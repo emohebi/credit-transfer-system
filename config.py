@@ -51,6 +51,33 @@ class Config:
     BREADTH_RATIO_MIN = float(os.getenv("BREADTH_RATIO_MIN", "0.7"))
     BREADTH_RATIO_MAX = float(os.getenv("BREADTH_RATIO_MAX", "1.5"))
     
+    # Study Level Configuration
+    STUDY_LEVEL_WEIGHTS = {
+        "introductory": 0.2,
+        "intermediate": 0.4,
+        "advanced": 0.6,
+        "specialized": 0.8,
+        "postgraduate": 1.0
+    }
+    
+    # Expected skill levels for each study level
+    STUDY_LEVEL_SKILL_MAPPING = {
+        "introductory": "NOVICE",
+        "intermediate": "COMPETENT",
+        "advanced": "PROFICIENT",
+        "specialized": "EXPERT",
+        "postgraduate": "EXPERT"
+    }
+    
+    # Expected cognitive depth for each study level
+    STUDY_LEVEL_DEPTH_MAPPING = {
+        "introductory": "UNDERSTAND",
+        "intermediate": "APPLY",
+        "advanced": "ANALYZE",
+        "specialized": "EVALUATE",
+        "postgraduate": "CREATE"
+    }
+    
     # Credit Hour Configuration
     CREDIT_POINT_TO_HOURS = float(os.getenv("CREDIT_POINT_TO_HOURS", "12.5"))
     HOUR_RATIO_MIN = float(os.getenv("HOUR_RATIO_MIN", "0.7"))

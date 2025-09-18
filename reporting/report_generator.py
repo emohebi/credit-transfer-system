@@ -61,9 +61,11 @@ class ReportGenerator:
         report.append(f"\nCourses with Credit Transfer Options: {coverage['courses_covered']}/{coverage['total_courses']}")
         report.append(f"Coverage Rate: {coverage['coverage_rate']:.1%}")
         
-        report.append("\nBy Year Level:")
-        for year, stats in coverage['by_year'].items():
-            report.append(f"  Year {year}: {stats['covered']}/{stats['total']} courses ({stats['rate']:.1%})")
+        report.append(f"\nBy Study Level:")
+        for level in ["introductory", "intermediate", "advanced", "specialized"]:
+            if level in coverage['by_level']:
+                stats = coverage['by_level'][level]
+                report.append(f"  {level.title()}: {stats['covered']}/{stats['total']} courses ({stats['rate']:.1%})")
         
         # Detailed Recommendations
         report.append("\n" + "=" * 80)
@@ -134,7 +136,7 @@ class ReportGenerator:
         output = StringIO()
         
         fieldnames = [
-            'VET_Units', 'Uni_Course_Code', 'Uni_Course_Name', 'Year',
+            'VET_Units', 'Uni_Course_Code', 'Uni_Course_Name', 'Study_Level',
             'Alignment_Score', 'Confidence', 'Recommendation_Type',
             'Skill_Gaps', 'Conditions', 'Evidence'
         ]
@@ -147,7 +149,7 @@ class ReportGenerator:
                 'VET_Units': ', '.join(rec.get_vet_unit_codes()),
                 'Uni_Course_Code': rec.uni_course.code,
                 'Uni_Course_Name': rec.uni_course.name,
-                'Year': rec.uni_course.year,
+                'Study_Level': rec.uni_course.study_level,
                 'Alignment_Score': f"{rec.alignment_score:.2%}",
                 'Confidence': f"{rec.confidence:.2%}",
                 'Recommendation_Type': rec.recommendation.value,
@@ -221,7 +223,7 @@ class ReportGenerator:
         html.append("<thead><tr>")
         html.append("<th>VET Units</th>")
         html.append("<th>University Course</th>")
-        html.append("<th>Year</th>")
+        html.append("<th>Study Level</th>")
         html.append("<th>Alignment</th>")
         html.append("<th>Confidence</th>")
         html.append("<th>Type</th>")
@@ -234,7 +236,7 @@ class ReportGenerator:
             html.append(f"<tr class='{rec_class}'>")
             html.append(f"<td>{', '.join(rec.get_vet_unit_codes())}</td>")
             html.append(f"<td>{rec.uni_course.code}: {rec.uni_course.name}</td>")
-            html.append(f"<td>{rec.uni_course.year}</td>")
+            html.append(f"<td>{rec.uni_course.study_level.title()}</td>")
             html.append(f"<td>{rec.alignment_score:.1%}</td>")
             html.append(f"<td>{rec.confidence:.1%}</td>")
             html.append(f"<td>{rec.recommendation.value.upper()}</td>")
@@ -263,7 +265,7 @@ class ReportGenerator:
     def _format_recommendation(self, index: int, rec: CreditTransferRecommendation) -> str:
         """Format a single recommendation for text report"""
         lines = []
-        lines.append(f"\n{index}. {rec.uni_course.code}: {rec.uni_course.name} (Year {rec.uni_course.year})")
+        lines.append(f"\n{index}. {rec.uni_course.code}: {rec.uni_course.name} (Level: {rec.uni_course.study_level})")
         lines.append("-" * 60)
         
         # VET units
@@ -341,23 +343,25 @@ class ReportGenerator:
         covered_courses = set(r.uni_course.code for r in recommendations)
         total_courses = len(uni_qual.courses)
         
-        # Analyze by year
-        by_year = {}
-        for year in range(1, 5):
-            year_courses = [c for c in uni_qual.courses if c.year == year]
-            if year_courses:
-                year_covered = sum(1 for c in year_courses if c.code in covered_courses)
-                by_year[year] = {
-                    'total': len(year_courses),
-                    'covered': year_covered,
-                    'rate': year_covered / len(year_courses)
+        # Analyze by study level
+        by_level = {}
+        all_levels = uni_qual.get_all_study_levels()
+        
+        for level in all_levels:
+            level_courses = uni_qual.get_courses_by_level(level)
+            if level_courses:
+                level_covered = sum(1 for c in level_courses if c.code in covered_courses)
+                by_level[level] = {
+                    'total': len(level_courses),
+                    'covered': level_covered,
+                    'rate': level_covered / len(level_courses)
                 }
         
         return {
             'courses_covered': len(covered_courses),
             'total_courses': total_courses,
             'coverage_rate': len(covered_courses) / total_courses if total_courses > 0 else 0,
-            'by_year': by_year
+            'by_level': by_level
         }
     
     def _analyze_gaps(self, recommendations: List[CreditTransferRecommendation]) -> Dict:

@@ -136,7 +136,7 @@ class UniCourse:
     code: str
     name: str
     description: str
-    year: int  # 1, 2, 3, 4
+    study_level: str  # e.g., "Introductory", "Intermediate", "Advanced", "Specialized"
     learning_outcomes: List[str] = field(default_factory=list)
     prerequisites: List[str] = field(default_factory=list)
     credit_points: int = 0
@@ -162,7 +162,7 @@ class UniCourse:
             "code": self.code,
             "name": self.name,
             "description": self.description,
-            "year": self.year,
+            "study_level": self.study_level,
             "learning_outcomes": self.learning_outcomes,
             "prerequisites": self.prerequisites,
             "credit_points": self.credit_points,
@@ -183,9 +183,13 @@ class UniQualification:
     duration_years: int = 4
     metadata: Dict[str, Any] = field(default_factory=dict)
     
-    def get_courses_by_year(self, year: int) -> List[UniCourse]:
-        """Get courses for a specific year"""
-        return [c for c in self.courses if c.year == year]
+    def get_courses_by_level(self, level: str) -> List[UniCourse]:
+        """Get courses for a specific study level"""
+        return [c for c in self.courses if c.study_level == level]
+    
+    def get_all_study_levels(self) -> List[str]:
+        """Get all unique study levels in the qualification"""
+        return list(set(c.study_level for c in self.courses))
     
     def get_all_skills(self) -> List[Skill]:
         """Get all skills from all courses"""

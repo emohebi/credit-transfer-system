@@ -101,7 +101,70 @@ class SkillCategory(Enum):
     PROFESSIONAL = "professional"
 
 
-class RecommendationType(Enum):
+class StudyLevel(Enum):
+    """Study levels for university courses"""
+    INTRODUCTORY = "introductory"
+    INTERMEDIATE = "intermediate"
+    ADVANCED = "advanced"
+    SPECIALIZED = "specialized"
+    POSTGRADUATE = "postgraduate"
+    
+    @classmethod
+    def from_string(cls, level_str: str):
+        """Parse study level from string"""
+        level_map = {
+            "introductory": cls.INTRODUCTORY,
+            "intro": cls.INTRODUCTORY,
+            "beginner": cls.INTRODUCTORY,
+            "foundation": cls.INTRODUCTORY,
+            "intermediate": cls.INTERMEDIATE,
+            "inter": cls.INTERMEDIATE,
+            "advanced": cls.ADVANCED,
+            "adv": cls.ADVANCED,
+            "specialized": cls.SPECIALIZED,
+            "spec": cls.SPECIALIZED,
+            "specialist": cls.SPECIALIZED,
+            "postgraduate": cls.POSTGRADUATE,
+            "postgrad": cls.POSTGRADUATE,
+            "graduate": cls.POSTGRADUATE
+        }
+        return level_map.get(level_str.lower(), cls.INTERMEDIATE)
+    
+    @classmethod
+    def to_complexity_score(cls, level):
+        """Convert study level to complexity score (0-1)"""
+        scores = {
+            cls.INTRODUCTORY: 0.2,
+            cls.INTERMEDIATE: 0.4,
+            cls.ADVANCED: 0.6,
+            cls.SPECIALIZED: 0.8,
+            cls.POSTGRADUATE: 1.0
+        }
+        return scores.get(level, 0.5)
+    
+    @classmethod
+    def expected_skill_level(cls, study_level):
+        """Get expected skill level for a study level"""
+        mapping = {
+            cls.INTRODUCTORY: SkillLevel.NOVICE,
+            cls.INTERMEDIATE: SkillLevel.COMPETENT,
+            cls.ADVANCED: SkillLevel.PROFICIENT,
+            cls.SPECIALIZED: SkillLevel.EXPERT,
+            cls.POSTGRADUATE: SkillLevel.EXPERT
+        }
+        return mapping.get(study_level, SkillLevel.COMPETENT)
+    
+    @classmethod
+    def expected_skill_depth(cls, study_level):
+        """Get expected cognitive depth for a study level"""
+        mapping = {
+            cls.INTRODUCTORY: SkillDepth.UNDERSTAND,
+            cls.INTERMEDIATE: SkillDepth.APPLY,
+            cls.ADVANCED: SkillDepth.ANALYZE,
+            cls.SPECIALIZED: SkillDepth.EVALUATE,
+            cls.POSTGRADUATE: SkillDepth.CREATE
+        }
+        return mapping.get(study_level, SkillDepth.APPLY)
     """Types of credit transfer recommendations"""
     FULL = "full"
     CONDITIONAL = "conditional"

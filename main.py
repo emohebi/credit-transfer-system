@@ -88,7 +88,7 @@ def load_uni_data(filepath: str) -> UniQualification:
                 "code": "COMP1234",
                 "name": "Introduction to Programming",
                 "description": "...",
-                "year": 1,
+                "study_level": "introductory",
                 "learning_outcomes": [...],
                 "prerequisites": [],
                 "credit_points": 6,
@@ -111,7 +111,7 @@ def load_uni_data(filepath: str) -> UniQualification:
             code=course_data["code"],
             name=course_data["name"],
             description=course_data.get("description", ""),
-            year=course_data["year"],
+            study_level=course_data.get("study_level", "intermediate"),  # Default to intermediate
             learning_outcomes=course_data.get("learning_outcomes", []),
             prerequisites=course_data.get("prerequisites", []),
             credit_points=course_data.get("credit_points", 0),

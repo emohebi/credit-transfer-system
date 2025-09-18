@@ -195,7 +195,7 @@ class EdgeCaseHandler:
             
             result["coverage_by_course"][course.code] = {
                 "coverage": coverage,
-                "year": course.year,
+                "study_level": course.study_level,
                 "credit_points": course.credit_points
             }
             
@@ -203,7 +203,7 @@ class EdgeCaseHandler:
                 result["recommended_transfers"].append({
                     "course": course.code,
                     "coverage": coverage,
-                    "year": course.year
+                    "study_level": course.study_level
                 })
             elif coverage > 0.4:
                 result["partial_transfers"].append({

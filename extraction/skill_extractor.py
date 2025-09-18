@@ -1,9 +1,6 @@
 """
 Advanced skill extraction from course descriptions
 """
-"""
-Advanced skill extraction from course descriptions
-"""
 
 import re
 import logging
@@ -157,7 +154,7 @@ class SkillExtractor:
         
         # Extract from topics
         for topic in course.topics:
-            topic_skills = self._extract_from_topic(topic, course.year)
+            topic_skills = self._extract_from_topic(topic, course.study_level)
             skills.extend(topic_skills)
         
         # Extract from assessment
@@ -182,11 +179,16 @@ class SkillExtractor:
         # Deduplicate and validate
         skills = self._deduplicate_skills(skills)
         
-        # Adjust levels based on year
+        # Adjust levels based on study_level
+        from ..models.enums import StudyLevel
+        study_level_enum = StudyLevel.from_string(course.study_level)
+        expected_level = StudyLevel.expected_skill_level(study_level_enum)
+        expected_depth = StudyLevel.expected_skill_depth(study_level_enum)
+        
         for skill in skills:
-            skill.level = self._adjust_level_by_year(skill.level, course.year)
-            if skill.depth == SkillDepth.APPLY and course.year >= 3:
-                skill.depth = SkillDepth.ANALYZE
+            skill.level = self._adjust_level_by_study_level(skill.level, study_level_enum)
+            if skill.depth == SkillDepth.APPLY and study_level_enum in [StudyLevel.ADVANCED, StudyLevel.SPECIALIZED]:
+                skill.depth = expected_depth
         
         # Cache and assign
         self.cache[cache_key] = skills
@@ -254,20 +256,23 @@ class SkillExtractor:
         
         return skills
     
-    def _extract_from_topic(self, topic: str, year: int) -> List[Skill]:
+    def _extract_from_topic(self, topic: str, study_level: str) -> List[Skill]:
         """Extract skills from course topic"""
         topic_clean = self._clean_skill_name(topic)
         if not topic_clean:
             return []
         
+        from ..models.enums import StudyLevel
+        study_level_enum = StudyLevel.from_string(study_level)
+        
         skill = Skill(
             name=topic_clean,
             category=self._categorize_skill(topic_clean),
-            level=self._adjust_level_by_year(SkillLevel.COMPETENT, year),
-            depth=self._parse_depth_by_year(year),
+            level=StudyLevel.expected_skill_level(study_level_enum),
+            depth=StudyLevel.expected_skill_depth(study_level_enum),
             context=SkillContext.THEORETICAL,  # Topics are typically theoretical
             confidence=0.7,
-            source=f"topic_year{year}"
+            source=f"topic_{study_level}"
         )
         
         return [skill]
@@ -543,26 +548,22 @@ class SkillExtractor:
         
         return list(set(keywords))[:10]  # Unique and limited
     
-    def _adjust_level_by_year(self, base_level: SkillLevel, year: int) -> SkillLevel:
-        """Adjust skill level based on university year"""
-        if year == 1:
+    def _adjust_level_by_study_level(self, base_level: SkillLevel, study_level) -> SkillLevel:
+        """Adjust skill level based on study level"""
+        from ..models.enums import StudyLevel
+        
+        if study_level == StudyLevel.INTRODUCTORY:
             return min(base_level, SkillLevel.ADVANCED_BEGINNER)
-        elif year == 2:
+        elif study_level == StudyLevel.INTERMEDIATE:
             return base_level
-        elif year == 3:
+        elif study_level == StudyLevel.ADVANCED:
             return max(base_level, SkillLevel.COMPETENT)
-        else:  # year 4+
+        elif study_level == StudyLevel.SPECIALIZED:
             return max(base_level, SkillLevel.PROFICIENT)
+        else:  # POSTGRADUATE
+            return max(base_level, SkillLevel.EXPERT)
     
-    def _parse_depth_by_year(self, year: int) -> SkillDepth:
-        """Expected cognitive depth by year"""
-        year_depth_map = {
-            1: SkillDepth.UNDERSTAND,
-            2: SkillDepth.APPLY,
-            3: SkillDepth.ANALYZE,
-            4: SkillDepth.EVALUATE
-        }
-        return year_depth_map.get(year, SkillDepth.APPLY)
+
     
     def _deduplicate_skills(self, skills: List[Skill]) -> List[Skill]:
         """Remove duplicate skills, keeping highest confidence"""
