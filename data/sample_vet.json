@@ -1,0 +1,20 @@
+{
+  "code": "ICT50220",
+  "name": "Diploma of Information Technology",
+  "level": "Diploma",
+  "units": [
+    {
+      "code": "ICTICT517",
+      "name": "Match IT needs with the strategic direction",
+      "description": "This unit describes the skills and knowledge required to match IT needs with the strategic direction of the organization.",
+      "learning_outcomes": [
+        "Identify organizational IT requirements",
+        "Develop IT strategic plans",
+        "Implement IT governance frameworks"
+      ],
+      "assessment_requirements": "Assessment must include practical demonstration",
+      "nominal_hours": 60,
+      "prerequisites": []
+    }
+  ]
+}

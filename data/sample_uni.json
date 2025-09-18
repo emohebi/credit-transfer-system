@@ -1,0 +1,25 @@
+{
+  "code": "BIT",
+  "name": "Bachelor of Information Technology",
+  "courses": [
+    {
+      "code": "COMP1234",
+      "name": "Introduction to Programming",
+      "description": "This course introduces fundamental programming concepts",
+      "year": 1,
+      "learning_outcomes": [
+        "Understand programming fundamentals",
+        "Apply problem-solving techniques",
+        "Develop simple applications"
+      ],
+      "prerequisites": [],
+      "credit_points": 6,
+      "topics": [
+        "Variables and data types",
+        "Control structures",
+        "Functions and modules"
+      ],
+      "assessment": "Exam 50%, Assignments 50%"
+    }
+  ]
+}
