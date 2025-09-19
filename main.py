@@ -129,15 +129,41 @@ def initialize_interfaces():
     genai = None
     embeddings = None
     
-    # Initialize GenAI if enabled
-    if Config.USE_GENAI:
+    # Initialize GenAI - prefer vLLM over web API
+    if Config.USE_VLLM:
         try:
+            from interfaces.vllm_genai_interface import VLLMGenAIInterface
+            genai = VLLMGenAIInterface(
+                model_name=Config.VLLM_MODEL_NAME,
+                number_gpus=Config.VLLM_NUM_GPUS,
+                max_model_len=Config.VLLM_MAX_MODEL_LEN,
+                model_cache_dir=Config.MODEL_CACHE_DIR,
+                external_model_dir=Config.EXTERNAL_MODEL_DIR
+            )
+            logger.info(f"vLLM GenAI interface initialized with model: {Config.VLLM_MODEL_NAME}")
+        except Exception as e:
+            logger.warning(f"Failed to initialize vLLM GenAI interface: {e}")
+            # Fall back to web API if available
+            if Config.USE_GENAI:
+                try:
+                    from interfaces.genai_interface import GenAIInterface
+                    genai = GenAIInterface(
+                        model_endpoint=Config.GENAI_ENDPOINT,
+                        api_key=Config.GENAI_API_KEY,
+                        timeout=Config.GENAI_TIMEOUT
+                    )
+                    logger.info("Fell back to web API GenAI interface")
+                except Exception as e2:
+                    logger.warning(f"Failed to initialize web API GenAI interface: {e2}")
+    elif Config.USE_GENAI:
+        try:
+            from interfaces.genai_interface import GenAIInterface
             genai = GenAIInterface(
                 model_endpoint=Config.GENAI_ENDPOINT,
                 api_key=Config.GENAI_API_KEY,
                 timeout=Config.GENAI_TIMEOUT
             )
-            logger.info("GenAI interface initialized")
+            logger.info("Web API GenAI interface initialized")
         except Exception as e:
             logger.warning(f"Failed to initialize GenAI interface: {e}")
     

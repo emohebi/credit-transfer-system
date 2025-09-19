@@ -20,17 +20,31 @@ class Config:
         dir_path.mkdir(exist_ok=True)
     
     # GenAI Configuration
+    USE_VLLM = os.getenv("USE_VLLM", "true").lower() == "true"
+    VLLM_MODEL_NAME = os.getenv("VLLM_MODEL_NAME", "meta-llama--Llama-3.1-8B-Instruct")
+    VLLM_NUM_GPUS = int(os.getenv("VLLM_NUM_GPUS", "1"))
+    VLLM_MAX_MODEL_LEN = int(os.getenv("VLLM_MAX_MODEL_LEN", "8192"))
+    VLLM_BATCH_SIZE = int(os.getenv("VLLM_BATCH_SIZE", "8"))
+    MODEL_CACHE_DIR = os.getenv("MODEL_CACHE_DIR", "/root/.cache/huggingface/hub")
+    EXTERNAL_MODEL_DIR = os.getenv("EXTERNAL_MODEL_DIR", "/Volumes/jsa_external_prod/external_vols/scratch/Scratch/Ehsan/Models")
+    
+    # Legacy Web API Configuration (kept for compatibility)
     GENAI_ENDPOINT = os.getenv("GENAI_ENDPOINT", "http://localhost:8080")
     GENAI_API_KEY = os.getenv("GENAI_API_KEY", None)
     GENAI_TIMEOUT = int(os.getenv("GENAI_TIMEOUT", "30"))
-    USE_GENAI = os.getenv("USE_GENAI", "true").lower() == "true"
+    USE_GENAI = os.getenv("USE_GENAI", "false").lower() == "true"  # Default to false, use vLLM instead
     
     # Embedding Configuration
+    EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL_NAME", "jinaai--jina-embeddings-v4")
+    EMBEDDING_DEVICE = os.getenv("EMBEDDING_DEVICE", "cuda")
+    EMBEDDING_BATCH_SIZE = int(os.getenv("EMBEDDING_BATCH_SIZE", "32"))
+    
+    # Legacy configurations (kept for compatibility)
     EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
     EMBEDDING_ENDPOINT = os.getenv("EMBEDDING_ENDPOINT", None)
     EMBEDDING_API_KEY = os.getenv("EMBEDDING_API_KEY", None)
     USE_EMBEDDING_API = os.getenv("USE_EMBEDDING_API", "false").lower() == "true"
-    EMBEDDING_DIM = int(os.getenv("EMBEDDING_DIM", "384"))
+    EMBEDDING_DIM = int(os.getenv("EMBEDDING_DIM", "768"))  # Default for Jina v4
     
     # Analysis Configuration
     MIN_ALIGNMENT_SCORE = float(os.getenv("MIN_ALIGNMENT_SCORE", "0.5"))

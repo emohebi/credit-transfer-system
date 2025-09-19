@@ -40,8 +40,17 @@ class CreditTransferAnalyzer:
         self.embeddings = embeddings
         self.config = config or {}
         
-        # Initialize components
-        self.extractor = SkillExtractor(genai, embeddings)
+        # Initialize components based on interface type
+        if isinstance(genai, VLLMGenAIInterface):
+            # Use optimized vLLM extractor for batch processing
+            from ..extraction.vllm_skill_extractor import VLLMSkillExtractor
+            self.extractor = VLLMSkillExtractor(genai, embeddings)
+            logger.info("Using vLLM skill extractor for batch processing")
+        else:
+            # Use standard extractor
+            self.extractor = SkillExtractor(genai, embeddings)
+            logger.info("Using standard skill extractor")
+        
         self.mapper = SkillMapper(embeddings)
         self.edge_handler = EdgeCaseHandler()
         
@@ -71,22 +80,43 @@ class CreditTransferAnalyzer:
         
         recommendations = []
         
-        # Extract skills from all VET units if not already done
-        logger.info("Extracting skills from VET units...")
-        for unit in vet_qual.units:
-            if not unit.extracted_skills:
-                self.extractor.extract_from_vet_unit(unit)
+        # Check if we have vLLM batch extractor
+        from ..interfaces.vllm_genai_interface import VLLMGenAIInterface
+        from ..extraction.vllm_skill_extractor import VLLMSkillExtractor
         
-        # Filter target courses if specified
-        courses_to_analyze = uni_qual.courses
-        if target_courses:
-            courses_to_analyze = [c for c in uni_qual.courses if c.code in target_courses]
-        
-        # Extract skills from university courses
-        logger.info(f"Extracting skills from {len(courses_to_analyze)} university courses...")
-        for course in courses_to_analyze:
-            if not course.extracted_skills:
-                self.extractor.extract_from_uni_course(course)
+        if isinstance(self.extractor, VLLMSkillExtractor):
+            # Use batch extraction for efficiency
+            logger.info("Using batch extraction for VET units...")
+            self.extractor.extract_from_vet_qualification(vet_qual)
+            
+            logger.info("Using batch extraction for University courses...")
+            if target_courses:
+                # Filter courses first
+                filtered_qual = UniQualification(
+                    code=uni_qual.code,
+                    name=uni_qual.name,
+                    courses=[c for c in uni_qual.courses if c.code in target_courses]
+                )
+                self.extractor.extract_from_uni_qualification(filtered_qual)
+            else:
+                self.extractor.extract_from_uni_qualification(uni_qual)
+        else:
+            # Standard extraction (one by one)
+            logger.info("Extracting skills from VET units...")
+            for unit in vet_qual.units:
+                if not unit.extracted_skills:
+                    self.extractor.extract_from_vet_unit(unit)
+            
+            # Filter target courses if specified
+            courses_to_analyze = uni_qual.courses
+            if target_courses:
+                courses_to_analyze = [c for c in uni_qual.courses if c.code in target_courses]
+            
+            # Extract skills from university courses
+            logger.info(f"Extracting skills from {len(courses_to_analyze)} university courses...")
+            for course in courses_to_analyze:
+                if not course.extracted_skills:
+                    self.extractor.extract_from_uni_course(course)
         
         # Analyze each university course
         for course in courses_to_analyze:
