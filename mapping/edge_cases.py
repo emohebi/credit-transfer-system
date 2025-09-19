@@ -8,8 +8,8 @@ from typing import List, Dict, Any, Optional, Tuple
 from collections import defaultdict
 import numpy as np
 
-from ..models.base_models import Skill, UnitOfCompetency, UniCourse, SkillMapping
-from ..models.enums import SkillLevel, SkillDepth, SkillContext
+from models.base_models import Skill, UnitOfCompetency, UniCourse, SkillMapping
+from models.enums import SkillLevel, SkillDepth, SkillContext
 
 logger = logging.getLogger(__name__)
 

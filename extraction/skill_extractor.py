@@ -7,10 +7,10 @@ import logging
 from typing import List, Dict, Set, Optional
 from collections import defaultdict
 
-from ..models.base_models import Skill, UnitOfCompetency, UniCourse
-from ..models.enums import SkillLevel, SkillDepth, SkillContext, SkillCategory
-from ..interfaces.genai_interface import GenAIInterface
-from ..interfaces.embedding_interface import EmbeddingInterface
+from models.base_models import Skill, UnitOfCompetency, UniCourse
+from models.enums import SkillLevel, SkillDepth, SkillContext, SkillCategory
+from interfaces.genai_interface import GenAIInterface
+from interfaces.embedding_interface import EmbeddingInterface
 from .patterns import ExtractionPatterns, SkillOntology, CompositeSkillDecomposer
 
 logger = logging.getLogger(__name__)
@@ -180,7 +180,7 @@ class SkillExtractor:
         skills = self._deduplicate_skills(skills)
         
         # Adjust levels based on study_level
-        from ..models.enums import StudyLevel
+        from models.enums import StudyLevel
         study_level_enum = StudyLevel.from_string(course.study_level)
         expected_level = StudyLevel.expected_skill_level(study_level_enum)
         expected_depth = StudyLevel.expected_skill_depth(study_level_enum)
@@ -262,7 +262,7 @@ class SkillExtractor:
         if not topic_clean:
             return []
         
-        from ..models.enums import StudyLevel
+        from models.enums import StudyLevel
         study_level_enum = StudyLevel.from_string(study_level)
         
         skill = Skill(
@@ -550,7 +550,7 @@ class SkillExtractor:
     
     def _adjust_level_by_study_level(self, base_level: SkillLevel, study_level) -> SkillLevel:
         """Adjust skill level based on study level"""
-        from ..models.enums import StudyLevel
+        from models.enums import StudyLevel
         
         if study_level == StudyLevel.INTRODUCTORY:
             return min(base_level, SkillLevel.ADVANCED_BEGINNER)

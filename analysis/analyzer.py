@@ -7,16 +7,18 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 import json
 
-from ..models.base_models import (
+from models.base_models import (
     VETQualification, UniQualification, CreditTransferRecommendation,
     UnitOfCompetency, UniCourse, SkillMapping
 )
-from ..models.enums import RecommendationType
-from ..extraction.skill_extractor import SkillExtractor
-from ..mapping.skill_mapper import SkillMapper
-from ..mapping.edge_cases import EdgeCaseHandler
-from ..interfaces.genai_interface import GenAIInterface
-from ..interfaces.embedding_interface import EmbeddingInterface
+from models.enums import RecommendationType
+from extraction.skill_extractor import SkillExtractor
+from mapping.skill_mapper import SkillMapper
+from mapping.edge_cases import EdgeCaseHandler
+from interfaces.genai_interface import GenAIInterface
+from interfaces.embedding_interface import EmbeddingInterface
+from interfaces.vllm_genai_interface import VLLMGenAIInterface
+from extraction.vllm_skill_extractor import VLLMSkillExtractor
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +45,7 @@ class CreditTransferAnalyzer:
         # Initialize components based on interface type
         if isinstance(genai, VLLMGenAIInterface):
             # Use optimized vLLM extractor for batch processing
-            from ..extraction.vllm_skill_extractor import VLLMSkillExtractor
+            
             self.extractor = VLLMSkillExtractor(genai, embeddings)
             logger.info("Using vLLM skill extractor for batch processing")
         else:
@@ -81,8 +83,6 @@ class CreditTransferAnalyzer:
         recommendations = []
         
         # Check if we have vLLM batch extractor
-        from ..interfaces.vllm_genai_interface import VLLMGenAIInterface
-        from ..extraction.vllm_skill_extractor import VLLMSkillExtractor
         
         if isinstance(self.extractor, VLLMSkillExtractor):
             # Use batch extraction for efficiency

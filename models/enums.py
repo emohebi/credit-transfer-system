@@ -103,11 +103,11 @@ class SkillCategory(Enum):
 
 class StudyLevel(Enum):
     """Study levels for university courses"""
-    INTRODUCTORY = "introductory"
-    INTERMEDIATE = "intermediate"
-    ADVANCED = "advanced"
-    SPECIALIZED = "specialized"
-    POSTGRADUATE = "postgraduate"
+    INTRODUCTORY = 1
+    INTERMEDIATE = 2
+    ADVANCED = 3
+    SPECIALIZED = 4
+    POSTGRADUATE = 5
     
     @classmethod
     def from_string(cls, level_str: str):
@@ -165,6 +165,25 @@ class StudyLevel(Enum):
             cls.POSTGRADUATE: SkillDepth.CREATE
         }
         return mapping.get(study_level, SkillDepth.APPLY)
+    """Types of credit transfer recommendations"""
+    FULL = "full"
+    CONDITIONAL = "conditional"
+    PARTIAL = "partial"
+    NONE = "none"
+    
+    @classmethod
+    def from_score(cls, score: float, has_gaps: bool = False):
+        """Determine recommendation type from alignment score"""
+        if score >= 0.8 and not has_gaps:
+            return cls.FULL
+        elif score >= 0.7:
+            return cls.CONDITIONAL
+        elif score >= 0.5:
+            return cls.PARTIAL
+        else:
+            return cls.NONE
+
+class RecommendationType(Enum):
     """Types of credit transfer recommendations"""
     FULL = "full"
     CONDITIONAL = "conditional"

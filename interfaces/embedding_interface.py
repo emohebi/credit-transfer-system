@@ -200,9 +200,9 @@ class EmbeddingInterface:
     
     def encode(self, texts: Union[str, List[str]], 
                batch_size: Optional[int] = None,
-               show_progress: bool = False,
+               show_progress: bool = True,
                convert_to_tensor: bool = False,
-               normalize_embeddings: bool = False) -> np.ndarray:
+               normalize_embeddings: bool = True) -> np.ndarray:
         """
         Generate embeddings for texts
         
@@ -236,8 +236,11 @@ class EmbeddingInterface:
             batch_size = self.default_batch_size
         
         # Encode using SentenceTransformer
+        task = "text-matching"
         embeddings = self.model.encode(
             texts,
+            task=task,
+            prompt_name='passage',
             batch_size=batch_size,
             show_progress_bar=show_progress,
             convert_to_tensor=convert_to_tensor,
@@ -391,54 +394,54 @@ class EmbeddingInterface:
         self.cache.clear()
         logger.info("Embedding cache cleared")
     
-    def get_model_info(self) -> Dict:
-        """Get information about the loaded model"""
-        return {
-            "model_name": self.model_name,
-            "embedding_dimension": self.embedding_dim,
-            "device": self.device,
-            "trust_remote_code": self.trust_remote_code,
-            "cache_size": len(self.cache)
-        }v2",
-                 api_endpoint: Optional[str] = None,
-                 api_key: Optional[str] = None,
-                 embedding_dim: int = 384,
-                 use_api: bool = False):
-        """
-        Initialize embedding interface
+    # def get_model_info(self) -> Dict:
+    #     """Get information about the loaded model"""
+    #     return {
+    #         "model_name": self.model_name,
+    #         "embedding_dimension": self.embedding_dim,
+    #         "device": self.device,
+    #         "trust_remote_code": self.trust_remote_code,
+    #         "cache_size": len(self.cache)
+    #     }v2",
+    #              api_endpoint: Optional[str] = None,
+    #              api_key: Optional[str] = None,
+    #              embedding_dim: int = 384,
+    #              use_api: bool = False):
+    #     """
+    #     Initialize embedding interface
         
-        Args:
-            model_path: Path to local model or model name
-            api_endpoint: Optional API endpoint for embedding service
-            api_key: Optional API key for authentication
-            embedding_dim: Dimension of embeddings
-            use_api: Whether to use API instead of local model
-        """
-        self.model_path = model_path
-        self.api_endpoint = api_endpoint
-        self.api_key = api_key
-        self.embedding_dim = embedding_dim
-        self.use_api = use_api
-        self.model = None
+    #     Args:
+    #         model_path: Path to local model or model name
+    #         api_endpoint: Optional API endpoint for embedding service
+    #         api_key: Optional API key for authentication
+    #         embedding_dim: Dimension of embeddings
+    #         use_api: Whether to use API instead of local model
+    #     """
+    #     self.model_path = model_path
+    #     self.api_endpoint = api_endpoint
+    #     self.api_key = api_key
+    #     self.embedding_dim = embedding_dim
+    #     self.use_api = use_api
+    #     self.model = None
         
-        # Initialize based on configuration
-        if not use_api and SENTENCE_TRANSFORMERS_AVAILABLE:
-            try:
-                self.model = SentenceTransformer(model_path)
-                self.embedding_dim = self.model.get_sentence_embedding_dimension()
-                logger.info(f"Loaded local embedding model: {model_path}")
-            except Exception as e:
-                logger.warning(f"Failed to load local model: {e}. Will use API or fallback.")
-                self.use_api = True
-        elif not use_api:
-            logger.warning("Local model requested but sentence-transformers not available. Using API.")
-            self.use_api = True
+    #     # Initialize based on configuration
+    #     if not use_api and SENTENCE_TRANSFORMERS_AVAILABLE:
+    #         try:
+    #             self.model = SentenceTransformer(model_path)
+    #             self.embedding_dim = self.model.get_sentence_embedding_dimension()
+    #             logger.info(f"Loaded local embedding model: {model_path}")
+    #         except Exception as e:
+    #             logger.warning(f"Failed to load local model: {e}. Will use API or fallback.")
+    #             self.use_api = True
+    #     elif not use_api:
+    #         logger.warning("Local model requested but sentence-transformers not available. Using API.")
+    #         self.use_api = True
         
-        # Setup session for API calls
-        if self.use_api or api_endpoint:
-            self.session = requests.Session()
-            if api_key:
-                self.session.headers.update({"Authorization": f"Bearer {api_key}"})
+    #     # Setup session for API calls
+    #     if self.use_api or api_endpoint:
+    #         self.session = requests.Session()
+    #         if api_key:
+    #             self.session.headers.update({"Authorization": f"Bearer {api_key}"})
     
     def encode(self, texts: Union[str, List[str]], 
                batch_size: int = 32,

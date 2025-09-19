@@ -7,9 +7,9 @@ import numpy as np
 from typing import List, Dict, Any, Optional, Tuple
 from collections import defaultdict
 
-from ..models.base_models import Skill, SkillMapping
-from ..models.enums import SkillLevel, SkillDepth, SkillContext
-from ..interfaces.embedding_interface import EmbeddingInterface
+from models.base_models import Skill, SkillMapping
+from models.enums import SkillLevel, SkillDepth, SkillContext
+from interfaces.embedding_interface import EmbeddingInterface
 
 logger = logging.getLogger(__name__)
 

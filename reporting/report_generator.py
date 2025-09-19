@@ -8,12 +8,12 @@ from datetime import datetime
 from typing import List, Dict, Any
 from io import StringIO
 
-from ..models.base_models import (
+from models.base_models import (
     CreditTransferRecommendation,
     VETQualification,
     UniQualification
 )
-from ..models.enums import RecommendationType
+from models.enums import RecommendationType
 
 
 class ReportGenerator:

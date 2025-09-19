@@ -111,7 +111,7 @@ class VLLMGenAIInterface:
             logger.error(f"Failed to initialize model: {e}")
             raise
     
-    def _get_snapshot_location(self, copy_model: bool = True) -> str:
+    def _get_snapshot_location(self, copy_model: bool = False) -> str:
         """Get or download model snapshot location"""
         model_id = self.model_config['model_id']
         revision = self.model_config['revision']
@@ -322,7 +322,7 @@ class VLLMGenAIInterface:
             }
             ]"""
                     
-                    query = f"""Course description: {text[:1000]}
+        query = f"""Course description: {text[:1000]}
 
             Explicit skills already identified: {', '.join(explicit_skills[:20])}
 

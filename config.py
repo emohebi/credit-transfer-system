@@ -21,7 +21,7 @@ class Config:
     
     # GenAI Configuration
     USE_VLLM = os.getenv("USE_VLLM", "true").lower() == "true"
-    VLLM_MODEL_NAME = os.getenv("VLLM_MODEL_NAME", "meta-llama--Llama-3.1-8B-Instruct")
+    VLLM_MODEL_NAME = os.getenv("VLLM_MODEL_NAME", "gpt-oss-120b")
     VLLM_NUM_GPUS = int(os.getenv("VLLM_NUM_GPUS", "1"))
     VLLM_MAX_MODEL_LEN = int(os.getenv("VLLM_MAX_MODEL_LEN", "8192"))
     VLLM_BATCH_SIZE = int(os.getenv("VLLM_BATCH_SIZE", "8"))

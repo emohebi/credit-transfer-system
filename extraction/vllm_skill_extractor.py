@@ -7,10 +7,10 @@ import logging
 from typing import List, Dict, Set, Optional, Tuple
 from collections import defaultdict
 
-from ..models.base_models import Skill, UnitOfCompetency, UniCourse, VETQualification, UniQualification
-from ..models.enums import SkillLevel, SkillDepth, SkillContext, SkillCategory, StudyLevel
-from ..interfaces.vllm_genai_interface import VLLMGenAIInterface
-from ..interfaces.embedding_interface import EmbeddingInterface
+from models.base_models import Skill, UnitOfCompetency, UniCourse, VETQualification, UniQualification
+from models.enums import SkillLevel, SkillDepth, SkillContext, SkillCategory, StudyLevel
+from interfaces.vllm_genai_interface import VLLMGenAIInterface
+from interfaces.embedding_interface import EmbeddingInterface
 from .patterns import ExtractionPatterns, SkillOntology, CompositeSkillDecomposer
 
 logger = logging.getLogger(__name__)
