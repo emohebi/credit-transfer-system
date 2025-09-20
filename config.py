@@ -4,11 +4,12 @@ Configuration settings for the Credit Transfer Analysis System
 
 import os
 from pathlib import Path
+import dotenv
 
 
 class Config:
     """System configuration"""
-    
+    dotenv.load_dotenv()  # Load environment variables from .env file if present
     # Project paths
     BASE_DIR = Path(__file__).parent
     DATA_DIR = BASE_DIR / "data"
@@ -20,7 +21,7 @@ class Config:
         dir_path.mkdir(exist_ok=True)
     
     # GenAI Configuration
-    USE_VLLM = os.getenv("USE_VLLM", "true").lower() == "true"
+    USE_VLLM = os.getenv("USE_VLLM", "false").lower() == "true"
     VLLM_MODEL_NAME = os.getenv("VLLM_MODEL_NAME", "gpt-oss-120b")
     VLLM_NUM_GPUS = int(os.getenv("VLLM_NUM_GPUS", "1"))
     VLLM_MAX_MODEL_LEN = int(os.getenv("VLLM_MAX_MODEL_LEN", "8192"))
@@ -32,7 +33,7 @@ class Config:
     GENAI_ENDPOINT = os.getenv("GENAI_ENDPOINT", "http://localhost:8080")
     GENAI_API_KEY = os.getenv("GENAI_API_KEY", None)
     GENAI_TIMEOUT = int(os.getenv("GENAI_TIMEOUT", "30"))
-    USE_GENAI = os.getenv("USE_GENAI", "false").lower() == "true"  # Default to false, use vLLM instead
+    USE_GENAI = os.getenv("USE_GENAI", "true").lower() == "true"  # Default to false, use vLLM instead
     
     # Embedding Configuration
     EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL_NAME", "jinaai--jina-embeddings-v4")
@@ -40,11 +41,9 @@ class Config:
     EMBEDDING_BATCH_SIZE = int(os.getenv("EMBEDDING_BATCH_SIZE", "32"))
     
     # Legacy configurations (kept for compatibility)
-    EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
-    EMBEDDING_ENDPOINT = os.getenv("EMBEDDING_ENDPOINT", None)
-    EMBEDDING_API_KEY = os.getenv("EMBEDDING_API_KEY", None)
-    USE_EMBEDDING_API = os.getenv("USE_EMBEDDING_API", "false").lower() == "true"
-    EMBEDDING_DIM = int(os.getenv("EMBEDDING_DIM", "768"))  # Default for Jina v4
+    EMBEDDING_EXTERNAL_DIR = os.getenv("EMBEDDING_EXTERNAL_DIR", None)
+    EMBEDDING_API_KEY = os.getenv("EMBEDDING_API_KEY", "/Volumes/jsa_external_prod/external_vols/scratch/Scratch/Ehsan/Models")
+    EMBEDDING_CACHE_DIR = int(os.getenv("EMBEDDING_CACHE_DIR", "/root/.cache/huggingface/hub"))  # Default for Jina v4
     
     # Analysis Configuration
     MIN_ALIGNMENT_SCORE = float(os.getenv("MIN_ALIGNMENT_SCORE", "0.5"))
@@ -110,6 +109,102 @@ class Config:
     REPORT_FORMAT = os.getenv("REPORT_FORMAT", "json")  # json, csv, html
     INCLUDE_EDGE_CASES = os.getenv("INCLUDE_EDGE_CASES", "true").lower() == "true"
     MAX_RECOMMENDATIONS_PER_COURSE = int(os.getenv("MAX_RECOMMENDATIONS_PER_COURSE", "5"))
+    
+    # Model configurations
+    EMBEDDING_MODELS = {
+        "jinaai--jina-embeddings-v4": {
+            "model_id": "jinaai/jina-embeddings-v4",
+            "revision": "737fa5c46f0262ceba4a462ffa1c5bcf01da416f",
+            "trust_remote_code": True,
+            "embedding_dim": 768
+        },
+        "jinaai--jina-embeddings-v3": {
+            "model_id": "jinaai/jina-embeddings-v3",
+            "revision": None,
+            "trust_remote_code": True,
+            "embedding_dim": 1024
+        },
+        "BAAI--bge-large-en-v1.5": {
+            "model_id": "BAAI/bge-large-en-v1.5",
+            "revision": None,
+            "trust_remote_code": False,
+            "embedding_dim": 1024
+        },
+        "BAAI--bge-base-en-v1.5": {
+            "model_id": "BAAI/bge-base-en-v1.5",
+            "revision": None,
+            "trust_remote_code": False,
+            "embedding_dim": 768
+        },
+        "sentence-transformers--all-MiniLM-L6-v2": {
+            "model_id": "sentence-transformers/all-MiniLM-L6-v2",
+            "revision": None,
+            "trust_remote_code": False,
+            "embedding_dim": 384
+        },
+        "sentence-transformers--all-mpnet-base-v2": {
+            "model_id": "sentence-transformers/all-mpnet-base-v2",
+            "revision": None,
+            "trust_remote_code": False,
+            "embedding_dim": 768
+        },
+        "intfloat--e5-large-v2": {
+            "model_id": "intfloat/e5-large-v2",
+            "revision": None,
+            "trust_remote_code": False,
+            "embedding_dim": 1024
+        },
+        "WhereIsAI--UAE-Large-V1": {
+            "model_id": "WhereIsAI/UAE-Large-V1",
+            "revision": None,
+            "trust_remote_code": False,
+            "embedding_dim": 1024
+        }
+    }
+    
+    # Model configurations
+    MODELS = {
+        "mistralai--Mistral-7B-Instruct-v0.2": {
+            "model_id": "mistralai/Mistral-7B-Instruct-v0.2",
+            "revision": "41b61a33a2483885c981aa79e0df6b32407ed873",
+            "template": "Mistral"
+        },
+        "mistralai--Mistral-7B-Instruct-v0.3": {
+            "model_id": "mistralai/Mistral-7B-Instruct-v0.3",
+            "revision": "e0bc86c23ce5aae1db576c8cca6f06f1f73af2db",
+            "template": "Mistral"
+        },
+        "neuralmagic--Meta-Llama-3.1-70B-Instruct-quantized.w4a16": {
+            "model_id": "neuralmagic/Meta-Llama-3.1-70B-Instruct-quantized.w4a16",
+            "revision": "8c670bcdb23f58a977e1440354beb7c3e455961d",
+            "template": "Llama"
+        },
+        "meta-llama--Llama-3.1-8B-Instruct": {
+            "model_id": "meta-llama/Llama-3.1-8B-Instruct",
+            "revision": "0e9e39f249a16976918f6564b8830bc894c89659",
+            "template": "Llama"
+        },
+        "neuralmagic--Meta-Llama-3.1-70B-Instruct-FP8": {
+            "model_id": "neuralmagic/Meta-Llama-3.1-70B-Instruct-FP8",
+            "revision": "08b31c0f951f2227f6cdbc088cdb6fd139aecf0f",
+            "template": "Llama"
+        },
+        "microsoft--Phi-4-mini-instruct": {
+            "model_id": "microsoft/Phi-4-mini-instruct",
+            "revision": "c0fb9e74abda11b496b7907a9c6c9009a7a0488f",
+            "template": "Phi"
+        },
+        "cortecs--Llama-3.3-70B-Instruct-FP8-Dynamic": {
+            "model_id": "cortecs/Llama-3.3-70B-Instruct-FP8-Dynamic",
+            "revision": "3722358cc2b990b22304489b2f87ef3bb876d6f6",
+            "template": "Llama"
+        },
+        "gpt-oss-120b": {
+            "model_id": "/Volumes/jsa_external_prod/external_vols/scratch/Scratch/Ehsan/Models/gpt-oss-120b",
+            "revision": None,
+            "template": "GPT"
+        }
+    }
     
     @classmethod
     def get_config_dict(cls) -> dict:

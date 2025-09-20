@@ -9,6 +9,7 @@ import shutil
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 from huggingface_hub import snapshot_download
+from config import Config
 from vllm import LLM, SamplingParams
 
 logger = logging.getLogger(__name__)
@@ -17,49 +18,6 @@ logger = logging.getLogger(__name__)
 class VLLMGenAIInterface:
     """Interface for local GenAI model integration using vLLM"""
     
-    # Model configurations
-    MODELS = {
-        "mistralai--Mistral-7B-Instruct-v0.2": {
-            "model_id": "mistralai/Mistral-7B-Instruct-v0.2",
-            "revision": "41b61a33a2483885c981aa79e0df6b32407ed873",
-            "template": "Mistral"
-        },
-        "mistralai--Mistral-7B-Instruct-v0.3": {
-            "model_id": "mistralai/Mistral-7B-Instruct-v0.3",
-            "revision": "e0bc86c23ce5aae1db576c8cca6f06f1f73af2db",
-            "template": "Mistral"
-        },
-        "neuralmagic--Meta-Llama-3.1-70B-Instruct-quantized.w4a16": {
-            "model_id": "neuralmagic/Meta-Llama-3.1-70B-Instruct-quantized.w4a16",
-            "revision": "8c670bcdb23f58a977e1440354beb7c3e455961d",
-            "template": "Llama"
-        },
-        "meta-llama--Llama-3.1-8B-Instruct": {
-            "model_id": "meta-llama/Llama-3.1-8B-Instruct",
-            "revision": "0e9e39f249a16976918f6564b8830bc894c89659",
-            "template": "Llama"
-        },
-        "neuralmagic--Meta-Llama-3.1-70B-Instruct-FP8": {
-            "model_id": "neuralmagic/Meta-Llama-3.1-70B-Instruct-FP8",
-            "revision": "08b31c0f951f2227f6cdbc088cdb6fd139aecf0f",
-            "template": "Llama"
-        },
-        "microsoft--Phi-4-mini-instruct": {
-            "model_id": "microsoft/Phi-4-mini-instruct",
-            "revision": "c0fb9e74abda11b496b7907a9c6c9009a7a0488f",
-            "template": "Phi"
-        },
-        "cortecs--Llama-3.3-70B-Instruct-FP8-Dynamic": {
-            "model_id": "cortecs/Llama-3.3-70B-Instruct-FP8-Dynamic",
-            "revision": "3722358cc2b990b22304489b2f87ef3bb876d6f6",
-            "template": "Llama"
-        },
-        "gpt-oss-120b": {
-            "model_id": "/Volumes/jsa_external_prod/external_vols/scratch/Scratch/Ehsan/Models/gpt-oss-120b",
-            "revision": None,
-            "template": "GPT"
-        }
-    }
     
     def __init__(self, 
                  model_name: str = "meta-llama--Llama-3.1-8B-Instruct",
@@ -77,6 +35,7 @@ class VLLMGenAIInterface:
             model_cache_dir: Directory for HuggingFace cache
             external_model_dir: Directory containing pre-downloaded models
         """
+        self.MODELS = Config.MODELS
         self.model_name = model_name
         self.number_gpus = number_gpus
         self.max_model_len = max_model_len

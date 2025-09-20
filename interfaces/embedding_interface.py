@@ -8,6 +8,7 @@ from typing import List, Optional, Union, Dict
 import shutil
 from pathlib import Path
 from huggingface_hub import snapshot_download
+from config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -23,58 +24,7 @@ except ImportError:
 class EmbeddingInterface:
     """Interface for local embedding model"""
     
-    # Model configurations
-    MODELS = {
-        "jinaai--jina-embeddings-v4": {
-            "model_id": "jinaai/jina-embeddings-v4",
-            "revision": "737fa5c46f0262ceba4a462ffa1c5bcf01da416f",
-            "trust_remote_code": True,
-            "embedding_dim": 768
-        },
-        "jinaai--jina-embeddings-v3": {
-            "model_id": "jinaai/jina-embeddings-v3",
-            "revision": None,
-            "trust_remote_code": True,
-            "embedding_dim": 1024
-        },
-        "BAAI--bge-large-en-v1.5": {
-            "model_id": "BAAI/bge-large-en-v1.5",
-            "revision": None,
-            "trust_remote_code": False,
-            "embedding_dim": 1024
-        },
-        "BAAI--bge-base-en-v1.5": {
-            "model_id": "BAAI/bge-base-en-v1.5",
-            "revision": None,
-            "trust_remote_code": False,
-            "embedding_dim": 768
-        },
-        "sentence-transformers--all-MiniLM-L6-v2": {
-            "model_id": "sentence-transformers/all-MiniLM-L6-v2",
-            "revision": None,
-            "trust_remote_code": False,
-            "embedding_dim": 384
-        },
-        "sentence-transformers--all-mpnet-base-v2": {
-            "model_id": "sentence-transformers/all-mpnet-base-v2",
-            "revision": None,
-            "trust_remote_code": False,
-            "embedding_dim": 768
-        },
-        "intfloat--e5-large-v2": {
-            "model_id": "intfloat/e5-large-v2",
-            "revision": None,
-            "trust_remote_code": False,
-            "embedding_dim": 1024
-        },
-        "WhereIsAI--UAE-Large-V1": {
-            "model_id": "WhereIsAI/UAE-Large-V1",
-            "revision": None,
-            "trust_remote_code": False,
-            "embedding_dim": 1024
-        }
-    }
-    
+
     def __init__(self, 
                  model_name: str = "jinaai--jina-embeddings-v4",
                  model_cache_dir: str = "/root/.cache/huggingface/hub",
@@ -94,6 +44,7 @@ class EmbeddingInterface:
         if not SENTENCE_TRANSFORMERS_AVAILABLE:
             raise ImportError("sentence-transformers is required for embeddings. Install with: pip install sentence-transformers")
         
+        self.MODELS = Config.EMBEDDING_MODELS
         self.model_name = model_name
         self.model_cache_dir = Path(model_cache_dir)
         self.external_model_dir = Path(external_model_dir)

@@ -170,11 +170,11 @@ def initialize_interfaces():
     # Initialize Embeddings
     try:
         embeddings = EmbeddingInterface(
-            model_path=Config.EMBEDDING_MODEL,
-            api_endpoint=Config.EMBEDDING_ENDPOINT,
-            api_key=Config.EMBEDDING_API_KEY,
-            embedding_dim=Config.EMBEDDING_DIM,
-            use_api=Config.USE_EMBEDDING_API
+            model_name=Config.EMBEDDING_MODEL_NAME,
+            model_cache_dir=Config.EMBEDDING_EXTERNAL_DIR,
+            external_model_dir=Config.EMBEDDING_EXTERNAL_DIR,
+            device=Config.EMBEDDING_DEVICE,
+            batch_size=Config.EMBEDDING_BATCH_SIZE
         )
         logger.info("Embedding interface initialized")
     except Exception as e:
