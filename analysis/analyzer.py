@@ -1,11 +1,12 @@
 """
-Main credit transfer analyzer
+Main credit transfer analyzer - Updated to support OpenAI extractor
 """
 
 import logging
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 import json
+from config import Config
 
 from models.base_models import (
     VETQualification, UniQualification, CreditTransferRecommendation,
@@ -17,8 +18,10 @@ from mapping.skill_mapper import SkillMapper
 from mapping.edge_cases import EdgeCaseHandler
 from interfaces.genai_interface import GenAIInterface
 from interfaces.embedding_interface import EmbeddingInterface
-from interfaces.vllm_genai_interface import VLLMGenAIInterface
-from extraction.vllm_skill_extractor import VLLMSkillExtractor
+if Config.USE_VLLM:
+    from interfaces.vllm_genai_interface import VLLMGenAIInterface
+    from extraction.vllm_skill_extractor import VLLMSkillExtractor
+from extraction.openai_skill_extractor import OpenAISkillExtractor
 
 logger = logging.getLogger(__name__)
 
@@ -43,11 +46,22 @@ class CreditTransferAnalyzer:
         self.config = config or {}
         
         # Initialize components based on interface type
-        if isinstance(genai, VLLMGenAIInterface):
+        if Config.USE_VLLM and isinstance(genai, VLLMGenAIInterface):
             # Use optimized vLLM extractor for batch processing
-            
             self.extractor = VLLMSkillExtractor(genai, embeddings)
             logger.info("Using vLLM skill extractor for batch processing")
+            
+        elif isinstance(genai, GenAIInterface) and hasattr(genai, 'client'):
+            # Use OpenAI extractor for Azure OpenAI (individual requests, no batch)
+            delay = self.config.get("openai_delay_between_requests", 1.0)
+            
+            self.extractor = OpenAISkillExtractor(
+                genai, 
+                embeddings, 
+                delay_between_requests=delay
+            )
+            logger.info("Using OpenAI skill extractor for Azure OpenAI API (individual requests)")
+            
         else:
             # Use standard extractor
             self.extractor = SkillExtractor(genai, embeddings)
@@ -83,9 +97,8 @@ class CreditTransferAnalyzer:
         recommendations = []
         
         # Check if we have vLLM batch extractor
-        
-        if isinstance(self.extractor, VLLMSkillExtractor):
-            # Use batch extraction for efficiency
+        if Config.USE_VLLM and isinstance(self.extractor, VLLMSkillExtractor):
+            # Use batch extraction for efficiency with vLLM
             logger.info("Using batch extraction for VET units...")
             self.extractor.extract_from_vet_qualification(vet_qual)
             
@@ -98,8 +111,10 @@ class CreditTransferAnalyzer:
                     courses=[c for c in uni_qual.courses if c.code in target_courses]
                 )
                 self.extractor.extract_from_uni_qualification(filtered_qual)
+                courses_to_analyze = filtered_qual.courses
             else:
                 self.extractor.extract_from_uni_qualification(uni_qual)
+                courses_to_analyze = uni_qual.courses
         else:
             # Standard extraction (one by one)
             logger.info("Extracting skills from VET units...")
@@ -502,7 +517,8 @@ class CreditTransferAnalyzer:
                 "vet_qualification": vet_qual.code,
                 "uni_qualification": uni_qual.code,
                 "analysis_timestamp": timestamp,
-                "analyzer_version": "1.0.0"
+                "analyzer_version": "1.0.0",
+                "extractor_type": type(self.extractor).__name__
             })
     
     def export_recommendations(self,
@@ -512,7 +528,8 @@ class CreditTransferAnalyzer:
         data = {
             "recommendations": [rec.to_dict() for rec in recommendations],
             "summary": self._generate_summary(recommendations),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
+            "extractor_stats": self._get_extractor_stats()
         }
         
         with open(filepath, 'w') as f:
@@ -535,3 +552,12 @@ class CreditTransferAnalyzer:
             "average_alignment": sum(r.alignment_score for r in recommendations) / len(recommendations) if recommendations else 0,
             "average_confidence": sum(r.confidence for r in recommendations) / len(recommendations) if recommendations else 0
         }
+    
+    def _get_extractor_stats(self) -> Dict:
+        """Get statistics from the extractor if available"""
+        if hasattr(self.extractor, 'get_extraction_stats'):
+            return self.extractor.get_extraction_stats()
+        elif hasattr(self.extractor, 'cache'):
+            return {"cache_size": len(self.extractor.cache)}
+        else:
+            return {"extractor_type": type(self.extractor).__name__}

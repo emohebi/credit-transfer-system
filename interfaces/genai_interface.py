@@ -1,53 +1,69 @@
 """
-Interface for local GenAI model integration
+Interface for Azure OpenAI integration
 """
 
 import json
 import logging
 import re
+import os
 from typing import List, Dict, Any, Optional
-import requests
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
+from openai import AzureOpenAI
 
 logger = logging.getLogger(__name__)
 
 
 class GenAIInterface:
-    """Interface for local GenAI model integration"""
+    """Interface for Azure OpenAI integration"""
     
-    def __init__(self, model_endpoint: str = "http://localhost:8080", 
+    def __init__(self, 
+                 endpoint: Optional[str] = None,
+                 deployment: Optional[str] = None,
                  api_key: Optional[str] = None,
-                 timeout: int = 30):
+                 api_version: str = "2025-01-01-preview",
+                 timeout: int = 60,
+                 max_tokens: int = 4000,
+                 temperature: float = 0.0):
         """
-        Initialize GenAI interface
+        Initialize Azure OpenAI interface
         
         Args:
-            model_endpoint: URL of the local GenAI model
-            api_key: Optional API key for authentication
+            endpoint: Azure OpenAI endpoint URL
+            deployment: Deployment name (model)
+            api_key: Azure OpenAI API key
+            api_version: API version
             timeout: Request timeout in seconds
+            max_tokens: Maximum tokens for responses
+            temperature: Sampling temperature
         """
-        self.endpoint = model_endpoint
-        self.api_key = api_key
+        # Use environment variables as fallback
+        self.endpoint = endpoint or os.getenv("ENDPOINT_URL", "https://ehsaninstance1.openai.azure.com/")
+        self.deployment = deployment or os.getenv("DEPLOYMENT_NAME", "gpt-4o")
+        self.api_key = api_key or os.getenv("AZURE_OPENAI_API_KEY")
+        
+        if not self.api_key or self.api_key == "REPLACE_WITH_YOUR_KEY_VALUE_HERE":
+            raise ValueError("Azure OpenAI API key is required. Set AZURE_OPENAI_API_KEY environment variable.")
+        
+        self.api_version = api_version
         self.timeout = timeout
+        self.max_tokens = max_tokens
+        self.temperature = temperature
         
-        # Setup session with retry strategy
-        self.session = requests.Session()
-        retry_strategy = Retry(
-            total=3,
-            backoff_factor=1,
-            status_forcelist=[429, 500, 502, 503, 504],
-        )
-        adapter = HTTPAdapter(max_retries=retry_strategy)
-        self.session.mount("http://", adapter)
-        self.session.mount("https://", adapter)
-        
-        if self.api_key:
-            self.session.headers.update({"Authorization": f"Bearer {self.api_key}"})
+        # Initialize Azure OpenAI client
+        try:
+            self.client = AzureOpenAI(
+                azure_endpoint=self.endpoint,
+                api_key=self.api_key,
+                api_version=self.api_version,
+                timeout=self.timeout
+            )
+            logger.info(f"Azure OpenAI client initialized with endpoint: {self.endpoint}")
+        except Exception as e:
+            logger.error(f"Failed to initialize Azure OpenAI client: {e}")
+            raise
     
     def extract_skills_prompt(self, text: str, context: str = "course") -> List[Dict]:
         """
-        Use GenAI to extract skills from text
+        Use Azure OpenAI to extract skills from text
         
         Args:
             text: Text to extract skills from
@@ -56,18 +72,43 @@ class GenAIInterface:
         Returns:
             List of extracted skills as dictionaries
         """
-        prompt = self._build_skill_extraction_prompt(text, context)
+        system_prompt = self._build_skill_extraction_system_prompt()
+        user_prompt = self._build_skill_extraction_user_prompt(text, context)
         
         try:
-            response = self._call_genai_api(prompt)
+            response = self._call_openai_api(system_prompt, user_prompt)
             return self._parse_skill_extraction_response(response)
         except Exception as e:
-            logger.warning(f"GenAI API call failed: {e}. Using fallback extraction.")
+            logger.warning(f"Azure OpenAI API call failed: {e}. Using fallback extraction.")
             return self._fallback_skill_extraction(text)
+    
+    def extract_skills_batch(self, texts: List[str], context: str = "course") -> List[List[Dict]]:
+        """
+        Extract skills from multiple texts (processes sequentially for now)
+        
+        Args:
+            texts: List of texts to extract skills from
+            context: Context type (e.g., "VET unit", "university course")
+            
+        Returns:
+            List of extracted skills for each text
+        """
+        results = []
+        
+        for i, text in enumerate(texts):
+            logger.info(f"Processing text {i+1}/{len(texts)}")
+            try:
+                skills = self.extract_skills_prompt(text, context)
+                results.append(skills)
+            except Exception as e:
+                logger.warning(f"Failed to process text {i+1}: {e}")
+                results.append([])
+        
+        return results
     
     def analyze_skill_similarity(self, skill1: str, skill2: str) -> float:
         """
-        Use GenAI to analyze similarity between two skills
+        Use Azure OpenAI to analyze similarity between two skills
         
         Args:
             skill1: First skill name
@@ -76,21 +117,19 @@ class GenAIInterface:
         Returns:
             Similarity score between 0 and 1
         """
-        prompt = f"""
-        Analyze the similarity between these two skills:
-        Skill 1: {skill1}
-        Skill 2: {skill2}
+        system_prompt = """You are an expert in skill analysis. Analyze the similarity between two skills and return a score between 0 and 1.
+
+Consider:
+1. Semantic similarity
+2. Required knowledge overlap
+3. Application context similarity
+
+Return ONLY a number between 0 and 1, nothing else."""
         
-        Consider:
-        1. Semantic similarity
-        2. Required knowledge overlap
-        3. Application context similarity
-        
-        Return a similarity score between 0 and 1.
-        """
+        user_prompt = f"Skill 1: {skill1}\nSkill 2: {skill2}\n\nSimilarity score:"
         
         try:
-            response = self._call_genai_api(prompt)
+            response = self._call_openai_api(system_prompt, user_prompt)
             # Parse similarity score from response
             score_match = re.search(r"(\d+\.?\d*)", response)
             if score_match:
@@ -102,7 +141,7 @@ class GenAIInterface:
     
     def identify_implicit_skills(self, text: str, explicit_skills: List[str]) -> List[Dict]:
         """
-        Use GenAI to identify implicit skills not explicitly mentioned
+        Use Azure OpenAI to identify implicit skills not explicitly mentioned
         
         Args:
             text: Course/unit description text
@@ -111,87 +150,122 @@ class GenAIInterface:
         Returns:
             List of implicit skills with confidence scores
         """
-        prompt = f"""
-        Given this course/unit description:
-        {text[:1000]}  # Limit text length
+        system_prompt = """You are an expert in skill analysis. Given a course description and explicitly mentioned skills, identify implicit skills that would be required but aren't explicitly stated.
+
+For each implicit skill, provide:
+1. Skill name
+2. Reason for inference
+3. Confidence level (0-1)
+
+Return as JSON list:
+[
+  {
+    "name": "skill name",
+    "reason": "why this skill is implied",
+    "confidence": 0.6
+  }
+]"""
         
-        And these explicitly mentioned skills:
-        {', '.join(explicit_skills[:20])}  # Limit list length
-        
-        Identify implicit skills that would be required or developed but aren't explicitly mentioned.
-        For each implicit skill, provide:
-        1. Skill name
-        2. Reason for inference
-        3. Confidence level (0-1)
-        
-        Return as JSON list.
-        """
+        user_prompt = f"""Course description: {text[:1000]}
+
+Explicit skills already identified: {', '.join(explicit_skills[:20])}
+
+Identify implicit skills:"""
         
         try:
-            response = self._call_genai_api(prompt)
+            response = self._call_openai_api(system_prompt, user_prompt)
             return self._parse_implicit_skills_response(response)
         except Exception as e:
             logger.warning(f"Implicit skill identification failed: {e}")
             return []
     
-    def _build_skill_extraction_prompt(self, text: str, context: str) -> str:
-        """Build prompt for skill extraction"""
-        return f"""
-        Extract all skills from the following {context} description. 
-        For each skill, identify:
-        1. Skill name (concise, specific)
-        2. Category (technical/cognitive/practical/foundational/professional)
-        3. Required proficiency level (novice/beginner/competent/proficient/expert)
-        4. Cognitive depth using Bloom's taxonomy (remember/understand/apply/analyze/evaluate/create)
-        5. Context (theoretical/practical/hybrid)
-        6. Related keywords (list of related terms)
-        7. Confidence score (0-1)
-        
-        Text to analyze:
-        {text[:2000]}  # Limit text length for API
-        
-        Return as JSON list with the following structure:
-        [
-            {{
-                "name": "skill name",
-                "category": "category",
-                "level": "proficiency level",
-                "depth": "cognitive depth",
-                "context": "context type",
-                "keywords": ["keyword1", "keyword2"],
-                "confidence": 0.8
-            }}
-        ]
-        """
+    def _build_skill_extraction_system_prompt(self) -> str:
+        """Build system prompt for skill extraction"""
+        return """You are an expert in educational course analysis and skill extraction. Given a course or unit description, extract individual skills, making sure they are generalizable capabilities - not task descriptions.
+
+IMPORTANT: Focus on the underlying skill or ability. If a tool/technology is mentioned, extract the human ability implied by its use (e.g., "Excel" → "spreadsheet data analysis", "Python" → "Python programming").
+
+For each skill, identify:
+1. Skill name (concise, specific)
+2. Category (technical/cognitive/practical/foundational/professional)
+3. Required proficiency level (novice/beginner/competent/proficient/expert)
+4. Cognitive depth using Bloom's taxonomy (remember/understand/apply/analyze/evaluate/create)
+5. Context (theoretical/practical/hybrid)
+6. Related keywords
+7. Confidence score (0-1)
+
+Return your answer in strict JSON format:
+[
+  {
+    "name": "skill name",
+    "category": "category",
+    "level": "proficiency level",
+    "depth": "cognitive depth",
+    "context": "context type",
+    "keywords": ["keyword1", "keyword2"],
+    "confidence": 0.8
+  }
+]
+
+Note: Only output the JSON, do not generate any extra sentences."""
     
-    def _call_genai_api(self, prompt: str) -> str:
+    def _build_skill_extraction_user_prompt(self, text: str, context: str) -> str:
+        """Build user prompt for skill extraction"""
+        return f"Now analyze the following {context}: {text[:2000]}"  # Limit text length
+    
+    def _call_openai_api(self, system_prompt: str, user_prompt: str) -> str:
         """
-        Make API call to GenAI model
+        Make API call to Azure OpenAI
         
         Args:
-            prompt: Prompt to send to the model
+            system_prompt: System prompt
+            user_prompt: User prompt
             
         Returns:
             Model response as string
         """
         try:
-            response = self.session.post(
-                f"{self.endpoint}/generate",
-                json={"prompt": prompt, "max_tokens": 1000},
-                timeout=self.timeout
+            messages = [
+                {
+                    "role": "system",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": system_prompt
+                        }
+                    ]
+                },
+                {
+                    "role": "user", 
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": user_prompt
+                        }
+                    ]
+                }
+            ]
+            
+            completion = self.client.chat.completions.create(
+                model=self.deployment,
+                messages=messages,
+                max_tokens=self.max_tokens,
+                temperature=self.temperature,
+                top_p=0.95,
+                frequency_penalty=0,
+                presence_penalty=0,
+                stop=None,
+                stream=False
             )
-            response.raise_for_status()
             
-            # Parse response based on your GenAI model's format
-            result = response.json()
-            return result.get("text", "") or result.get("response", "")
+            return completion.choices[0].message.content
             
-        except requests.exceptions.RequestException as e:
-            logger.error(f"GenAI API request failed: {e}")
+        except Exception as e:
+            logger.error(f"Azure OpenAI API request failed: {e}")
             raise
     
     def _parse_skill_extraction_response(self, response: str) -> List[Dict]:
-        """Parse skill extraction response from GenAI"""
+        """Parse skill extraction response from Azure OpenAI"""
         try:
             # Try to extract JSON from response
             json_match = re.search(r'\[.*\]', response, re.DOTALL)
@@ -199,7 +273,7 @@ class GenAIInterface:
                 skills_json = json.loads(json_match.group())
                 return self._validate_extracted_skills(skills_json)
         except json.JSONDecodeError as e:
-            logger.warning(f"Failed to parse GenAI response as JSON: {e}")
+            logger.warning(f"Failed to parse Azure OpenAI response as JSON: {e}")
         
         # Fallback to text parsing
         return self._parse_text_response(response)

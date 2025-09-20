@@ -1,17 +1,37 @@
 """
-Enumeration classes for the Credit Transfer Analysis System
+Fixed enumeration classes with proper ordering for SkillLevel
 """
 
 from enum import Enum
 
 
 class SkillLevel(Enum):
-    """Proficiency levels for skills"""
+    """Proficiency levels for skills with ordering support"""
     NOVICE = 1
     ADVANCED_BEGINNER = 2
     COMPETENT = 3
     PROFICIENT = 4
     EXPERT = 5
+    
+    def __lt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value < other.value
+        return NotImplemented
+    
+    def __le__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value <= other.value
+        return NotImplemented
+    
+    def __gt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value > other.value
+        return NotImplemented
+    
+    def __ge__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value >= other.value
+        return NotImplemented
     
     @classmethod
     def from_string(cls, level_str: str):
@@ -27,13 +47,33 @@ class SkillLevel(Enum):
 
 
 class SkillDepth(Enum):
-    """Cognitive depth according to Bloom's Taxonomy"""
+    """Cognitive depth according to Bloom's Taxonomy with ordering support"""
     REMEMBER = 1
     UNDERSTAND = 2
     APPLY = 3
     ANALYZE = 4
     EVALUATE = 5
     CREATE = 6
+    
+    def __lt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value < other.value
+        return NotImplemented
+    
+    def __le__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value <= other.value
+        return NotImplemented
+    
+    def __gt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value > other.value
+        return NotImplemented
+    
+    def __ge__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value >= other.value
+        return NotImplemented
     
     @classmethod
     def from_verb(cls, verb: str):
@@ -102,12 +142,32 @@ class SkillCategory(Enum):
 
 
 class StudyLevel(Enum):
-    """Study levels for university courses"""
+    """Study levels for university courses with ordering support"""
     INTRODUCTORY = 1
     INTERMEDIATE = 2
     ADVANCED = 3
     SPECIALIZED = 4
     POSTGRADUATE = 5
+    
+    def __lt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value < other.value
+        return NotImplemented
+    
+    def __le__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value <= other.value
+        return NotImplemented
+    
+    def __gt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value > other.value
+        return NotImplemented
+    
+    def __ge__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value >= other.value
+        return NotImplemented
     
     @classmethod
     def from_string(cls, level_str: str):
@@ -165,23 +225,7 @@ class StudyLevel(Enum):
             cls.POSTGRADUATE: SkillDepth.CREATE
         }
         return mapping.get(study_level, SkillDepth.APPLY)
-    """Types of credit transfer recommendations"""
-    FULL = "full"
-    CONDITIONAL = "conditional"
-    PARTIAL = "partial"
-    NONE = "none"
-    
-    @classmethod
-    def from_score(cls, score: float, has_gaps: bool = False):
-        """Determine recommendation type from alignment score"""
-        if score >= 0.8 and not has_gaps:
-            return cls.FULL
-        elif score >= 0.7:
-            return cls.CONDITIONAL
-        elif score >= 0.5:
-            return cls.PARTIAL
-        else:
-            return cls.NONE
+
 
 class RecommendationType(Enum):
     """Types of credit transfer recommendations"""

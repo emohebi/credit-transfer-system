@@ -129,8 +129,39 @@ def initialize_interfaces():
     genai = None
     embeddings = None
     
-    # Initialize GenAI - prefer vLLM over web API
-    if Config.USE_VLLM:
+    # Initialize GenAI - Priority order: Azure OpenAI > vLLM > Web API
+    if Config.USE_AZURE_OPENAI:
+        try:
+            azure_config = Config.get_azure_openai_config()
+            genai = GenAIInterface(
+                endpoint=azure_config["endpoint"],
+                deployment=azure_config["deployment"],
+                api_key=azure_config["api_key"],
+                api_version=azure_config["api_version"],
+                timeout=azure_config["timeout"],
+                max_tokens=azure_config["max_tokens"],
+                temperature=azure_config["temperature"]
+            )
+            logger.info(f"Azure OpenAI interface initialized with deployment: {azure_config['deployment']}")
+        except Exception as e:
+            logger.warning(f"Failed to initialize Azure OpenAI interface: {e}")
+            
+            # Fall back to vLLM if Azure OpenAI fails
+            if Config.USE_VLLM:
+                try:
+                    from interfaces.vllm_genai_interface import VLLMGenAIInterface
+                    genai = VLLMGenAIInterface(
+                        model_name=Config.VLLM_MODEL_NAME,
+                        number_gpus=Config.VLLM_NUM_GPUS,
+                        max_model_len=Config.VLLM_MAX_MODEL_LEN,
+                        model_cache_dir=Config.MODEL_CACHE_DIR,
+                        external_model_dir=Config.EXTERNAL_MODEL_DIR
+                    )
+                    logger.info(f"Fell back to vLLM interface with model: {Config.VLLM_MODEL_NAME}")
+                except Exception as e2:
+                    logger.warning(f"Failed to initialize vLLM interface: {e2}")
+    
+    elif Config.USE_VLLM:
         try:
             from interfaces.vllm_genai_interface import VLLMGenAIInterface
             genai = VLLMGenAIInterface(
@@ -143,10 +174,10 @@ def initialize_interfaces():
             logger.info(f"vLLM GenAI interface initialized with model: {Config.VLLM_MODEL_NAME}")
         except Exception as e:
             logger.warning(f"Failed to initialize vLLM GenAI interface: {e}")
-            # Fall back to web API if available
+            
+            # Fall back to web API if vLLM fails
             if Config.USE_GENAI:
                 try:
-                    from interfaces.genai_interface import GenAIInterface
                     genai = GenAIInterface(
                         model_endpoint=Config.GENAI_ENDPOINT,
                         api_key=Config.GENAI_API_KEY,
@@ -155,9 +186,9 @@ def initialize_interfaces():
                     logger.info("Fell back to web API GenAI interface")
                 except Exception as e2:
                     logger.warning(f"Failed to initialize web API GenAI interface: {e2}")
+    
     elif Config.USE_GENAI:
         try:
-            from interfaces.genai_interface import GenAIInterface
             genai = GenAIInterface(
                 model_endpoint=Config.GENAI_ENDPOINT,
                 api_key=Config.GENAI_API_KEY,
@@ -171,14 +202,26 @@ def initialize_interfaces():
     try:
         embeddings = EmbeddingInterface(
             model_name=Config.EMBEDDING_MODEL_NAME,
-            model_cache_dir=Config.EMBEDDING_EXTERNAL_DIR,
-            external_model_dir=Config.EMBEDDING_EXTERNAL_DIR,
+            model_cache_dir=Config.MODEL_CACHE_DIR,
+            external_model_dir=Config.EXTERNAL_MODEL_DIR,
             device=Config.EMBEDDING_DEVICE,
             batch_size=Config.EMBEDDING_BATCH_SIZE
         )
-        logger.info("Embedding interface initialized")
+        logger.info(f"Embedding interface initialized with model: {Config.EMBEDDING_MODEL_NAME}")
     except Exception as e:
         logger.warning(f"Failed to initialize Embedding interface: {e}")
+        # Try fallback to legacy configuration
+        try:
+            embeddings = EmbeddingInterface(
+                model_path=Config.EMBEDDING_MODEL,
+                api_endpoint=Config.EMBEDDING_ENDPOINT,
+                api_key=Config.EMBEDDING_API_KEY,
+                embedding_dim=Config.EMBEDDING_DIM,
+                use_api=Config.USE_EMBEDDING_API
+            )
+            logger.info("Initialized embedding interface with legacy configuration")
+        except Exception as e2:
+            logger.warning(f"Failed to initialize legacy embedding interface: {e2}")
     
     return genai, embeddings
 
@@ -204,6 +247,17 @@ def analyze_transfer(vet_file: str, uni_file: str, output_file: str,
     
     # Initialize interfaces
     genai, embeddings = initialize_interfaces()
+    
+    # Check if we have at least one interface
+    if genai is None and embeddings is None:
+        logger.error("Failed to initialize any interfaces. Analysis cannot proceed.")
+        raise RuntimeError("No interfaces available for analysis")
+    
+    if genai is None:
+        logger.warning("No GenAI interface available. Using pattern-based extraction only.")
+    
+    if embeddings is None:
+        logger.warning("No embedding interface available. Using string similarity only.")
     
     # Create analyzer
     analyzer = CreditTransferAnalyzer(
@@ -317,6 +371,28 @@ def main():
         action="store_true",
         help="Enable verbose output"
     )
+    parser.add_argument(
+        "--use-azure-openai",
+        action="store_true",
+        help="Force use of Azure OpenAI (overrides config)"
+    )
+    parser.add_argument(
+        "--use-vllm",
+        action="store_true", 
+        help="Force use of vLLM (overrides config)"
+    )
+    parser.add_argument(
+        "--azure-endpoint",
+        help="Azure OpenAI endpoint URL"
+    )
+    parser.add_argument(
+        "--azure-deployment",
+        help="Azure OpenAI deployment name"
+    )
+    parser.add_argument(
+        "--azure-api-key",
+        help="Azure OpenAI API key"
+    )
     
     args = parser.parse_args()
     
@@ -333,6 +409,26 @@ def main():
     if args.config:
         Config.load_config(args.config)
         logger.info(f"Loaded configuration from {args.config}")
+    
+    # Override config with command line arguments
+    if args.use_azure_openai:
+        Config.USE_AZURE_OPENAI = True
+        Config.USE_VLLM = False
+        Config.USE_GENAI = False
+    
+    if args.use_vllm:
+        Config.USE_VLLM = True
+        Config.USE_AZURE_OPENAI = False
+        Config.USE_GENAI = False
+    
+    if args.azure_endpoint:
+        Config.AZURE_OPENAI_ENDPOINT = args.azure_endpoint
+    
+    if args.azure_deployment:
+        Config.AZURE_OPENAI_DEPLOYMENT = args.azure_deployment
+    
+    if args.azure_api_key:
+        Config.AZURE_OPENAI_API_KEY = args.azure_api_key
     
     # Validate input files
     if not Path(args.vet_file).exists():
