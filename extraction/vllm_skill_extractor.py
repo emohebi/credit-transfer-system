@@ -8,7 +8,7 @@ from typing import List, Dict, Set, Optional, Tuple
 from collections import defaultdict
 
 from models.base_models import Skill, UnitOfCompetency, UniCourse, VETQualification, UniQualification
-from models.enums import SkillLevel, SkillDepth, SkillContext, SkillCategory, StudyLevel
+from models.enums import SkillLevel, SkillContext, SkillCategory, StudyLevel
 from interfaces.vllm_genai_interface import VLLMGenAIInterface
 from interfaces.embedding_interface import EmbeddingInterface
 from .patterns import ExtractionPatterns, SkillOntology, CompositeSkillDecomposer
@@ -220,8 +220,6 @@ class VLLMSkillExtractor:
                         study_level_enum = StudyLevel.from_string(level)
                         for skill in skills:
                             skill.level = self._adjust_level_by_study_level(skill.level, study_level_enum)
-                            if skill.depth == SkillDepth.APPLY and study_level_enum in [StudyLevel.ADVANCED, StudyLevel.SPECIALIZED]:
-                                skill.depth = StudyLevel.expected_skill_depth(study_level_enum)
                         
                         batch_results.append((code, skills))
                     
@@ -310,7 +308,6 @@ class VLLMSkillExtractor:
                     name=skill_dict.get("name", ""),
                     category=SkillCategory(skill_dict.get("category", "technical")),
                     level=SkillLevel.from_string(skill_dict.get("level", "competent")),
-                    depth=SkillDepth.from_verb(skill_dict.get("depth", "apply")),
                     context=SkillContext(skill_dict.get("context", "hybrid")),
                     keywords=skill_dict.get("keywords", []),
                     confidence=skill_dict.get("confidence", 0.8),
@@ -337,7 +334,6 @@ class VLLMSkillExtractor:
                     name=skill_name,
                     category=self._categorize_skill(skill_name),
                     level=SkillLevel.COMPETENT,
-                    depth=SkillDepth.APPLY,
                     context=SkillContext.HYBRID,
                     confidence=0.6,
                     source=f"{source_type}:{source_code}"
@@ -366,7 +362,6 @@ class VLLMSkillExtractor:
                     name=skill_name,
                     category=self._categorize_skill(skill_name),
                     level=SkillLevel.COMPETENT,
-                    depth=self._determine_depth_from_text(text_lower),
                     context=self._determine_context(text_lower),
                     keywords=self._extract_keywords(skill_name, text_lower),
                     evidence_type=pattern_type,
@@ -413,25 +408,6 @@ class VLLMSkillExtractor:
                 return SkillCategory(category)
         
         return SkillCategory.TECHNICAL
-    
-    def _determine_depth_from_text(self, text: str) -> SkillDepth:
-        """Determine cognitive depth from text content"""
-        text_lower = text.lower()
-        
-        depth_indicators = {
-            SkillDepth.CREATE: ["create", "design", "develop", "innovate"],
-            SkillDepth.EVALUATE: ["evaluate", "assess", "critique", "judge"],
-            SkillDepth.ANALYZE: ["analyze", "examine", "investigate", "compare"],
-            SkillDepth.APPLY: ["apply", "implement", "use", "demonstrate"],
-            SkillDepth.UNDERSTAND: ["understand", "explain", "describe", "interpret"],
-            SkillDepth.REMEMBER: ["identify", "list", "name", "recall"]
-        }
-        
-        for depth, indicators in depth_indicators.items():
-            if any(ind in text_lower for ind in indicators):
-                return depth
-        
-        return SkillDepth.APPLY
     
     def _determine_context(self, text: str) -> SkillContext:
         """Determine if content is theoretical, practical, or hybrid"""
@@ -486,7 +462,6 @@ class VLLMSkillExtractor:
                             name=component_name,
                             category=skill.category,
                             level=skill.level,
-                            depth=skill.depth,
                             context=skill.context,
                             confidence=skill.confidence * 0.8,
                             source=f"decomposed_from_{skill.source}"

@@ -9,7 +9,7 @@ from collections import defaultdict
 import numpy as np
 
 from models.base_models import Skill, UnitOfCompetency, UniCourse, SkillMapping
-from models.enums import SkillLevel, SkillDepth, SkillContext
+from models.enums import SkillLevel, SkillContext
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,6 @@ class EdgeCaseHandler:
             "single_to_multiple": self.handle_single_to_multiple,
             "practical_theoretical_imbalance": self.handle_context_imbalance,
             "outdated_content": self.handle_outdated_content,
-            "depth_vs_breadth": self.handle_depth_breadth,
             "composite_skills": self.handle_composite_skills,
             "implicit_skills": self.handle_implicit_skills,
             "version_mismatch": self.handle_version_mismatch,
@@ -74,11 +73,6 @@ class EdgeCaseHandler:
         # Check for outdated content
         edge_case_results["outdated_content"] = self.handle_outdated_content(
             vet_units, uni_course
-        )
-        
-        # Check depth vs breadth
-        edge_case_results["depth_breadth"] = self.handle_depth_breadth(
-            vet_units, uni_course, mapping
         )
         
         # Check for composite skills
@@ -373,73 +367,6 @@ class EdgeCaseHandler:
                     result["update_requirements"].append(
                         f"Modernize from {old_method} to {new_method}"
                     )
-        
-        return result
-    
-    def handle_depth_breadth(self,
-                            vet_units: List[UnitOfCompetency],
-                            uni_course: UniCourse,
-                            mapping: SkillMapping) -> Dict[str, Any]:
-        """Handle depth vs breadth mismatches"""
-        result = {
-            "vet_skill_depth_avg": 0.0,
-            "uni_skill_depth_avg": 0.0,
-            "vet_skill_depth_distribution": {},
-            "uni_skill_depth_distribution": {},
-            "breadth_ratio": 0.0,
-            "depth_adequate": False,
-            "recommendations": [],
-            "focus_areas": []
-        }
-        
-        # Calculate VET depth distribution
-        vet_depths = []
-        for unit in vet_units:
-            for skill in unit.extracted_skills:
-                vet_depths.append(skill.depth.value)
-        
-        if vet_depths:
-            result["vet_skill_depth_avg"] = np.mean(vet_depths)
-            result["vet_skill_depth_distribution"] = self._calculate_distribution(vet_depths)
-        
-        # Calculate Uni depth distribution
-        uni_depths = [skill.depth.value for skill in uni_course.extracted_skills]
-        
-        if uni_depths:
-            result["uni_skill_depth_avg"] = np.mean(uni_depths)
-            result["uni_skill_depth_distribution"] = self._calculate_distribution(uni_depths)
-        
-        # Calculate breadth ratio
-        total_vet_skills = sum(len(u.extracted_skills) for u in vet_units)
-        total_uni_skills = len(uni_course.extracted_skills)
-        
-        if total_uni_skills > 0:
-            result["breadth_ratio"] = total_vet_skills / total_uni_skills
-        
-        # Assess depth adequacy
-        if result["vet_skill_depth_avg"] > 0 and result["uni_skill_depth_avg"] > 0:
-            result["depth_adequate"] = \
-                result["vet_skill_depth_avg"] >= result["uni_skill_depth_avg"] * 0.8
-        
-        # Generate recommendations
-        if not result["depth_adequate"]:
-            depth_gap = result["uni_skill_depth_avg"] - result["vet_skill_depth_avg"]
-            result["recommendations"].append(
-                f"Enhance cognitive depth (gap: {depth_gap:.1f} levels)"
-            )
-            result["focus_areas"].append("Critical analysis and evaluation skills")
-            result["focus_areas"].append("Research methodology")
-        
-        if result["breadth_ratio"] < 0.7:
-            result["recommendations"].append(
-                "Insufficient breadth - additional topics need coverage"
-            )
-            result["focus_areas"].append("Broaden skill coverage")
-        elif result["breadth_ratio"] > 1.5:
-            result["recommendations"].append(
-                "VET covers broader scope - can focus on depth for uni requirements"
-            )
-            result["focus_areas"].append("Deepen understanding of core concepts")
         
         return result
     
@@ -842,19 +769,6 @@ class EdgeCaseHandler:
                 missing.append(target.name)
         
         return missing
-    
-    def _calculate_distribution(self, values: List[float]) -> Dict[str, float]:
-        """Calculate distribution statistics"""
-        if not values:
-            return {}
-        
-        return {
-            "min": float(np.min(values)),
-            "max": float(np.max(values)),
-            "mean": float(np.mean(values)),
-            "median": float(np.median(values)),
-            "std": float(np.std(values))
-        }
     
     def _decompose_skill(self, skill_name: str) -> List[str]:
         """Decompose composite skill into components"""

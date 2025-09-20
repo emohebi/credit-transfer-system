@@ -4,7 +4,7 @@ Core data models for the Credit Transfer Analysis System
 
 from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional
-from .enums import SkillLevel, SkillDepth, SkillContext, SkillCategory, RecommendationType
+from .enums import SkillLevel, SkillContext, SkillCategory, RecommendationType
 
 
 @dataclass
@@ -13,7 +13,6 @@ class Skill:
     name: str
     category: SkillCategory
     level: SkillLevel
-    depth: SkillDepth
     context: SkillContext
     keywords: List[str] = field(default_factory=list)
     evidence_type: str = ""
@@ -35,7 +34,6 @@ class Skill:
             "name": self.name,
             "category": self.category.value,
             "level": self.level.name,
-            "depth": self.depth.name,
             "context": self.context.value,
             "keywords": self.keywords,
             "evidence_type": self.evidence_type,
@@ -51,7 +49,6 @@ class Skill:
             name=data["name"],
             category=SkillCategory(data["category"]),
             level=SkillLevel[data["level"]],
-            depth=SkillDepth[data["depth"]],
             context=SkillContext(data["context"]),
             keywords=data.get("keywords", []),
             evidence_type=data.get("evidence_type", ""),
@@ -218,7 +215,6 @@ class SkillMapping:
     unmapped_vet: List[Skill] = field(default_factory=list)
     unmapped_uni: List[Skill] = field(default_factory=list)
     coverage_score: float = 0.0
-    depth_alignment: float = 0.0
     context_alignment: float = 0.0
     metadata: Dict[str, Any] = field(default_factory=dict)
 

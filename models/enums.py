@@ -46,67 +46,6 @@ class SkillLevel(Enum):
         return level_map.get(level_str.lower(), cls.COMPETENT)
 
 
-class SkillDepth(Enum):
-    """Cognitive depth according to Bloom's Taxonomy with ordering support"""
-    REMEMBER = 1
-    UNDERSTAND = 2
-    APPLY = 3
-    ANALYZE = 4
-    EVALUATE = 5
-    CREATE = 6
-    
-    def __lt__(self, other):
-        if self.__class__ is other.__class__:
-            return self.value < other.value
-        return NotImplemented
-    
-    def __le__(self, other):
-        if self.__class__ is other.__class__:
-            return self.value <= other.value
-        return NotImplemented
-    
-    def __gt__(self, other):
-        if self.__class__ is other.__class__:
-            return self.value > other.value
-        return NotImplemented
-    
-    def __ge__(self, other):
-        if self.__class__ is other.__class__:
-            return self.value >= other.value
-        return NotImplemented
-    
-    @classmethod
-    def from_verb(cls, verb: str):
-        """Determine depth from action verb"""
-        verb_map = {
-            "identify": cls.REMEMBER,
-            "list": cls.REMEMBER,
-            "name": cls.REMEMBER,
-            "recognize": cls.REMEMBER,
-            "explain": cls.UNDERSTAND,
-            "describe": cls.UNDERSTAND,
-            "interpret": cls.UNDERSTAND,
-            "summarize": cls.UNDERSTAND,
-            "apply": cls.APPLY,
-            "demonstrate": cls.APPLY,
-            "implement": cls.APPLY,
-            "use": cls.APPLY,
-            "analyze": cls.ANALYZE,
-            "compare": cls.ANALYZE,
-            "examine": cls.ANALYZE,
-            "investigate": cls.ANALYZE,
-            "evaluate": cls.EVALUATE,
-            "assess": cls.EVALUATE,
-            "critique": cls.EVALUATE,
-            "justify": cls.EVALUATE,
-            "create": cls.CREATE,
-            "design": cls.CREATE,
-            "develop": cls.CREATE,
-            "construct": cls.CREATE
-        }
-        return verb_map.get(verb.lower(), cls.APPLY)
-
-
 class SkillContext(Enum):
     """Context where skill is applied"""
     THEORETICAL = "theoretical"
@@ -213,18 +152,6 @@ class StudyLevel(Enum):
             cls.POSTGRADUATE: SkillLevel.EXPERT
         }
         return mapping.get(study_level, SkillLevel.COMPETENT)
-    
-    @classmethod
-    def expected_skill_depth(cls, study_level):
-        """Get expected cognitive depth for a study level"""
-        mapping = {
-            cls.INTRODUCTORY: SkillDepth.UNDERSTAND,
-            cls.INTERMEDIATE: SkillDepth.APPLY,
-            cls.ADVANCED: SkillDepth.ANALYZE,
-            cls.SPECIALIZED: SkillDepth.EVALUATE,
-            cls.POSTGRADUATE: SkillDepth.CREATE
-        }
-        return mapping.get(study_level, SkillDepth.APPLY)
 
 
 class RecommendationType(Enum):

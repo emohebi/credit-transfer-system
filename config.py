@@ -81,16 +81,14 @@ class Config:
     SIMILARITY_THRESHOLD = float(os.getenv("SIMILARITY_THRESHOLD", "0.8"))
     PARTIAL_THRESHOLD = float(os.getenv("PARTIAL_THRESHOLD", "0.6"))
     
-    # Scoring Weights
-    COVERAGE_WEIGHT = float(os.getenv("COVERAGE_WEIGHT", "0.4"))
-    DEPTH_WEIGHT = float(os.getenv("DEPTH_WEIGHT", "0.2"))
-    CONTEXT_WEIGHT = float(os.getenv("CONTEXT_WEIGHT", "0.2"))
-    QUALITY_WEIGHT = float(os.getenv("QUALITY_WEIGHT", "0.1"))
+    # Scoring Weights (updated without depth component)
+    COVERAGE_WEIGHT = float(os.getenv("COVERAGE_WEIGHT", "0.5"))
+    CONTEXT_WEIGHT = float(os.getenv("CONTEXT_WEIGHT", "0.25"))
+    QUALITY_WEIGHT = float(os.getenv("QUALITY_WEIGHT", "0.15"))
     EDGE_PENALTY_WEIGHT = float(os.getenv("EDGE_PENALTY_WEIGHT", "0.1"))
     
     # Edge Case Thresholds
     CONTEXT_IMBALANCE_THRESHOLD = float(os.getenv("CONTEXT_IMBALANCE_THRESHOLD", "0.3"))
-    DEPTH_ADEQUACY_THRESHOLD = float(os.getenv("DEPTH_ADEQUACY_THRESHOLD", "0.8"))
     BREADTH_RATIO_MIN = float(os.getenv("BREADTH_RATIO_MIN", "0.7"))
     BREADTH_RATIO_MAX = float(os.getenv("BREADTH_RATIO_MAX", "1.5"))
     
@@ -110,15 +108,6 @@ class Config:
         "advanced": "PROFICIENT",
         "specialized": "EXPERT",
         "postgraduate": "EXPERT"
-    }
-    
-    # Expected cognitive depth for each study level
-    STUDY_LEVEL_DEPTH_MAPPING = {
-        "introductory": "UNDERSTAND",
-        "intermediate": "APPLY",
-        "advanced": "ANALYZE",
-        "specialized": "EVALUATE",
-        "postgraduate": "CREATE"
     }
     
     # Credit Hour Configuration
@@ -150,14 +139,12 @@ class Config:
             "partial_threshold": cls.PARTIAL_THRESHOLD,
             "weights": {
                 "coverage": cls.COVERAGE_WEIGHT,
-                "depth": cls.DEPTH_WEIGHT,
                 "context": cls.CONTEXT_WEIGHT,
                 "quality": cls.QUALITY_WEIGHT,
                 "edge_penalty": cls.EDGE_PENALTY_WEIGHT
             },
             "thresholds": {
                 "context_imbalance": cls.CONTEXT_IMBALANCE_THRESHOLD,
-                "depth_adequacy": cls.DEPTH_ADEQUACY_THRESHOLD,
                 "breadth_ratio_min": cls.BREADTH_RATIO_MIN,
                 "breadth_ratio_max": cls.BREADTH_RATIO_MAX
             }

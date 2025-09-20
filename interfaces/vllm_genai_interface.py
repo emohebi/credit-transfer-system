@@ -194,10 +194,9 @@ class VLLMGenAIInterface:
         1. Skill name (concise, specific)
         2. Category (technical/cognitive/practical/foundational/professional)
         3. Required proficiency level (novice/beginner/competent/proficient/expert)
-        4. Cognitive depth using Bloom's taxonomy (remember/understand/apply/analyze/evaluate/create)
-        5. Context (theoretical/practical/hybrid)
-        6. Related keywords
-        7. Confidence score (0-1)
+        4. Context (theoretical/practical/hybrid)
+        5. Related keywords
+        6. Confidence score (0-1)
 
         Return your answer in strict JSON format:
         [
@@ -205,7 +204,6 @@ class VLLMGenAIInterface:
             "name": "skill name",
             "category": "category",
             "level": "proficiency level",
-            "depth": "cognitive depth",
             "context": "context type",
             "keywords": ["keyword1", "keyword2"],
             "confidence": 0.8
@@ -343,7 +341,6 @@ class VLLMGenAIInterface:
         
         valid_categories = ["technical", "cognitive", "practical", "foundational", "professional"]
         valid_levels = ["novice", "beginner", "competent", "proficient", "expert"]
-        valid_depths = ["remember", "understand", "apply", "analyze", "evaluate", "create"]
         valid_contexts = ["theoretical", "practical", "hybrid"]
         
         for skill in skills:
@@ -352,7 +349,6 @@ class VLLMGenAIInterface:
                     "name": skill.get("name", "")[:100],
                     "category": skill.get("category", "technical").lower(),
                     "level": skill.get("level", "competent").lower(),
-                    "depth": skill.get("depth", "apply").lower(),
                     "context": skill.get("context", "hybrid").lower(),
                     "keywords": skill.get("keywords", [])[:10],
                     "confidence": min(1.0, max(0.0, float(skill.get("confidence", 0.8))))
@@ -363,8 +359,6 @@ class VLLMGenAIInterface:
                     clean_skill["category"] = "technical"
                 if clean_skill["level"] not in valid_levels:
                     clean_skill["level"] = "competent"
-                if clean_skill["depth"] not in valid_depths:
-                    clean_skill["depth"] = "apply"
                 if clean_skill["context"] not in valid_contexts:
                     clean_skill["context"] = "hybrid"
                 

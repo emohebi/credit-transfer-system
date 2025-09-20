@@ -8,7 +8,7 @@ from typing import List, Dict, Any, Optional, Tuple
 from collections import defaultdict
 
 from models.base_models import Skill, SkillMapping
-from models.enums import SkillLevel, SkillDepth, SkillContext
+from models.enums import SkillLevel, SkillContext
 from interfaces.embedding_interface import EmbeddingInterface
 
 logger = logging.getLogger(__name__)
@@ -118,7 +118,6 @@ class SkillMapper:
         
         # Calculate overall scores
         mapping.coverage_score = self._calculate_coverage_score(mapping, uni_skills)
-        mapping.depth_alignment = self._calculate_depth_alignment(mapping)
         mapping.context_alignment = self._calculate_context_alignment(mapping)
         
         # Add metadata
@@ -218,7 +217,6 @@ class SkillMapper:
         """Assess quality of skill match beyond name similarity"""
         quality = {
             "level_alignment": self._compare_levels(vet_skill.level, uni_skill.level),
-            "depth_alignment": self._compare_depths(vet_skill.depth, uni_skill.depth),
             "context_compatibility": self._compare_contexts(vet_skill.context, uni_skill.context),
             "category_match": vet_skill.category == uni_skill.category,
             "confidence_product": vet_skill.confidence * uni_skill.confidence
@@ -226,11 +224,10 @@ class SkillMapper:
         
         # Overall quality score (weighted average)
         quality["overall"] = (
-            quality["level_alignment"] * 0.25 +
-            quality["depth_alignment"] * 0.25 +
-            quality["context_compatibility"] * 0.2 +
-            float(quality["category_match"]) * 0.15 +
-            quality["confidence_product"] * 0.15
+            quality["level_alignment"] * 0.4 +
+            quality["context_compatibility"] * 0.3 +
+            float(quality["category_match"]) * 0.2 +
+            quality["confidence_product"] * 0.1
         )
         
         return quality
@@ -252,20 +249,6 @@ class SkillMapper:
             # Large gap
             return 0.3
     
-    def _compare_depths(self, vet_depth: SkillDepth, uni_depth: SkillDepth) -> float:
-        """Compare cognitive depths"""
-        depth_diff = vet_depth.value - uni_depth.value
-        
-        if depth_diff >= 0:
-            # VET meets or exceeds requirement
-            return 1.0
-        elif depth_diff == -1:
-            return 0.8
-        elif depth_diff == -2:
-            return 0.6
-        else:
-            return 0.4
-    
     def _compare_contexts(self, vet_context: SkillContext, uni_context: SkillContext) -> float:
         """Compare skill contexts"""
         if vet_context == uni_context:
@@ -285,10 +268,6 @@ class SkillMapper:
         if vet_skill.level.value < uni_skill.level.value:
             level_diff = uni_skill.level.value - vet_skill.level.value
             gaps.append(f"Proficiency gap: {level_diff} level(s) below required {uni_skill.level.name}")
-        
-        # Depth gap
-        if vet_skill.depth.value < uni_skill.depth.value:
-            gaps.append(f"Cognitive depth gap: requires {uni_skill.depth.name} level understanding")
         
         # Context gap
         if vet_skill.context != uni_skill.context and uni_skill.context != SkillContext.HYBRID:
@@ -314,22 +293,6 @@ class SkillMapper:
         
         return min(1.0, covered_count / total_count) if total_count > 0 else 0.0
     
-    def _calculate_depth_alignment(self, mapping: SkillMapping) -> float:
-        """Calculate overall depth alignment score"""
-        if not mapping.direct_matches and not mapping.partial_matches:
-            return 0.0
-        
-        scores = []
-        
-        for match in mapping.direct_matches:
-            scores.append(match["quality"]["depth_alignment"])
-        
-        for match in mapping.partial_matches:
-            # Weight partial matches less
-            scores.append(match["quality"]["depth_alignment"] * 0.7)
-        
-        return np.mean(scores) if scores else 0.0
-    
     def _calculate_context_alignment(self, mapping: SkillMapping) -> float:
         """Calculate overall context alignment score"""
         if not mapping.direct_matches and not mapping.partial_matches:
@@ -354,18 +317,15 @@ class SkillMapper:
             "recommendations": []
         }
         
-        # Calculate total alignment score
+        # Calculate total alignment score (adjusted weights without depth)
         summary["total_alignment_score"] = (
-            mapping.coverage_score * 0.4 +
-            mapping.depth_alignment * 0.3 +
-            mapping.context_alignment * 0.3
+            mapping.coverage_score * 0.6 +
+            mapping.context_alignment * 0.4
         )
         
         # Identify strengths
         if mapping.coverage_score > 0.7:
             summary["strengths"].append(f"Good skill coverage ({mapping.coverage_score:.1%})")
-        if mapping.depth_alignment > 0.8:
-            summary["strengths"].append("Strong cognitive depth alignment")
         if mapping.context_alignment > 0.8:
             summary["strengths"].append("Good practical/theoretical balance")
         
@@ -376,8 +336,6 @@ class SkillMapper:
         # Identify weaknesses
         if mapping.coverage_score < 0.5:
             summary["weaknesses"].append(f"Low skill coverage ({mapping.coverage_score:.1%})")
-        if mapping.depth_alignment < 0.6:
-            summary["weaknesses"].append("Weak cognitive depth alignment")
         if mapping.context_alignment < 0.6:
             summary["weaknesses"].append("Poor practical/theoretical balance")
         if len(mapping.unmapped_uni) > 5:
@@ -387,11 +345,6 @@ class SkillMapper:
         if mapping.unmapped_uni:
             summary["recommendations"].append(
                 f"Bridge {len(mapping.unmapped_uni)} missing skills through supplementary training"
-            )
-        
-        if mapping.depth_alignment < 0.7:
-            summary["recommendations"].append(
-                "Consider additional modules to enhance cognitive depth"
             )
         
         if mapping.context_alignment < 0.7:

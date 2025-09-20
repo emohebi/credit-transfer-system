@@ -189,10 +189,9 @@ For each skill, identify:
 1. Skill name (concise, specific)
 2. Category (technical/cognitive/practical/foundational/professional)
 3. Required proficiency level (novice/beginner/competent/proficient/expert)
-4. Cognitive depth using Bloom's taxonomy (remember/understand/apply/analyze/evaluate/create)
-5. Context (theoretical/practical/hybrid)
-6. Related keywords
-7. Confidence score (0-1)
+4. Context (theoretical/practical/hybrid)
+5. Related keywords
+6. Confidence score (0-1)
 
 Return your answer in strict JSON format:
 [
@@ -200,7 +199,6 @@ Return your answer in strict JSON format:
     "name": "skill name",
     "category": "category",
     "level": "proficiency level",
-    "depth": "cognitive depth",
     "context": "context type",
     "keywords": ["keyword1", "keyword2"],
     "confidence": 0.8
@@ -291,7 +289,6 @@ Note: Only output the JSON, do not generate any extra sentences."""
                 "name": match.strip(),
                 "category": "technical",  # Default
                 "level": "competent",     # Default
-                "depth": "apply",         # Default
                 "context": "hybrid",      # Default
                 "keywords": [],
                 "confidence": 0.6        # Lower confidence for parsed
@@ -305,7 +302,6 @@ Note: Only output the JSON, do not generate any extra sentences."""
         
         valid_categories = ["technical", "cognitive", "practical", "foundational", "professional"]
         valid_levels = ["novice", "beginner", "competent", "proficient", "expert"]
-        valid_depths = ["remember", "understand", "apply", "analyze", "evaluate", "create"]
         valid_contexts = ["theoretical", "practical", "hybrid"]
         
         for skill in skills:
@@ -315,7 +311,6 @@ Note: Only output the JSON, do not generate any extra sentences."""
                     "name": skill["name"][:100],  # Limit length
                     "category": skill.get("category", "technical").lower(),
                     "level": skill.get("level", "competent").lower(),
-                    "depth": skill.get("depth", "apply").lower(),
                     "context": skill.get("context", "hybrid").lower(),
                     "keywords": skill.get("keywords", [])[:10],  # Limit keywords
                     "confidence": min(1.0, max(0.0, float(skill.get("confidence", 0.8))))
@@ -326,8 +321,6 @@ Note: Only output the JSON, do not generate any extra sentences."""
                     clean_skill["category"] = "technical"
                 if clean_skill["level"] not in valid_levels:
                     clean_skill["level"] = "competent"
-                if clean_skill["depth"] not in valid_depths:
-                    clean_skill["depth"] = "apply"
                 if clean_skill["context"] not in valid_contexts:
                     clean_skill["context"] = "hybrid"
                 
@@ -371,7 +364,6 @@ Note: Only output the JSON, do not generate any extra sentences."""
                         "name": skill_name,
                         "category": category,
                         "level": "competent",
-                        "depth": "apply",
                         "context": "hybrid",
                         "keywords": [],
                         "confidence": 0.6

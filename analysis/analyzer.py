@@ -288,12 +288,11 @@ class CreditTransferAnalyzer:
                                    edge_cases: Dict[str, Any]) -> float:
         """Calculate overall alignment score"""
         
-        # Base weights
+        # Base weights (adjusted without depth component)
         weights = {
-            "coverage": 0.4,
-            "depth": 0.2,
-            "context": 0.2,
-            "quality": 0.1,
+            "coverage": 0.5,
+            "context": 0.25,
+            "quality": 0.15,
             "edge_penalty": 0.1
         }
         
@@ -309,10 +308,6 @@ class CreditTransferAnalyzer:
         if "context_imbalance" in edge_cases:
             edge_penalty += edge_cases["context_imbalance"].get("imbalance_score", 0) * 0.3
         
-        if "depth_breadth" in edge_cases:
-            if not edge_cases["depth_breadth"].get("depth_adequate", True):
-                edge_penalty += 0.3
-        
         if "outdated_content" in edge_cases:
             if edge_cases["outdated_content"].get("currency_issues"):
                 edge_penalty += 0.2
@@ -320,7 +315,6 @@ class CreditTransferAnalyzer:
         # Calculate final score
         score = (
             mapping.coverage_score * weights["coverage"] +
-            mapping.depth_alignment * weights["depth"] +
             mapping.context_alignment * weights["context"] +
             quality_score * weights["quality"] -
             edge_penalty * weights["edge_penalty"]
@@ -337,7 +331,6 @@ class CreditTransferAnalyzer:
         has_gaps = len(mapping.unmapped_uni) > 0
         has_major_issues = any([
             edge_cases.get("outdated_content", {}).get("estimated_update_effort") == "high",
-            edge_cases.get("depth_breadth", {}).get("depth_adequate") is False,
             edge_cases.get("context_imbalance", {}).get("imbalance_score", 0) > 0.5
         ])
         
@@ -364,10 +357,6 @@ class CreditTransferAnalyzer:
         # Context imbalance
         if "context_imbalance" in edge_cases:
             conditions.extend(edge_cases["context_imbalance"].get("bridging_requirements", []))
-        
-        # Depth issues
-        if "depth_breadth" in edge_cases:
-            conditions.extend(edge_cases["depth_breadth"].get("recommendations", []))
         
         # Outdated content
         if "outdated_content" in edge_cases:
@@ -396,9 +385,6 @@ class CreditTransferAnalyzer:
         
         # Coverage metrics
         evidence.append(f"Skill coverage: {mapping.coverage_score:.1%}")
-        
-        if mapping.depth_alignment > 0.8:
-            evidence.append("Strong cognitive depth alignment")
         
         if mapping.context_alignment > 0.8:
             evidence.append("Good practical/theoretical balance")

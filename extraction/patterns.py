@@ -1,9 +1,6 @@
 """
 Extraction patterns and rules for skill identification
 """
-"""
-Extraction patterns and rules for skill identification
-"""
 
 from typing import Dict, List, Set
 import re
@@ -11,16 +8,6 @@ import re
 
 class ExtractionPatterns:
     """Collection of patterns for skill extraction"""
-    
-    # Action verb patterns mapped to Bloom's taxonomy levels
-    ACTION_VERB_PATTERNS = {
-        "remember": ["identify", "list", "name", "recognize", "recall", "define", "describe"],
-        "understand": ["explain", "describe", "interpret", "summarize", "classify", "discuss"],
-        "apply": ["apply", "demonstrate", "implement", "use", "execute", "solve", "operate"],
-        "analyze": ["analyze", "compare", "examine", "investigate", "differentiate", "organize"],
-        "evaluate": ["evaluate", "assess", "critique", "justify", "judge", "recommend", "validate"],
-        "create": ["create", "design", "develop", "construct", "produce", "formulate", "invent"]
-    }
     
     # Skill indicator patterns
     SKILL_PATTERNS = [

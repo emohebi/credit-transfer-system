@@ -219,7 +219,7 @@ def test_model_loading():
     
     try:
         from models.base_models import VETQualification, UniQualification, UnitOfCompetency, UniCourse, Skill
-        from models.enums import SkillLevel, SkillDepth, SkillContext, SkillCategory
+        from models.enums import SkillLevel, SkillContext, SkillCategory
         
         # Test enum creation and comparison
         level1 = SkillLevel.COMPETENT
@@ -227,12 +227,11 @@ def test_model_loading():
         assert level1 < level2, "Skill level comparison failed"
         logger.info("Skill level comparison working correctly")
         
-        # Test skill creation
+        # Test skill creation (without depth parameter)
         skill = Skill(
             name="Python programming",
             category=SkillCategory.TECHNICAL,
             level=SkillLevel.COMPETENT,
-            depth=SkillDepth.APPLY,
             context=SkillContext.PRACTICAL
         )
         logger.info(f"Created test skill: {skill.name}")

@@ -8,7 +8,7 @@ from typing import List, Dict, Set, Optional
 from collections import defaultdict
 
 from models.base_models import Skill, UnitOfCompetency, UniCourse
-from models.enums import SkillLevel, SkillDepth, SkillContext, SkillCategory
+from models.enums import SkillLevel, SkillContext, SkillCategory
 from interfaces.genai_interface import GenAIInterface
 from interfaces.embedding_interface import EmbeddingInterface
 from .patterns import ExtractionPatterns, SkillOntology, CompositeSkillDecomposer
@@ -183,12 +183,9 @@ class SkillExtractor:
         from models.enums import StudyLevel
         study_level_enum = StudyLevel.from_string(course.study_level)
         expected_level = StudyLevel.expected_skill_level(study_level_enum)
-        expected_depth = StudyLevel.expected_skill_depth(study_level_enum)
         
         for skill in skills:
             skill.level = self._adjust_level_by_study_level(skill.level, study_level_enum)
-            if skill.depth == SkillDepth.APPLY and study_level_enum in [StudyLevel.ADVANCED, StudyLevel.SPECIALIZED]:
-                skill.depth = expected_depth
         
         # Cache and assign
         self.cache[cache_key] = skills
@@ -214,7 +211,6 @@ class SkillExtractor:
                     name=skill_name,
                     category=self._categorize_skill(skill_name),
                     level=SkillLevel.COMPETENT,  # Default
-                    depth=self._determine_depth_from_text(text_lower),
                     context=self._determine_context(text_lower),
                     keywords=self._extract_keywords(skill_name, text_lower),
                     evidence_type=pattern_type,
@@ -230,13 +226,6 @@ class SkillExtractor:
         skills = []
         outcome_lower = outcome.lower()
         
-        # Determine cognitive depth from action verbs
-        depth = SkillDepth.APPLY  # Default
-        for depth_level, verbs in self.patterns.ACTION_VERB_PATTERNS.items():
-            if any(verb in outcome_lower for verb in verbs):
-                depth = SkillDepth.from_verb(verbs[0])
-                break
-        
         # Extract skill phrases from outcome
         for pattern, pattern_type in self.patterns.SKILL_PATTERNS[:5]:  # Focus on main patterns
             matches = re.findall(pattern, outcome_lower)
@@ -247,7 +236,6 @@ class SkillExtractor:
                         name=skill_name,
                         category=self._categorize_skill(skill_name),
                         level=SkillLevel.COMPETENT,
-                        depth=depth,
                         context=SkillContext.HYBRID,
                         confidence=0.9,  # High confidence from learning outcomes
                         source=source
@@ -269,7 +257,6 @@ class SkillExtractor:
             name=topic_clean,
             category=self._categorize_skill(topic_clean),
             level=StudyLevel.expected_skill_level(study_level_enum),
-            depth=StudyLevel.expected_skill_depth(study_level_enum),
             context=SkillContext.THEORETICAL,  # Topics are typically theoretical
             confidence=0.7,
             source=f"topic_{study_level}"
@@ -309,7 +296,6 @@ class SkillExtractor:
                         name=skill_name,
                         category=SkillCategory.COGNITIVE,
                         level=SkillLevel.COMPETENT,
-                        depth=SkillDepth.from_verb(indicator),
                         context=context,
                         confidence=0.6,
                         source=source
@@ -328,7 +314,6 @@ class SkillExtractor:
                 name=self._clean_skill_name(prereq),
                 category=SkillCategory.FOUNDATIONAL,
                 level=SkillLevel.COMPETENT,
-                depth=SkillDepth.UNDERSTAND,
                 context=SkillContext.THEORETICAL,
                 confidence=0.8,
                 source="prerequisite"
@@ -356,7 +341,6 @@ class SkillExtractor:
                             name=skill_dict["name"],
                             category=SkillCategory.TECHNICAL,
                             level=SkillLevel.COMPETENT,
-                            depth=SkillDepth.APPLY,
                             context=SkillContext.HYBRID,
                             confidence=skill_dict.get("confidence", 0.5),
                             source="implicit_ai"
@@ -374,7 +358,6 @@ class SkillExtractor:
                         name=implied_name,
                         category=self._categorize_skill(implied_name),
                         level=explicit_skill.level,  # Inherit from parent skill
-                        depth=SkillDepth.APPLY,
                         context=explicit_skill.context,
                         confidence=0.6,  # Lower confidence for inferred
                         source="implicit_inference"
@@ -403,7 +386,6 @@ class SkillExtractor:
                             name=component_name,
                             category=skill.category,
                             level=skill.level,
-                            depth=skill.depth,
                             context=skill.context,
                             confidence=skill.confidence * 0.8,  # Slightly lower
                             source=f"decomposed_from_{skill.source}"
@@ -424,7 +406,6 @@ class SkillExtractor:
                     name=ai_skill["name"],
                     category=SkillCategory(ai_skill.get("category", "technical")),
                     level=SkillLevel.from_string(ai_skill.get("level", "competent")),
-                    depth=SkillDepth.from_verb(ai_skill.get("depth", "apply")),
                     context=SkillContext(ai_skill.get("context", "hybrid")),
                     keywords=ai_skill.get("keywords", []),
                     confidence=ai_skill.get("confidence", 0.8),
@@ -481,33 +462,6 @@ class SkillExtractor:
         # Default
         return SkillCategory.TECHNICAL
     
-    def _determine_depth_from_text(self, text: str) -> SkillDepth:
-        """Determine cognitive depth from text content"""
-        text_lower = text.lower()
-        
-        # Check for depth indicators
-        depth_indicators = {
-            SkillDepth.CREATE: ["create", "design", "develop", "innovate", "invent"],
-            SkillDepth.EVALUATE: ["evaluate", "assess", "critique", "judge", "validate"],
-            SkillDepth.ANALYZE: ["analyze", "examine", "investigate", "compare"],
-            SkillDepth.APPLY: ["apply", "implement", "use", "demonstrate"],
-            SkillDepth.UNDERSTAND: ["understand", "explain", "describe", "interpret"],
-            SkillDepth.REMEMBER: ["identify", "list", "name", "recall"]
-        }
-        
-        # Count occurrences of each depth level
-        depth_counts = {}
-        for depth, indicators in depth_indicators.items():
-            count = sum(1 for ind in indicators if ind in text_lower)
-            if count > 0:
-                depth_counts[depth] = count
-        
-        # Return highest occurring depth
-        if depth_counts:
-            return max(depth_counts.items(), key=lambda x: x[1])[0]
-        
-        return SkillDepth.APPLY  # Default
-    
     def _determine_context(self, text: str) -> SkillContext:
         """Determine if content is theoretical, practical, or hybrid"""
         text_lower = text.lower()
@@ -562,8 +516,6 @@ class SkillExtractor:
             return max(base_level, SkillLevel.PROFICIENT)
         else:  # POSTGRADUATE
             return max(base_level, SkillLevel.EXPERT)
-    
-
     
     def _deduplicate_skills(self, skills: List[Skill]) -> List[Skill]:
         """Remove duplicate skills, keeping highest confidence"""
