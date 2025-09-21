@@ -1,10 +1,9 @@
 """
-Edge case handlers for credit transfer mapping
+Edge case handlers for credit transfer mapping using Gen AI
 """
 
-import re
 import logging
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional
 from collections import defaultdict
 import numpy as np
 
@@ -15,10 +14,17 @@ logger = logging.getLogger(__name__)
 
 
 class EdgeCaseHandler:
-    """Handles various edge cases in credit transfer mapping"""
+    """Handles various edge cases in credit transfer mapping using Gen AI"""
     
-    def __init__(self):
-        """Initialize edge case handler"""
+    def __init__(self, genai=None):
+        """
+        Initialize edge case handler
+        
+        Args:
+            genai: GenAI interface for AI-based analysis
+        """
+        self.genai = genai
+        
         self.handlers = {
             "split_to_single": self.handle_split_to_single,
             "single_to_multiple": self.handle_single_to_multiple,
@@ -30,22 +36,13 @@ class EdgeCaseHandler:
             "prerequisite_chain": self.handle_prerequisite_chain,
             "credit_hour_mismatch": self.handle_credit_hour_mismatch
         }
-        
-        # Technology currency windows (years)
-        self.currency_windows = {
-            "default": 3,
-            "programming_language": 5,
-            "framework": 2,
-            "methodology": 10,
-            "fundamental": 20
-        }
     
     def process_edge_cases(self, 
                           vet_units: List[UnitOfCompetency],
                           uni_course: UniCourse,
                           mapping: SkillMapping) -> Dict[str, Any]:
         """
-        Process all applicable edge cases
+        Process all applicable edge cases using Gen AI
         
         Args:
             vet_units: VET units being mapped
@@ -59,7 +56,34 @@ class EdgeCaseHandler:
         
         edge_case_results = {}
         
-        # Check for split-to-single mapping (multiple VET to single Uni)
+        # Use Gen AI to detect edge cases if available
+        if self.genai:
+            # Prepare summary for AI analysis
+            vet_text = " ".join([unit.get_full_text()[:500] for unit in vet_units])
+            uni_text = uni_course.get_full_text()[:1000]
+            
+            mapping_info = {
+                "vet_units": len(vet_units),
+                "direct_matches": len(mapping.direct_matches) if mapping else 0,
+                "partial_matches": len(mapping.partial_matches) if mapping else 0,
+                "unmapped_skills": len(mapping.unmapped_uni) if mapping else 0,
+                "coverage_score": mapping.coverage_score if mapping else 0
+            }
+            
+            # Use AI to detect edge cases
+            ai_edge_cases = self.genai.detect_edge_cases(vet_text, uni_text, mapping_info)
+            
+            # Process AI-detected edge cases
+            for edge_case in ai_edge_cases.get("edge_cases", []):
+                edge_type = edge_case.get("type", "")
+                if edge_type not in edge_case_results:
+                    edge_case_results[edge_type] = edge_case
+            
+            logger.debug(f"AI detected {len(ai_edge_cases.get('edge_cases', []))} edge cases")
+        
+        # Run specific handlers
+        
+        # Check for split-to-single mapping
         if len(vet_units) > 1:
             edge_case_results["split_to_single"] = self.handle_split_to_single(
                 vet_units, uni_course, mapping
@@ -70,7 +94,7 @@ class EdgeCaseHandler:
             vet_units, uni_course, mapping
         )
         
-        # Check for outdated content
+        # Check for outdated content using AI
         edge_case_results["outdated_content"] = self.handle_outdated_content(
             vet_units, uni_course
         )
@@ -81,14 +105,9 @@ class EdgeCaseHandler:
         )
         
         # Check for version mismatches
-        if mapping:
-            all_vet_skills = []
-            for unit in vet_units:
-                all_vet_skills.extend(unit.extracted_skills)
-            
-            edge_case_results["version_mismatch"] = self.handle_version_mismatch(
-                all_vet_skills, uni_course.extracted_skills
-            )
+        edge_case_results["version_mismatch"] = self.handle_version_mismatch(
+            vet_units, uni_course
+        )
         
         # Check prerequisite chains
         edge_case_results["prerequisite_chain"] = self.handle_prerequisite_chain(
@@ -101,69 +120,6 @@ class EdgeCaseHandler:
         )
         
         return edge_case_results
-    
-    def handle_split_to_single(self,
-                               vet_units: List[UnitOfCompetency],
-                               uni_course: UniCourse,
-                               mapping: SkillMapping) -> Dict[str, Any]:
-        """Handle multiple VET units mapping to single uni course"""
-        result = {
-            "applicable": len(vet_units) > 1,
-            "coverage_by_unit": {},
-            "minimum_combination": [],
-            "recommended_combination": [],
-            "overlap_analysis": {},
-            "total_coverage": 0.0
-        }
-        
-        if not result["applicable"]:
-            return result
-        
-        # Calculate individual unit contributions
-        for unit in vet_units:
-            unit_skills = unit.extracted_skills
-            coverage = self._calculate_skill_coverage(unit_skills, uni_course.extracted_skills)
-            result["coverage_by_unit"][unit.code] = {
-                "coverage": coverage,
-                "skill_count": len(unit_skills),
-                "unique_contributions": []
-            }
-        
-        # Analyze skill overlap between units
-        result["overlap_analysis"] = self._analyze_unit_overlap(vet_units)
-        
-        # Find minimum combination for adequate coverage
-        result["minimum_combination"] = self._find_minimum_combination(
-            result["coverage_by_unit"], 
-            threshold=0.7
-        )
-        
-        # Find recommended combination for optimal coverage
-        result["recommended_combination"] = self._find_optimal_combination(
-            vet_units, 
-            uni_course, 
-            threshold=0.85
-        )
-        
-        # Calculate total coverage with all units
-        all_vet_skills = []
-        for unit in vet_units:
-            all_vet_skills.extend(unit.extracted_skills)
-        
-        result["total_coverage"] = self._calculate_skill_coverage(
-            all_vet_skills, 
-            uni_course.extracted_skills
-        )
-        
-        # Add recommendations
-        if result["overlap_analysis"]["overlap_ratio"] > 0.5:
-            result["recommendation"] = "High overlap between units - consider streamlining"
-        elif result["total_coverage"] < 0.7:
-            result["recommendation"] = "Insufficient coverage even with all units"
-        else:
-            result["recommendation"] = f"Use combination: {', '.join(result['recommended_combination'])}"
-        
-        return result
     
     def handle_single_to_multiple(self,
                                  vet_unit: UnitOfCompetency,
@@ -229,11 +185,79 @@ class EdgeCaseHandler:
         
         return result
     
+    def handle_split_to_single(self,
+                               vet_units: List[UnitOfCompetency],
+                               uni_course: UniCourse,
+                               mapping: SkillMapping) -> Dict[str, Any]:
+        """Handle multiple VET units mapping to single uni course"""
+        result = {
+            "applicable": len(vet_units) > 1,
+            "coverage_by_unit": {},
+            "minimum_combination": [],
+            "recommended_combination": [],
+            "overlap_analysis": {},
+            "total_coverage": 0.0
+        }
+        
+        if not result["applicable"]:
+            return result
+        
+        # Calculate individual unit contributions
+        for unit in vet_units:
+            unit_skills = unit.extracted_skills
+            coverage = self._calculate_skill_coverage(unit_skills, uni_course.extracted_skills)
+            result["coverage_by_unit"][unit.code] = {
+                "coverage": coverage,
+                "skill_count": len(unit_skills),
+                "unique_contributions": []
+            }
+        
+        # Analyze skill overlap between units using AI if available
+        if self.genai:
+            # Get AI assessment of overlap
+            units_text = {unit.code: unit.get_full_text()[:500] for unit in vet_units}
+            # This would need a specific prompt for overlap analysis
+            # For now, use basic analysis
+        
+        result["overlap_analysis"] = self._analyze_unit_overlap(vet_units)
+        
+        # Find minimum and recommended combinations
+        result["minimum_combination"] = self._find_minimum_combination(
+            result["coverage_by_unit"], 
+            threshold=0.7
+        )
+        
+        result["recommended_combination"] = self._find_optimal_combination(
+            vet_units, 
+            uni_course, 
+            threshold=0.85
+        )
+        
+        # Calculate total coverage
+        all_vet_skills = []
+        for unit in vet_units:
+            all_vet_skills.extend(unit.extracted_skills)
+        
+        result["total_coverage"] = self._calculate_skill_coverage(
+            all_vet_skills, 
+            uni_course.extracted_skills
+        )
+        
+        # Add recommendations
+        if result["overlap_analysis"]["overlap_ratio"] > 0.5:
+            result["recommendation"] = "High overlap between units - consider streamlining"
+        elif result["total_coverage"] < 0.7:
+            result["recommendation"] = "Insufficient coverage even with all units"
+        else:
+            result["recommendation"] = f"Use combination: {', '.join(result['recommended_combination'])}"
+        
+        return result
+    
     def handle_context_imbalance(self,
                                  vet_units: List[UnitOfCompetency],
                                  uni_course: UniCourse,
                                  mapping: SkillMapping) -> Dict[str, Any]:
-        """Handle practical vs theoretical context imbalance"""
+        """Handle practical vs theoretical context imbalance using Gen AI"""
         result = {
             "vet_context_distribution": {},
             "uni_context_distribution": {},
@@ -242,33 +266,29 @@ class EdgeCaseHandler:
             "recommended_supplements": []
         }
         
-        # Calculate VET context distribution
-        vet_contexts = defaultdict(int)
-        total_vet_skills = 0
-        for unit in vet_units:
-            for skill in unit.extracted_skills:
-                vet_contexts[skill.context.value] += 1
-                total_vet_skills += 1
-        
-        # Calculate Uni context distribution
-        uni_contexts = defaultdict(int)
-        for skill in uni_course.extracted_skills:
-            uni_contexts[skill.context.value] += 1
-        
-        # Normalize to percentages
-        if total_vet_skills > 0:
+        if self.genai:
+            # Use AI to analyze context
+            vet_text = " ".join([unit.get_full_text()[:500] for unit in vet_units])
+            uni_text = uni_course.get_full_text()[:1000]
+            
+            vet_context = self.genai.determine_context(vet_text)
+            uni_context = self.genai.determine_context(uni_text)
+            
+            # Extract context distributions
+            vet_analysis = vet_context.get("context_analysis", {})
+            uni_analysis = uni_context.get("context_analysis", {})
+            
             result["vet_context_distribution"] = {
-                k: v/total_vet_skills for k, v in vet_contexts.items()
+                "theoretical": vet_analysis.get("theoretical_percentage", 0) / 100,
+                "practical": vet_analysis.get("practical_percentage", 0) / 100
             }
-        
-        total_uni_skills = len(uni_course.extracted_skills)
-        if total_uni_skills > 0:
+            
             result["uni_context_distribution"] = {
-                k: v/total_uni_skills for k, v in uni_contexts.items()
+                "theoretical": uni_analysis.get("theoretical_percentage", 0) / 100,
+                "practical": uni_analysis.get("practical_percentage", 0) / 100
             }
-        
-        # Calculate imbalance score
-        if total_vet_skills > 0 and total_uni_skills > 0:
+            
+            # Calculate imbalance
             practical_diff = abs(
                 result["vet_context_distribution"].get("practical", 0) -
                 result["uni_context_distribution"].get("practical", 0)
@@ -279,7 +299,7 @@ class EdgeCaseHandler:
             )
             result["imbalance_score"] = (practical_diff + theoretical_diff) / 2
             
-            # Generate bridging requirements
+            # Generate bridging requirements based on imbalance
             if result["uni_context_distribution"].get("theoretical", 0) > \
                result["vet_context_distribution"].get("theoretical", 0) + 0.3:
                 gap = result["uni_context_distribution"]["theoretical"] - \
@@ -287,8 +307,10 @@ class EdgeCaseHandler:
                 result["bridging_requirements"].append(
                     f"Additional theoretical foundation required ({gap:.1%} gap)"
                 )
-                result["recommended_supplements"].append("Theory bridging module")
-                result["recommended_supplements"].append("Academic writing workshop")
+                result["recommended_supplements"].extend([
+                    "Theory bridging module",
+                    "Academic writing workshop"
+                ])
             
             if result["uni_context_distribution"].get("practical", 0) > \
                result["vet_context_distribution"].get("practical", 0) + 0.3:
@@ -297,76 +319,50 @@ class EdgeCaseHandler:
                 result["bridging_requirements"].append(
                     f"Additional practical experience required ({gap:.1%} gap)"
                 )
-                result["recommended_supplements"].append("Laboratory skills workshop")
-                result["recommended_supplements"].append("Industry placement")
+                result["recommended_supplements"].extend([
+                    "Laboratory skills workshop",
+                    "Industry placement"
+                ])
+        else:
+            # Fallback to basic analysis without AI
+            result = self._fallback_context_analysis(vet_units, uni_course)
         
         return result
     
     def handle_outdated_content(self,
                                 vet_units: List[UnitOfCompetency],
                                 uni_course: UniCourse) -> Dict[str, Any]:
-        """Handle potentially outdated content"""
+        """Handle potentially outdated content using Gen AI"""
         result = {
             "currency_issues": [],
             "version_specific_skills": [],
             "update_requirements": [],
-            "estimated_update_effort": "low"  # low, medium, high
+            "estimated_update_effort": "low"
         }
         
-        # Technology version patterns
-        version_patterns = [
-            (r"python\s*2\.?\d*", "Python 2.x", "Python 3.x", "medium"),
-            (r"java\s*[678]\b", "Java 6/7/8", "Java 11+", "low"),
-            (r"angular\s*js", "AngularJS", "Angular 2+", "high"),
-            (r"flash", "Flash", "HTML5/Canvas", "high"),
-            (r"vb6|visual\s*basic\s*6", "Visual Basic 6", "Modern .NET", "high"),
-            (r"php\s*[45]\b", "PHP 4/5", "PHP 8+", "medium"),
-            (r"mysql\s*[45]\b", "MySQL 4/5", "MySQL 8+", "low"),
-            (r"windows\s*xp|windows\s*7", "Legacy Windows", "Windows 10/11", "medium"),
-        ]
-        
-        update_efforts = []
-        
-        for unit in vet_units:
-            text = unit.get_full_text().lower()
-            
-            for pattern, old_tech, new_tech, effort in version_patterns:
-                if re.search(pattern, text):
-                    result["currency_issues"].append({
-                        "unit": unit.code,
-                        "old_technology": old_tech,
-                        "recommended": new_tech,
-                        "update_effort": effort
-                    })
-                    update_efforts.append(effort)
-                    
-                    result["update_requirements"].append(
-                        f"Update from {old_tech} to {new_tech}"
-                    )
-        
-        # Estimate overall update effort
-        if update_efforts:
-            if "high" in update_efforts:
-                result["estimated_update_effort"] = "high"
-            elif "medium" in update_efforts:
-                result["estimated_update_effort"] = "medium"
-            else:
-                result["estimated_update_effort"] = "low"
-        
-        # Check for deprecated methodologies
-        deprecated_methods = [
-            ("waterfall", "Agile/Scrum methodologies"),
-            ("big data hadoop only", "Modern data platforms (Spark, Cloud)"),
-            ("on-premise only", "Cloud and hybrid architectures"),
-        ]
-        
-        for unit in vet_units:
-            text = unit.get_full_text().lower()
-            for old_method, new_method in deprecated_methods:
-                if old_method in text and new_method.lower() not in text:
-                    result["update_requirements"].append(
-                        f"Modernize from {old_method} to {new_method}"
-                    )
+        if self.genai:
+            # Use AI to detect outdated technologies
+            for unit in vet_units:
+                text = unit.get_full_text()
+                tech_versions = self.genai.extract_technology_versions(text)
+                
+                for tech in tech_versions.get("technologies", []):
+                    if not tech.get("is_current", True):
+                        result["currency_issues"].append({
+                            "unit": unit.code,
+                            "old_technology": f"{tech['name']} {tech.get('version', '')}",
+                            "recommended": tech.get("recommended_version", "latest"),
+                            "update_effort": tech.get("update_priority", "medium")
+                        })
+                        
+                        result["update_requirements"].append(
+                            f"Update {tech['name']} to {tech.get('recommended_version', 'latest')}"
+                        )
+                
+                # Get overall assessment
+                overall_effort = tech_versions.get("update_effort", "low")
+                if overall_effort in ["medium", "high"]:
+                    result["estimated_update_effort"] = overall_effort
         
         return result
     
@@ -374,7 +370,7 @@ class EdgeCaseHandler:
                                vet_units: List[UnitOfCompetency],
                                uni_course: UniCourse,
                                mapping: SkillMapping) -> Dict[str, Any]:
-        """Handle composite vs granular skill mismatches"""
+        """Handle composite vs granular skill mismatches using Gen AI"""
         result = {
             "composite_skills_found": [],
             "decomposition_mapping": {},
@@ -382,61 +378,34 @@ class EdgeCaseHandler:
             "coverage_improvement": 0.0
         }
         
-        # Identify composite skills
-        composite_indicators = [
-            "management", "development", "analysis", "design", 
-            "maintenance", "administration", "engineering"
-        ]
-        
-        original_coverage = mapping.coverage_score if mapping else 0.0
-        
-        for unit in vet_units:
-            for skill in unit.extracted_skills:
-                skill_lower = skill.name.lower()
-                
-                # Check if skill is composite
-                is_composite = any(ind in skill_lower for ind in composite_indicators)
-                is_composite = is_composite and len(skill.name.split()) <= 3
-                
-                if is_composite:
-                    result["composite_skills_found"].append(skill.name)
-                    
-                    # Simulate decomposition (in practice, use actual decomposer)
-                    components = self._decompose_skill(skill.name)
-                    result["decomposition_mapping"][skill.name] = components
-                    
-                    # Check if components match uni skills better
-                    for component in components:
-                        for uni_skill in uni_course.extracted_skills:
-                            if self._skills_similar(component, uni_skill.name):
-                                result["coverage_improvement"] += 0.1
-        
-        # Normalize coverage improvement
-        if uni_course.extracted_skills:
-            result["coverage_improvement"] /= len(uni_course.extracted_skills)
-        
-        # Check for granularity mismatch
-        avg_vet_skill_words = np.mean([
-            len(skill.name.split()) 
-            for unit in vet_units 
-            for skill in unit.extracted_skills
-        ]) if vet_units else 0
-        
-        avg_uni_skill_words = np.mean([
-            len(skill.name.split()) 
-            for skill in uni_course.extracted_skills
-        ]) if uni_course.extracted_skills else 0
-        
-        if avg_vet_skill_words > 0 and avg_uni_skill_words > 0:
-            granularity_ratio = avg_vet_skill_words / avg_uni_skill_words
-            result["granularity_mismatch"] = granularity_ratio > 1.5 or granularity_ratio < 0.67
+        if self.genai:
+            # Collect all skills
+            all_skills = []
+            for unit in vet_units:
+                all_skills.extend([s.name for s in unit.extracted_skills])
+            
+            # Use AI to identify and decompose composite skills
+            composite_result = self.genai.decompose_composite_skills(all_skills[:50])
+            
+            for comp_skill in composite_result.get("composite_skills", []):
+                if comp_skill.get("is_composite"):
+                    result["composite_skills_found"].append(comp_skill["original_skill"])
+                    result["decomposition_mapping"][comp_skill["original_skill"]] = [
+                        c["name"] for c in comp_skill.get("components", [])
+                    ]
+            
+            # Check if decomposition improves coverage
+            if mapping and result["decomposition_mapping"]:
+                # This would require recalculating mapping with decomposed skills
+                # For now, estimate improvement
+                result["coverage_improvement"] = len(result["decomposition_mapping"]) * 0.05
         
         return result
     
     def handle_implicit_skills(self,
                               vet_units: List[UnitOfCompetency],
                               uni_course: UniCourse) -> Dict[str, Any]:
-        """Handle implicit skills that aren't explicitly stated"""
+        """Handle implicit skills using Gen AI"""
         result = {
             "inferred_vet_skills": [],
             "inferred_uni_skills": [],
@@ -444,45 +413,38 @@ class EdgeCaseHandler:
             "validation_required": []
         }
         
-        # Common implicit skill patterns
-        implicit_patterns = {
-            "programming": ["debugging", "testing", "version control", "documentation"],
-            "database": ["backup", "security", "optimization", "migration"],
-            "web development": ["responsive design", "cross-browser compatibility", "accessibility"],
-            "project": ["time management", "risk assessment", "stakeholder communication"],
-            "analysis": ["data collection", "interpretation", "reporting", "validation"],
-        }
-        
-        # Check VET units for implicit skills
-        for unit in vet_units:
-            text = unit.get_full_text().lower()
-            explicit_skills = {s.name.lower() for s in unit.extracted_skills}
+        if self.genai:
+            # Get explicit skills
+            vet_explicit = []
+            for unit in vet_units:
+                vet_explicit.extend([s.name for s in unit.extracted_skills])
             
-            for trigger, implied in implicit_patterns.items():
-                if trigger in text:
-                    for skill in implied:
-                        if skill not in explicit_skills and skill not in text:
-                            result["inferred_vet_skills"].append(skill)
-                            result["confidence_levels"][skill] = 0.6
-                            result["validation_required"].append(skill)
-        
-        # Check Uni course for implicit skills
-        uni_text = uni_course.get_full_text().lower()
-        uni_explicit = {s.name.lower() for s in uni_course.extracted_skills}
-        
-        for trigger, implied in implicit_patterns.items():
-            if trigger in uni_text:
-                for skill in implied:
-                    if skill not in uni_explicit and skill not in uni_text:
-                        result["inferred_uni_skills"].append(skill)
-                        result["confidence_levels"][skill] = result["confidence_levels"].get(skill, 0.7)
+            uni_explicit = [s.name for s in uni_course.extracted_skills]
+            
+            # Find implicit skills for VET
+            vet_text = " ".join([unit.get_full_text()[:500] for unit in vet_units])
+            vet_implicit = self.genai.identify_implicit_skills(vet_text, vet_explicit[:20])
+            
+            for skill in vet_implicit:
+                result["inferred_vet_skills"].append(skill["name"])
+                result["confidence_levels"][skill["name"]] = skill.get("confidence", 0.6)
+                if skill.get("confidence", 0) < 0.7:
+                    result["validation_required"].append(skill["name"])
+            
+            # Find implicit skills for Uni
+            uni_text = uni_course.get_full_text()[:1000]
+            uni_implicit = self.genai.identify_implicit_skills(uni_text, uni_explicit[:20])
+            
+            for skill in uni_implicit:
+                result["inferred_uni_skills"].append(skill["name"])
+                result["confidence_levels"][skill["name"]] = skill.get("confidence", 0.7)
         
         return result
     
     def handle_version_mismatch(self,
-                               vet_skills: List[Skill],
-                               uni_skills: List[Skill]) -> Dict[str, Any]:
-        """Handle version mismatches in technologies/tools"""
+                               vet_units: List[UnitOfCompetency],
+                               uni_course: UniCourse) -> Dict[str, Any]:
+        """Handle version mismatches in technologies using Gen AI"""
         result = {
             "version_mismatches": [],
             "core_skill_preserved": {},
@@ -490,59 +452,53 @@ class EdgeCaseHandler:
             "training_requirements": []
         }
         
-        # Technology version extraction patterns
-        tech_patterns = {
-            "python": (r"python\s*(\d+(?:\.\d+)?)", 0.85),
-            "java": (r"java\s*(?:se\s*)?(\d+)", 0.9),
-            "javascript": (r"(?:javascript|js)\s*(?:es)?(\d+)?", 0.8),
-            "react": (r"react(?:\.?js)?\s*(?:v)?(\d+(?:\.\d+)?)", 0.7),
-            "angular": (r"angular(?:js)?\s*(?:v)?(\d+)?", 0.5),
-            ".net": (r"\.net\s*(?:core\s*)?(?:framework\s*)?(\d+(?:\.\d+)?)", 0.8),
-        }
-        
-        for vet_skill in vet_skills:
-            for tech, (pattern, preservation_rate) in tech_patterns.items():
-                if tech in vet_skill.name.lower():
-                    vet_match = re.search(pattern, vet_skill.name.lower())
+        if self.genai:
+            # Extract technology versions from VET
+            vet_technologies = {}
+            for unit in vet_units:
+                text = unit.get_full_text()
+                tech_result = self.genai.extract_technology_versions(text)
+                for tech in tech_result.get("technologies", []):
+                    vet_technologies[tech["name"]] = tech.get("version", "unknown")
+            
+            # Extract technology versions from Uni
+            uni_text = uni_course.get_full_text()
+            uni_tech_result = self.genai.extract_technology_versions(uni_text)
+            
+            # Compare versions
+            for uni_tech in uni_tech_result.get("technologies", []):
+                tech_name = uni_tech["name"]
+                uni_version = uni_tech.get("version", "latest")
+                
+                if tech_name in vet_technologies:
+                    vet_version = vet_technologies[tech_name]
                     
-                    if vet_match:
-                        vet_version = vet_match.group(1) or "unspecified"
+                    if vet_version != uni_version:
+                        mismatch = {
+                            "technology": tech_name,
+                            "vet_version": vet_version,
+                            "uni_version": uni_version,
+                            "skill_preserved": 0.8  # Default preservation
+                        }
+                        result["version_mismatches"].append(mismatch)
+                        result["core_skill_preserved"][tech_name] = 0.8
                         
-                        # Check uni skills for same tech
-                        for uni_skill in uni_skills:
-                            if tech in uni_skill.name.lower():
-                                uni_match = re.search(pattern, uni_skill.name.lower())
-                                
-                                if uni_match:
-                                    uni_version = uni_match.group(1) or "latest"
-                                    
-                                    if vet_version != uni_version:
-                                        mismatch = {
-                                            "technology": tech,
-                                            "vet_version": vet_version,
-                                            "uni_version": uni_version,
-                                            "skill_preserved": preservation_rate
-                                        }
-                                        result["version_mismatches"].append(mismatch)
-                                        result["core_skill_preserved"][tech] = preservation_rate
-                                        
-                                        # Assess update difficulty
-                                        difficulty = self._assess_update_difficulty(
-                                            tech, vet_version, uni_version
-                                        )
-                                        result["update_difficulty"][tech] = difficulty
-                                        
-                                        # Add training requirement
-                                        result["training_requirements"].append(
-                                            f"Update {tech} from {vet_version} to {uni_version}"
-                                        )
+                        # Assess difficulty
+                        if uni_tech.get("update_priority") == "high":
+                            result["update_difficulty"][tech_name] = "high"
+                        else:
+                            result["update_difficulty"][tech_name] = "medium"
+                        
+                        result["training_requirements"].append(
+                            f"Update {tech_name} from {vet_version} to {uni_version}"
+                        )
         
         return result
     
     def handle_prerequisite_chain(self,
                                   vet_units: List[UnitOfCompetency],
                                   uni_course: UniCourse) -> Dict[str, Any]:
-        """Handle prerequisite chains and dependencies"""
+        """Handle prerequisite chains using Gen AI"""
         result = {
             "missing_prerequisites": [],
             "prerequisite_coverage": {},
@@ -550,36 +506,43 @@ class EdgeCaseHandler:
             "recommended_sequence": []
         }
         
-        # Check if VET units cover uni course prerequisites
-        for prereq in uni_course.prerequisites:
-            prereq_lower = prereq.lower()
-            covered = False
+        if self.genai and uni_course.prerequisites:
+            # Analyze prerequisites with AI
+            uni_text = uni_course.get_full_text()[:1000]
+            prereq_analysis = self.genai.analyze_prerequisites(
+                uni_course.prerequisites, 
+                uni_text
+            )
             
+            # Check if VET units cover the implied skills
+            vet_skills = set()
             for unit in vet_units:
-                # Check in unit name, description, and skills
-                if (prereq_lower in unit.name.lower() or 
-                    prereq_lower in unit.description.lower() or
-                    any(prereq_lower in s.name.lower() for s in unit.extracted_skills)):
-                    covered = True
-                    result["prerequisite_coverage"][prereq] = unit.code
-                    break
+                vet_skills.update([s.name.lower() for s in unit.extracted_skills])
             
-            if not covered:
-                result["missing_prerequisites"].append(prereq)
-                result["dependency_gaps"].append(f"Prerequisite '{prereq}' not covered")
-        
-        # Check VET prerequisite alignment
-        vet_prereqs = set()
-        for unit in vet_units:
-            vet_prereqs.update(unit.prerequisites)
-        
-        # Recommend sequence if prerequisites are missing
-        if result["missing_prerequisites"]:
-            result["recommended_sequence"] = [
-                "1. Complete bridging modules for prerequisites",
-                "2. Review VET unit content",
-                "3. Proceed with credit transfer assessment"
-            ]
+            for prereq in prereq_analysis.get("prerequisites", []):
+                prereq_name = prereq["prerequisite"]
+                covered = False
+                
+                for impl_skill in prereq.get("implied_skills", []):
+                    skill_name = impl_skill["name"].lower()
+                    if skill_name in vet_skills:
+                        covered = True
+                        result["prerequisite_coverage"][prereq_name] = "covered"
+                        break
+                
+                if not covered:
+                    result["missing_prerequisites"].append(prereq_name)
+                    result["dependency_gaps"].append(
+                        f"Prerequisite '{prereq_name}' skills not covered"
+                    )
+            
+            # Recommend sequence if gaps exist
+            if result["missing_prerequisites"]:
+                result["recommended_sequence"] = [
+                    "1. Complete bridging modules for prerequisites",
+                    "2. Review VET unit content",
+                    "3. Proceed with credit transfer assessment"
+                ]
         
         return result
     
@@ -599,7 +562,7 @@ class EdgeCaseHandler:
         result["vet_total_hours"] = sum(unit.nominal_hours for unit in vet_units)
         
         # Typical conversion: 1 credit point = 10-15 hours of study
-        estimated_uni_hours = uni_course.credit_points * 12.5  # Using middle value
+        estimated_uni_hours = uni_course.credit_points * 12.5
         
         if estimated_uni_hours > 0:
             result["hour_ratio"] = result["vet_total_hours"] / estimated_uni_hours
@@ -625,36 +588,25 @@ class EdgeCaseHandler:
             return 0.0
         
         covered = 0
-        for target in target_skills:
-            for source in source_skills:
-                if self._skills_similar(source.name, target.name, threshold=0.7):
-                    covered += 1
-                    break
+        
+        if self.genai:
+            # Use AI for similarity assessment
+            for target in target_skills:
+                for source in source_skills:
+                    similarity = self.genai.analyze_skill_similarity(
+                        source.name, 
+                        target.name
+                    )
+                    if similarity >= 0.7:
+                        covered += 1
+                        break
+        else:
+            # Fallback to simple name matching
+            target_names = {s.name.lower() for s in target_skills}
+            source_names = {s.name.lower() for s in source_skills}
+            covered = len(target_names.intersection(source_names))
         
         return covered / len(target_skills)
-    
-    def _skills_similar(self, skill1: str, skill2: str, threshold: float = 0.7) -> bool:
-        """Check if two skill names are similar"""
-        skill1_lower = skill1.lower()
-        skill2_lower = skill2.lower()
-        
-        # Exact match
-        if skill1_lower == skill2_lower:
-            return True
-        
-        # One contains the other
-        if skill1_lower in skill2_lower or skill2_lower in skill1_lower:
-            return True
-        
-        # Word overlap
-        words1 = set(skill1_lower.split())
-        words2 = set(skill2_lower.split())
-        
-        if words1 and words2:
-            jaccard = len(words1.intersection(words2)) / len(words1.union(words2))
-            return jaccard >= threshold
-        
-        return False
     
     def _analyze_unit_overlap(self, units: List[UnitOfCompetency]) -> Dict[str, Any]:
         """Analyze skill overlap between units"""
@@ -697,7 +649,7 @@ class EdgeCaseHandler:
                                   coverage_by_unit: Dict, 
                                   threshold: float) -> List[str]:
         """Find minimum combination of units to meet threshold"""
-        # Sort units by coverage (greedy approach)
+        # Sort units by coverage
         sorted_units = sorted(
             coverage_by_unit.items(), 
             key=lambda x: x[1]["coverage"] if isinstance(x[1], dict) else x[1],
@@ -710,10 +662,9 @@ class EdgeCaseHandler:
         for unit_code, info in sorted_units:
             coverage = info["coverage"] if isinstance(info, dict) else info
             
-            # Add unit to combination
             combination.append(unit_code)
             
-            # Update cumulative coverage (with diminishing returns)
+            # Update cumulative coverage
             marginal_coverage = coverage * (1 - cumulative_coverage * 0.2)
             cumulative_coverage += marginal_coverage
             
@@ -726,15 +677,13 @@ class EdgeCaseHandler:
                                   units: List[UnitOfCompetency],
                                   course: UniCourse,
                                   threshold: float) -> List[str]:
-        """Find optimal combination for best coverage with minimal redundancy"""
-        # More sophisticated than minimum - considers overlap
+        """Find optimal combination for best coverage"""
         best_combination = []
         best_coverage = 0.0
         
-        # Try different combinations (simplified - in practice use optimization)
         from itertools import combinations
         
-        for r in range(1, min(4, len(units) + 1)):  # Limit to combinations of 3
+        for r in range(1, min(4, len(units) + 1)):
             for combo in combinations(units, r):
                 combo_skills = []
                 for unit in combo:
@@ -746,7 +695,6 @@ class EdgeCaseHandler:
                     best_coverage = coverage
                     best_combination = [u.code for u in combo]
                     
-                    # Early exit if excellent coverage
                     if coverage >= 0.95:
                         return best_combination
         
@@ -758,87 +706,65 @@ class EdgeCaseHandler:
         """Identify skills in target that aren't in source"""
         missing = []
         
-        for target in target_skills:
-            found = False
-            for source in source_skills:
-                if self._skills_similar(source.name, target.name):
-                    found = True
-                    break
-            
-            if not found:
-                missing.append(target.name)
+        if self.genai:
+            # Use AI for better skill matching
+            for target in target_skills:
+                found = False
+                for source in source_skills:
+                    similarity = self.genai.analyze_skill_similarity(
+                        source.name, 
+                        target.name
+                    )
+                    if similarity >= 0.7:
+                        found = True
+                        break
+                
+                if not found:
+                    missing.append(target.name)
+        else:
+            # Fallback to simple name matching
+            source_names = {s.name.lower() for s in source_skills}
+            for target in target_skills:
+                if target.name.lower() not in source_names:
+                    missing.append(target.name)
         
         return missing
     
-    def _decompose_skill(self, skill_name: str) -> List[str]:
-        """Decompose composite skill into components"""
-        # Simplified decomposition rules
-        decomposition_rules = {
-            "project management": ["planning", "execution", "monitoring", "closure"],
-            "software development": ["design", "coding", "testing", "deployment"],
-            "data analysis": ["collection", "processing", "visualization", "interpretation"],
-            "system administration": ["configuration", "monitoring", "maintenance", "security"],
-            "web development": ["frontend", "backend", "database", "deployment"],
+    def _fallback_context_analysis(self, 
+                                   vet_units: List[UnitOfCompetency],
+                                   uni_course: UniCourse) -> Dict:
+        """Fallback context analysis without AI"""
+        # Basic context counting from skill objects
+        vet_contexts = defaultdict(int)
+        total_vet = 0
+        
+        for unit in vet_units:
+            for skill in unit.extracted_skills:
+                vet_contexts[skill.context.value] += 1
+                total_vet += 1
+        
+        uni_contexts = defaultdict(int)
+        total_uni = len(uni_course.extracted_skills)
+        
+        for skill in uni_course.extracted_skills:
+            uni_contexts[skill.context.value] += 1
+        
+        result = {
+            "vet_context_distribution": {},
+            "uni_context_distribution": {},
+            "imbalance_score": 0.0,
+            "bridging_requirements": [],
+            "recommended_supplements": []
         }
         
-        skill_lower = skill_name.lower()
-        
-        for composite, components in decomposition_rules.items():
-            if composite in skill_lower:
-                # Add context from original skill
-                context = skill_lower.replace(composite, "").strip()
-                if context:
-                    return [f"{comp} {context}" for comp in components]
-                return components
-        
-        return [skill_name]
-    
-    def _assess_update_difficulty(self, 
-                                  tech: str, 
-                                  old_version: str,
-                                  new_version: str) -> str:
-        """Assess difficulty of updating from old to new version"""
-        # Difficulty assessment rules
-        difficulty_map = {
-            "python": {
-                ("2", "3"): "medium",
-                ("3", "3"): "low"
-            },
-            "java": {
-                ("8", "11"): "low",
-                ("8", "17"): "medium",
-                ("6", "11"): "high"
-            },
-            "angular": {
-                ("js", "2"): "high",
-                ("2", "latest"): "medium"
+        if total_vet > 0:
+            result["vet_context_distribution"] = {
+                k: v/total_vet for k, v in vet_contexts.items()
             }
-        }
         
-        # Try to extract major version numbers
-        old_major = re.match(r"(\d+)", old_version)
-        new_major = re.match(r"(\d+)", new_version)
+        if total_uni > 0:
+            result["uni_context_distribution"] = {
+                k: v/total_uni for k, v in uni_contexts.items()
+            }
         
-        if old_major and new_major:
-            old_v = old_major.group(1)
-            new_v = new_major.group(1)
-            
-            if tech in difficulty_map:
-                for (from_v, to_v), difficulty in difficulty_map[tech].items():
-                    if old_v == from_v and new_v == to_v:
-                        return difficulty
-        
-        # Default based on version difference
-        try:
-            if old_major and new_major:
-                diff = int(new_major.group(1)) - int(old_major.group(1))
-                if diff <= 1:
-                    return "low"
-                elif diff <= 3:
-                    return "medium"
-                else:
-                    return "high"
-        except:
-            pass
-        
-        return "medium"  # Default
+        return result

@@ -357,146 +357,33 @@ def analyze_transfer(vet_file: str, uni_file: str, output_file: str,
 
 
 def main():
-    """Main entry point with CLI"""
-    parser = argparse.ArgumentParser(
-        description="Credit Transfer Analysis System - Analyze VET to University credit transfers"
-    )
     
-    parser.add_argument(
-        "vet_file",
-        help="Path to VET qualification JSON file"
-    )
-    parser.add_argument(
-        "uni_file",
-        help="Path to university qualification JSON file"
-    )
-    parser.add_argument(
-        "-o", "--output",
-        default="output/recommendations.json",
-        help="Output file path (default: output/recommendations.json)"
-    )
-    parser.add_argument(
-        "-f", "--format",
-        choices=["json", "html", "csv", "text"],
-        default="json",
-        help="Output format (default: json)"
-    )
-    parser.add_argument(
-        "-c", "--courses",
-        nargs="+",
-        help="Specific course codes to analyze (e.g., COMP1234 COMP2345)"
-    )
-    parser.add_argument(
-        "--config",
-        help="Path to configuration file to load"
-    )
-    parser.add_argument(
-        "--save-config",
-        help="Save current configuration to file"
-    )
-    parser.add_argument(
-        "-v", "--verbose",
-        action="store_true",
-        help="Enable verbose output"
-    )
-    parser.add_argument(
-        "--use-azure-openai",
-        action="store_true",
-        help="Force use of Azure OpenAI (overrides config)"
-    )
-    parser.add_argument(
-        "--use-vllm",
-        action="store_true", 
-        help="Force use of vLLM (overrides config)"
-    )
-    parser.add_argument(
-        "--azure-endpoint",
-        help="Azure OpenAI endpoint URL"
-    )
-    parser.add_argument(
-        "--azure-deployment",
-        help="Azure OpenAI deployment name"
-    )
-    parser.add_argument(
-        "--azure-api-key",
-        help="Azure OpenAI API key"
-    )
-    parser.add_argument(
-        "--export-skills",
-        action="store_true",
-        default=True,
-        help="Export extracted skills to separate files (default: True)"
-    )
-    parser.add_argument(
-        "--skill-format",
-        choices=["json", "csv", "both"],
-        default="both",
-        help="Format for skill export (default: both)"
-    )
-    parser.add_argument(
-        "--generate-package",
-        action="store_true",
-        help="Generate complete report package with all formats"
-    )
-    
-    args = parser.parse_args()
-    
-    # Set verbosity
-    if args.verbose:
-        logging.getLogger().setLevel(logging.DEBUG)
-    
-    # Handle config operations
-    if args.save_config:
-        Config.save_config(args.save_config)
-        print(f"Configuration saved to {args.save_config}")
-        return
-    
-    if args.config:
-        Config.load_config(args.config)
-        logger.info(f"Loaded configuration from {args.config}")
-    
-    # Override config with command line arguments
-    if args.use_azure_openai:
-        Config.USE_AZURE_OPENAI = True
-        Config.USE_VLLM = False
-        Config.USE_GENAI = False
-    
-    if args.use_vllm:
-        Config.USE_VLLM = True
-        Config.USE_AZURE_OPENAI = False
-        Config.USE_GENAI = False
-    
-    if args.azure_endpoint:
-        Config.AZURE_OPENAI_ENDPOINT = args.azure_endpoint
-    
-    if args.azure_deployment:
-        Config.AZURE_OPENAI_DEPLOYMENT = args.azure_deployment
-    
-    if args.azure_api_key:
-        Config.AZURE_OPENAI_API_KEY = args.azure_api_key
+    vet_file = "./data/sample_vet.json"
+    uni_file = "./data/sample_uni.json"
     
     # Validate input files
-    if not Path(args.vet_file).exists():
-        print(f"Error: VET file not found: {args.vet_file}")
+    if not Path(vet_file).exists():
+        print(f"Error: VET file not found: {vet_file}")
         sys.exit(1)
     
-    if not Path(args.uni_file).exists():
-        print(f"Error: University file not found: {args.uni_file}")
+    if not Path(uni_file).exists():
+        print(f"Error: University file not found: {uni_file}")
         sys.exit(1)
     
+    output = "./output"
     # Create output directory if needed
-    output_path = Path(args.output)
+    output_path = Path(output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     
     # Run analysis
     try:
         analyze_transfer(
-            vet_file=args.vet_file,
-            uni_file=args.uni_file,
-            output_file=args.output,
-            target_courses=args.courses,
-            report_format=args.format,
-            export_skills=args.export_skills
+            vet_file=vet_file,
+            uni_file=uni_file,
+            output_file=output,
+            target_courses=None,
+            report_format="both",
+            export_skills=True
         )
     except Exception as e:
         logger.error(f"Analysis failed: {e}", exc_info=True)

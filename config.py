@@ -67,6 +67,7 @@ class Config:
     EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL_NAME", "jinaai--jina-embeddings-v4")
     EMBEDDING_DEVICE = os.getenv("EMBEDDING_DEVICE", "cuda")
     EMBEDDING_BATCH_SIZE = int(os.getenv("EMBEDDING_BATCH_SIZE", "32"))
+    EMBEDDING_MODE = int(os.getenv("EMBEDDING_MODE", "embedding"))  # Options: hybrid, genai, embedding
     
     # Legacy configurations (kept for compatibility)
     EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")

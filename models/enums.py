@@ -172,3 +172,9 @@ class RecommendationType(Enum):
             return cls.PARTIAL
         else:
             return cls.NONE
+        
+class EMBEDDING_MODE(Enum):
+    """Categories of skills"""
+    HYBRID = "hybrid"
+    GENAI = "genai"
+    EMBEDDING = "embedding"

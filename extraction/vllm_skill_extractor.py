@@ -1,53 +1,237 @@
 """
-Optimized skill extraction using vLLM for batch processing
+vLLM skill extraction using pure Gen AI - no batch processing, no patterns
 """
 
-import re
 import logging
-from typing import List, Dict, Set, Optional, Tuple
-from collections import defaultdict
+from typing import List, Dict, Optional, Any
 
 from models.base_models import Skill, UnitOfCompetency, UniCourse, VETQualification, UniQualification
 from models.enums import SkillLevel, SkillContext, SkillCategory, StudyLevel
 from interfaces.vllm_genai_interface import VLLMGenAIInterface
 from interfaces.embedding_interface import EmbeddingInterface
-from .patterns import ExtractionPatterns, SkillOntology, CompositeSkillDecomposer
 
 logger = logging.getLogger(__name__)
 
 
 class VLLMSkillExtractor:
-    """Optimized skill extraction using vLLM batch processing"""
+    """vLLM skill extraction using pure Gen AI - individual processing"""
     
     def __init__(self, 
                  genai: Optional[VLLMGenAIInterface] = None,
-                 embeddings: Optional[EmbeddingInterface] = None,
-                 use_genai: bool = True,
-                 batch_size: int = 8):
+                 embeddings: Optional[EmbeddingInterface] = None):
         """
-        Initialize vLLM skill extractor
+        Initialize vLLM skill extractor with Gen AI only approach
         
         Args:
-            genai: vLLM GenAI interface for batch extraction
+            genai: vLLM GenAI interface for extraction
             embeddings: Embedding interface for similarity
-            use_genai: Whether to use GenAI for extraction
-            batch_size: Batch size for vLLM processing
         """
         self.genai = genai
         self.embeddings = embeddings
-        self.use_genai = use_genai and genai is not None
-        self.batch_size = batch_size
-        
-        self.patterns = ExtractionPatterns()
-        self.ontology = SkillOntology()
-        self.decomposer = CompositeSkillDecomposer()
         
         # Cache for processed texts
         self.cache = {}
     
+    def extract_from_vet_unit(self, unit: UnitOfCompetency) -> List[Skill]:
+        """
+        Extract skills from a single VET unit using Gen AI
+        
+        Args:
+            unit: VET unit to extract skills from
+            
+        Returns:
+            List of extracted skills
+        """
+        logger.info(f"Extracting skills from VET unit: {unit.code}")
+        
+        # Check cache
+        cache_key = f"vet_{unit.code}"
+        if cache_key in self.cache:
+            unit.extracted_skills = self.cache[cache_key]
+            return self.cache[cache_key]
+        
+        skills = []
+        
+        # Combine all text sources
+        full_text = unit.get_full_text()
+        
+        # Step 1: Extract skills using Gen AI
+        ai_skills = self.genai.extract_skills_prompt(full_text, "VET unit")
+        skills.extend(self._convert_ai_skills(ai_skills, f"VET:{unit.code}"))
+        logger.debug(f"AI extracted {len(ai_skills)} skills from {unit.code}")
+        
+        # Step 2: Identify implicit skills
+        explicit_skill_names = [s["name"] for s in ai_skills]
+        implicit_skills = self.genai.identify_implicit_skills(full_text, explicit_skill_names)
+        
+        for impl_skill in implicit_skills:
+            # Get category from AI and validate it
+            category_str = self.genai.categorize_skill(impl_skill["name"], full_text)
+            category = self._validate_category(category_str)
+            
+            skill = Skill(
+                name=impl_skill["name"],
+                category=category,
+                level=SkillLevel.COMPETENT,
+                context=SkillContext.PRACTICAL,  # VET is typically practical
+                confidence=impl_skill.get("confidence", 0.6),
+                source=f"VET:{unit.code}_implicit"
+            )
+            skills.append(skill)
+        logger.debug(f"Found {len(implicit_skills)} implicit skills in {unit.code}")
+        
+        # Step 3: Decompose composite skills
+        skill_names = [s.name for s in skills]
+        composite_result = self.genai.decompose_composite_skills(skill_names)
+        
+        # Add decomposed components
+        for comp_skill in composite_result.get("composite_skills", []):
+            if comp_skill.get("is_composite"):
+                for component in comp_skill.get("components", []):
+                    # Validate category
+                    category = self._validate_category(component.get("category", "technical"))
+                    
+                    new_skill = Skill(
+                        name=component["name"],
+                        category=category,
+                        level=SkillLevel.COMPETENT,
+                        context=SkillContext.PRACTICAL,
+                        confidence=0.7,
+                        source=f"VET:{unit.code}_decomposed"
+                    )
+                    skills.append(new_skill)
+        
+        # Step 4: Determine context
+        context_result = self.genai.determine_context(full_text)
+        primary_context = context_result.get("context_analysis", {}).get("primary_context", "practical")
+        
+        # Apply context to skills
+        for skill in skills:
+            if primary_context == "practical":
+                skill.context = SkillContext.PRACTICAL
+            elif primary_context == "theoretical":
+                skill.context = SkillContext.THEORETICAL
+            else:
+                skill.context = SkillContext.HYBRID
+        
+        # Step 5: Extract keywords for top skills
+        for skill in skills[:15]:  # Limit to avoid too many calls
+            keywords = self.genai.extract_keywords(skill.name, full_text)
+            skill.keywords = keywords
+        
+        # Step 6: Deduplicate skills
+        skills = self._deduplicate_skills_with_ai(skills)
+        
+        # Cache and assign
+        self.cache[cache_key] = skills
+        unit.extracted_skills = skills
+        
+        logger.info(f"Extracted {len(skills)} skills from {unit.code}")
+        return skills
+    
+    def extract_from_uni_course(self, course: UniCourse) -> List[Skill]:
+        """
+        Extract skills from a single university course using Gen AI
+        
+        Args:
+            course: University course to extract skills from
+            
+        Returns:
+            List of extracted skills
+        """
+        logger.info(f"Extracting skills from Uni course: {course.code}")
+        
+        # Check cache
+        cache_key = f"uni_{course.code}"
+        if cache_key in self.cache:
+            course.extracted_skills = self.cache[cache_key]
+            return self.cache[cache_key]
+        
+        skills = []
+        
+        # Combine all text sources
+        full_text = course.get_full_text()
+        
+        # Step 1: Identify study level if needed
+        if not course.study_level or course.study_level == "intermediate":
+            study_level_result = self.genai.identify_study_level(full_text)
+            course.study_level = study_level_result.get("study_level", "intermediate")
+            logger.debug(f"Identified study level: {course.study_level}")
+        
+        # Step 2: Extract skills using Gen AI
+        ai_skills = self.genai.extract_skills_prompt(full_text, "university course")
+        skills.extend(self._convert_ai_skills(ai_skills, f"UNI:{course.code}"))
+        logger.debug(f"AI extracted {len(ai_skills)} skills from {course.code}")
+        
+        # Step 3: Analyze prerequisites
+        if course.prerequisites:
+            prereq_result = self.genai.analyze_prerequisites(course.prerequisites, full_text)
+            for prereq in prereq_result.get("prerequisites", []):
+                for impl_skill in prereq.get("implied_skills", []):
+                    skill = Skill(
+                        name=impl_skill["name"],
+                        category=SkillCategory.FOUNDATIONAL,
+                        level=SkillLevel.from_string(impl_skill.get("level", "competent")),
+                        context=SkillContext.THEORETICAL,
+                        confidence=0.8,
+                        source=f"UNI:{course.code}_prerequisite"
+                    )
+                    skills.append(skill)
+        
+        # Step 4: Analyze assessment
+        if course.assessment:
+            assessment_result = self.genai.analyze_assessment(course.assessment)
+            assessment_context = assessment_result.get("primary_assessment_context", "hybrid")
+            
+            # Apply assessment context
+            for skill in skills:
+                if assessment_context == "practical" and skill.context == SkillContext.THEORETICAL:
+                    skill.context = SkillContext.HYBRID
+                elif assessment_context == "theoretical" and skill.context == SkillContext.PRACTICAL:
+                    skill.context = SkillContext.HYBRID
+        
+        # Step 5: Identify implicit skills
+        explicit_skill_names = [s.name for s in skills]
+        implicit_skills = self.genai.identify_implicit_skills(full_text, explicit_skill_names)
+        
+        for impl_skill in implicit_skills:
+            # Get category from AI and validate it
+            category_str = self.genai.categorize_skill(impl_skill["name"], full_text)
+            category = self._validate_category(category_str)
+            
+            skill = Skill(
+                name=impl_skill["name"],
+                category=category,
+                level=SkillLevel.COMPETENT,
+                context=SkillContext.HYBRID,
+                confidence=impl_skill.get("confidence", 0.6),
+                source=f"UNI:{course.code}_implicit"
+            )
+            skills.append(skill)
+        
+        # Step 6: Adjust skill levels based on study level
+        skills_dict = [{"name": s.name, "level": s.level.name} for s in skills]
+        level_adjustment = self.genai.adjust_skill_levels(skills_dict, course.study_level, full_text)
+        
+        for adj_skill in level_adjustment.get("adjusted_skills", []):
+            for skill in skills:
+                if skill.name == adj_skill["skill_name"]:
+                    skill.level = SkillLevel.from_string(adj_skill["adjusted_level"])
+                    break
+        
+        # Step 7: Deduplicate skills
+        skills = self._deduplicate_skills_with_ai(skills)
+        
+        # Cache and assign
+        self.cache[cache_key] = skills
+        course.extracted_skills = skills
+        
+        logger.info(f"Extracted {len(skills)} skills from {course.code}")
+        return skills
+    
     def extract_from_vet_qualification(self, vet_qual: VETQualification) -> Dict[str, List[Skill]]:
         """
-        Extract skills from entire VET qualification using batch processing
+        Extract skills from entire VET qualification (individual processing)
         
         Args:
             vet_qual: VET qualification to process
@@ -55,107 +239,20 @@ class VLLMSkillExtractor:
         Returns:
             Dictionary mapping unit codes to extracted skills
         """
-        logger.info(f"Batch extracting skills from VET qualification: {vet_qual.code}")
+        logger.info(f"Extracting skills from VET qualification: {vet_qual.code}")
         
-        if not vet_qual.units:
-            return {}
-        
-        # Prepare batch data
-        unit_texts = []
-        unit_codes = []
-        
-        for unit in vet_qual.units:
-            # Check cache first
-            cache_key = f"vet_{unit.code}"
-            if cache_key in self.cache:
-                unit.extracted_skills = self.cache[cache_key]
-                continue
-            
-            unit_texts.append(unit.get_full_text())
-            unit_codes.append(unit.code)
-        
-        if not unit_texts:
-            logger.info("All units already cached")
-            return {unit.code: unit.extracted_skills for unit in vet_qual.units}
-        
-        # Batch process with vLLM if available
         all_skills = {}
         
-        if self.use_genai and unit_texts:
-            try:
-                # Process in batches
-                logger.info(f"Processing {len(unit_texts)} units in batches of {self.batch_size}")
-                
-                batch_results = []
-                for i in range(0, len(unit_texts), self.batch_size):
-                    batch_texts = unit_texts[i:i + self.batch_size]
-                    batch_codes = unit_codes[i:i + self.batch_size]
-                    
-                    # Get AI-extracted skills for batch
-                    ai_skills_batch = self.genai.extract_skills_batch(batch_texts, "VET unit")
-                    
-                    # Process each result
-                    for j, (text, code, ai_skills) in enumerate(zip(batch_texts, batch_codes, ai_skills_batch)):
-                        skills = self._process_extracted_skills(ai_skills, f"VET:{code}")
-                        
-                        # Add pattern-based extraction as supplement
-                        pattern_skills = self._extract_with_patterns(text, "VET", code)
-                        skills.extend(pattern_skills)
-                        
-                        # Process and deduplicate
-                        skills = self._handle_composite_skills(skills)
-                        skills = self._deduplicate_skills(skills)
-                        
-                        # Adjust for VET context
-                        for skill in skills:
-                            if skill.context == SkillContext.HYBRID:
-                                skill.context = SkillContext.PRACTICAL
-                        
-                        batch_results.append((code, skills))
-                    
-                    logger.info(f"Processed batch {i//self.batch_size + 1}")
-                
-                # Assign results
-                for code, skills in batch_results:
-                    # Find corresponding unit
-                    for unit in vet_qual.units:
-                        if unit.code == code:
-                            unit.extracted_skills = skills
-                            self.cache[f"vet_{code}"] = skills
-                            all_skills[code] = skills
-                            break
-                            
-            except Exception as e:
-                logger.warning(f"vLLM batch processing failed: {e}. Falling back to pattern extraction.")
-                
-                # Fallback to pattern-based extraction
-                for text, code in zip(unit_texts, unit_codes):
-                    skills = self._fallback_extract(text, "VET", code)
-                    
-                    for unit in vet_qual.units:
-                        if unit.code == code:
-                            unit.extracted_skills = skills
-                            self.cache[f"vet_{code}"] = skills
-                            all_skills[code] = skills
-                            break
-        else:
-            # Pattern-based extraction only
-            for text, code in zip(unit_texts, unit_codes):
-                skills = self._fallback_extract(text, "VET", code)
-                
-                for unit in vet_qual.units:
-                    if unit.code == code:
-                        unit.extracted_skills = skills
-                        self.cache[f"vet_{code}"] = skills
-                        all_skills[code] = skills
-                        break
+        for unit in vet_qual.units:
+            skills = self.extract_from_vet_unit(unit)
+            all_skills[unit.code] = skills
         
         logger.info(f"Extracted skills from {len(all_skills)} units")
         return all_skills
     
     def extract_from_uni_qualification(self, uni_qual: UniQualification) -> Dict[str, List[Skill]]:
         """
-        Extract skills from entire university qualification using batch processing
+        Extract skills from entire university qualification (individual processing)
         
         Args:
             uni_qual: University qualification to process
@@ -163,348 +260,169 @@ class VLLMSkillExtractor:
         Returns:
             Dictionary mapping course codes to extracted skills
         """
-        logger.info(f"Batch extracting skills from Uni qualification: {uni_qual.code}")
+        logger.info(f"Extracting skills from Uni qualification: {uni_qual.code}")
         
-        if not uni_qual.courses:
-            return {}
-        
-        # Prepare batch data
-        course_texts = []
-        course_codes = []
-        course_levels = []
-        
-        for course in uni_qual.courses:
-            # Check cache first
-            cache_key = f"uni_{course.code}"
-            if cache_key in self.cache:
-                course.extracted_skills = self.cache[cache_key]
-                continue
-            
-            course_texts.append(course.get_full_text())
-            course_codes.append(course.code)
-            course_levels.append(course.study_level)
-        
-        if not course_texts:
-            logger.info("All courses already cached")
-            return {course.code: course.extracted_skills for course in uni_qual.courses}
-        
-        # Batch process with vLLM if available
         all_skills = {}
         
-        if self.use_genai and course_texts:
-            try:
-                logger.info(f"Processing {len(course_texts)} courses in batches of {self.batch_size}")
-                
-                batch_results = []
-                for i in range(0, len(course_texts), self.batch_size):
-                    batch_texts = course_texts[i:i + self.batch_size]
-                    batch_codes = course_codes[i:i + self.batch_size]
-                    batch_levels = course_levels[i:i + self.batch_size]
-                    
-                    # Get AI-extracted skills for batch
-                    ai_skills_batch = self.genai.extract_skills_batch(batch_texts, "university course")
-                    
-                    # Process each result
-                    for text, code, level, ai_skills in zip(batch_texts, batch_codes, batch_levels, ai_skills_batch):
-                        skills = self._process_extracted_skills(ai_skills, f"UNI:{code}")
-                        
-                        # Add pattern-based extraction
-                        pattern_skills = self._extract_with_patterns(text, "UNI", code)
-                        skills.extend(pattern_skills)
-                        
-                        # Process and deduplicate
-                        skills = self._handle_composite_skills(skills)
-                        skills = self._deduplicate_skills(skills)
-                        
-                        # Adjust for study level
-                        study_level_enum = StudyLevel.from_string(level)
-                        for skill in skills:
-                            skill.level = self._adjust_level_by_study_level(skill.level, study_level_enum)
-                        
-                        batch_results.append((code, skills))
-                    
-                    logger.info(f"Processed batch {i//self.batch_size + 1}")
-                
-                # Assign results
-                for code, skills in batch_results:
-                    for course in uni_qual.courses:
-                        if course.code == code:
-                            course.extracted_skills = skills
-                            self.cache[f"uni_{code}"] = skills
-                            all_skills[code] = skills
-                            break
-                            
-            except Exception as e:
-                logger.warning(f"vLLM batch processing failed: {e}. Falling back to pattern extraction.")
-                
-                # Fallback
-                for text, code, level in zip(course_texts, course_codes, course_levels):
-                    skills = self._fallback_extract(text, "UNI", code)
-                    
-                    # Adjust for study level
-                    study_level_enum = StudyLevel.from_string(level)
-                    for skill in skills:
-                        skill.level = self._adjust_level_by_study_level(skill.level, study_level_enum)
-                    
-                    for course in uni_qual.courses:
-                        if course.code == code:
-                            course.extracted_skills = skills
-                            self.cache[f"uni_{code}"] = skills
-                            all_skills[code] = skills
-                            break
-        else:
-            # Pattern-based extraction only
-            for text, code, level in zip(course_texts, course_codes, course_levels):
-                skills = self._fallback_extract(text, "UNI", code)
-                
-                # Adjust for study level
-                study_level_enum = StudyLevel.from_string(level)
-                for skill in skills:
-                    skill.level = self._adjust_level_by_study_level(skill.level, study_level_enum)
-                
-                for course in uni_qual.courses:
-                    if course.code == code:
-                        course.extracted_skills = skills
-                        self.cache[f"uni_{code}"] = skills
-                        all_skills[code] = skills
-                        break
+        for course in uni_qual.courses:
+            skills = self.extract_from_uni_course(course)
+            all_skills[course.code] = skills
         
         logger.info(f"Extracted skills from {len(all_skills)} courses")
         return all_skills
     
-    def extract_from_vet_unit(self, unit: UnitOfCompetency) -> List[Skill]:
-        """Extract skills from a single VET unit (for compatibility)"""
-        cache_key = f"vet_{unit.code}"
-        if cache_key in self.cache:
-            unit.extracted_skills = self.cache[cache_key]
-            return self.cache[cache_key]
+    def _validate_category(self, category_str: str) -> SkillCategory:
+        """Validate and convert category string to SkillCategory enum"""
+        valid_categories = {
+            "technical": SkillCategory.TECHNICAL,
+            "cognitive": SkillCategory.COGNITIVE,
+            "practical": SkillCategory.PRACTICAL,
+            "foundational": SkillCategory.FOUNDATIONAL,
+            "professional": SkillCategory.PROFESSIONAL
+        }
         
-        # Process single unit
-        qual = VETQualification(code="TEMP", name="Temp", level="", units=[unit])
-        results = self.extract_from_vet_qualification(qual)
+        category_lower = category_str.lower().strip()
         
-        return results.get(unit.code, [])
+        if category_lower in valid_categories:
+            return valid_categories[category_lower]
+        
+        # Try to find closest match
+        for valid_cat in valid_categories:
+            if valid_cat in category_lower or category_lower in valid_cat:
+                return valid_categories[valid_cat]
+        
+        # Default to technical
+        logger.debug(f"Invalid category '{category_str}' defaulting to 'technical'")
+        return SkillCategory.TECHNICAL
     
-    def extract_from_uni_course(self, course: UniCourse) -> List[Skill]:
-        """Extract skills from a single university course (for compatibility)"""
-        cache_key = f"uni_{course.code}"
-        if cache_key in self.cache:
-            course.extracted_skills = self.cache[cache_key]
-            return self.cache[cache_key]
+    def _validate_context(self, context_str: str) -> SkillContext:
+        """Validate and convert context string to SkillContext enum"""
+        valid_contexts = {
+            "theoretical": SkillContext.THEORETICAL,
+            "practical": SkillContext.PRACTICAL,
+            "hybrid": SkillContext.HYBRID
+        }
         
-        # Process single course
-        qual = UniQualification(code="TEMP", name="Temp", courses=[course])
-        results = self.extract_from_uni_qualification(qual)
+        context_lower = context_str.lower().strip()
         
-        return results.get(course.code, [])
+        if context_lower in valid_contexts:
+            return valid_contexts[context_lower]
+        
+        # Default to hybrid
+        logger.debug(f"Invalid context '{context_str}' defaulting to 'hybrid'")
+        return SkillContext.HYBRID
     
-    def _process_extracted_skills(self, ai_skills: List[Dict], source: str) -> List[Skill]:
+    def _convert_ai_skills(self, ai_skills: List[Dict], source: str) -> List[Skill]:
         """Convert AI-extracted skills to Skill objects"""
         skills = []
         
-        for skill_dict in ai_skills:
+        for ai_skill in ai_skills:
             try:
+                # Validate skill name
+                skill_name = ai_skill.get("name", "").strip()
+                if len(skill_name) < 3 or len(skill_name) > 100:
+                    continue
+                
+                # Validate category and context
+                category = self._validate_category(ai_skill.get("category", "technical"))
+                context = self._validate_context(ai_skill.get("context", "hybrid"))
+                
                 skill = Skill(
-                    name=skill_dict.get("name", ""),
-                    category=SkillCategory(skill_dict.get("category", "technical")),
-                    level=SkillLevel.from_string(skill_dict.get("level", "competent")),
-                    context=SkillContext(skill_dict.get("context", "hybrid")),
-                    keywords=skill_dict.get("keywords", []),
-                    confidence=skill_dict.get("confidence", 0.8),
+                    name=skill_name,
+                    category=category,
+                    level=SkillLevel.from_string(ai_skill.get("level", "competent")),
+                    context=context,
+                    keywords=ai_skill.get("keywords", [])[:10],
+                    confidence=min(1.0, max(0.0, ai_skill.get("confidence", 0.8))),
                     source=source
                 )
                 skills.append(skill)
             except Exception as e:
-                logger.debug(f"Failed to process skill: {e}")
+                logger.debug(f"Failed to convert AI skill: {e}")
         
         return skills
     
-    def _fallback_extract(self, text: str, source_type: str, source_code: str) -> List[Skill]:
-        """Fallback extraction using patterns"""
-        skills = self._extract_with_patterns(text, source_type, source_code)
+    def _deduplicate_skills_with_ai(self, skills: List[Skill]) -> List[Skill]:
+        """Deduplicate skills using Gen AI"""
+        if len(skills) <= 1:
+            return skills
         
-        # Extract from learning outcomes if present
-        outcome_pattern = r"(?:will be able to|demonstrate|develop|understand|apply)\s+([^.;]+)"
-        outcomes = re.findall(outcome_pattern, text.lower())
+        # Convert skills to dict format
+        skills_dict = [
+            {
+                "name": s.name,
+                "category": s.category.value,
+                "level": s.level.name,
+                "confidence": s.confidence
+            }
+            for s in skills
+        ]
         
-        for outcome in outcomes[:10]:  # Limit to prevent too many
-            skill_name = self._clean_skill_name(outcome)
-            if skill_name:
-                skill = Skill(
-                    name=skill_name,
-                    category=self._categorize_skill(skill_name),
-                    level=SkillLevel.COMPETENT,
-                    context=SkillContext.HYBRID,
-                    confidence=0.6,
-                    source=f"{source_type}:{source_code}"
-                )
-                skills.append(skill)
+        # Use AI to identify duplicates
+        dedup_result = self.genai.deduplicate_skills(skills_dict)
         
-        skills = self._handle_composite_skills(skills)
-        skills = self._deduplicate_skills(skills)
+        # Build merged skills
+        final_skills = []
+        processed_names = set()
         
-        return skills
-    
-    def _extract_with_patterns(self, text: str, source_type: str, source_code: str) -> List[Skill]:
-        """Extract skills using patterns"""
-        skills = []
-        text_lower = text.lower()
-        
-        for pattern, pattern_type in self.patterns.SKILL_PATTERNS:
-            matches = re.findall(pattern, text_lower)
+        # Process skill groups
+        for group in dedup_result.get("skill_groups", []):
+            similar_names = [s.lower() for s in group.get("similar_skills", [])]
+            merged_name = group.get("merged_name", "")
             
-            for match in matches:
-                skill_name = self._clean_skill_name(match)
-                if not skill_name:
-                    continue
+            if merged_name:
+                # Find best skill from group
+                best_skill = None
+                best_confidence = 0
                 
-                skill = Skill(
-                    name=skill_name,
-                    category=self._categorize_skill(skill_name),
-                    level=SkillLevel.COMPETENT,
-                    context=self._determine_context(text_lower),
-                    keywords=self._extract_keywords(skill_name, text_lower),
-                    evidence_type=pattern_type,
-                    confidence=0.7,
-                    source=f"{source_type}:{source_code}"
-                )
-                skills.append(skill)
-        
-        return skills
-    
-    def _clean_skill_name(self, name: str) -> str:
-        """Clean and normalize skill name"""
-        if not name:
-            return ""
-        
-        # Remove extra whitespace
-        name = " ".join(name.split())
-        
-        # Remove common stop words at the beginning
-        stop_prefixes = ["the", "a", "an", "and", "or", "of", "in", "on", "at", "to", "for"]
-        words = name.split()
-        while words and words[0].lower() in stop_prefixes:
-            words.pop(0)
-        
-        name = " ".join(words)
-        
-        # Limit length
-        if len(name) > 100:
-            name = name[:100]
-        
-        # Basic validation
-        if len(name) < 3 or len(name.split()) > 10:
-            return ""
-        
-        return name.strip()
-    
-    def _categorize_skill(self, skill_name: str) -> SkillCategory:
-        """Categorize skill based on keywords and ontology"""
-        skill_lower = skill_name.lower()
-        
-        # Check keyword categories
-        for category, keywords in self.patterns.CATEGORY_KEYWORDS.items():
-            if any(keyword in skill_lower for keyword in keywords):
-                return SkillCategory(category)
-        
-        return SkillCategory.TECHNICAL
-    
-    def _determine_context(self, text: str) -> SkillContext:
-        """Determine if content is theoretical, practical, or hybrid"""
-        text_lower = text.lower()
-        
-        practical_count = sum(
-            1 for ind in self.patterns.CONTEXT_INDICATORS["practical"] 
-            if ind in text_lower
-        )
-        theoretical_count = sum(
-            1 for ind in self.patterns.CONTEXT_INDICATORS["theoretical"] 
-            if ind in text_lower
-        )
-        
-        if practical_count > theoretical_count * 1.5:
-            return SkillContext.PRACTICAL
-        elif theoretical_count > practical_count * 1.5:
-            return SkillContext.THEORETICAL
-        else:
-            return SkillContext.HYBRID
-    
-    def _extract_keywords(self, skill_name: str, context_text: str) -> List[str]:
-        """Extract relevant keywords for a skill"""
-        keywords = []
-        skill_words = set(skill_name.lower().split())
-        
-        # Find words that frequently appear near the skill name
-        if skill_name.lower() in context_text.lower():
-            pattern = f"\\b\\w+\\s+{re.escape(skill_name.lower())}\\s+\\w+\\b"
-            matches = re.findall(pattern, context_text.lower())
-            
-            for match in matches[:5]:
-                words = match.split()
-                for word in words:
-                    if word not in skill_words and len(word) > 3:
-                        keywords.append(word)
-        
-        return list(set(keywords))[:10]
-    
-    def _handle_composite_skills(self, skills: List[Skill]) -> List[Skill]:
-        """Handle composite skills by decomposing them"""
-        expanded_skills = []
-        
-        for skill in skills:
-            if self.decomposer.is_composite(skill.name):
-                components = self.decomposer.decompose(skill.name)
-                expanded_skills.append(skill)
+                for skill in skills:
+                    if skill.name.lower() in similar_names:
+                        if skill.confidence > best_confidence:
+                            best_skill = skill
+                            best_confidence = skill.confidence
+                        processed_names.add(skill.name.lower())
                 
-                for component_name in components:
-                    if component_name != skill.name:
-                        component_skill = Skill(
-                            name=component_name,
-                            category=skill.category,
-                            level=skill.level,
-                            context=skill.context,
-                            confidence=skill.confidence * 0.8,
-                            source=f"decomposed_from_{skill.source}"
-                        )
-                        expanded_skills.append(component_skill)
-            else:
-                expanded_skills.append(skill)
+                if best_skill:
+                    # Update with merged properties
+                    best_skill.name = merged_name
+                    # Validate category before setting
+                    merged_category = self._validate_category(group.get("merged_category", best_skill.category.value))
+                    best_skill.category = merged_category
+                    best_skill.level = SkillLevel.from_string(group.get("merged_level", best_skill.level.name))
+                    final_skills.append(best_skill)
         
-        return expanded_skills
-    
-    def _deduplicate_skills(self, skills: List[Skill]) -> List[Skill]:
-        """Remove duplicate skills, keeping highest confidence"""
-        skill_dict = {}
+        # Add unique skills
+        for skill_name in dedup_result.get("unique_skills", []):
+            for skill in skills:
+                if skill.name == skill_name and skill.name.lower() not in processed_names:
+                    final_skills.append(skill)
+                    processed_names.add(skill.name.lower())
         
+        # Add any remaining skills
         for skill in skills:
-            key = skill.name.lower().strip()
-            
-            if key not in skill_dict:
-                skill_dict[key] = skill
-            else:
-                if skill.confidence > skill_dict[key].confidence:
-                    skill_dict[key] = skill
-                elif skill.keywords:
-                    existing_keywords = set(skill_dict[key].keywords)
-                    existing_keywords.update(skill.keywords)
-                    skill_dict[key].keywords = list(existing_keywords)[:10]
+            if skill.name.lower() not in processed_names:
+                final_skills.append(skill)
         
-        return list(skill_dict.values())
-    
-    def _adjust_level_by_study_level(self, base_level: SkillLevel, study_level: StudyLevel) -> SkillLevel:
-        """Adjust skill level based on study level"""
-        if study_level == StudyLevel.INTRODUCTORY:
-            return min(base_level, SkillLevel.ADVANCED_BEGINNER)
-        elif study_level == StudyLevel.INTERMEDIATE:
-            return base_level
-        elif study_level == StudyLevel.ADVANCED:
-            return max(base_level, SkillLevel.COMPETENT)
-        elif study_level == StudyLevel.SPECIALIZED:
-            return max(base_level, SkillLevel.PROFICIENT)
-        else:  # POSTGRADUATE
-            return max(base_level, SkillLevel.EXPERT)
+        return final_skills
     
     def clear_cache(self):
         """Clear the extraction cache"""
         self.cache.clear()
         logger.info("Extraction cache cleared")
+    
+    def get_extraction_stats(self) -> Dict[str, Any]:
+        """Get statistics about the extraction process"""
+        return {
+            "cache_size": len(self.cache),
+            "extraction_mode": "vllm_individual_genai_only",
+            "features": [
+                "individual_processing",
+                "pure_genai_extraction",
+                "ai_based_deduplication",
+                "ai_study_level_detection",
+                "ai_context_determination",
+                "ai_skill_categorization",
+                "ai_implicit_skill_detection",
+                "ai_composite_decomposition"
+            ]
+        }

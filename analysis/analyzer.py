@@ -1,5 +1,5 @@
 """
-Main credit transfer analyzer - Updated to support OpenAI extractor
+Main credit transfer analyzer - Updated to use Gen AI for all operations
 """
 
 import logging
@@ -27,14 +27,14 @@ logger = logging.getLogger(__name__)
 
 
 class CreditTransferAnalyzer:
-    """Main analyzer for credit transfer recommendations"""
+    """Main analyzer for credit transfer recommendations using Gen AI"""
     
     def __init__(self,
                  genai: Optional[GenAIInterface] = None,
                  embeddings: Optional[EmbeddingInterface] = None,
                  config: Optional[Dict] = None):
         """
-        Initialize credit transfer analyzer
+        Initialize credit transfer analyzer with Gen AI support
         
         Args:
             genai: GenAI interface for advanced extraction
@@ -47,12 +47,12 @@ class CreditTransferAnalyzer:
         
         # Initialize components based on interface type
         if Config.USE_VLLM and isinstance(genai, VLLMGenAIInterface):
-            # Use optimized vLLM extractor for batch processing
+            # Use vLLM extractor (individual processing, no batch)
             self.extractor = VLLMSkillExtractor(genai, embeddings)
-            logger.info("Using vLLM skill extractor for batch processing")
+            logger.info("Using vLLM skill extractor with Gen AI only approach")
             
         elif isinstance(genai, GenAIInterface) and hasattr(genai, 'client'):
-            # Use OpenAI extractor for Azure OpenAI (individual requests, no batch)
+            # Use OpenAI extractor for Azure OpenAI
             delay = self.config.get("openai_delay_between_requests", 1.0)
             
             self.extractor = OpenAISkillExtractor(
@@ -60,15 +60,18 @@ class CreditTransferAnalyzer:
                 embeddings, 
                 delay_between_requests=delay
             )
-            logger.info("Using OpenAI skill extractor for Azure OpenAI API (individual requests)")
+            logger.info("Using OpenAI skill extractor with Gen AI only approach")
             
         else:
-            # Use standard extractor
+            # Use standard extractor with Gen AI
             self.extractor = SkillExtractor(genai, embeddings)
-            logger.info("Using standard skill extractor")
+            logger.info("Using standard skill extractor with Gen AI")
         
-        self.mapper = SkillMapper(embeddings)
-        self.edge_handler = EdgeCaseHandler()
+        # Initialize mapper with Gen AI support
+        self.mapper = SkillMapper(embeddings, genai)
+        
+        # Initialize edge handler with Gen AI support
+        self.edge_handler = EdgeCaseHandler(genai)
         
         # Configuration
         self.min_alignment_score = self.config.get("min_alignment_score", 0.5)
@@ -82,7 +85,7 @@ class CreditTransferAnalyzer:
                         uni_qual: UniQualification,
                         target_courses: Optional[List[str]] = None) -> List[CreditTransferRecommendation]:
         """
-        Analyze credit transfer possibilities
+        Analyze credit transfer possibilities using Gen AI
         
         Args:
             vet_qual: VET qualification to analyze
@@ -96,42 +99,22 @@ class CreditTransferAnalyzer:
         
         recommendations = []
         
-        # Check if we have vLLM batch extractor
-        if Config.USE_VLLM and isinstance(self.extractor, VLLMSkillExtractor):
-            # Use batch extraction for efficiency with vLLM
-            logger.info("Using batch extraction for VET units...")
-            self.extractor.extract_from_vet_qualification(vet_qual)
-            
-            logger.info("Using batch extraction for University courses...")
-            if target_courses:
-                # Filter courses first
-                filtered_qual = UniQualification(
-                    code=uni_qual.code,
-                    name=uni_qual.name,
-                    courses=[c for c in uni_qual.courses if c.code in target_courses]
-                )
-                self.extractor.extract_from_uni_qualification(filtered_qual)
-                courses_to_analyze = filtered_qual.courses
-            else:
-                self.extractor.extract_from_uni_qualification(uni_qual)
-                courses_to_analyze = uni_qual.courses
-        else:
-            # Standard extraction (one by one)
-            logger.info("Extracting skills from VET units...")
-            for unit in vet_qual.units:
-                if not unit.extracted_skills:
-                    self.extractor.extract_from_vet_unit(unit)
-            
-            # Filter target courses if specified
-            courses_to_analyze = uni_qual.courses
-            if target_courses:
-                courses_to_analyze = [c for c in uni_qual.courses if c.code in target_courses]
-            
-            # Extract skills from university courses
-            logger.info(f"Extracting skills from {len(courses_to_analyze)} university courses...")
-            for course in courses_to_analyze:
-                if not course.extracted_skills:
-                    self.extractor.extract_from_uni_course(course)
+        # Extract skills from VET units
+        logger.info("Extracting skills from VET units...")
+        for unit in vet_qual.units:
+            if not unit.extracted_skills:
+                self.extractor.extract_from_vet_unit(unit)
+        
+        # Filter target courses if specified
+        courses_to_analyze = uni_qual.courses
+        if target_courses:
+            courses_to_analyze = [c for c in uni_qual.courses if c.code in target_courses]
+        
+        # Extract skills from university courses
+        logger.info(f"Extracting skills from {len(courses_to_analyze)} university courses...")
+        for course in courses_to_analyze:
+            if not course.extracted_skills:
+                self.extractor.extract_from_uni_course(course)
         
         # Analyze each university course
         for course in courses_to_analyze:
@@ -160,7 +143,7 @@ class CreditTransferAnalyzer:
     def _analyze_single_mappings(self,
                                  units: List[UnitOfCompetency],
                                  course: UniCourse) -> List[CreditTransferRecommendation]:
-        """Analyze single unit to course mappings"""
+        """Analyze single unit to course mappings using Gen AI"""
         recommendations = []
         
         for unit in units:
@@ -188,12 +171,12 @@ class CreditTransferAnalyzer:
     def _analyze_single_mapping(self,
                                unit: UnitOfCompetency,
                                course: UniCourse) -> CreditTransferRecommendation:
-        """Analyze single unit to course mapping"""
+        """Analyze single unit to course mapping using Gen AI"""
         
         # Map skills
         mapping = self.mapper.map_skills(unit.extracted_skills, course.extracted_skills)
         
-        # Handle edge cases
+        # Handle edge cases with Gen AI
         edge_cases = self.edge_handler.process_edge_cases([unit], course, mapping)
         
         # Calculate scores
@@ -231,7 +214,7 @@ class CreditTransferAnalyzer:
     def _analyze_combination_mappings(self,
                                       units: List[UnitOfCompetency],
                                       course: UniCourse) -> List[CreditTransferRecommendation]:
-        """Analyze combinations of units mapping to course"""
+        """Analyze combinations of units mapping to course using Gen AI"""
         recommendations = []
         
         from itertools import combinations
@@ -255,7 +238,7 @@ class CreditTransferAnalyzer:
                 if mapping.coverage_score < 0.7:
                     continue
                 
-                # Perform full analysis
+                # Perform full analysis with Gen AI
                 edge_cases = self.edge_handler.process_edge_cases(list(combo), course, mapping)
                 alignment_score = self._calculate_alignment_score(mapping, edge_cases)
                 
@@ -288,7 +271,7 @@ class CreditTransferAnalyzer:
                                    edge_cases: Dict[str, Any]) -> float:
         """Calculate overall alignment score"""
         
-        # Base weights (adjusted without depth component)
+        # Base weights
         weights = {
             "coverage": 0.5,
             "context": 0.25,
@@ -351,7 +334,7 @@ class CreditTransferAnalyzer:
         
         # Missing skills
         if mapping.unmapped_uni:
-            skill_names = [s.name for s in mapping.unmapped_uni[:3]]  # Limit display
+            skill_names = [s.name for s in mapping.unmapped_uni[:3]]
             conditions.append(f"Bridge missing skills: {', '.join(skill_names)}")
         
         # Context imbalance
@@ -397,6 +380,10 @@ class CreditTransferAnalyzer:
         if "credit_hours" in edge_cases:
             if not edge_cases["credit_hours"].get("adjustment_needed", False):
                 evidence.append("Credit hour alignment acceptable")
+        
+        # Add AI analysis method
+        if mapping.metadata.get("use_ai"):
+            evidence.append("Analyzed using AI-powered skill matching")
         
         return evidence
     
@@ -462,6 +449,10 @@ class CreditTransferAnalyzer:
             if direct_ratio > 0.7:
                 confidence += 0.1
         
+        # Boost if using AI
+        if mapping.metadata.get("use_ai"):
+            confidence += 0.05
+        
         return max(0.3, min(1.0, confidence))
     
     def _filter_recommendations(self,
@@ -503,8 +494,10 @@ class CreditTransferAnalyzer:
                 "vet_qualification": vet_qual.code,
                 "uni_qualification": uni_qual.code,
                 "analysis_timestamp": timestamp,
-                "analyzer_version": "1.0.0",
-                "extractor_type": type(self.extractor).__name__
+                "analyzer_version": "2.0.0",  # Updated version for Gen AI
+                "extractor_type": type(self.extractor).__name__,
+                "uses_genai": self.genai is not None,
+                "uses_embeddings": self.embeddings is not None
             })
     
     def export_recommendations(self,
@@ -515,7 +508,8 @@ class CreditTransferAnalyzer:
             "recommendations": [rec.to_dict() for rec in recommendations],
             "summary": self._generate_summary(recommendations),
             "timestamp": datetime.now().isoformat(),
-            "extractor_stats": self._get_extractor_stats()
+            "extractor_stats": self._get_extractor_stats(),
+            "analysis_method": "gen_ai_powered"
         }
         
         with open(filepath, 'w') as f:
@@ -536,7 +530,8 @@ class CreditTransferAnalyzer:
             "conditional_credit": len(conditional),
             "partial_credit": len(partial),
             "average_alignment": sum(r.alignment_score for r in recommendations) / len(recommendations) if recommendations else 0,
-            "average_confidence": sum(r.confidence for r in recommendations) / len(recommendations) if recommendations else 0
+            "average_confidence": sum(r.confidence for r in recommendations) / len(recommendations) if recommendations else 0,
+            "uses_ai": self.genai is not None
         }
     
     def _get_extractor_stats(self) -> Dict:
