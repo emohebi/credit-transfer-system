@@ -87,7 +87,10 @@ def initialize_interfaces():
     """Initialize GenAI and Embedding interfaces with batch processing support"""
     genai = None
     embeddings = None
-    
+
+    # Save the original CUDA_VISIBLE_DEVICES
+    original_cuda_visible = os.environ.get("CUDA_VISIBLE_DEVICES", None)
+    logger.info(f"original_cuda_visible : {original_cuda_visible}")
     # Initialize GenAI - Priority order: Azure OpenAI > vLLM > Web API
     if Config.USE_AZURE_OPENAI:
         try:
@@ -109,7 +112,6 @@ def initialize_interfaces():
             if Config.USE_VLLM:
                 try:
                     if Config.USE_VLLM_BATCH:
-                        from interfaces.vllm_genai_interface_batch import VLLMGenAIInterfaceBatch
                         genai = VLLMGenAIInterfaceBatch(
                             model_name=Config.VLLM_MODEL_NAME,
                             number_gpus=Config.VLLM_NUM_GPUS,
@@ -121,7 +123,6 @@ def initialize_interfaces():
                         )
                         logger.info(f"Fell back to vLLM batch interface on GPU 0 with model: {Config.VLLM_MODEL_NAME}")
                     else:
-                        from interfaces.vllm_genai_interface import VLLMGenAIInterface
                         genai = VLLMGenAIInterface(
                             model_name=Config.VLLM_MODEL_NAME,
                             number_gpus=Config.VLLM_NUM_GPUS,
@@ -136,8 +137,10 @@ def initialize_interfaces():
     
     elif Config.USE_VLLM:
         try:
+            # Set CUDA_VISIBLE_DEVICES for vLLM (GPU 0)
+            os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+            
             if Config.USE_VLLM_BATCH:
-                from interfaces.vllm_genai_interface_batch import VLLMGenAIInterfaceBatch
                 genai = VLLMGenAIInterfaceBatch(
                     model_name=Config.VLLM_MODEL_NAME,
                     number_gpus=Config.VLLM_NUM_GPUS,
@@ -145,23 +148,31 @@ def initialize_interfaces():
                     batch_size=Config.VLLM_BATCH_SIZE,
                     model_cache_dir=Config.MODEL_CACHE_DIR,
                     external_model_dir=Config.EXTERNAL_MODEL_DIR,
-                    gpu_id=0  # Explicitly use GPU 0
+                    gpu_id=0  # Using GPU 0
                 )
                 logger.info(f"vLLM batch GenAI interface initialized on GPU 0 with model: {Config.VLLM_MODEL_NAME}")
                 logger.info(f"Batch size: {Config.VLLM_BATCH_SIZE}")
             else:
-                from interfaces.vllm_genai_interface import VLLMGenAIInterface
                 genai = VLLMGenAIInterface(
                     model_name=Config.VLLM_MODEL_NAME,
                     number_gpus=Config.VLLM_NUM_GPUS,
                     max_model_len=Config.VLLM_MAX_MODEL_LEN,
                     model_cache_dir=Config.MODEL_CACHE_DIR,
                     external_model_dir=Config.EXTERNAL_MODEL_DIR,
-                    gpu_id=0  # Explicitly use GPU 0
+                    gpu_id=0  # Using GPU 0
                 )
                 logger.info(f"vLLM GenAI interface initialized on GPU 0 with model: {Config.VLLM_MODEL_NAME}")
+                
+            # Restore original CUDA_VISIBLE_DEVICES for embedding model
+            if original_cuda_visible is not None:
+                os.environ["CUDA_VISIBLE_DEVICES"] = original_cuda_visible
+            else:
+                # Remove the variable to make all GPUs visible again
+                del os.environ["CUDA_VISIBLE_DEVICES"]
+
         except Exception as e:
             logger.warning(f"Failed to initialize vLLM GenAI interface: {e}")
+            
             # Fall back to web API if vLLM fails
             if Config.USE_GENAI:
                 try:
@@ -203,11 +214,11 @@ def initialize_interfaces():
         # Try fallback to legacy configuration
         try:
             embeddings = EmbeddingInterface(
-                model_path=Config.EMBEDDING_MODEL,
-                api_endpoint=Config.EMBEDDING_ENDPOINT,
-                api_key=Config.EMBEDDING_API_KEY,
-                embedding_dim=Config.EMBEDDING_DIM,
-                use_api=Config.USE_EMBEDDING_API
+                model_name=Config.EMBEDDING_MODEL_NAME,
+                model_cache_dir=Config.MODEL_CACHE_DIR,
+                external_model_dir=Config.EXTERNAL_MODEL_DIR,
+                device=embedding_device,  # This will be cuda:1 when using vLLM
+                batch_size=Config.EMBEDDING_BATCH_SIZE
             )
             logger.info("Initialized embedding interface with legacy configuration")
         except Exception as e2:

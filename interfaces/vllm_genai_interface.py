@@ -1,32 +1,72 @@
 """
 Interface for local GenAI model integration using vLLM
-Modified to use individual processing instead of batch processing
 """
 
 import json
 import logging
 import re
 import shutil
-import torch
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 from huggingface_hub import snapshot_download
-from config import Config
 from vllm import LLM, SamplingParams
 
 logger = logging.getLogger(__name__)
 
 
 class VLLMGenAIInterface:
-    """Interface for local GenAI model integration using vLLM - Individual Processing"""
+    """Interface for local GenAI model integration using vLLM"""
+    
+    # Model configurations
+    MODELS = {
+        "mistralai--Mistral-7B-Instruct-v0.2": {
+            "model_id": "mistralai/Mistral-7B-Instruct-v0.2",
+            "revision": "41b61a33a2483885c981aa79e0df6b32407ed873",
+            "template": "Mistral"
+        },
+        "mistralai--Mistral-7B-Instruct-v0.3": {
+            "model_id": "mistralai/Mistral-7B-Instruct-v0.3",
+            "revision": "e0bc86c23ce5aae1db576c8cca6f06f1f73af2db",
+            "template": "Mistral"
+        },
+        "neuralmagic--Meta-Llama-3.1-70B-Instruct-quantized.w4a16": {
+            "model_id": "neuralmagic/Meta-Llama-3.1-70B-Instruct-quantized.w4a16",
+            "revision": "8c670bcdb23f58a977e1440354beb7c3e455961d",
+            "template": "Llama"
+        },
+        "meta-llama--Llama-3.1-8B-Instruct": {
+            "model_id": "meta-llama/Llama-3.1-8B-Instruct",
+            "revision": "0e9e39f249a16976918f6564b8830bc894c89659",
+            "template": "Llama"
+        },
+        "neuralmagic--Meta-Llama-3.1-70B-Instruct-FP8": {
+            "model_id": "neuralmagic/Meta-Llama-3.1-70B-Instruct-FP8",
+            "revision": "08b31c0f951f2227f6cdbc088cdb6fd139aecf0f",
+            "template": "Llama"
+        },
+        "microsoft--Phi-4-mini-instruct": {
+            "model_id": "microsoft/Phi-4-mini-instruct",
+            "revision": "c0fb9e74abda11b496b7907a9c6c9009a7a0488f",
+            "template": "Phi"
+        },
+        "cortecs--Llama-3.3-70B-Instruct-FP8-Dynamic": {
+            "model_id": "cortecs/Llama-3.3-70B-Instruct-FP8-Dynamic",
+            "revision": "3722358cc2b990b22304489b2f87ef3bb876d6f6",
+            "template": "Llama"
+        },
+        "gpt-oss-120b": {
+            "model_id": "/Volumes/jsa_external_prod/external_vols/scratch/Scratch/Ehsan/Models/gpt-oss-120b",
+            "revision": None,
+            "template": "GPT"
+        }
+    }
     
     def __init__(self, 
                  model_name: str = "meta-llama--Llama-3.1-8B-Instruct",
                  number_gpus: int = 1,
                  max_model_len: int = 8192,
                  model_cache_dir: str = "/root/.cache/huggingface/hub",
-                 external_model_dir: str = "/Volumes/jsa_external_prod/external_vols/scratch/Scratch/Ehsan/Models",
-                 gpu_id: int = 0):  # Add explicit GPU ID parameter
+                 external_model_dir: str = "/Volumes/jsa_external_prod/external_vols/scratch/Scratch/Ehsan/Models"):
         """
         Initialize vLLM GenAI interface
         
@@ -36,20 +76,12 @@ class VLLMGenAIInterface:
             max_model_len: Maximum model context length
             model_cache_dir: Directory for HuggingFace cache
             external_model_dir: Directory containing pre-downloaded models
-            gpu_id: GPU ID to use (default 0)
         """
-        self.MODELS = Config.MODELS
         self.model_name = model_name
         self.number_gpus = number_gpus
         self.max_model_len = max_model_len
         self.model_cache_dir = Path(model_cache_dir)
         self.external_model_dir = Path(external_model_dir)
-        self.gpu_id = gpu_id
-        
-        # Set CUDA device for vLLM
-        if torch.cuda.is_available():
-            torch.cuda.set_device(gpu_id)
-            logger.info(f"vLLM will use GPU {gpu_id}")
         
         # Get model configuration
         if model_name not in self.MODELS:
@@ -57,10 +89,6 @@ class VLLMGenAIInterface:
         
         self.model_config = self.MODELS[model_name]
         self.template = self.model_config.get("template", "Mistral")
-        
-        # Import prompts
-        from extraction.genai_prompts import GenAIPrompts
-        self.prompts = GenAIPrompts()
         
         # Initialize the model
         self.llm = None
@@ -72,25 +100,16 @@ class VLLMGenAIInterface:
             snapshot_location = self._get_snapshot_location()
             logger.info(f"Loading model from: {snapshot_location}")
             
-            # Set environment variable to control GPU visibility
-            import os
-            if self.number_gpus == 1:
-                os.environ["CUDA_VISIBLE_DEVICES"] = str(self.gpu_id)
-            
-            # Initialize vLLM with explicit GPU configuration
             self.llm = LLM(
                 model=snapshot_location,
                 tensor_parallel_size=self.number_gpus,
-                max_model_len=self.max_model_len,
-                gpu_memory_utilization=0.9,  # Allow vLLM to use most of GPU 0
-                device='cuda' if torch.cuda.is_available() else 'cpu'
+                max_model_len=self.max_model_len
             )
-            logger.info(f"Successfully loaded model: {self.model_name} on GPU {self.gpu_id}")
+            logger.info(f"Successfully loaded model: {self.model_name}")
             
         except Exception as e:
             logger.error(f"Failed to initialize model: {e}")
             raise
-    
     
     def _get_snapshot_location(self, copy_model: bool = False) -> str:
         """Get or download model snapshot location"""
@@ -148,13 +167,31 @@ class VLLMGenAIInterface:
         else:  # Default Mistral format
             return f'<s> [INST] {sys_message} [/INST]\nUser: {query}\nAssistant: '
     
-    def _generate_with_prompt(self, system_prompt: str, user_prompt: str, max_tokens: int = 2048) -> str:
-        """Generate response for a single prompt"""
-        full_prompt = self._format_instruction(system_prompt, user_prompt)
+    def extract_skills_batch(self, texts: List[str], context: str = "course") -> List[List[Dict]]:
+        """
+        Extract skills from multiple texts in batch
         
+        Args:
+            texts: List of texts to extract skills from
+            context: Context type (e.g., "VET unit", "university course")
+            
+        Returns:
+            List of extracted skills for each text
+        """
+        sys_message = self._build_skill_extraction_prompt_system()
+        
+        # Format prompts for batch processing
+        full_prompts = [
+            self._format_instruction(
+                sys_message,
+                f"Now analyze the following {context}: {text}"
+            ) for text in texts
+        ]
+        
+        # Set sampling parameters
         sampling_params = SamplingParams(
-            max_tokens=max_tokens,
-            temperature=0.0,  # Deterministic for consistency
+            max_tokens=2048,
+            temperature=0.0,
             top_p=1,
             frequency_penalty=0,
             presence_penalty=0,
@@ -162,25 +199,21 @@ class VLLMGenAIInterface:
             best_of=1
         )
         
-        output = self.llm.generate([full_prompt], sampling_params=sampling_params)[0]
-        return output.outputs[0].text
-    
-    def _parse_json_response(self, response: str) -> Dict:
-        """Parse JSON from model response"""
-        try:
-            # Try to extract JSON from response
-            json_match = re.search(r'\{.*\}', response, re.DOTALL)
-            if json_match:
-                return json.loads(json_match.group())
-        except json.JSONDecodeError as e:
-            logger.warning(f"Failed to parse JSON response: {e}")
-        return {}
-    
-    # Main extraction methods (non-batch)
+        # Generate outputs
+        outputs = self.llm.generate(full_prompts, sampling_params=sampling_params)
+        
+        # Parse results
+        results = []
+        for output in outputs:
+            generated_text = output.outputs[0].text
+            skills = self._parse_skill_extraction_response(generated_text)
+            results.append(skills)
+        
+        return results
     
     def extract_skills_prompt(self, text: str, context: str = "course") -> List[Dict]:
         """
-        Extract skills from a single text using Gen AI
+        Extract skills from a single text
         
         Args:
             text: Text to extract skills from
@@ -189,126 +222,227 @@ class VLLMGenAIInterface:
         Returns:
             List of extracted skills as dictionaries
         """
-        system_prompt = self.prompts.skill_extraction_prompt()
-        user_prompt = f"Context: {context}\n\nText to analyze:\n{text[:3000]}"  # Limit text length
-        
-        response = self._generate_with_prompt(system_prompt, user_prompt)
-        result = self._parse_json_response(response)
-        
-        return result.get("skills", [])
+        results = self.extract_skills_batch([text], context)
+        return results[0] if results else []
     
-    def identify_study_level(self, course_text: str) -> Dict:
-        """Identify study level from course description"""
-        system_prompt = self.prompts.study_level_identification_prompt()
-        user_prompt = f"Course description:\n{course_text[:2000]}"
-        
-        response = self._generate_with_prompt(system_prompt, user_prompt, max_tokens=512)
-        return self._parse_json_response(response)
-    
-    def deduplicate_skills(self, skills: List[Dict]) -> Dict:
-        """Deduplicate and merge similar skills"""
-        system_prompt = self.prompts.skill_deduplication_prompt()
-        skills_json = json.dumps(skills[:50], indent=2)  # Limit to 50 skills
-        user_prompt = f"Skills to analyze:\n{skills_json}"
-        
-        response = self._generate_with_prompt(system_prompt, user_prompt)
-        return self._parse_json_response(response)
-    
-    def identify_implicit_skills(self, text: str, explicit_skills: List[str]) -> List[Dict]:
-        """Identify implicit skills not explicitly mentioned"""
-        system_prompt = self.prompts.implicit_skill_identification_prompt()
-        user_prompt = f"""Course content: {text[:1500]}
+    def _build_skill_extraction_prompt_system(self) -> str:
+        """Build system prompt for skill extraction"""
+        return """You are an expert in educational course analysis and skill extraction. Given a course or unit description, extract individual skills, making sure they are generalizable capabilities - not task descriptions.
 
-Explicit skills already identified: {', '.join(explicit_skills[:20])}"""
-        
-        response = self._generate_with_prompt(system_prompt, user_prompt)
-        result = self._parse_json_response(response)
-        return result.get("implicit_skills", [])
-    
-    def decompose_composite_skills(self, skills: List[str]) -> Dict:
-        """Decompose composite skills into components"""
-        system_prompt = self.prompts.composite_skill_decomposition_prompt()
-        user_prompt = f"Skills to analyze:\n{json.dumps(skills[:30], indent=2)}"
-        
-        response = self._generate_with_prompt(system_prompt, user_prompt)
-        return self._parse_json_response(response)
-    
-    def adjust_skill_levels(self, skills: List[Dict], study_level: str, course_text: str) -> Dict:
-        """Adjust skill levels based on context"""
-        system_prompt = self.prompts.skill_level_adjustment_prompt()
-        user_prompt = f"""Study level: {study_level}
-Course context: {course_text[:1000]}
-Skills to adjust: {json.dumps(skills[:30], indent=2)}"""
-        
-        response = self._generate_with_prompt(system_prompt, user_prompt)
-        return self._parse_json_response(response)
-    
-    def determine_context(self, text: str) -> Dict:
-        """Determine theoretical vs practical context"""
-        system_prompt = self.prompts.context_determination_prompt()
-        user_prompt = f"Text to analyze:\n{text[:2000]}"
-        
-        response = self._generate_with_prompt(system_prompt, user_prompt, max_tokens=512)
-        return self._parse_json_response(response)
-    
-    def extract_technology_versions(self, text: str) -> Dict:
-        """Extract technology versions and assess currency"""
-        system_prompt = self.prompts.technology_version_extraction_prompt()
-        user_prompt = f"Text to analyze:\n{text[:2000]}"
-        
-        response = self._generate_with_prompt(system_prompt, user_prompt)
-        return self._parse_json_response(response)
-    
-    def analyze_prerequisites(self, prerequisites: List[str], course_text: str) -> Dict:
-        """Analyze prerequisites and dependencies"""
-        system_prompt = self.prompts.prerequisite_analysis_prompt()
-        user_prompt = f"""Prerequisites: {', '.join(prerequisites)}
-Course context: {course_text[:1000]}"""
-        
-        response = self._generate_with_prompt(system_prompt, user_prompt)
-        return self._parse_json_response(response)
+        IMPORTANT: Focus on the underlying skill or ability. If a tool/technology is mentioned, extract the human ability implied by its use (e.g., "Excel" → "spreadsheet data analysis", "Python" → "Python programming").
+
+        For each skill, identify:
+        1. Skill name (concise, specific)
+        2. Category (technical/cognitive/practical/foundational/professional)
+        3. Required proficiency level (novice/beginner/competent/proficient/expert)
+        4. Cognitive depth using Bloom's taxonomy (remember/understand/apply/analyze/evaluate/create)
+        5. Context (theoretical/practical/hybrid)
+        6. Confidence score (0-1)
+
+        Return your answer in strict JSON format as below for direct parsing:
+        [
+            {
+                "name": "skill name",
+                "category": "category",
+                "level": "proficiency level",
+                "depth": "cognitive depth",
+                "context": "context type",
+                "confidence": 0.8
+            }
+        ]
+
+        Note: Only output the JSON, do not generate any extra sentences."""
     
     def analyze_skill_similarity(self, skill1: str, skill2: str) -> float:
-        """Analyze similarity between two skills"""
-        system_prompt = self.prompts.skill_similarity_prompt()
-        user_prompt = f"Skill 1: {skill1}\nSkill 2: {skill2}"
+        """
+        Analyze similarity between two skills using the LLM
         
-        response = self._generate_with_prompt(system_prompt, user_prompt, max_tokens=256)
-        result = self._parse_json_response(response)
-        return result.get("similarity_score", 0.5)
+        Args:
+            skill1: First skill name
+            skill2: Second skill name
+            
+        Returns:
+            Similarity score between 0 and 1
+        """
+        sys_message = """You are an expert in skill analysis. Analyze the similarity between two skills and return a score between 0 and 1.
+
+        Consider:
+        1. Semantic similarity
+        2. Required knowledge overlap
+        3. Application context similarity
+
+        Return ONLY a number between 0 and 1, nothing else."""
+        
+        query = f"Skill 1: {skill1}\nSkill 2: {skill2}\n\nSimilarity score:"
+        
+        prompt = self._format_instruction(sys_message, query)
+        
+        sampling_params = SamplingParams(
+            max_tokens=10,
+            temperature=0.0,
+            top_p=1
+        )
+        
+        output = self.llm.generate([prompt], sampling_params=sampling_params)[0]
+        response = output.outputs[0].text.strip()
+        
+        # Parse similarity score
+        try:
+            score = float(re.search(r"(\d+\.?\d*)", response).group(1))
+            return min(1.0, max(0.0, score))
+        except:
+            return 0.5  # Default if parsing fails
     
-    def detect_edge_cases(self, vet_text: str, uni_text: str, mapping_info: Dict) -> Dict:
-        """Detect edge cases in credit mapping"""
-        system_prompt = self.prompts.edge_case_detection_prompt()
-        user_prompt = f"""VET content: {vet_text[:1000]}
-University content: {uni_text[:1000]}
-Mapping summary: {json.dumps(mapping_info, indent=2)}"""
+    def identify_implicit_skills(self, text: str, explicit_skills: List[str]) -> List[Dict]:
+        """
+        Identify implicit skills not explicitly mentioned
         
-        response = self._generate_with_prompt(system_prompt, user_prompt)
-        return self._parse_json_response(response)
+        Args:
+            text: Course/unit description text
+            explicit_skills: Already identified explicit skills
+            
+        Returns:
+            List of implicit skills with confidence scores
+        """
+        sys_message = """You are an expert in skill analysis. Given a course description and explicitly mentioned skills, identify implicit skills that would be required but aren't explicitly stated.
+
+            For each implicit skill, provide:
+            1. Skill name
+            2. Reason for inference
+            3. Confidence level (0-1)
+
+            Return as JSON list as below for direct parsing::
+            [
+            {
+                "name": "skill name",
+                "reason": "why this skill is implied",
+                "confidence": 0.6
+            }
+            ]"""
+                    
+        query = f"""Course description: {text[:1000]}
+
+            Explicit skills already identified: {', '.join(explicit_skills[:20])}
+
+            Identify implicit skills:"""
+        
+        prompt = self._format_instruction(sys_message, query)
+        
+        sampling_params = SamplingParams(
+            max_tokens=1024,
+            temperature=0.0,
+            top_p=1
+        )
+        
+        output = self.llm.generate([prompt], sampling_params=sampling_params)[0]
+        response = output.outputs[0].text
+        
+        return self._parse_implicit_skills_response(response)
     
-    def extract_keywords(self, skill_name: str, context_text: str) -> List[str]:
-        """Extract relevant keywords for a skill"""
-        system_prompt = self.prompts.keyword_extraction_prompt()
-        user_prompt = f"Skill: {skill_name}\nContext: {context_text[:500]}"
+    def _parse_skill_extraction_response(self, response: str) -> List[Dict]:
+        """Parse skill extraction response from LLM"""
+        try:
+            # Look for content after "assistant" marker
+            assistant_pattern = r'(?:assistant|<\|assistant\|>)'
+            assistant_match = re.search(assistant_pattern, response, re.IGNORECASE)
+            
+            if assistant_match:
+                # Get content after "assistant"
+                response_after_assistant = response[assistant_match.end():]
+                
+                # Check if there's a "final" marker and extract content after it
+                final_match = re.search(r'(?:final|<\|final\|>)', response_after_assistant, re.IGNORECASE)
+                
+                if final_match:
+                    # Extract JSON after "final" marker
+                    search_text = response_after_assistant[final_match.end():]
+                else:
+                    # If no "final" marker, search after "assistant"
+                    search_text = response_after_assistant
+            else:
+                # Fallback to searching the entire response if no "assistant" marker
+                search_text = response
+            
+            # Extract JSON array from the relevant portion
+            json_match = re.search(r'\[.*?\]', search_text, re.DOTALL)
+            
+            if json_match:
+                skills_json = json.loads(json_match.group())
+                return self._validate_extracted_skills(skills_json)
+                
+        except json.JSONDecodeError as e:
+            logger.warning(f"Failed to parse LLM response as JSON: {e}")
         
-        response = self._generate_with_prompt(system_prompt, user_prompt, max_tokens=256)
-        result = self._parse_json_response(response)
-        return result.get("keywords", [])
+        # Fallback to empty list
+        return []
     
-    def analyze_assessment(self, assessment_text: str) -> Dict:
-        """Analyze assessment methods"""
-        system_prompt = self.prompts.assessment_type_analysis_prompt()
-        user_prompt = f"Assessment description:\n{assessment_text[:1500]}"
+    def _validate_extracted_skills(self, skills: List[Dict]) -> List[Dict]:
+        """Validate and clean extracted skills"""
+        valid_skills = []
         
-        response = self._generate_with_prompt(system_prompt, user_prompt)
-        return self._parse_json_response(response)
+        valid_categories = ["technical", "cognitive", "practical", "foundational", "professional"]
+        valid_levels = ["novice", "beginner", "competent", "proficient", "expert"]
+        valid_depths = ["remember", "understand", "apply", "analyze", "evaluate", "create"]
+        valid_contexts = ["theoretical", "practical", "hybrid"]
+        
+        for skill in skills:
+            if "name" in skill and skill["name"]:
+                clean_skill = {
+                    "name": skill.get("name", "")[:100],
+                    "category": skill.get("category", "technical").lower(),
+                    "level": skill.get("level", "competent").lower(),
+                    "depth": skill.get("depth", "apply").lower(),
+                    "context": skill.get("context", "hybrid").lower(),
+                    "keywords": skill.get("keywords", [])[:10],
+                    "confidence": min(1.0, max(0.0, float(skill.get("confidence", 0.8))))
+                }
+                
+                # Validate against allowed values
+                if clean_skill["category"] not in valid_categories:
+                    clean_skill["category"] = "technical"
+                if clean_skill["level"] not in valid_levels:
+                    clean_skill["level"] = "competent"
+                if clean_skill["depth"] not in valid_depths:
+                    clean_skill["depth"] = "apply"
+                if clean_skill["context"] not in valid_contexts:
+                    clean_skill["context"] = "hybrid"
+                
+                valid_skills.append(clean_skill)
+        
+        return valid_skills
     
-    def categorize_skill(self, skill_name: str, context: str = "") -> str:
-        """Categorize a skill"""
-        system_prompt = self.prompts.skill_categorization_prompt()
-        user_prompt = f"Skill to categorize: {skill_name}\nContext: {context[:200]}"
+    def _parse_implicit_skills_response(self, response: str) -> List[Dict]:
+        """Parse implicit skills response"""
+        try:
+            json_match = re.search(r'\[.*\]', response, re.DOTALL)
+            if json_match:
+                return json.loads(json_match.group())
+        except json.JSONDecodeError:
+            pass
         
-        response = self._generate_with_prompt(system_prompt, user_prompt, max_tokens=256)
-        result = self._parse_json_response(response)
-        return result.get("category", "technical")
+        return []
+    
+    def batch_process_units(self, units: List[Dict], batch_size: int = 8) -> List[List[Dict]]:
+        """
+        Process multiple units in batches for efficiency
+        
+        Args:
+            units: List of unit dictionaries with 'text' field
+            batch_size: Number of units to process in each batch
+            
+        Returns:
+            List of skill lists for each unit
+        """
+        all_results = []
+        
+        for i in range(0, len(units), batch_size):
+            batch = units[i:i + batch_size]
+            texts = [unit.get('text', '') for unit in batch]
+            
+            # Process batch
+            batch_results = self.extract_skills_batch(texts, "VET unit")
+            all_results.extend(batch_results)
+            
+            logger.info(f"Processed batch {i//batch_size + 1}/{(len(units) + batch_size - 1)//batch_size}")
+        
+        return all_results

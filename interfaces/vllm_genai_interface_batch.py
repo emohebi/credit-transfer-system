@@ -48,10 +48,15 @@ class VLLMGenAIInterfaceBatch:
         self.external_model_dir = Path(external_model_dir)
         self.gpu_id = gpu_id
         
-        # Set CUDA device for vLLM
-        if torch.cuda.is_available():
-            torch.cuda.set_device(gpu_id)
-            logger.info(f"vLLM batch interface will use GPU {gpu_id}")
+        # Set environment variable to control GPU visibility for vLLM
+        if self.number_gpus == 1:
+            os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
+            logger.info(f"Set CUDA_VISIBLE_DEVICES={gpu_id} for vLLM batch interface")
+        else:
+            # For multi-GPU, set the range starting from gpu_id
+            gpu_list = ",".join(str(gpu_id + i) for i in range(number_gpus))
+            os.environ["CUDA_VISIBLE_DEVICES"] = gpu_list
+            logger.info(f"Set CUDA_VISIBLE_DEVICES={gpu_list} for vLLM batch interface")
         
         # Get model configuration
         if model_name not in self.MODELS:
@@ -74,20 +79,14 @@ class VLLMGenAIInterfaceBatch:
             snapshot_location = self._get_snapshot_location()
             logger.info(f"Loading model from: {snapshot_location}")
             
-            # Set environment variable to control GPU visibility
-            import os
-            if self.number_gpus == 1:
-                os.environ["CUDA_VISIBLE_DEVICES"] = str(self.gpu_id)
-            
-            # Initialize vLLM with explicit GPU configuration
+            # Initialize vLLM (it will use the GPUs specified by CUDA_VISIBLE_DEVICES)
             self.llm = LLM(
                 model=snapshot_location,
                 tensor_parallel_size=self.number_gpus,
                 max_model_len=self.max_model_len,
-                gpu_memory_utilization=0.9,  # Allow vLLM to use most of GPU 0
-                device='cuda' if torch.cuda.is_available() else 'cpu'
+                gpu_memory_utilization=0.9  # Allow vLLM to use 90% of GPU memory
             )
-            logger.info(f"Successfully loaded model: {self.model_name} on GPU {self.gpu_id}")
+            logger.info(f"Successfully loaded model: {self.model_name} on GPU(s) specified by CUDA_VISIBLE_DEVICES")
             
         except Exception as e:
             logger.error(f"Failed to initialize model: {e}")

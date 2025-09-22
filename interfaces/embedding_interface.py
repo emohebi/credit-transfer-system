@@ -101,7 +101,8 @@ class EmbeddingInterface:
                 # Initialize model - do NOT pass device parameter to avoid conflicts
                 self.model = SentenceTransformer(
                     snapshot_location,
-                    trust_remote_code=self.trust_remote_code
+                    trust_remote_code=self.trust_remote_code,
+                    device=self.device
                 )
                 
                 # Manually move model to the correct device
@@ -236,81 +237,28 @@ class EmbeddingInterface:
             # Use a custom encoding approach to ensure device consistency
             try:
                 # For Jina models with task parameter
-                if 'jina' in self.model_name.lower():
-                    # Manually handle encoding to ensure device consistency
-                    all_embeddings = []
-                    
-                    for i in range(0, len(texts), batch_size):
-                        batch_texts = texts[i:i + batch_size]
-                        
-                        # Encode batch
-                        with torch.no_grad():
-                            # Get model inputs
-                            inputs = self.model.tokenizer(
-                                batch_texts,
-                                padding=True,
-                                truncation=True,
-                                return_tensors='pt',
-                                max_length=512
-                            )
-                            
-                            # Move inputs to correct device
-                            inputs = {k: v.to(self.device) for k, v in inputs.items()}
-                            
-                            # Get embeddings
-                            outputs = self.model[0].auto_model(**inputs)
-                            
-                            # Handle different output formats
-                            if hasattr(outputs, 'last_hidden_state'):
-                                embeddings = outputs.last_hidden_state
-                            elif hasattr(outputs, 'pooler_output'):
-                                embeddings = outputs.pooler_output
-                            else:
-                                embeddings = outputs[0]
-                            
-                            # Mean pooling
-                            attention_mask = inputs['attention_mask']
-                            mask_expanded = attention_mask.unsqueeze(-1).expand(embeddings.size()).float()
-                            sum_embeddings = torch.sum(embeddings * mask_expanded, 1)
-                            sum_mask = torch.clamp(mask_expanded.sum(1), min=1e-9)
-                            embeddings = sum_embeddings / sum_mask
-                            
-                            # Normalize if needed
-                            if normalize_embeddings:
-                                embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=1)
-                            
-                            all_embeddings.append(embeddings)
-                    
-                    # Combine all batches
-                    embeddings = torch.cat(all_embeddings, dim=0)
-                    
-                    # Convert to numpy if needed
-                    if not convert_to_tensor:
-                        embeddings = embeddings.cpu().numpy()
-                    
-                else:
-                    # For other models, use standard encode with device override
-                    embeddings = self.model.encode(
-                        texts,
-                        batch_size=batch_size,
-                        show_progress_bar=show_progress,
-                        convert_to_tensor=convert_to_tensor,
-                        normalize_embeddings=normalize_embeddings
-                    )
-                    
-                    # Ensure result is on correct device if tensor
-                    if convert_to_tensor and torch.is_tensor(embeddings):
-                        embeddings = embeddings.to(self.device)
-                    
-            except Exception as e:
-                logger.warning(f"Custom encoding failed: {e}. Falling back to standard encode.")
-                # Fallback to standard encode
                 embeddings = self.model.encode(
                     texts,
+                    task='text-matching',
+                    prompt_name='passage',
                     batch_size=batch_size,
                     show_progress_bar=show_progress,
                     convert_to_tensor=convert_to_tensor,
                     normalize_embeddings=normalize_embeddings
+                )
+                    
+            except Exception as e:
+                logger.warning(f"Custom encoding failed: {e}. Falling back to standard encode with device.")
+                # Fallback to standard encode
+                embeddings = self.model.encode(
+                    texts,
+                    task='text-matching',
+                    prompt_name='passage',
+                    batch_size=batch_size,
+                    show_progress_bar=show_progress,
+                    convert_to_tensor=convert_to_tensor,
+                    normalize_embeddings=normalize_embeddings,
+                    device=self.device
                 )
         
         # Cache single text results
