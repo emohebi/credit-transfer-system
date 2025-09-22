@@ -8,7 +8,7 @@ from typing import List, Dict, Any, Optional
 from collections import defaultdict
 
 from models.base_models import Skill, SkillMapping
-from models.enums import SkillLevel, SkillContext
+from models.enums import SkillLevel, SkillContext, EMBEDDING_MODE
 from interfaces.embedding_interface import EmbeddingInterface
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,8 @@ class SkillMapper:
                  embeddings: Optional[EmbeddingInterface] = None,
                  genai: Optional[Any] = None,
                  similarity_threshold: float = 0.8,
-                 partial_threshold: float = 0.6):
+                 partial_threshold: float = 0.6,
+                 embedding_mode: str = "embedding"):
         """
         Initialize skill mapper with Gen AI support
         
@@ -36,6 +37,10 @@ class SkillMapper:
         self.similarity_threshold = similarity_threshold
         self.partial_threshold = partial_threshold
         self.similarity_cache = {}
+        self.embedding_mode = embedding_mode.lower()
+        if self.embedding_mode not in {"hybrid", "genai", "embedding"}:
+            logger.warning(f"Unknown embedding mode '{self.embedding_mode}', defaulting to 'embedding'")
+            self.embedding_mode = "embedding"
     
     def map_skills(self, 
                    vet_skills: List[Skill], 
@@ -149,7 +154,7 @@ class SkillMapper:
         """Calculate pairwise similarity between skills using AI and/or embeddings"""
         
         # If both AI and embeddings available, use hybrid approach
-        if self.genai and self.embeddings:
+        if self.genai and self.embeddings and self.embedding_mode == EMBEDDING_MODE.HYBRID.value:
             # Use embeddings for initial fast similarity
             vet_names = [s.name for s in vet_skills]
             uni_names = [s.name for s in uni_skills]
@@ -172,7 +177,7 @@ class SkillMapper:
                 similarity_matrix[i, j] = 0.6 * similarity_matrix[i, j] + 0.4 * ai_similarity
         
         # If only GenAI available, use it exclusively
-        elif self.genai:
+        elif self.genai and self.embedding_mode == EMBEDDING_MODE.GENAI.value:
             similarity_matrix = np.zeros((len(vet_skills), len(uni_skills)))
             
             for i, vet_skill in enumerate(vet_skills):
@@ -191,7 +196,7 @@ class SkillMapper:
                     similarity_matrix[i, j] = similarity
         
         # If only embeddings available, use them
-        elif self.embeddings:
+        elif self.embeddings and self.embedding_mode == EMBEDDING_MODE.EMBEDDING.value:
             vet_names = [s.name for s in vet_skills]
             uni_names = [s.name for s in uni_skills]
             

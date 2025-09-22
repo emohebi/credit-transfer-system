@@ -184,14 +184,17 @@ def initialize_interfaces():
     
     # Initialize Embeddings
     try:
+        # Use cuda:1 for embeddings when using vLLM on cuda:0
+        embedding_device = "cuda:1" if Config.USE_VLLM else Config.EMBEDDING_DEVICE
+        
         embeddings = EmbeddingInterface(
             model_name=Config.EMBEDDING_MODEL_NAME,
             model_cache_dir=Config.MODEL_CACHE_DIR,
             external_model_dir=Config.EXTERNAL_MODEL_DIR,
-            device=Config.EMBEDDING_DEVICE,
+            device=embedding_device,  # This will be cuda:1 when using vLLM
             batch_size=Config.EMBEDDING_BATCH_SIZE
         )
-        logger.info(f"Embedding interface initialized with model: {Config.EMBEDDING_MODEL_NAME}")
+        logger.info(f"Embedding interface initialized with model: {Config.EMBEDDING_MODEL_NAME} on device: {embedding_device}")
     except Exception as e:
         logger.warning(f"Failed to initialize Embedding interface: {e}")
         # Try fallback to legacy configuration

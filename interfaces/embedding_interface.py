@@ -1,9 +1,10 @@
 """
-Interface for local embedding model integration
+Interface for local embedding model integration with multi-GPU support
 """
 
 import logging
 import numpy as np
+import torch
 from typing import List, Optional, Union, Dict
 import shutil
 from pathlib import Path
@@ -22,9 +23,8 @@ except ImportError:
 
 
 class EmbeddingInterface:
-    """Interface for local embedding model"""
+    """Interface for local embedding model with multi-GPU support"""
     
-
     def __init__(self, 
                  model_name: str = "jinaai--jina-embeddings-v4",
                  model_cache_dir: str = "/home/ehsan/.cache/huggingface/hub",
@@ -38,7 +38,7 @@ class EmbeddingInterface:
             model_name: Name of the model to use from MODELS dict
             model_cache_dir: Directory for HuggingFace cache
             external_model_dir: Directory containing pre-downloaded models
-            device: Device to run model on (cuda/cpu)
+            device: Device to run model on (cuda, cuda:0, cuda:1, cpu)
             batch_size: Default batch size for encoding
         """
         if not SENTENCE_TRANSFORMERS_AVAILABLE:
@@ -50,6 +50,22 @@ class EmbeddingInterface:
         self.external_model_dir = Path(external_model_dir)
         self.device = device
         self.default_batch_size = batch_size
+        
+        # Parse device string to handle specific GPU selection
+        if device.startswith("cuda"):
+            if ":" in device:
+                # Specific GPU like cuda:1
+                self.device_id = int(device.split(":")[1])
+                self.torch_device = torch.device(f"cuda:{self.device_id}")
+            else:
+                # Default to cuda:0
+                self.device_id = 0
+                self.torch_device = torch.device("cuda:0")
+        else:
+            self.device_id = None
+            self.torch_device = torch.device("cpu")
+        
+        logger.info(f"Embedding interface will use device: {self.torch_device}")
         
         # Get model configuration
         if model_name not in self.MODELS:
@@ -74,20 +90,24 @@ class EmbeddingInterface:
         self.cache = {}
         
     def _initialize_model(self):
-        """Initialize the SentenceTransformer model"""
+        """Initialize the SentenceTransformer model with proper device handling"""
         try:
             snapshot_location = self._get_snapshot_location()
             logger.info(f"Loading embedding model from: {snapshot_location}")
             
+            # Initialize model with specific device
             self.model = SentenceTransformer(
                 snapshot_location,
                 trust_remote_code=self.trust_remote_code,
-                device=self.device
+                device=str(self.torch_device)  # Pass device as string
             )
+            
+            # Ensure model is on the correct device
+            self.model = self.model.to(self.torch_device)
             
             # Update embedding dimension from model
             self.embedding_dim = self.model.get_sentence_embedding_dimension()
-            logger.info(f"Successfully loaded embedding model: {self.model_name} (dim={self.embedding_dim})")
+            logger.info(f"Successfully loaded embedding model: {self.model_name} on {self.torch_device} (dim={self.embedding_dim})")
             
         except Exception as e:
             logger.error(f"Failed to initialize embedding model: {e}")
@@ -151,11 +171,11 @@ class EmbeddingInterface:
     
     def encode(self, texts: Union[str, List[str]], 
                batch_size: Optional[int] = None,
-               show_progress: bool = True,
+               show_progress: bool = False,
                convert_to_tensor: bool = False,
                normalize_embeddings: bool = True) -> np.ndarray:
         """
-        Generate embeddings for texts
+        Generate embeddings for texts with proper device handling
         
         Args:
             texts: Single text or list of texts to encode
@@ -178,25 +198,47 @@ class EmbeddingInterface:
         if len(texts) == 1 and texts[0] in self.cache:
             cached = self.cache[texts[0]]
             if convert_to_tensor:
-                import torch
-                return torch.from_numpy(cached)
+                return torch.from_numpy(cached).to(self.torch_device)
             return cached
         
         # Set batch size
         if batch_size is None:
             batch_size = self.default_batch_size
         
+        # Ensure model is on correct device before encoding
+        if hasattr(self.model, '_target_device'):
+            self.model._target_device = self.torch_device
+        
         # Encode using SentenceTransformer
         task = "text-matching"
-        embeddings = self.model.encode(
-            texts,
-            task=task,
-            prompt_name='passage',
-            batch_size=batch_size,
-            show_progress_bar=show_progress,
-            convert_to_tensor=convert_to_tensor,
-            normalize_embeddings=normalize_embeddings
-        )
+        try:
+            # The encode method should handle device placement automatically
+            embeddings = self.model.encode(
+                texts,
+                task=task,
+                prompt_name='passage',
+                batch_size=batch_size,
+                show_progress_bar=show_progress,
+                convert_to_tensor=convert_to_tensor,
+                normalize_embeddings=normalize_embeddings,
+                device=str(self.torch_device)  # Explicitly pass device
+            )
+        except Exception as e:
+            logger.warning(f"Encoding with device parameter failed: {e}. Trying without explicit device.")
+            # Fallback without device parameter (for older versions)
+            embeddings = self.model.encode(
+                texts,
+                task=task,
+                prompt_name='passage',
+                batch_size=batch_size,
+                show_progress_bar=show_progress,
+                convert_to_tensor=convert_to_tensor,
+                normalize_embeddings=normalize_embeddings
+            )
+        
+        # If tensor, ensure it's on the correct device
+        if convert_to_tensor and torch.is_tensor(embeddings):
+            embeddings = embeddings.to(self.torch_device)
         
         # Cache single text results
         if len(texts) == 1 and not convert_to_tensor:
@@ -235,14 +277,26 @@ class EmbeddingInterface:
         if embeddings2.ndim == 1:
             embeddings2 = embeddings2.reshape(1, -1)
         
-        # Normalize embeddings
-        norm1 = embeddings1 / (np.linalg.norm(embeddings1, axis=1, keepdims=True) + 1e-10)
-        norm2 = embeddings2 / (np.linalg.norm(embeddings2, axis=1, keepdims=True) + 1e-10)
+        # Convert to tensors if needed and move to correct device
+        if not torch.is_tensor(embeddings1):
+            embeddings1_tensor = torch.from_numpy(embeddings1).to(self.torch_device)
+        else:
+            embeddings1_tensor = embeddings1.to(self.torch_device)
         
-        # Calculate cosine similarity
-        similarity_matrix = np.dot(norm1, norm2.T)
+        if not torch.is_tensor(embeddings2):
+            embeddings2_tensor = torch.from_numpy(embeddings2).to(self.torch_device)
+        else:
+            embeddings2_tensor = embeddings2.to(self.torch_device)
         
-        return similarity_matrix
+        # Normalize embeddings on GPU
+        norm1 = embeddings1_tensor / (torch.linalg.norm(embeddings1_tensor, dim=1, keepdim=True) + 1e-10)
+        norm2 = embeddings2_tensor / (torch.linalg.norm(embeddings2_tensor, dim=1, keepdim=True) + 1e-10)
+        
+        # Calculate cosine similarity on GPU
+        similarity_matrix = torch.mm(norm1, norm2.T)
+        
+        # Convert back to numpy
+        return similarity_matrix.cpu().numpy()
     
     def similarity_score(self, text1: str, text2: str) -> float:
         """
@@ -307,11 +361,16 @@ class EmbeddingInterface:
         """
         import json
         
+        # Convert to CPU numpy if tensor
+        if torch.is_tensor(embeddings):
+            embeddings = embeddings.cpu().numpy()
+        
         data = {
             "embeddings": embeddings.tolist(),
             "texts": texts,
             "model": self.model_name,
-            "dimension": self.embedding_dim
+            "dimension": self.embedding_dim,
+            "device": str(self.torch_device)
         }
         
         with open(filepath, 'w') as f:
@@ -344,252 +403,3 @@ class EmbeddingInterface:
         """Clear the embedding cache"""
         self.cache.clear()
         logger.info("Embedding cache cleared")
-    
-    def encode(self, texts: Union[str, List[str]], 
-               batch_size: int = 32,
-               show_progress: bool = False) -> np.ndarray:
-        """
-        Generate embeddings for texts
-        
-        Args:
-            texts: Single text or list of texts to encode
-            batch_size: Batch size for encoding
-            show_progress: Whether to show progress bar
-            
-        Returns:
-            Numpy array of embeddings
-        """
-        # Handle single text input
-        if isinstance(texts, str):
-            texts = [texts]
-        
-        if not texts:
-            return np.array([])
-        
-        # Use local model if available
-        if self.model is not None:
-            return self.model.encode(texts,
-                                     task="text-matching",
-                                     prompt_name='passage',
-                                     normalize_embeddings=True,
-                                     batch_size=batch_size,
-                                     show_progress_bar=show_progress)
-        
-        # Use API if configured
-        if self.use_api and self.api_endpoint:
-            return self._encode_via_api(texts)
-        
-        # Fallback to random embeddings for testing
-        logger.warning("No embedding method available. Using random embeddings for testing.")
-        return self._generate_random_embeddings(texts)
-    
-    def similarity(self, embeddings1: np.ndarray, 
-                  embeddings2: np.ndarray) -> np.ndarray:
-        """
-        Calculate cosine similarity between embeddings
-        
-        Args:
-            embeddings1: First set of embeddings
-            embeddings2: Second set of embeddings
-            
-        Returns:
-            Similarity matrix
-        """
-        # Handle single embedding
-        if embeddings1.ndim == 1:
-            embeddings1 = embeddings1.reshape(1, -1)
-        if embeddings2.ndim == 1:
-            embeddings2 = embeddings2.reshape(1, -1)
-        
-        # Normalize embeddings
-        norm1 = embeddings1 / (np.linalg.norm(embeddings1, axis=1, keepdims=True) + 1e-10)
-        norm2 = embeddings2 / (np.linalg.norm(embeddings2, axis=1, keepdims=True) + 1e-10)
-        
-        # Calculate cosine similarity
-        similarity_matrix = np.dot(norm1, norm2.T)
-        
-        return similarity_matrix
-    
-    def similarity_score(self, text1: str, text2: str) -> float:
-        """
-        Calculate similarity score between two texts
-        
-        Args:
-            text1: First text
-            text2: Second text
-            
-        Returns:
-            Similarity score between 0 and 1
-        """
-        embeddings = self.encode([text1, text2])
-        sim_matrix = self.similarity(embeddings[0:1], embeddings[1:2])
-        return float(sim_matrix[0, 0])
-    
-    def find_most_similar(self, query: str, 
-                         candidates: List[str], 
-                         top_k: int = 5) -> List[tuple]:
-        """
-        Find most similar texts from candidates
-        
-        Args:
-            query: Query text
-            candidates: List of candidate texts
-            top_k: Number of top results to return
-            
-        Returns:
-            List of (text, score) tuples sorted by similarity
-        """
-        if not candidates:
-            return []
-        
-        # Encode all texts
-        all_texts = [query] + candidates
-        embeddings = self.encode(all_texts)
-        
-        # Calculate similarities
-        query_embedding = embeddings[0:1]
-        candidate_embeddings = embeddings[1:]
-        
-        similarities = self.similarity(query_embedding, candidate_embeddings)
-        scores = similarities[0]
-        
-        # Get top-k indices
-        top_indices = np.argsort(scores)[-top_k:][::-1]
-        
-        # Return results
-        results = [(candidates[idx], float(scores[idx])) for idx in top_indices]
-        return results
-    
-    def _encode_via_api(self, texts: List[str]) -> np.ndarray:
-        """
-        Encode texts via API
-        
-        Args:
-            texts: Texts to encode
-            
-        Returns:
-            Embeddings array
-        """
-        try:
-            response = self.session.post(
-                f"{self.api_endpoint}/encode",
-                json={"texts": texts},
-                timeout=30
-            )
-            response.raise_for_status()
-            
-            result = response.json()
-            embeddings = np.array(result.get("embeddings", []))
-            
-            if embeddings.shape[0] != len(texts):
-                raise ValueError(f"Expected {len(texts)} embeddings, got {embeddings.shape[0]}")
-            
-            return embeddings
-            
-        except Exception as e:
-            logger.error(f"API encoding failed: {e}")
-            return self._generate_random_embeddings(texts)
-    
-    def _generate_random_embeddings(self, texts: List[str]) -> np.ndarray:
-        """
-        Generate random embeddings for testing
-        
-        Args:
-            texts: Texts to generate embeddings for
-            
-        Returns:
-            Random embeddings with some consistency based on text
-        """
-        np.random.seed(42)  # For reproducibility in testing
-        embeddings = []
-        
-        for text in texts:
-            # Generate semi-consistent embeddings based on text hash
-            seed = hash(text) % (2**32)
-            np.random.seed(seed)
-            embedding = np.random.randn(self.embedding_dim)
-            embeddings.append(embedding)
-        
-        return np.array(embeddings)
-    
-    def save_embeddings(self, embeddings: np.ndarray, 
-                       texts: List[str], 
-                       filepath: str):
-        """
-        Save embeddings to file
-        
-        Args:
-            embeddings: Embeddings array
-            texts: Corresponding texts
-            filepath: Path to save file
-        """
-        data = {
-            "embeddings": embeddings.tolist(),
-            "texts": texts,
-            "model": self.model_path,
-            "dimension": self.embedding_dim
-        }
-        
-        import json
-        with open(filepath, 'w') as f:
-            json.dump(data, f)
-        
-        logger.info(f"Saved {len(texts)} embeddings to {filepath}")
-    
-    def load_embeddings(self, filepath: str) -> tuple:
-        """
-        Load embeddings from file
-        
-        Args:
-            filepath: Path to saved embeddings
-            
-        Returns:
-            Tuple of (embeddings, texts)
-        """
-        import json
-        with open(filepath, 'r') as f:
-            data = json.load(f)
-        
-        embeddings = np.array(data["embeddings"])
-        texts = data["texts"]
-        
-        logger.info(f"Loaded {len(texts)} embeddings from {filepath}")
-        return embeddings, texts
-
-
-class EmbeddingCache:
-    """Cache for embeddings to avoid recomputation"""
-    
-    def __init__(self, max_size: int = 10000):
-        """
-        Initialize embedding cache
-        
-        Args:
-            max_size: Maximum number of embeddings to cache
-        """
-        self.cache = {}
-        self.max_size = max_size
-        self.access_count = {}
-    
-    def get(self, text: str) -> Optional[np.ndarray]:
-        """Get embedding from cache"""
-        if text in self.cache:
-            self.access_count[text] = self.access_count.get(text, 0) + 1
-            return self.cache[text]
-        return None
-    
-    def put(self, text: str, embedding: np.ndarray):
-        """Add embedding to cache"""
-        # Remove least accessed item if cache is full
-        if len(self.cache) >= self.max_size:
-            least_accessed = min(self.access_count.items(), key=lambda x: x[1])[0]
-            del self.cache[least_accessed]
-            del self.access_count[least_accessed]
-        
-        self.cache[text] = embedding
-        self.access_count[text] = 1
-    
-    def clear(self):
-        """Clear the cache"""
-        self.cache.clear()
-        self.access_count.clear()
