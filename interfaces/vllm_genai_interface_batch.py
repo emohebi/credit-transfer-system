@@ -6,6 +6,7 @@ import json
 import logging
 import re
 import shutil
+import torch
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 from huggingface_hub import snapshot_download
@@ -24,7 +25,8 @@ class VLLMGenAIInterfaceBatch:
                  max_model_len: int = 8192,
                  batch_size: int = 8,
                  model_cache_dir: str = "/root/.cache/huggingface/hub",
-                 external_model_dir: str = "/Volumes/jsa_external_prod/external_vols/scratch/Scratch/Ehsan/Models"):
+                 external_model_dir: str = "/Volumes/jsa_external_prod/external_vols/scratch/Scratch/Ehsan/Models",
+                 gpu_id: int = 0):  # Add explicit GPU ID parameter
         """
         Initialize vLLM GenAI interface with batch processing
         
@@ -35,6 +37,7 @@ class VLLMGenAIInterfaceBatch:
             batch_size: Default batch size for processing
             model_cache_dir: Directory for HuggingFace cache
             external_model_dir: Directory containing pre-downloaded models
+            gpu_id: GPU ID to use (default 0)
         """
         self.MODELS = Config.MODELS
         self.model_name = model_name
@@ -43,6 +46,12 @@ class VLLMGenAIInterfaceBatch:
         self.batch_size = batch_size
         self.model_cache_dir = Path(model_cache_dir)
         self.external_model_dir = Path(external_model_dir)
+        self.gpu_id = gpu_id
+        
+        # Set CUDA device for vLLM
+        if torch.cuda.is_available():
+            torch.cuda.set_device(gpu_id)
+            logger.info(f"vLLM batch interface will use GPU {gpu_id}")
         
         # Get model configuration
         if model_name not in self.MODELS:
@@ -65,12 +74,20 @@ class VLLMGenAIInterfaceBatch:
             snapshot_location = self._get_snapshot_location()
             logger.info(f"Loading model from: {snapshot_location}")
             
+            # Set environment variable to control GPU visibility
+            import os
+            if self.number_gpus == 1:
+                os.environ["CUDA_VISIBLE_DEVICES"] = str(self.gpu_id)
+            
+            # Initialize vLLM with explicit GPU configuration
             self.llm = LLM(
                 model=snapshot_location,
                 tensor_parallel_size=self.number_gpus,
-                max_model_len=self.max_model_len
+                max_model_len=self.max_model_len,
+                gpu_memory_utilization=0.9,  # Allow vLLM to use most of GPU 0
+                device='cuda' if torch.cuda.is_available() else 'cpu'
             )
-            logger.info(f"Successfully loaded model: {self.model_name}")
+            logger.info(f"Successfully loaded model: {self.model_name} on GPU {self.gpu_id}")
             
         except Exception as e:
             logger.error(f"Failed to initialize model: {e}")

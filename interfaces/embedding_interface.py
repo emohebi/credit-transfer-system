@@ -48,7 +48,7 @@ class EmbeddingInterface:
         self.model_name = model_name
         self.model_cache_dir = Path(model_cache_dir)
         self.external_model_dir = Path(external_model_dir)
-        self.device = device
+        self.device_str = device
         self.default_batch_size = batch_size
         
         # Parse device string to handle specific GPU selection
@@ -56,16 +56,17 @@ class EmbeddingInterface:
             if ":" in device:
                 # Specific GPU like cuda:1
                 self.device_id = int(device.split(":")[1])
-                self.torch_device = torch.device(f"cuda:{self.device_id}")
             else:
                 # Default to cuda:0
                 self.device_id = 0
-                self.torch_device = torch.device("cuda:0")
+            # Set CUDA device for this model
+            torch.cuda.set_device(self.device_id)
+            self.device = torch.device(f"cuda:{self.device_id}")
         else:
             self.device_id = None
-            self.torch_device = torch.device("cpu")
+            self.device = torch.device("cpu")
         
-        logger.info(f"Embedding interface will use device: {self.torch_device}")
+        logger.info(f"Embedding interface will use device: {self.device}")
         
         # Get model configuration
         if model_name not in self.MODELS:
@@ -95,31 +96,60 @@ class EmbeddingInterface:
             snapshot_location = self._get_snapshot_location()
             logger.info(f"Loading embedding model from: {snapshot_location}")
             
-            # Initialize model with specific device
-            self.model = SentenceTransformer(
-                snapshot_location,
-                trust_remote_code=self.trust_remote_code,
-                device=str(self.torch_device)  # Pass device as string
-            )
-            
-            # Ensure model is on the correct device
-            self.model = self.model.to(self.torch_device)
+            # Create a context manager to ensure model loads on correct device
+            with torch.cuda.device(self.device_id) if self.device_id is not None else torch.cuda.device(0):
+                # Initialize model - do NOT pass device parameter to avoid conflicts
+                self.model = SentenceTransformer(
+                    snapshot_location,
+                    trust_remote_code=self.trust_remote_code
+                )
+                
+                # Manually move model to the correct device
+                self.model = self.model.to(self.device)
+                
+                # Set the device in the model's internal state
+                self.model._target_device = self.device
+                
+                # Ensure all sub-modules are on the correct device
+                for module in self.model.modules():
+                    module.to(self.device)
+                
+                # If model has tokenizer, ensure it's configured correctly
+                if hasattr(self.model, 'tokenizer'):
+                    # Some tokenizers have device-specific settings
+                    if hasattr(self.model.tokenizer, 'padding_side'):
+                        self.model.tokenizer.padding_side = 'right'
             
             # Update embedding dimension from model
             self.embedding_dim = self.model.get_sentence_embedding_dimension()
-            logger.info(f"Successfully loaded embedding model: {self.model_name} on {self.torch_device} (dim={self.embedding_dim})")
+            logger.info(f"Successfully loaded embedding model: {self.model_name} on {self.device} (dim={self.embedding_dim})")
+            
+            # Verify device placement
+            self._verify_device_placement()
             
         except Exception as e:
             logger.error(f"Failed to initialize embedding model: {e}")
             raise
     
+    def _verify_device_placement(self):
+        """Verify all model parameters are on the correct device"""
+        for name, param in self.model.named_parameters():
+            if param.device != self.device:
+                logger.warning(f"Parameter {name} is on {param.device}, moving to {self.device}")
+                param.data = param.data.to(self.device)
+        
+        # Check buffers as well
+        for name, buffer in self.model.named_buffers():
+            if buffer.device != self.device:
+                logger.warning(f"Buffer {name} is on {buffer.device}, moving to {self.device}")
+                buffer.data = buffer.data.to(self.device)
+    
     def _get_snapshot_location(self, copy_model: bool = True) -> str:
-        """Get or download model snapshot location (same logic as vLLM interface)"""
+        """Get or download model snapshot location"""
         model_id = self.model_config['model_id']
         revision = self.model_config.get('revision')
         
         if revision:
-            # Copy from external storage if available
             external_path = self.external_model_dir / f"models--{self.model_name}"
             cache_path = self.model_cache_dir / f"models--{self.model_name}"
             
@@ -130,14 +160,12 @@ class EmbeddingInterface:
                 except FileExistsError:
                     logger.info(f"Model already exists in cache: {cache_path}")
             
-            # Download from HuggingFace
             snapshot_location = snapshot_download(
                 repo_id=model_id,
                 revision=revision,
                 cache_dir=str(self.model_cache_dir)
             )
         else:
-            # Check for local model in external directory first
             if copy_model:
                 external_path = self.external_model_dir / self.model_name
                 cache_path = self.model_cache_dir / self.model_name
@@ -151,13 +179,11 @@ class EmbeddingInterface:
                     
                     snapshot_location = str(cache_path)
                 else:
-                    # Download from HuggingFace if not in external directory
                     snapshot_location = snapshot_download(
                         repo_id=model_id,
                         cache_dir=str(self.model_cache_dir)
                     )
             else:
-                # Try to use from cache or download
                 cache_path = self.model_cache_dir / self.model_name
                 if cache_path.exists():
                     snapshot_location = str(cache_path)
@@ -195,67 +221,108 @@ class EmbeddingInterface:
             return np.array([])
         
         # Use cache for single texts
-        if len(texts) == 1 and texts[0] in self.cache:
-            cached = self.cache[texts[0]]
-            if convert_to_tensor:
-                return torch.from_numpy(cached).to(self.torch_device)
-            return cached
+        if len(texts) == 1 and texts[0] in self.cache and not convert_to_tensor:
+            return self.cache[texts[0]]
         
         # Set batch size
         if batch_size is None:
             batch_size = self.default_batch_size
         
-        # Ensure model is on correct device before encoding
-        if hasattr(self.model, '_target_device'):
-            self.model._target_device = self.torch_device
-        
-        # Encode using SentenceTransformer
-        task = "text-matching"
-        try:
-            # The encode method should handle device placement automatically
-            embeddings = self.model.encode(
-                texts,
-                task=task,
-                prompt_name='passage',
-                batch_size=batch_size,
-                show_progress_bar=show_progress,
-                convert_to_tensor=convert_to_tensor,
-                normalize_embeddings=normalize_embeddings,
-                device=str(self.torch_device)  # Explicitly pass device
-            )
-        except Exception as e:
-            logger.warning(f"Encoding with device parameter failed: {e}. Trying without explicit device.")
-            # Fallback without device parameter (for older versions)
-            embeddings = self.model.encode(
-                texts,
-                task=task,
-                prompt_name='passage',
-                batch_size=batch_size,
-                show_progress_bar=show_progress,
-                convert_to_tensor=convert_to_tensor,
-                normalize_embeddings=normalize_embeddings
-            )
-        
-        # If tensor, ensure it's on the correct device
-        if convert_to_tensor and torch.is_tensor(embeddings):
-            embeddings = embeddings.to(self.torch_device)
+        # Ensure we're in the right CUDA context
+        with torch.cuda.device(self.device_id) if self.device_id is not None else torch.cuda.device(0):
+            # Double-check model is on correct device
+            self.model._target_device = self.device
+            
+            # Use a custom encoding approach to ensure device consistency
+            try:
+                # For Jina models with task parameter
+                if 'jina' in self.model_name.lower():
+                    # Manually handle encoding to ensure device consistency
+                    all_embeddings = []
+                    
+                    for i in range(0, len(texts), batch_size):
+                        batch_texts = texts[i:i + batch_size]
+                        
+                        # Encode batch
+                        with torch.no_grad():
+                            # Get model inputs
+                            inputs = self.model.tokenizer(
+                                batch_texts,
+                                padding=True,
+                                truncation=True,
+                                return_tensors='pt',
+                                max_length=512
+                            )
+                            
+                            # Move inputs to correct device
+                            inputs = {k: v.to(self.device) for k, v in inputs.items()}
+                            
+                            # Get embeddings
+                            outputs = self.model[0].auto_model(**inputs)
+                            
+                            # Handle different output formats
+                            if hasattr(outputs, 'last_hidden_state'):
+                                embeddings = outputs.last_hidden_state
+                            elif hasattr(outputs, 'pooler_output'):
+                                embeddings = outputs.pooler_output
+                            else:
+                                embeddings = outputs[0]
+                            
+                            # Mean pooling
+                            attention_mask = inputs['attention_mask']
+                            mask_expanded = attention_mask.unsqueeze(-1).expand(embeddings.size()).float()
+                            sum_embeddings = torch.sum(embeddings * mask_expanded, 1)
+                            sum_mask = torch.clamp(mask_expanded.sum(1), min=1e-9)
+                            embeddings = sum_embeddings / sum_mask
+                            
+                            # Normalize if needed
+                            if normalize_embeddings:
+                                embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=1)
+                            
+                            all_embeddings.append(embeddings)
+                    
+                    # Combine all batches
+                    embeddings = torch.cat(all_embeddings, dim=0)
+                    
+                    # Convert to numpy if needed
+                    if not convert_to_tensor:
+                        embeddings = embeddings.cpu().numpy()
+                    
+                else:
+                    # For other models, use standard encode with device override
+                    embeddings = self.model.encode(
+                        texts,
+                        batch_size=batch_size,
+                        show_progress_bar=show_progress,
+                        convert_to_tensor=convert_to_tensor,
+                        normalize_embeddings=normalize_embeddings
+                    )
+                    
+                    # Ensure result is on correct device if tensor
+                    if convert_to_tensor and torch.is_tensor(embeddings):
+                        embeddings = embeddings.to(self.device)
+                    
+            except Exception as e:
+                logger.warning(f"Custom encoding failed: {e}. Falling back to standard encode.")
+                # Fallback to standard encode
+                embeddings = self.model.encode(
+                    texts,
+                    batch_size=batch_size,
+                    show_progress_bar=show_progress,
+                    convert_to_tensor=convert_to_tensor,
+                    normalize_embeddings=normalize_embeddings
+                )
         
         # Cache single text results
         if len(texts) == 1 and not convert_to_tensor:
-            self.cache[texts[0]] = embeddings[0] if embeddings.ndim > 1 else embeddings
+            if isinstance(embeddings, np.ndarray):
+                self.cache[texts[0]] = embeddings[0] if embeddings.ndim > 1 else embeddings
         
         return embeddings
     
     def encode_batch(self, texts: List[str], batch_size: Optional[int] = None) -> np.ndarray:
         """
         Encode multiple texts in batches (convenience method)
-        
-        Args:
-            texts: List of texts to encode
-            batch_size: Batch size for processing
-            
-        Returns:
-            Numpy array of embeddings
         """
         return self.encode(texts, batch_size=batch_size)
     
@@ -263,13 +330,6 @@ class EmbeddingInterface:
                   embeddings2: np.ndarray) -> np.ndarray:
         """
         Calculate cosine similarity between embeddings
-        
-        Args:
-            embeddings1: First set of embeddings
-            embeddings2: Second set of embeddings
-            
-        Returns:
-            Similarity matrix
         """
         # Handle single embedding
         if embeddings1.ndim == 1:
@@ -277,38 +337,18 @@ class EmbeddingInterface:
         if embeddings2.ndim == 1:
             embeddings2 = embeddings2.reshape(1, -1)
         
-        # Convert to tensors if needed and move to correct device
-        if not torch.is_tensor(embeddings1):
-            embeddings1_tensor = torch.from_numpy(embeddings1).to(self.torch_device)
-        else:
-            embeddings1_tensor = embeddings1.to(self.torch_device)
+        # Use numpy operations to avoid device issues
+        # Normalize embeddings
+        norm1 = embeddings1 / (np.linalg.norm(embeddings1, axis=1, keepdims=True) + 1e-10)
+        norm2 = embeddings2 / (np.linalg.norm(embeddings2, axis=1, keepdims=True) + 1e-10)
         
-        if not torch.is_tensor(embeddings2):
-            embeddings2_tensor = torch.from_numpy(embeddings2).to(self.torch_device)
-        else:
-            embeddings2_tensor = embeddings2.to(self.torch_device)
+        # Calculate cosine similarity
+        similarity_matrix = np.dot(norm1, norm2.T)
         
-        # Normalize embeddings on GPU
-        norm1 = embeddings1_tensor / (torch.linalg.norm(embeddings1_tensor, dim=1, keepdim=True) + 1e-10)
-        norm2 = embeddings2_tensor / (torch.linalg.norm(embeddings2_tensor, dim=1, keepdim=True) + 1e-10)
-        
-        # Calculate cosine similarity on GPU
-        similarity_matrix = torch.mm(norm1, norm2.T)
-        
-        # Convert back to numpy
-        return similarity_matrix.cpu().numpy()
+        return similarity_matrix
     
     def similarity_score(self, text1: str, text2: str) -> float:
-        """
-        Calculate similarity score between two texts
-        
-        Args:
-            text1: First text
-            text2: Second text
-            
-        Returns:
-            Similarity score between 0 and 1
-        """
+        """Calculate similarity score between two texts"""
         embeddings = self.encode([text1, text2])
         sim_matrix = self.similarity(embeddings[0:1], embeddings[1:2])
         return float(sim_matrix[0, 0])
@@ -316,52 +356,30 @@ class EmbeddingInterface:
     def find_most_similar(self, query: str, 
                          candidates: List[str], 
                          top_k: int = 5) -> List[tuple]:
-        """
-        Find most similar texts from candidates
-        
-        Args:
-            query: Query text
-            candidates: List of candidate texts
-            top_k: Number of top results to return
-            
-        Returns:
-            List of (text, score) tuples sorted by similarity
-        """
+        """Find most similar texts from candidates"""
         if not candidates:
             return []
         
-        # Encode all texts
         all_texts = [query] + candidates
         embeddings = self.encode(all_texts)
         
-        # Calculate similarities
         query_embedding = embeddings[0:1]
         candidate_embeddings = embeddings[1:]
         
         similarities = self.similarity(query_embedding, candidate_embeddings)
         scores = similarities[0]
         
-        # Get top-k indices
         top_indices = np.argsort(scores)[-top_k:][::-1]
         
-        # Return results
         results = [(candidates[idx], float(scores[idx])) for idx in top_indices]
         return results
     
     def save_embeddings(self, embeddings: np.ndarray, 
                        texts: List[str], 
                        filepath: str):
-        """
-        Save embeddings to file
-        
-        Args:
-            embeddings: Embeddings array
-            texts: Corresponding texts
-            filepath: Path to save file
-        """
+        """Save embeddings to file"""
         import json
         
-        # Convert to CPU numpy if tensor
         if torch.is_tensor(embeddings):
             embeddings = embeddings.cpu().numpy()
         
@@ -370,7 +388,7 @@ class EmbeddingInterface:
             "texts": texts,
             "model": self.model_name,
             "dimension": self.embedding_dim,
-            "device": str(self.torch_device)
+            "device": self.device_str
         }
         
         with open(filepath, 'w') as f:
@@ -379,15 +397,7 @@ class EmbeddingInterface:
         logger.info(f"Saved {len(texts)} embeddings to {filepath}")
     
     def load_embeddings(self, filepath: str) -> tuple:
-        """
-        Load embeddings from file
-        
-        Args:
-            filepath: Path to saved embeddings
-            
-        Returns:
-            Tuple of (embeddings, texts)
-        """
+        """Load embeddings from file"""
         import json
         
         with open(filepath, 'r') as f:

@@ -116,9 +116,10 @@ def initialize_interfaces():
                             max_model_len=Config.VLLM_MAX_MODEL_LEN,
                             batch_size=Config.VLLM_BATCH_SIZE,
                             model_cache_dir=Config.MODEL_CACHE_DIR,
-                            external_model_dir=Config.EXTERNAL_MODEL_DIR
+                            external_model_dir=Config.EXTERNAL_MODEL_DIR,
+                            gpu_id=0  # Explicitly use GPU 0
                         )
-                        logger.info(f"Fell back to vLLM batch interface with model: {Config.VLLM_MODEL_NAME}")
+                        logger.info(f"Fell back to vLLM batch interface on GPU 0 with model: {Config.VLLM_MODEL_NAME}")
                     else:
                         from interfaces.vllm_genai_interface import VLLMGenAIInterface
                         genai = VLLMGenAIInterface(
@@ -126,9 +127,10 @@ def initialize_interfaces():
                             number_gpus=Config.VLLM_NUM_GPUS,
                             max_model_len=Config.VLLM_MAX_MODEL_LEN,
                             model_cache_dir=Config.MODEL_CACHE_DIR,
-                            external_model_dir=Config.EXTERNAL_MODEL_DIR
+                            external_model_dir=Config.EXTERNAL_MODEL_DIR,
+                            gpu_id=0  # Explicitly use GPU 0
                         )
-                        logger.info(f"Fell back to vLLM interface with model: {Config.VLLM_MODEL_NAME}")
+                        logger.info(f"Fell back to vLLM interface on GPU 0 with model: {Config.VLLM_MODEL_NAME}")
                 except Exception as e2:
                     logger.warning(f"Failed to initialize vLLM interface: {e2}")
     
@@ -142,9 +144,10 @@ def initialize_interfaces():
                     max_model_len=Config.VLLM_MAX_MODEL_LEN,
                     batch_size=Config.VLLM_BATCH_SIZE,
                     model_cache_dir=Config.MODEL_CACHE_DIR,
-                    external_model_dir=Config.EXTERNAL_MODEL_DIR
+                    external_model_dir=Config.EXTERNAL_MODEL_DIR,
+                    gpu_id=0  # Explicitly use GPU 0
                 )
-                logger.info(f"vLLM batch GenAI interface initialized with model: {Config.VLLM_MODEL_NAME}")
+                logger.info(f"vLLM batch GenAI interface initialized on GPU 0 with model: {Config.VLLM_MODEL_NAME}")
                 logger.info(f"Batch size: {Config.VLLM_BATCH_SIZE}")
             else:
                 from interfaces.vllm_genai_interface import VLLMGenAIInterface
@@ -153,12 +156,12 @@ def initialize_interfaces():
                     number_gpus=Config.VLLM_NUM_GPUS,
                     max_model_len=Config.VLLM_MAX_MODEL_LEN,
                     model_cache_dir=Config.MODEL_CACHE_DIR,
-                    external_model_dir=Config.EXTERNAL_MODEL_DIR
+                    external_model_dir=Config.EXTERNAL_MODEL_DIR,
+                    gpu_id=0  # Explicitly use GPU 0
                 )
-                logger.info(f"vLLM GenAI interface initialized with model: {Config.VLLM_MODEL_NAME}")
+                logger.info(f"vLLM GenAI interface initialized on GPU 0 with model: {Config.VLLM_MODEL_NAME}")
         except Exception as e:
             logger.warning(f"Failed to initialize vLLM GenAI interface: {e}")
-            
             # Fall back to web API if vLLM fails
             if Config.USE_GENAI:
                 try:

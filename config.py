@@ -34,6 +34,13 @@ class Config:
     # Create directories if they don't exist
     for dir_path in [DATA_DIR, OUTPUT_DIR, CACHE_DIR]:
         dir_path.mkdir(exist_ok=True)
+        
+    # In config.py, add these configuration options:
+
+    # GPU Configuration
+    VLLM_GPU_ID = int(os.getenv("VLLM_GPU_ID", "0"))  # GPU ID for vLLM
+    EMBEDDING_GPU_ID = int(os.getenv("EMBEDDING_GPU_ID", "1"))  # GPU ID for embeddings
+    GPU_MEMORY_UTILIZATION = float(os.getenv("GPU_MEMORY_UTILIZATION", "0.9"))  # Memory fraction for vLLM
     
     # Azure OpenAI Configuration
     AZURE_OPENAI_ENDPOINT = os.getenv("ENDPOINT_URL", "https://ehsaninstance1.openai.azure.com/")
