@@ -1,5 +1,5 @@
 """
-Main entry point for the Credit Transfer Analysis System
+Main entry point for the Credit Transfer Analysis System with batch processing support
 """
 
 import argparse
@@ -29,27 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 def load_vet_data(filepath: str) -> VETQualification:
-    """
-    Load VET qualification data from JSON file
-    
-    Expected format:
-    {
-        "code": "ICT50220",
-        "name": "Diploma of Information Technology",
-        "level": "Diploma",
-        "units": [
-            {
-                "code": "ICTICT517",
-                "name": "Match IT needs with the strategic direction",
-                "description": "...",
-                "learning_outcomes": [...],
-                "assessment_requirements": "...",
-                "nominal_hours": 60,
-                "prerequisites": []
-            }
-        ]
-    }
-    """
+    """Load VET qualification data from JSON file"""
     with open(filepath, 'r') as f:
         data = json.load(f)
     
@@ -76,28 +56,7 @@ def load_vet_data(filepath: str) -> VETQualification:
 
 
 def load_uni_data(filepath: str) -> UniQualification:
-    """
-    Load university qualification data from JSON file
-    
-    Expected format:
-    {
-        "code": "BIT",
-        "name": "Bachelor of Information Technology",
-        "courses": [
-            {
-                "code": "COMP1234",
-                "name": "Introduction to Programming",
-                "description": "...",
-                "study_level": "introductory",
-                "learning_outcomes": [...],
-                "prerequisites": [],
-                "credit_points": 6,
-                "topics": [...],
-                "assessment": "..."
-            }
-        ]
-    }
-    """
+    """Load university qualification data from JSON file"""
     with open(filepath, 'r') as f:
         data = json.load(f)
     
@@ -111,7 +70,7 @@ def load_uni_data(filepath: str) -> UniQualification:
             code=course_data["code"],
             name=course_data["name"],
             description=course_data.get("description", ""),
-            study_level=course_data.get("study_level", "intermediate"),  # Default to intermediate
+            study_level=course_data.get("study_level", "intermediate"),
             learning_outcomes=course_data.get("learning_outcomes", []),
             prerequisites=course_data.get("prerequisites", []),
             credit_points=course_data.get("credit_points", 0),
@@ -125,7 +84,7 @@ def load_uni_data(filepath: str) -> UniQualification:
 
 
 def initialize_interfaces():
-    """Initialize GenAI and Embedding interfaces"""
+    """Initialize GenAI and Embedding interfaces with batch processing support"""
     genai = None
     embeddings = None
     
@@ -149,29 +108,54 @@ def initialize_interfaces():
             # Fall back to vLLM if Azure OpenAI fails
             if Config.USE_VLLM:
                 try:
-                    from interfaces.vllm_genai_interface import VLLMGenAIInterface
-                    genai = VLLMGenAIInterface(
-                        model_name=Config.VLLM_MODEL_NAME,
-                        number_gpus=Config.VLLM_NUM_GPUS,
-                        max_model_len=Config.VLLM_MAX_MODEL_LEN,
-                        model_cache_dir=Config.MODEL_CACHE_DIR,
-                        external_model_dir=Config.EXTERNAL_MODEL_DIR
-                    )
-                    logger.info(f"Fell back to vLLM interface with model: {Config.VLLM_MODEL_NAME}")
+                    if Config.USE_VLLM_BATCH:
+                        from interfaces.vllm_genai_interface_batch import VLLMGenAIInterfaceBatch
+                        genai = VLLMGenAIInterfaceBatch(
+                            model_name=Config.VLLM_MODEL_NAME,
+                            number_gpus=Config.VLLM_NUM_GPUS,
+                            max_model_len=Config.VLLM_MAX_MODEL_LEN,
+                            batch_size=Config.VLLM_BATCH_SIZE,
+                            model_cache_dir=Config.MODEL_CACHE_DIR,
+                            external_model_dir=Config.EXTERNAL_MODEL_DIR
+                        )
+                        logger.info(f"Fell back to vLLM batch interface with model: {Config.VLLM_MODEL_NAME}")
+                    else:
+                        from interfaces.vllm_genai_interface import VLLMGenAIInterface
+                        genai = VLLMGenAIInterface(
+                            model_name=Config.VLLM_MODEL_NAME,
+                            number_gpus=Config.VLLM_NUM_GPUS,
+                            max_model_len=Config.VLLM_MAX_MODEL_LEN,
+                            model_cache_dir=Config.MODEL_CACHE_DIR,
+                            external_model_dir=Config.EXTERNAL_MODEL_DIR
+                        )
+                        logger.info(f"Fell back to vLLM interface with model: {Config.VLLM_MODEL_NAME}")
                 except Exception as e2:
                     logger.warning(f"Failed to initialize vLLM interface: {e2}")
     
     elif Config.USE_VLLM:
         try:
-            from interfaces.vllm_genai_interface import VLLMGenAIInterface
-            genai = VLLMGenAIInterface(
-                model_name=Config.VLLM_MODEL_NAME,
-                number_gpus=Config.VLLM_NUM_GPUS,
-                max_model_len=Config.VLLM_MAX_MODEL_LEN,
-                model_cache_dir=Config.MODEL_CACHE_DIR,
-                external_model_dir=Config.EXTERNAL_MODEL_DIR
-            )
-            logger.info(f"vLLM GenAI interface initialized with model: {Config.VLLM_MODEL_NAME}")
+            if Config.USE_VLLM_BATCH:
+                from interfaces.vllm_genai_interface_batch import VLLMGenAIInterfaceBatch
+                genai = VLLMGenAIInterfaceBatch(
+                    model_name=Config.VLLM_MODEL_NAME,
+                    number_gpus=Config.VLLM_NUM_GPUS,
+                    max_model_len=Config.VLLM_MAX_MODEL_LEN,
+                    batch_size=Config.VLLM_BATCH_SIZE,
+                    model_cache_dir=Config.MODEL_CACHE_DIR,
+                    external_model_dir=Config.EXTERNAL_MODEL_DIR
+                )
+                logger.info(f"vLLM batch GenAI interface initialized with model: {Config.VLLM_MODEL_NAME}")
+                logger.info(f"Batch size: {Config.VLLM_BATCH_SIZE}")
+            else:
+                from interfaces.vllm_genai_interface import VLLMGenAIInterface
+                genai = VLLMGenAIInterface(
+                    model_name=Config.VLLM_MODEL_NAME,
+                    number_gpus=Config.VLLM_NUM_GPUS,
+                    max_model_len=Config.VLLM_MAX_MODEL_LEN,
+                    model_cache_dir=Config.MODEL_CACHE_DIR,
+                    external_model_dir=Config.EXTERNAL_MODEL_DIR
+                )
+                logger.info(f"vLLM GenAI interface initialized with model: {Config.VLLM_MODEL_NAME}")
         except Exception as e:
             logger.warning(f"Failed to initialize vLLM GenAI interface: {e}")
             
@@ -229,9 +213,9 @@ def initialize_interfaces():
 def analyze_transfer(vet_file: str, uni_file: str, output_file: str, 
                     target_courses: Optional[List[str]] = None,
                     report_format: str = "json",
-                    export_skills: bool = True):  # Add this parameter
+                    export_skills: bool = True):
     """
-    Main analysis function with skill export
+    Main analysis function with batch processing support
     
     Args:
         vet_file: Path to VET qualification JSON
@@ -242,6 +226,12 @@ def analyze_transfer(vet_file: str, uni_file: str, output_file: str,
         export_skills: Whether to export extracted skills
     """
     logger.info("Starting credit transfer analysis")
+    
+    if Config.USE_VLLM_BATCH:
+        logger.info("Batch processing mode enabled")
+        logger.info(f"Batch size: {Config.VLLM_BATCH_SIZE}")
+    else:
+        logger.info("Individual processing mode")
     
     # Load data
     vet_qual = load_vet_data(vet_file)
@@ -278,7 +268,7 @@ def analyze_transfer(vet_file: str, uni_file: str, output_file: str,
     
     logger.info(f"Generated {len(recommendations)} recommendations")
     
-    # Generate report with skill export
+    # Generate report
     report_gen = ReportGenerator()
     
     # Export skills if requested
@@ -294,10 +284,13 @@ def analyze_transfer(vet_file: str, uni_file: str, output_file: str,
         for file_type, filepath in files.items():
             logger.info(f"  {file_type}: {filepath}")
         
-        # Print summary of exported files
+        # Print summary
         print("\n" + "="*60)
         print("REPORT PACKAGE GENERATED")
         print("="*60)
+        print(f"Processing Mode: {'Batch' if Config.USE_VLLM_BATCH else 'Individual'}")
+        if Config.USE_VLLM_BATCH:
+            print(f"Batch Size: {Config.VLLM_BATCH_SIZE}")
         print(f"Main report: {files.get('report_html', 'N/A')}")
         print(f"Recommendations: {files.get('recommendations_json', 'N/A')}")
         print(f"VET Skills: {files.get('vet_skills_json', 'N/A')}")
@@ -306,7 +299,7 @@ def analyze_transfer(vet_file: str, uni_file: str, output_file: str,
         print(f"Skill Analysis: {files.get('skill_analysis', 'N/A')}")
         
     else:
-        # Standard report generation (existing code)
+        # Standard report generation
         if report_format == "json":
             analyzer.export_recommendations(recommendations, output_file)
         elif report_format == "html":
@@ -332,6 +325,7 @@ def analyze_transfer(vet_file: str, uni_file: str, output_file: str,
     print("\n" + "="*60)
     print("ANALYSIS COMPLETE")
     print("="*60)
+    print(f"Processing Mode: {'Batch' if Config.USE_VLLM_BATCH else 'Individual'}")
     print(f"VET Qualification: {vet_qual.name}")
     print(f"University Program: {uni_qual.name}")
     print(f"Total Recommendations: {len(recommendations)}")
@@ -357,7 +351,7 @@ def analyze_transfer(vet_file: str, uni_file: str, output_file: str,
 
 
 def main():
-    """Main entry point with CLI"""
+    """Main entry point with CLI including batch processing options"""
     parser = argparse.ArgumentParser(
         description="Credit Transfer Analysis System - Analyze VET to University credit transfers"
     )
@@ -399,15 +393,34 @@ def main():
         action="store_true",
         help="Enable verbose output"
     )
-    parser.add_argument(
-        "--use-azure-openai",
-        action="store_true",
-        help="Force use of Azure OpenAI (overrides config)"
-    )
+    
+    # vLLM options
     parser.add_argument(
         "--use-vllm",
         action="store_true", 
         help="Force use of vLLM (overrides config)"
+    )
+    parser.add_argument(
+        "--use-batch",
+        action="store_true",
+        help="Enable batch processing for vLLM"
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        help="Batch size for vLLM processing (default: 8)"
+    )
+    parser.add_argument(
+        "--no-batch",
+        action="store_true",
+        help="Disable batch processing (use individual processing)"
+    )
+    
+    # Azure OpenAI options
+    parser.add_argument(
+        "--use-azure-openai",
+        action="store_true",
+        help="Force use of Azure OpenAI (overrides config)"
     )
     parser.add_argument(
         "--azure-endpoint",
@@ -421,6 +434,8 @@ def main():
         "--azure-api-key",
         help="Azure OpenAI API key"
     )
+    
+    # Skill export options
     parser.add_argument(
         "--export-skills",
         action="store_true",
@@ -465,6 +480,18 @@ def main():
         Config.USE_VLLM = True
         Config.USE_AZURE_OPENAI = False
         Config.USE_GENAI = False
+    
+    if args.use_batch:
+        Config.USE_VLLM_BATCH = True
+        logger.info("Batch processing enabled via command line")
+    
+    if args.no_batch:
+        Config.USE_VLLM_BATCH = False
+        logger.info("Batch processing disabled via command line")
+    
+    if args.batch_size:
+        Config.VLLM_BATCH_SIZE = args.batch_size
+        logger.info(f"Batch size set to {args.batch_size}")
     
     if args.azure_endpoint:
         Config.AZURE_OPENAI_ENDPOINT = args.azure_endpoint

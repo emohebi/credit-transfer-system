@@ -1,5 +1,6 @@
 """
 Configuration settings for the Credit Transfer Analysis System
+Updated to include batch processing options
 """
 
 import os
@@ -8,25 +9,21 @@ from pathlib import Path
 # Load environment variables from .env file
 try:
     from dotenv import load_dotenv
-    # Look for .env file in the current directory and parent directories
     env_path = Path(__file__).parent / '.env'
     if env_path.exists():
         load_dotenv(env_path)
         print(f"Loaded environment variables from {env_path}")
     else:
-        # Try to load from current working directory
         load_dotenv()
         print("Loaded environment variables from .env file")
 except ImportError:
     print("python-dotenv not installed. Install with: pip install python-dotenv")
-    print("Environment variables will be loaded from system environment only.")
 except Exception as e:
     print(f"Warning: Could not load .env file: {e}")
-    print("Environment variables will be loaded from system environment only.")
 
 
 class Config:
-    """System configuration"""
+    """System configuration with batch processing support"""
     
     # Project paths
     BASE_DIR = Path(__file__).parent
@@ -48,33 +45,40 @@ class Config:
     AZURE_OPENAI_TEMPERATURE = float(os.getenv("AZURE_OPENAI_TEMPERATURE", "0.0"))
     USE_AZURE_OPENAI = os.getenv("USE_AZURE_OPENAI", "true").lower() == "true"
     
-    # vLLM Configuration (kept for compatibility)
-    USE_VLLM = os.getenv("USE_VLLM", "false").lower() == "true"  # Default to false, prefer Azure OpenAI
-    VLLM_MODEL_NAME = os.getenv("VLLM_MODEL_NAME", "gpt-oss-120b")
+    # vLLM Configuration
+    USE_VLLM = os.getenv("USE_VLLM", "false").lower() == "true"
+    VLLM_MODEL_NAME = os.getenv("VLLM_MODEL_NAME", "meta-llama--Llama-3.1-8B-Instruct")
     VLLM_NUM_GPUS = int(os.getenv("VLLM_NUM_GPUS", "1"))
     VLLM_MAX_MODEL_LEN = int(os.getenv("VLLM_MAX_MODEL_LEN", "8192"))
+    
+    # Batch Processing Configuration
+    USE_VLLM_BATCH = os.getenv("USE_VLLM_BATCH", "false").lower() == "true"
     VLLM_BATCH_SIZE = int(os.getenv("VLLM_BATCH_SIZE", "8"))
-    MODEL_CACHE_DIR = os.getenv("MODEL_CACHE_DIR", "home/.cache/huggingface/hub")
+    VLLM_MAX_BATCH_SIZE = int(os.getenv("VLLM_MAX_BATCH_SIZE", "16"))
+    VLLM_BATCH_TIMEOUT = int(os.getenv("VLLM_BATCH_TIMEOUT", "120"))
+    
+    # Model directories
+    MODEL_CACHE_DIR = os.getenv("MODEL_CACHE_DIR", "/root/.cache/huggingface/hub")
     EXTERNAL_MODEL_DIR = os.getenv("EXTERNAL_MODEL_DIR", "/Volumes/jsa_external_prod/external_vols/scratch/Scratch/Ehsan/Models")
     
     # Legacy Web API Configuration (kept for compatibility)
     GENAI_ENDPOINT = os.getenv("GENAI_ENDPOINT", "http://localhost:8080")
     GENAI_API_KEY = os.getenv("GENAI_API_KEY", None)
     GENAI_TIMEOUT = int(os.getenv("GENAI_TIMEOUT", "30"))
-    USE_GENAI = os.getenv("USE_GENAI", "false").lower() == "true"  # Default to false
+    USE_GENAI = os.getenv("USE_GENAI", "false").lower() == "true"
     
     # Embedding Configuration
     EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL_NAME", "jinaai--jina-embeddings-v4")
     EMBEDDING_DEVICE = os.getenv("EMBEDDING_DEVICE", "cuda")
     EMBEDDING_BATCH_SIZE = int(os.getenv("EMBEDDING_BATCH_SIZE", "32"))
-    EMBEDDING_MODE = int(os.getenv("EMBEDDING_MODE", "embedding"))  # Options: hybrid, genai, embedding
+    EMBEDDING_MODE = os.getenv("EMBEDDING_MODE", "embedding")
     
-    # Legacy configurations (kept for compatibility)
+    # Legacy embedding configurations
     EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
     EMBEDDING_ENDPOINT = os.getenv("EMBEDDING_ENDPOINT", None)
     EMBEDDING_API_KEY = os.getenv("EMBEDDING_API_KEY", None)
     USE_EMBEDDING_API = os.getenv("USE_EMBEDDING_API", "false").lower() == "true"
-    EMBEDDING_DIM = int(os.getenv("EMBEDDING_DIM", "768"))  # Default for Jina v4
+    EMBEDDING_DIM = int(os.getenv("EMBEDDING_DIM", "768"))
     
     # Analysis Configuration
     MIN_ALIGNMENT_SCORE = float(os.getenv("MIN_ALIGNMENT_SCORE", "0.5"))
@@ -82,7 +86,7 @@ class Config:
     SIMILARITY_THRESHOLD = float(os.getenv("SIMILARITY_THRESHOLD", "0.8"))
     PARTIAL_THRESHOLD = float(os.getenv("PARTIAL_THRESHOLD", "0.6"))
     
-    # Scoring Weights (updated without depth component)
+    # Scoring Weights
     COVERAGE_WEIGHT = float(os.getenv("COVERAGE_WEIGHT", "0.5"))
     CONTEXT_WEIGHT = float(os.getenv("CONTEXT_WEIGHT", "0.25"))
     QUALITY_WEIGHT = float(os.getenv("QUALITY_WEIGHT", "0.15"))
@@ -102,7 +106,6 @@ class Config:
         "postgraduate": 1.0
     }
     
-    # Expected skill levels for each study level
     STUDY_LEVEL_SKILL_MAPPING = {
         "introductory": "NOVICE",
         "intermediate": "COMPETENT",
@@ -126,7 +129,7 @@ class Config:
     CACHE_EXPIRY_DAYS = int(os.getenv("CACHE_EXPIRY_DAYS", "30"))
     
     # Report Configuration
-    REPORT_FORMAT = os.getenv("REPORT_FORMAT", "json")  # json, csv, html
+    REPORT_FORMAT = os.getenv("REPORT_FORMAT", "json")
     INCLUDE_EDGE_CASES = os.getenv("INCLUDE_EDGE_CASES", "true").lower() == "true"
     MAX_RECOMMENDATIONS_PER_COURSE = int(os.getenv("MAX_RECOMMENDATIONS_PER_COURSE", "5"))
     
@@ -138,6 +141,8 @@ class Config:
             "max_unit_combination": cls.MAX_UNIT_COMBINATION,
             "similarity_threshold": cls.SIMILARITY_THRESHOLD,
             "partial_threshold": cls.PARTIAL_THRESHOLD,
+            "use_vllm_batch": cls.USE_VLLM_BATCH,
+            "vllm_batch_size": cls.VLLM_BATCH_SIZE,
             "weights": {
                 "coverage": cls.COVERAGE_WEIGHT,
                 "context": cls.CONTEXT_WEIGHT,
@@ -165,6 +170,21 @@ class Config:
         }
     
     @classmethod
+    def get_vllm_config(cls) -> dict:
+        """Get vLLM configuration as dictionary"""
+        return {
+            "model_name": cls.VLLM_MODEL_NAME,
+            "number_gpus": cls.VLLM_NUM_GPUS,
+            "max_model_len": cls.VLLM_MAX_MODEL_LEN,
+            "use_batch": cls.USE_VLLM_BATCH,
+            "batch_size": cls.VLLM_BATCH_SIZE,
+            "max_batch_size": cls.VLLM_MAX_BATCH_SIZE,
+            "batch_timeout": cls.VLLM_BATCH_TIMEOUT,
+            "model_cache_dir": cls.MODEL_CACHE_DIR,
+            "external_model_dir": cls.EXTERNAL_MODEL_DIR
+        }
+    
+    @classmethod
     def save_config(cls, filepath: str = None):
         """Save configuration to file"""
         import json
@@ -174,6 +194,7 @@ class Config:
         
         config_dict = cls.get_config_dict()
         config_dict["azure_openai"] = cls.get_azure_openai_config()
+        config_dict["vllm"] = cls.get_vllm_config()
         
         with open(filepath, 'w') as f:
             json.dump(config_dict, f, indent=2)
@@ -189,11 +210,20 @@ class Config:
         # Update class attributes
         for key, value in config.items():
             if key == "azure_openai":
-                # Handle Azure OpenAI config
                 for azure_key, azure_value in value.items():
                     attr_name = f"AZURE_OPENAI_{azure_key.upper()}"
                     if hasattr(cls, attr_name):
                         setattr(cls, attr_name, azure_value)
+            elif key == "vllm":
+                for vllm_key, vllm_value in value.items():
+                    if vllm_key == "use_batch":
+                        setattr(cls, "USE_VLLM_BATCH", vllm_value)
+                    elif vllm_key == "batch_size":
+                        setattr(cls, "VLLM_BATCH_SIZE", vllm_value)
+                    else:
+                        attr_name = f"VLLM_{vllm_key.upper()}"
+                        if hasattr(cls, attr_name):
+                            setattr(cls, attr_name, vllm_value)
             elif hasattr(cls, key.upper()):
                 setattr(cls, key.upper(), value)
 
