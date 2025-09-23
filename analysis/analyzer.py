@@ -19,6 +19,11 @@ from mapping.edge_cases import EdgeCaseHandler
 from interfaces.genai_interface import GenAIInterface
 from interfaces.embedding_interface import EmbeddingInterface
 
+from analysis.bayesian_confidence import BayesianConfidenceEstimator
+from mapping.granularity_converter import SkillGranularityConverter
+from mapping.fuzzy_matcher import FuzzySkillMatcher
+from config import Config
+
 # Import vLLM interfaces
 if Config.USE_VLLM:
     if Config.USE_VLLM_BATCH:
@@ -52,6 +57,11 @@ class CreditTransferAnalyzer:
         self.embeddings = embeddings
         self.config = config or {}
         
+        # Initialize advanced components
+        self.bayesian_estimator = BayesianConfidenceEstimator() if Config.USE_BAYESIAN_CONFIDENCE else None
+        self.granularity_converter = SkillGranularityConverter(genai, embeddings)
+        self.fuzzy_matcher = FuzzySkillMatcher() if Config.USE_FUZZY_LOGIC else None
+                
         # Initialize components based on interface type and configuration
         if Config.USE_VLLM:
             if Config.USE_VLLM_BATCH:
@@ -323,12 +333,21 @@ class CreditTransferAnalyzer:
         """Calculate overall alignment score"""
         
         # Base weights
-        weights = {
-            "coverage": 0.5,
-            "context": 0.25,
-            "quality": 0.15,
-            "edge_penalty": 0.1
-        }
+        # Use optimized weights from research
+        if Config.USE_FUZZY_LOGIC:
+            weights = {
+                "coverage": Config.COVERAGE_WEIGHT_OPTIMIZED,
+                "context": Config.CONTEXT_WEIGHT_OPTIMIZED,
+                "quality": Config.QUALITY_WEIGHT_OPTIMIZED,
+                "edge_penalty": Config.EDGE_PENALTY_WEIGHT_OPTIMIZED
+            }
+        else:
+            weights = {
+                "coverage": Config.COVERAGE_WEIGHT,
+                "context": Config.CONTEXT_WEIGHT,
+                "quality": Config.QUALITY_WEIGHT,
+                "edge_penalty": Config.EDGE_PENALTY_WEIGHT
+            }
         
         # Calculate quality score
         quality_score = 0.0
@@ -471,7 +490,34 @@ class CreditTransferAnalyzer:
         
         return dict(breakdown)
     
-    def _calculate_confidence(self,
+    def _calculate_confidence(self, mapping: SkillMapping, edge_cases: Dict[str, Any]) -> float:
+        """Calculate confidence with optional Bayesian uncertainty"""
+        
+        if self.bayesian_estimator and Config.USE_BAYESIAN_CONFIDENCE:
+            # Prepare scores for Bayesian estimation
+            scores = []
+            for match in mapping.direct_matches:
+                scores.append(match["similarity"])
+            for match in mapping.partial_matches:
+                scores.append(match["similarity"] * 0.5)
+            
+            edge_scores = {
+                "context_imbalance": edge_cases.get("context_imbalance", {}).get("imbalance_score", 0),
+                "outdated_content": 0.2 if edge_cases.get("outdated_content", {}).get("currency_issues") else 0
+            }
+            
+            confidence, uncertainty_info = self.bayesian_estimator.calculate_confidence_with_uncertainty(
+                scores, edge_scores
+            )
+            
+            # Store uncertainty info in metadata
+            mapping.metadata["uncertainty_analysis"] = uncertainty_info
+            return confidence
+        else:
+            # Use original confidence calculation
+            return self._calculate_confidence_original(mapping, edge_cases)
+    
+    def _calculate_confidence_original(self,
                              mapping: SkillMapping,
                              edge_cases: Dict[str, Any]) -> float:
         """Calculate confidence in the recommendation"""

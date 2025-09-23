@@ -60,7 +60,7 @@ class Config:
     
     # Batch Processing Configuration
     USE_VLLM_BATCH = os.getenv("USE_VLLM_BATCH", "false").lower() == "true"
-    VLLM_BATCH_SIZE = int(os.getenv("VLLM_BATCH_SIZE", "8"))
+    VLLM_BATCH_SIZE = int(os.getenv("VLLM_BATCH_SIZE", "16"))
     VLLM_MAX_BATCH_SIZE = int(os.getenv("VLLM_MAX_BATCH_SIZE", "16"))
     VLLM_BATCH_TIMEOUT = int(os.getenv("VLLM_BATCH_TIMEOUT", "120"))
     
@@ -103,6 +103,20 @@ class Config:
     CONTEXT_IMBALANCE_THRESHOLD = float(os.getenv("CONTEXT_IMBALANCE_THRESHOLD", "0.3"))
     BREADTH_RATIO_MIN = float(os.getenv("BREADTH_RATIO_MIN", "0.7"))
     BREADTH_RATIO_MAX = float(os.getenv("BREADTH_RATIO_MAX", "1.5"))
+    
+    # Research-optimized weights (2024 findings)
+    COVERAGE_WEIGHT_OPTIMIZED = 0.45  # was 0.5
+    CONTEXT_WEIGHT_OPTIMIZED = 0.30   # was 0.25
+    QUALITY_WEIGHT_OPTIMIZED = 0.20   # was 0.15
+    EDGE_PENALTY_WEIGHT_OPTIMIZED = 0.05  # was 0.1
+
+    # Hybrid similarity weights
+    EMBEDDING_WEIGHT_OPTIMIZED = 0.68  # was 0.6
+    LLM_WEIGHT_OPTIMIZED = 0.32  # was 0.4
+
+    # Enable advanced scoring methods
+    USE_FUZZY_LOGIC = True
+    USE_BAYESIAN_CONFIDENCE = True
     
     # Study Level Configuration
     STUDY_LEVEL_WEIGHTS = {

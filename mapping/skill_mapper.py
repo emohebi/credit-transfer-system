@@ -10,6 +10,8 @@ from collections import defaultdict
 from models.base_models import Skill, SkillMapping
 from models.enums import SkillLevel, SkillContext, EMBEDDING_MODE
 from interfaces.embedding_interface import EmbeddingInterface
+from mapping.fuzzy_matcher import FuzzySkillMatcher
+from config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +43,7 @@ class SkillMapper:
         if self.embedding_mode not in {"hybrid", "genai", "embedding"}:
             logger.warning(f"Unknown embedding mode '{self.embedding_mode}', defaulting to 'embedding'")
             self.embedding_mode = "embedding"
+        self.fuzzy_matcher = FuzzySkillMatcher() if Config.USE_FUZZY_LOGIC else None
     
     def map_skills(self, 
                    vet_skills: List[Skill], 
@@ -154,7 +157,17 @@ class SkillMapper:
         """Calculate pairwise similarity between skills using AI and/or embeddings"""
         
         # If both AI and embeddings available, use hybrid approach
-        if self.genai and self.embeddings and self.embedding_mode == EMBEDDING_MODE.HYBRID.value:
+        # Apply fuzzy logic enhancement if enabled
+        if self.fuzzy_matcher and Config.USE_FUZZY_LOGIC:
+            for i, vet_skill in enumerate(vet_skills):
+                for j, uni_skill in enumerate(uni_skills):
+                    base_sim = similarity_matrix[i, j]
+                    fuzzy_results = self.fuzzy_matcher.calculate_fuzzy_similarity(
+                        vet_skill, uni_skill, base_sim
+                    )
+                    # Combine fuzzy score with base similarity
+                    similarity_matrix[i, j] = 0.7 * base_sim + 0.3 * fuzzy_results["fuzzy_score"]
+        elif self.genai and self.embeddings and self.embedding_mode == EMBEDDING_MODE.HYBRID.value:
             # Use embeddings for initial fast similarity
             vet_names = [s.name for s in vet_skills]
             uni_names = [s.name for s in uni_skills]

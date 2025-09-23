@@ -274,3 +274,44 @@ Mapping summary: {json.dumps(mapping_info, indent=2)}"""
         response = self._call_openai_api(system_prompt, user_prompt, max_tokens=256)
         result = self._parse_json_response(response)
         return result.get("category", "technical")
+    
+    def _validate_and_parse_json(self, response: str, schema_type: str = "skills") -> Dict:
+        """Strictly validate JSON response against schema"""
+        import jsonschema
+        
+        schemas = {
+            "skills": {
+                "type": "object",
+                "properties": {
+                    "skills": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": {"type": "string", "minLength": 3, "maxLength": 50},
+                                "category": {"enum": ["technical", "cognitive", "practical", "foundational", "professional"]},
+                                "level": {"enum": ["novice", "beginner", "competent", "proficient", "expert"]},
+                                "context": {"enum": ["theoretical", "practical", "hybrid"]},
+                                "keywords": {"type": "array", "items": {"type": "string"}, "minItems": 3, "maxItems": 10},
+                                "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+                                "evidence": {"type": "string", "maxLength": 100}
+                            },
+                            "required": ["name", "category", "level", "context", "confidence"]
+                        }
+                    }
+                },
+                "required": ["skills"]
+            }
+        }
+        
+        try:
+            # Extract JSON from response
+            json_match = re.search(r'\{.*\}', response, re.DOTALL)
+            if json_match:
+                data = json.loads(json_match.group())
+                jsonschema.validate(instance=data, schema=schemas[schema_type])
+                return data
+        except (json.JSONDecodeError, jsonschema.ValidationError) as e:
+            logger.warning(f"JSON validation failed: {e}")
+            # Fallback to original parser
+            return self._parse_json_response(response)

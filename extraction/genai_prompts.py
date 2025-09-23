@@ -43,6 +43,36 @@ OUTPUT FORMAT (strict JSON):
 }"""
 
     @staticmethod
+    def skill_extraction_prompt_strict():
+        """Strict JSON schema enforcement version"""
+        return """CRITICAL: You MUST return ONLY valid JSON. No explanatory text before or after.
+
+    Extract skills and return in this EXACT format:
+    {
+      "skills": [
+        {
+          "name": "string between 3-50 characters",
+          "category": "technical|cognitive|practical|foundational|professional",
+          "level": "novice|beginner|competent|proficient|expert",
+          "context": "theoretical|practical|hybrid",
+          "keywords": ["keyword1", "keyword2", "keyword3"],
+          "confidence": 0.8,
+          "evidence": "text excerpt max 100 chars"
+        }
+      ]
+    }
+
+    VALIDATION RULES:
+    - name: alphanumeric and spaces only, 3-50 chars
+    - category: MUST be one of the 5 listed values
+    - level: MUST be one of the 5 listed values
+    - context: MUST be one of the 3 listed values
+    - confidence: float between 0.0 and 1.0
+    - keywords: array of 3-10 strings, each 2-30 chars
+
+    Return ONLY the JSON object. No markdown, no explanation."""
+
+    @staticmethod
     def study_level_identification_prompt():
         """Identify study level from course description"""
         return """Analyze the course description and determine its study level based on complexity, prerequisites, and learning outcomes.
