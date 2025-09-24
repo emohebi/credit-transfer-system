@@ -9,6 +9,7 @@ import re
 import os
 from typing import List, Dict, Any, Optional
 from openai import AzureOpenAI
+from utils.converters import JSONExtraction
 
 logger = logging.getLogger(__name__)
 
@@ -122,7 +123,7 @@ class GenAIInterface:
         """Parse JSON from model response"""
         try:
             # Try to extract JSON from response
-            json_match = re.search(r'\{.*\}', response, re.DOTALL)
+            json_match = JSONExtraction.extract_json_from_text(response)
             if json_match:
                 return json.loads(json_match.group())
         except json.JSONDecodeError as e:

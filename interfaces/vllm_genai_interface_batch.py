@@ -1,7 +1,7 @@
 """
 Interface for local GenAI model integration using vLLM with true batch processing
 """
-
+import os
 import json
 import logging
 import re
@@ -11,6 +11,7 @@ from typing import List, Dict, Any, Optional
 from pathlib import Path
 from huggingface_hub import snapshot_download
 from config import Config
+from utils.converters import JSONExtraction
 from vllm import LLM, SamplingParams
 
 logger = logging.getLogger(__name__)
@@ -165,7 +166,7 @@ class VLLMGenAIInterfaceBatch:
     def _parse_json_response(self, response: str) -> Dict:
         """Parse JSON from model response"""
         try:
-            json_match = re.search(r'\{.*\}', response, re.DOTALL)
+            json_match = JSONExtraction.extract_json_from_text(response)
             if json_match:
                 return json.loads(json_match.group())
         except json.JSONDecodeError as e:
