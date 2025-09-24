@@ -168,7 +168,7 @@ class VLLMGenAIInterfaceBatch:
         try:
             json_match = JSONExtraction.extract_json_from_text(response)
             if json_match:
-                return json.loads(json_match.group())
+                return json.loads(json_match)
         except json.JSONDecodeError as e:
             logger.warning(f"Failed to parse JSON response: {e}")
         return {}

@@ -2,6 +2,7 @@
 Skill granularity converter for VET-University alignment
 """
 
+from collections import defaultdict
 import logging
 from typing import List, Dict, Set
 from sklearn.cluster import AgglomerativeClustering

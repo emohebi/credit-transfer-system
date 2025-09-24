@@ -16,7 +16,7 @@ class JSONExtraction:
         """
         
         # First try to find JSON after 'assistantfinal'
-        after_assistant_pattern = r'assistantfinal.*?(\[\s*\{.*?\}\s*\])'
+        after_assistant_pattern = r'assistantfinal.*?(\s*\{.*\}\s*)'
         match = re.search(after_assistant_pattern, text, re.DOTALL)
         
         if match:
@@ -24,7 +24,7 @@ class JSONExtraction:
         else:
             # If 'assistantfinal' not found or no JSON after it, 
             # find any JSON array in the text
-            general_pattern = r'(\[\s*\{.*?\}\s*\])'
+            general_pattern = r'(\s*\{.*\}\s*)'
             match = re.search(general_pattern, text, re.DOTALL)
             
             if match:
@@ -34,10 +34,10 @@ class JSONExtraction:
         
         # Try to parse the extracted string as JSON
         try:
-            return json.loads(json_str)
+            return json_str
         except json.JSONDecodeError:
             # If simple pattern fails, try more robust extraction
-            return self.extract_json_robust(text)
+            return None
 
     def extract_json_robust(self, text):
         """
