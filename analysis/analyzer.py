@@ -256,6 +256,16 @@ class CreditTransferAnalyzer:
         # Generate evidence
         evidence = self._generate_evidence(mapping, edge_cases)
         
+        mapping_metadata = {
+            'skill_mapping': {
+                'direct_matches': mapping.direct_matches,
+                'partial_matches': mapping.partial_matches,
+                'unmapped_uni': mapping.unmapped_uni,
+                'coverage_score': mapping.coverage_score,
+                'context_alignment': mapping.context_alignment
+            }
+        }
+        
         # Create recommendation
         rec = CreditTransferRecommendation(
             vet_units=[unit],
@@ -267,7 +277,8 @@ class CreditTransferAnalyzer:
             recommendation=recommendation_type,
             conditions=conditions,
             confidence=confidence,
-            edge_case_results=edge_cases
+            edge_case_results=edge_cases,
+            metadata={**mapping_metadata, **rec.metadata}
         )
         
         return rec

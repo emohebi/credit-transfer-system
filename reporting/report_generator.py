@@ -163,6 +163,22 @@ class ReportGenerator:
         for rec in recommendations:
             rec_data = rec.to_dict()
             
+            # Add detailed match analysis
+            match_info = self._extract_detailed_match_info(rec)
+            rec_data['detailed_analysis'] = {
+                'match_breakdown': {
+                    'direct': match_info['direct_matches'],
+                    'partial': match_info['partial_matches'],
+                    'unmapped': match_info['unmapped_critical'],
+                    'total_target': match_info['total_uni_skills']
+                },
+                'score_components': match_info['score_components'],
+                'quality_metrics': match_info['quality_breakdown'],
+                'edge_cases': match_info['edge_cases'],
+                'alignment_formula': match_info['alignment_calculation'],
+                'reasoning': self._generate_transfer_reasoning(rec, match_info).replace('<br>', ' | ')
+            }
+            
             # Add skill details for mapped units and courses
             rec_data["vet_skills"] = []
             for unit in rec.vet_units:
@@ -428,11 +444,12 @@ class ReportGenerator:
         
         fieldnames = [
             'VET_Units', 'VET_Skill_Count', 'Uni_Course_Code', 'Uni_Course_Name',
-            'Uni_Skill_Count', 'Study_Level', 'Alignment_Score', 'Confidence',
-            'Recommendation_Type', 'Direct_Matches', 'Partial_Matches',
-            'Skill_Gaps', 'Conditions', 'Evidence'
+            'Uni_Skill_Count', 'Study_Level', 'Direct_Matches', 'Partial_Matches',
+            'Unmapped_Skills', 'Coverage_Score', 'Context_Score', 'Quality_Score',
+            'Edge_Penalty', 'Alignment_Score', 'Confidence', 'Recommendation_Type',
+            'Transfer_Reasoning', 'Conditions', 'Evidence'
         ]
-        
+                
         writer = csv.DictWriter(output, fieldnames=fieldnames)
         writer.writeheader()
         
@@ -442,6 +459,7 @@ class ReportGenerator:
             
             # Count university skills
             uni_skill_count = len(rec.uni_course.extracted_skills)
+            match_info = self._extract_detailed_match_info(rec)
             
             writer.writerow({
                 'VET_Units': ', '.join(rec.get_vet_unit_codes()),
@@ -457,7 +475,15 @@ class ReportGenerator:
                 'Partial_Matches': len([e for e in rec.evidence if 'partial' in e.lower()]),
                 'Skill_Gaps': '; '.join([s.name for s in rec.gaps[:3]]),
                 'Conditions': '; '.join(rec.conditions[:3]),
-                'Evidence': '; '.join(rec.evidence[:3])
+                'Evidence': '; '.join(rec.evidence[:3]),
+                'Direct_Matches': match_info['direct_matches'],
+                'Partial_Matches': match_info['partial_matches'],
+                'Unmapped_Skills': match_info['unmapped_critical'],
+                'Coverage_Score': f"{match_info['score_components']['coverage']:.2f}",
+                'Context_Score': f"{match_info['score_components']['context']:.2f}",
+                'Quality_Score': f"{match_info['score_components']['quality']:.2f}",
+                'Edge_Penalty': f"{match_info['score_components']['edge_penalty']:.2f}",
+                'Transfer_Reasoning': self._generate_transfer_reasoning(rec, match_info).replace('<br>', '; ')
             })
         
         return output.getvalue()
@@ -495,6 +521,33 @@ class ReportGenerator:
                 .stat-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
                 .stat-value { font-size: 24px; font-weight: bold; color: #3498db; }
                 .stat-label { color: #7f8c8d; font-size: 14px; }
+                /* New styles for detailed analysis */
+                .detail-table { font-size: 14px; }
+                .score-component { 
+                    display: inline-block; 
+                    padding: 2px 6px; 
+                    margin: 2px;
+                    background: #f0f0f0;
+                    border-radius: 4px;
+                    font-size: 12px;
+                }
+                .match-quality-high { color: #27ae60; font-weight: bold; }
+                .match-quality-medium { color: #f39c12; }
+                .match-quality-low { color: #e74c3c; }
+                .reasoning-box {
+                    background: #fafafa;
+                    padding: 8px;
+                    border-left: 3px solid #3498db;
+                    margin: 5px 0;
+                    font-size: 13px;
+                }
+                .edge-case-warning {
+                    background: #fff3cd;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    font-size: 11px;
+                    margin: 2px 0;
+                }
             </style>
         </head>
         <body>
@@ -594,6 +647,84 @@ class ReportGenerator:
         
         html.append("</tbody></table>")
         
+        # Add this after the main recommendations table (around line 700)
+
+        # Detailed Match Analysis Table
+        html.append("<h2>Detailed Match Analysis</h2>")
+        html.append("<table>")
+        html.append("<thead><tr>")
+        html.append("<th>VET → Uni</th>")
+        html.append("<th>Match Type</th>")
+        html.append("<th>Score Breakdown</th>")
+        html.append("<th>Quality Factors</th>")
+        html.append("<th>Edge Cases</th>")
+        html.append("<th>Reasoning</th>")
+        html.append("</tr></thead>")
+        html.append("<tbody>")
+
+        for rec in recommendations[:20]:  # Top 20 detailed
+            match_info = self._extract_detailed_match_info(rec)
+            
+            html.append(f"<tr class='{rec.recommendation.value}'>")
+            
+            # VET to Uni mapping
+            html.append(f"<td>{', '.join(rec.get_vet_unit_codes())}<br>→<br>{rec.uni_course.code}</td>")
+            
+            # Match breakdown
+            html.append(f"<td>")
+            html.append(f"<strong>Direct:</strong> {match_info['direct_matches']}/{match_info['total_uni_skills']}<br>")
+            html.append(f"<strong>Partial:</strong> {match_info['partial_matches']}/{match_info['total_uni_skills']}<br>")
+            html.append(f"<strong>Unmapped:</strong> {match_info['unmapped_critical']}")
+            html.append(f"</td>")
+            
+            # Score components
+            html.append(f"<td>")
+            for comp, value in match_info['score_components'].items():
+                if comp != 'edge_penalty':
+                    html.append(f"<small>{comp.title()}: {value:.2f}</small><br>")
+                else:
+                    html.append(f"<small style='color: red;'>Penalty: -{value:.2f}</small><br>")
+            html.append(f"<strong>Total: {rec.alignment_score:.1%}</strong>")
+            html.append(f"</td>")
+            
+            # Quality factors
+            html.append(f"<td>")
+            for category, coverage in rec.skill_coverage.items():
+                html.append(f"<small>{category}: {coverage:.0%}</small><br>")
+            html.append(f"<strong>Confidence: {rec.confidence:.1%}</strong>")
+            html.append(f"</td>")
+            
+            # Edge cases
+            html.append(f"<td style='font-size: 12px;'>")
+            if match_info['edge_cases']:
+                for case_type, case_data in list(match_info['edge_cases'].items())[:2]:
+                    html.append(f"<small>• {case_type.replace('_', ' ').title()}</small><br>")
+            else:
+                html.append("None detected")
+            html.append(f"</td>")
+            
+            # Reasoning
+            html.append(f"<td style='font-size: 12px;'>")
+            html.append(self._generate_transfer_reasoning(rec, match_info))
+            html.append(f"</td>")
+            
+            html.append("</tr>")
+
+        html.append("</tbody></table>")
+
+        # Add Score Calculation Legend
+        html.append("<div class='summary-box'>")
+        html.append("<h3>Score Calculation Method</h3>")
+        html.append("<p><strong>Alignment Score = </strong>")
+        html.append("(0.5 × Coverage) + (0.25 × Context) + (0.15 × Quality) - (0.1 × Edge Penalties)</p>")
+        html.append("<ul>")
+        html.append("<li><strong>Coverage:</strong> Direct matches count 100%, partial matches count 50%</li>")
+        html.append("<li><strong>Context:</strong> Alignment between practical/theoretical requirements</li>")
+        html.append("<li><strong>Quality:</strong> Match confidence and skill level alignment</li>")
+        html.append("<li><strong>Edge Penalties:</strong> Deductions for outdated content, missing prerequisites, etc.</li>")
+        html.append("</ul>")
+        html.append("</div>")
+                
         # Top Skills Section
         html.append("<h2>Top Extracted Skills</h2>")
         
@@ -687,6 +818,107 @@ class ReportGenerator:
             'total_courses': total_courses,
             'coverage_rate': len(covered_courses) / total_courses if total_courses > 0 else 0,
             'by_level': by_level
+        }
+        
+    def _generate_transfer_reasoning(self, rec: CreditTransferRecommendation, match_info: Dict) -> str:
+        """Generate human-readable reasoning for transfer decision"""
+        
+        reasoning = []
+        
+        # Check match quality
+        if match_info['direct_matches'] > match_info['partial_matches']:
+            reasoning.append("High-quality direct matches")
+        elif match_info['partial_matches'] > match_info['direct_matches']:
+            reasoning.append("Mostly partial matches")
+        
+        # Check coverage
+        coverage_ratio = (match_info['direct_matches'] + match_info['partial_matches'] * 0.5) / max(match_info['total_uni_skills'], 1)
+        if coverage_ratio >= 0.9:
+            reasoning.append("Excellent skill coverage")
+        elif coverage_ratio >= 0.7:
+            reasoning.append("Good skill coverage")
+        else:
+            reasoning.append("Limited coverage")
+        
+        # Check for critical gaps
+        if match_info['unmapped_critical'] == 0:
+            reasoning.append("All critical skills covered")
+        elif match_info['unmapped_critical'] <= 3:
+            reasoning.append(f"{match_info['unmapped_critical']} minor gaps")
+        else:
+            reasoning.append(f"{match_info['unmapped_critical']} significant gaps")
+        
+        # Edge cases
+        if match_info['edge_cases']:
+            if 'context_imbalance' in match_info['edge_cases']:
+                reasoning.append("Context adjustment needed")
+            if 'outdated_content' in match_info['edge_cases']:
+                reasoning.append("Content update required")
+        
+        # Transfer type reasoning
+        if rec.recommendation == RecommendationType.FULL:
+            reasoning.append("→ Complete requirements met")
+        elif rec.recommendation == RecommendationType.CONDITIONAL:
+            reasoning.append("→ Conditions must be met")
+        else:
+            reasoning.append("→ Supplementary study needed")
+        
+        return "<br>".join(reasoning[:4])  # Limit to 4 key points
+            
+    def _extract_detailed_match_info(self, rec: CreditTransferRecommendation) -> Dict:
+        """Extract detailed matching information from recommendation"""
+        
+        # Initialize counters
+        direct_matches = 0
+        partial_matches = 0
+        unmapped_critical = 0
+        
+        # Get skill mapping details from metadata if available
+        if 'skill_mapping' in rec.metadata:
+            mapping = rec.metadata['skill_mapping']
+            direct_matches = len(mapping.get('direct_matches', []))
+            partial_matches = len(mapping.get('partial_matches', []))
+            unmapped_critical = len(mapping.get('unmapped_uni', []))
+        
+        # Calculate quality scores breakdown
+        quality_breakdown = {
+            'coverage_score': rec.skill_coverage,
+            'context_alignment': 0.0,
+            'level_alignment': 0.0,
+            'confidence_average': rec.confidence
+        }
+        
+        # Extract edge case information
+        edge_case_summary = {}
+        if rec.edge_case_results:
+            for case_type, case_data in rec.edge_case_results.items():
+                if isinstance(case_data, dict) and case_data.get('applicable'):
+                    edge_case_summary[case_type] = {
+                        'impact': case_data.get('imbalance_score', 0),
+                        'recommendation': case_data.get('recommendation', ''),
+                        'requirements': case_data.get('bridging_requirements', [])
+                    }
+        
+        # Calculate component scores
+        coverage_component = 0.5 * (direct_matches + partial_matches * 0.5) / max(rec.uni_course.extracted_skills, 1) if hasattr(rec.uni_course, 'extracted_skills') else 0
+        context_component = 0.25 * quality_breakdown['context_alignment']
+        quality_component = 0.15 * rec.confidence
+        edge_penalty = 0.1 * len(edge_case_summary)
+        
+        return {
+            'direct_matches': direct_matches,
+            'partial_matches': partial_matches,
+            'unmapped_critical': unmapped_critical,
+            'total_uni_skills': len(rec.uni_course.extracted_skills) if hasattr(rec.uni_course, 'extracted_skills') else 0,
+            'quality_breakdown': quality_breakdown,
+            'score_components': {
+                'coverage': coverage_component,
+                'context': context_component,
+                'quality': quality_component,
+                'edge_penalty': edge_penalty
+            },
+            'edge_cases': edge_case_summary,
+            'alignment_calculation': f"({coverage_component:.2f} + {context_component:.2f} + {quality_component:.2f} - {edge_penalty:.2f}) = {rec.alignment_score:.2%}"
         }
     
     def _analyze_gaps(self, recommendations: List[CreditTransferRecommendation]) -> Dict:
