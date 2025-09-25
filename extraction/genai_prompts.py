@@ -27,7 +27,7 @@ For each skill provide:
 - confidence: Score 0.0-1.0
 - evidence: Brief text showing where skill was found
 
-OUTPUT FORMAT (strict JSON):
+OUTPUT FORMAT (strict JSON format as below for direct parsing):
 {
   "skills": [
     {
@@ -44,7 +44,7 @@ OUTPUT FORMAT (strict JSON):
 
     @staticmethod
     def skill_extraction_prompt_strict():
-        """Strict JSON schema enforcement version"""
+        """strict JSON format as below for direct parsing schema enforcement version"""
         return """CRITICAL: You MUST return ONLY valid JSON. No explanatory text before or after.
 
     Extract skills and return in this EXACT format:
@@ -91,7 +91,7 @@ Analyze these factors:
 4. Expected prior knowledge
 5. Assessment complexity
 
-OUTPUT FORMAT (strict JSON):
+OUTPUT FORMAT (strict JSON format as below for direct parsing):
 {
   "study_level": "level_name",
   "confidence": 0.9,
@@ -116,7 +116,7 @@ For each group of similar skills:
 - Suggest the best merged name
 - Combine relevant properties
 
-OUTPUT FORMAT (strict JSON):
+OUTPUT FORMAT (strict JSON format as below for direct parsing):
 {
   "skill_groups": [
     {
@@ -143,7 +143,7 @@ Consider:
 4. Tool/technology skills referenced indirectly
 5. Process skills required for assessments
 
-OUTPUT FORMAT (strict JSON):
+OUTPUT FORMAT (strict JSON format as below for direct parsing):
 {
   "implicit_skills": [
     {
@@ -176,7 +176,7 @@ VALID CATEGORIES (use ONLY these):
 - foundational: Basic principles, theories, core concepts
 - professional: Communication, teamwork, leadership
 
-OUTPUT FORMAT (strict JSON):
+OUTPUT FORMAT (strict JSON format as below for direct parsing):
 {
   "composite_skills": [
     {
@@ -212,7 +212,7 @@ Levels (from lowest to highest):
 - proficient: Advanced application, can handle complex scenarios
 - expert: Master level, can teach/innovate
 
-OUTPUT FORMAT (strict JSON):
+OUTPUT FORMAT (strict JSON format as below for direct parsing):
 {
   "adjusted_skills": [
     {
@@ -233,7 +233,7 @@ Theoretical indicators: concepts, principles, models, analysis, research, examin
 Practical indicators: hands-on, laboratory, workshop, implementation, real-world, project
 Hybrid: combination of both
 
-OUTPUT FORMAT (strict JSON):
+OUTPUT FORMAT (strict JSON format as below for direct parsing):
 {
   "context_analysis": {
     "primary_context": "practical",
@@ -259,7 +259,7 @@ Look for:
 
 Assess currency based on 2024 standards.
 
-OUTPUT FORMAT (strict JSON):
+OUTPUT FORMAT (strict JSON format as below for direct parsing):
 {
   "technologies": [
     {
@@ -291,7 +291,7 @@ For each prerequisite:
 2. Determine the minimum proficiency level needed
 3. Assess criticality for the course
 
-OUTPUT FORMAT (strict JSON):
+OUTPUT FORMAT (strict JSON format as below for direct parsing):
 {
   "prerequisites": [
     {
@@ -319,7 +319,7 @@ Consider:
 
 Provide a similarity score from 0.0 (completely different) to 1.0 (identical).
 
-OUTPUT FORMAT (strict JSON):
+OUTPUT FORMAT (strict JSON format as below for direct parsing):
 {
   "similarity_score": 0.85,
   "similar_aspects": ["both involve programming", "similar complexity"],
@@ -341,7 +341,7 @@ Look for:
 6. Multiple units mapping to single course
 7. Outdated content requiring updates
 
-OUTPUT FORMAT (strict JSON):
+OUTPUT FORMAT (strict JSON format as below for direct parsing):
 {
   "edge_cases": [
     {
@@ -366,7 +366,7 @@ Keywords should be:
 3. Useful for searching and matching
 4. Not redundant with the skill name itself
 
-OUTPUT FORMAT (strict JSON):
+OUTPUT FORMAT (strict JSON format as below for direct parsing):
 {
   "keywords": ["keyword1", "keyword2", "keyword3"],
   "primary_domain": "software development"
@@ -383,7 +383,7 @@ Identify:
 3. Complexity level indicated by assessment
 4. Skills emphasized by assessment method
 
-OUTPUT FORMAT (strict JSON):
+OUTPUT FORMAT (strict JSON format as below for direct parsing):
 {
   "assessment_types": [
     {
@@ -411,7 +411,7 @@ Categories:
 
 Consider the skill's primary nature and application.
 
-OUTPUT FORMAT (strict JSON):
+OUTPUT FORMAT (strict JSON format as below for direct parsing):
 {
   "skill_name": "skill",
   "category": "technical",
