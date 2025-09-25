@@ -230,8 +230,8 @@ class CreditTransferAnalyzer:
         return recommendations
     
     def _analyze_single_mapping(self,
-                               unit: UnitOfCompetency,
-                               course: UniCourse) -> CreditTransferRecommendation:
+                           unit: UnitOfCompetency,
+                           course: UniCourse) -> CreditTransferRecommendation:
         """Analyze single unit to course mapping"""
         
         # Map skills
@@ -256,6 +256,7 @@ class CreditTransferAnalyzer:
         # Generate evidence
         evidence = self._generate_evidence(mapping, edge_cases)
         
+        # Store mapping details in metadata for report generation
         mapping_metadata = {
             'skill_mapping': {
                 'direct_matches': mapping.direct_matches,
@@ -266,7 +267,7 @@ class CreditTransferAnalyzer:
             }
         }
         
-        # Create recommendation
+        # Create recommendation with the metadata included
         rec = CreditTransferRecommendation(
             vet_units=[unit],
             uni_course=course,
@@ -278,7 +279,7 @@ class CreditTransferAnalyzer:
             conditions=conditions,
             confidence=confidence,
             edge_case_results=edge_cases,
-            metadata={**mapping_metadata, **rec.metadata}
+            metadata=mapping_metadata  # Just use mapping_metadata directly
         )
         
         return rec
@@ -314,7 +315,19 @@ class CreditTransferAnalyzer:
                 edge_cases = self.edge_handler.process_edge_cases(list(combo), course, mapping)
                 alignment_score = self._calculate_alignment_score(mapping, edge_cases)
                 
+                # In _analyze_combination_mappings, when creating the recommendation:
                 if alignment_score >= self.min_alignment_score * 1.2:  # Higher threshold for combinations
+                    # Store mapping details in metadata
+                    mapping_metadata = {
+                        'skill_mapping': {
+                            'direct_matches': mapping.direct_matches,
+                            'partial_matches': mapping.partial_matches,
+                            'unmapped_uni': mapping.unmapped_uni,
+                            'coverage_score': mapping.coverage_score,
+                            'context_alignment': mapping.context_alignment
+                        }
+                    }
+                    
                     rec = CreditTransferRecommendation(
                         vet_units=list(combo),
                         uni_course=course,
@@ -327,14 +340,10 @@ class CreditTransferAnalyzer:
                         ),
                         conditions=self._identify_conditions(mapping, edge_cases),
                         confidence=self._calculate_confidence(mapping, edge_cases),
-                        edge_case_results=edge_cases
+                        edge_case_results=edge_cases,
+                        metadata=mapping_metadata  # Use the metadata directly
                     )
                     recommendations.append(rec)
-                    
-                    logger.debug(
-                        f"Combination {'+'.join(u.code for u in combo)} -> "
-                        f"{course.code}: {alignment_score:.2%}"
-                    )
         
         return recommendations
     

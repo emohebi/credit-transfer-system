@@ -899,17 +899,26 @@ class ReportGenerator:
                         'requirements': case_data.get('bridging_requirements', [])
                     }
         
+        # Get the total number of university skills (LENGTH of the list)
+        total_uni_skills = len(rec.uni_course.extracted_skills) if hasattr(rec.uni_course, 'extracted_skills') else 0
+        
         # Calculate component scores
-        coverage_component = 0.5 * (direct_matches + partial_matches * 0.5) / max(rec.uni_course.extracted_skills, 1) if hasattr(rec.uni_course, 'extracted_skills') else 0
-        context_component = 0.25 * quality_breakdown['context_alignment']
+        coverage_component = 0.5 * (direct_matches + partial_matches * 0.5) / max(total_uni_skills, 1)
+        
+        # Get context alignment from metadata if available
+        if 'skill_mapping' in rec.metadata:
+            context_component = 0.25 * rec.metadata['skill_mapping'].get('context_alignment', 0)
+        else:
+            context_component = 0.25 * 0.5  # Default to 0.5 if not available
+        
         quality_component = 0.15 * rec.confidence
-        edge_penalty = 0.1 * len(edge_case_summary)
+        edge_penalty = 0.1 * (len(edge_case_summary) / 10)  # Normalize penalty
         
         return {
             'direct_matches': direct_matches,
             'partial_matches': partial_matches,
             'unmapped_critical': unmapped_critical,
-            'total_uni_skills': len(rec.uni_course.extracted_skills) if hasattr(rec.uni_course, 'extracted_skills') else 0,
+            'total_uni_skills': total_uni_skills,  # Now this is an integer
             'quality_breakdown': quality_breakdown,
             'score_components': {
                 'coverage': coverage_component,
