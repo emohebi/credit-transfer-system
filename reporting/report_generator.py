@@ -110,6 +110,30 @@ class ReportGenerator:
         files['package_summary'] = str(package_dir / "package_summary.json")
         self._create_package_summary(files, recommendations, vet_qual, uni_qual, files['package_summary'])
         
+        # In generate_complete_report_package, after the main reports:
+
+        # Generate skill extraction journey report
+        files['skill_journey_html'] = str(package_dir / "skill_extraction_journey.html")
+        journey_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Skill Extraction Journey Report</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; margin: 20px; }}
+                h1 {{ color: #2c3e50; border-bottom: 2px solid #3498db; }}
+            </style>
+        </head>
+        <body>
+            <h1>Skill Extraction Journey Report</h1>
+            <p>Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+            {self._generate_skill_extraction_journey_html(vet_qual, uni_qual, max_units=10, max_skills_per_unit=15)}
+        </body>
+        </html>
+        """
+        with open(files['skill_journey_html'], 'w') as f:
+            f.write(journey_content)
+        
         return files
     
     def _export_skills_json(self, 
@@ -747,6 +771,14 @@ class ReportGenerator:
             for skill, count in gaps['common_gaps'][:10]:
                 html.append(f"<li>{skill} ({count} occurrences)</li>")
             html.append("</ul>")
+            
+        journey_html = self._generate_skill_extraction_journey_html(
+            vet_qual=vet_qual,
+            uni_qual=uni_qual,
+            max_units=5,
+            max_skills_per_unit=8
+        )
+        html.append(journey_html)
         
         # Footer
         html.append("""
@@ -945,3 +977,397 @@ class ReportGenerator:
             'total_unique_gaps': len(set(all_gaps)),
             'total_unique_conditions': len(set(all_conditions))
         }
+        
+    def _generate_skill_extraction_journey_html(self, 
+                                           vet_qual: Optional[VETQualification] = None,
+                                           uni_qual: Optional[UniQualification] = None,
+                                           max_units: int = 5,
+                                           max_skills_per_unit: int = 10) -> str:
+        """Generate HTML showing the journey of skill extraction from source to final skills"""
+        
+        html = []
+        
+        # Add CSS for the journey table
+        html.append("""
+        <style>
+            .journey-table { 
+                width: 100%; 
+                border-collapse: collapse; 
+                margin: 20px 0;
+                font-size: 14px;
+            }
+            .journey-table th { 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white; 
+                padding: 12px; 
+                text-align: left;
+                position: sticky;
+                top: 0;
+            }
+            .journey-table td { 
+                padding: 10px; 
+                border: 1px solid #e0e0e0;
+                vertical-align: top;
+            }
+            .journey-table tr:nth-child(even) { background-color: #f9f9f9; }
+            .source-text { 
+                background: #f0f8ff; 
+                padding: 8px; 
+                border-radius: 5px;
+                font-size: 12px;
+                max-height: 150px;
+                overflow-y: auto;
+            }
+            .skill-stage {
+                background: #e8f5e9;
+                padding: 6px;
+                margin: 4px 0;
+                border-radius: 4px;
+                font-size: 12px;
+            }
+            .final-skill {
+                background: #fff3e0;
+                padding: 8px;
+                margin: 4px 0;
+                border-radius: 4px;
+                border-left: 4px solid #ff9800;
+            }
+            .skill-meta {
+                font-size: 11px;
+                color: #666;
+                margin-top: 4px;
+            }
+            .extraction-method {
+                display: inline-block;
+                padding: 2px 6px;
+                background: #e3f2fd;
+                border-radius: 3px;
+                font-size: 11px;
+                margin: 2px;
+            }
+            .confidence-high { color: #2e7d32; font-weight: bold; }
+            .confidence-medium { color: #f57c00; }
+            .confidence-low { color: #d32f2f; }
+            .processing-arrow {
+                text-align: center;
+                color: #9c27b0;
+                font-size: 18px;
+                padding: 5px;
+            }
+            .highlighted-text {
+                background: yellow;
+                padding: 2px;
+                border-radius: 3px;
+            }
+        </style>
+        """)
+        
+        html.append("<h2>Skill Extraction Journey</h2>")
+        html.append("<p><em>Showing how skills are extracted from source text through various processing stages</em></p>")
+        
+        # Process VET units
+        if vet_qual:
+            html.append("<h3>VET Units - Skill Extraction Process</h3>")
+            html.append("<table class='journey-table'>")
+            html.append("<thead><tr>")
+            html.append("<th width='15%'>Unit</th>")
+            html.append("<th width='25%'>Source Text Sample</th>")
+            html.append("<th width='20%'>Initial Extraction</th>")
+            html.append("<th width='20%'>Processing Steps</th>")
+            html.append("<th width='20%'>Final Skills</th>")
+            html.append("</tr></thead>")
+            html.append("<tbody>")
+            
+            for unit in vet_qual.units[:max_units]:
+                html.append("<tr>")
+                
+                # Unit info
+                html.append(f"<td><strong>{unit.code}</strong><br>{unit.name}<br>")
+                html.append(f"<span class='skill-meta'>Hours: {unit.nominal_hours}</span></td>")
+                
+                # Source text sample
+                html.append("<td>")
+                html.append("<div class='source-text'>")
+                
+                # Show snippets from different sources
+                if unit.description:
+                    html.append(f"<strong>Description:</strong><br>{unit.description[:200]}...<br><br>")
+                
+                if unit.learning_outcomes:
+                    html.append(f"<strong>Learning Outcome Sample:</strong><br>")
+                    html.append(f"{unit.learning_outcomes[0][:150]}...<br><br>" if unit.learning_outcomes else "")
+                
+                if unit.assessment_requirements:
+                    html.append(f"<strong>Assessment Sample:</strong><br>")
+                    html.append(f"{unit.assessment_requirements[:150]}...")
+                
+                html.append("</div>")
+                html.append("</td>")
+                
+                # Initial extraction stage
+                html.append("<td>")
+                html.append("<div class='skill-stage'>")
+                html.append("<strong>Stage 1: AI Extraction</strong><br>")
+                
+                # Show extraction metadata if available
+                skills_by_source = self._categorize_skills_by_source(unit.extracted_skills)
+                
+                if skills_by_source.get('explicit', []):
+                    html.append(f"<span class='extraction-method'>Explicit: {len(skills_by_source['explicit'])}</span>")
+                if skills_by_source.get('implicit', []):
+                    html.append(f"<span class='extraction-method'>Implicit: {len(skills_by_source['implicit'])}</span>")
+                if skills_by_source.get('decomposed', []):
+                    html.append(f"<span class='extraction-method'>Decomposed: {len(skills_by_source['decomposed'])}</span>")
+                
+                html.append("<br><br><strong>Sample Skills Found:</strong><br>")
+                for skill in unit.extracted_skills[:3]:
+                    confidence_class = self._get_confidence_class(skill.confidence)
+                    html.append(f"• {skill.name} <span class='{confidence_class}'>({skill.confidence:.1f})</span><br>")
+                
+                html.append("</div>")
+                html.append("</td>")
+                
+                # Processing steps
+                html.append("<td>")
+                html.append("<div class='skill-stage'>")
+                html.append("<strong>Stage 2: Processing</strong><br>")
+                html.append("<span class='extraction-method'>✓ Deduplication</span><br>")
+                html.append("<span class='extraction-method'>✓ Categorization</span><br>")
+                html.append("<span class='extraction-method'>✓ Level Assignment</span><br>")
+                html.append("<span class='extraction-method'>✓ Context Analysis</span><br>")
+                
+                if unit.extracted_skills:
+                    html.append("<br><strong>Categories Found:</strong><br>")
+                    categories = set(s.category.value for s in unit.extracted_skills)
+                    for cat in list(categories)[:3]:
+                        html.append(f"<span class='extraction-method'>{cat}</span>")
+                
+                html.append("</div>")
+                html.append("</td>")
+                
+                # Final skills
+                html.append("<td>")
+                for skill in unit.extracted_skills[:max_skills_per_unit]:
+                    html.append("<div class='final-skill'>")
+                    html.append(f"<strong>{skill.name}</strong><br>")
+                    html.append(f"<span class='skill-meta'>")
+                    html.append(f"Category: {skill.category.value}<br>")
+                    html.append(f"Level: {skill.level.name}<br>")
+                    html.append(f"Context: {skill.context.value}<br>")
+                    confidence_class = self._get_confidence_class(skill.confidence)
+                    html.append(f"Confidence: <span class='{confidence_class}'>{skill.confidence:.2f}</span><br>")
+                    if skill.keywords:
+                        html.append(f"Keywords: {', '.join(skill.keywords[:3])}")
+                    html.append("</span>")
+                    html.append("</div>")
+                
+                if len(unit.extracted_skills) > max_skills_per_unit:
+                    html.append(f"<div class='skill-meta'>... and {len(unit.extracted_skills) - max_skills_per_unit} more skills</div>")
+                
+                html.append("</td>")
+                html.append("</tr>")
+            
+            html.append("</tbody></table>")
+        
+        # Process University courses
+        if uni_qual:
+            html.append("<h3>University Courses - Skill Extraction Process</h3>")
+            html.append("<table class='journey-table'>")
+            html.append("<thead><tr>")
+            html.append("<th width='15%'>Course</th>")
+            html.append("<th width='25%'>Source Text Sample</th>")
+            html.append("<th width='20%'>Initial Extraction</th>")
+            html.append("<th width='20%'>Processing Steps</th>")
+            html.append("<th width='20%'>Final Skills</th>")
+            html.append("</tr></thead>")
+            html.append("<tbody>")
+            
+            for course in uni_qual.courses[:max_units]:
+                html.append("<tr>")
+                
+                # Course info
+                html.append(f"<td><strong>{course.code}</strong><br>{course.name}<br>")
+                html.append(f"<span class='skill-meta'>Level: {course.study_level}<br>")
+                html.append(f"Credits: {course.credit_points}</span></td>")
+                
+                # Source text sample
+                html.append("<td>")
+                html.append("<div class='source-text'>")
+                
+                if course.description:
+                    html.append(f"<strong>Description:</strong><br>{course.description[:200]}...<br><br>")
+                
+                if course.learning_outcomes:
+                    html.append(f"<strong>Learning Outcome Sample:</strong><br>")
+                    html.append(f"{course.learning_outcomes[0][:150]}...<br><br>" if course.learning_outcomes else "")
+                
+                if course.topics:
+                    html.append(f"<strong>Topics:</strong><br>")
+                    html.append(f"{', '.join(course.topics[:3])}...")
+                
+                html.append("</div>")
+                html.append("</td>")
+                
+                # Initial extraction
+                html.append("<td>")
+                html.append("<div class='skill-stage'>")
+                html.append("<strong>Stage 1: AI Extraction</strong><br>")
+                
+                skills_by_source = self._categorize_skills_by_source(course.extracted_skills)
+                
+                if skills_by_source.get('explicit', []):
+                    html.append(f"<span class='extraction-method'>Explicit: {len(skills_by_source['explicit'])}</span>")
+                if skills_by_source.get('implicit', []):
+                    html.append(f"<span class='extraction-method'>Implicit: {len(skills_by_source['implicit'])}</span>")
+                if skills_by_source.get('prerequisite', []):
+                    html.append(f"<span class='extraction-method'>Prerequisites: {len(skills_by_source['prerequisite'])}</span>")
+                
+                html.append("<br><br><strong>Sample Skills Found:</strong><br>")
+                for skill in course.extracted_skills[:3]:
+                    confidence_class = self._get_confidence_class(skill.confidence)
+                    html.append(f"• {skill.name} <span class='{confidence_class}'>({skill.confidence:.1f})</span><br>")
+                
+                html.append("</div>")
+                html.append("</td>")
+                
+                # Processing steps
+                html.append("<td>")
+                html.append("<div class='skill-stage'>")
+                html.append("<strong>Stage 2: Processing</strong><br>")
+                html.append("<span class='extraction-method'>✓ Study Level Adjustment</span><br>")
+                html.append("<span class='extraction-method'>✓ Prerequisite Analysis</span><br>")
+                html.append("<span class='extraction-method'>✓ Assessment Context</span><br>")
+                html.append("<span class='extraction-method'>✓ Skill Refinement</span><br>")
+                
+                if course.extracted_skills:
+                    html.append("<br><strong>Levels Adjusted to:</strong><br>")
+                    levels = set(s.level.name for s in course.extracted_skills)
+                    for level in list(levels)[:3]:
+                        html.append(f"<span class='extraction-method'>{level}</span>")
+                
+                html.append("</div>")
+                html.append("</td>")
+                
+                # Final skills
+                html.append("<td>")
+                for skill in course.extracted_skills[:max_skills_per_unit]:
+                    html.append("<div class='final-skill'>")
+                    html.append(f"<strong>{skill.name}</strong><br>")
+                    html.append(f"<span class='skill-meta'>")
+                    html.append(f"Category: {skill.category.value}<br>")
+                    html.append(f"Level: {skill.level.name}<br>")
+                    html.append(f"Context: {skill.context.value}<br>")
+                    confidence_class = self._get_confidence_class(skill.confidence)
+                    html.append(f"Confidence: <span class='{confidence_class}'>{skill.confidence:.2f}</span><br>")
+                    if skill.keywords:
+                        html.append(f"Keywords: {', '.join(skill.keywords[:3])}")
+                    html.append("</span>")
+                    html.append("</div>")
+                
+                if len(course.extracted_skills) > max_skills_per_unit:
+                    html.append(f"<div class='skill-meta'>... and {len(course.extracted_skills) - max_skills_per_unit} more skills</div>")
+                
+                html.append("</td>")
+                html.append("</tr>")
+            
+            html.append("</tbody></table>")
+        
+        # Add extraction process summary
+        html.append(self._generate_extraction_summary_html(vet_qual, uni_qual))
+        
+        return "\n".join(html)
+
+    def _categorize_skills_by_source(self, skills: List) -> Dict[str, List]:
+        """Categorize skills by their extraction source"""
+        categorized = {
+            'explicit': [],
+            'implicit': [],
+            'decomposed': [],
+            'prerequisite': [],
+            'fallback': []
+        }
+        
+        for skill in skills:
+            if hasattr(skill, 'source'):
+                if 'implicit' in skill.source.lower():
+                    categorized['implicit'].append(skill)
+                elif 'decomposed' in skill.source.lower():
+                    categorized['decomposed'].append(skill)
+                elif 'prerequisite' in skill.source.lower():
+                    categorized['prerequisite'].append(skill)
+                elif 'fallback' in skill.source.lower():
+                    categorized['fallback'].append(skill)
+                else:
+                    categorized['explicit'].append(skill)
+            else:
+                categorized['explicit'].append(skill)
+        
+        return categorized
+
+    def _get_confidence_class(self, confidence: float) -> str:
+        """Get CSS class based on confidence level"""
+        if confidence >= 0.8:
+            return 'confidence-high'
+        elif confidence >= 0.6:
+            return 'confidence-medium'
+        else:
+            return 'confidence-low'
+
+    def _generate_extraction_summary_html(self, 
+                                        vet_qual: Optional[VETQualification],
+                                        uni_qual: Optional[UniQualification]) -> str:
+        """Generate summary of extraction process"""
+        html = []
+        
+        html.append("<div class='summary-box' style='margin-top: 30px;'>")
+        html.append("<h3>Skill Extraction Process Summary</h3>")
+        
+        html.append("<h4>Extraction Pipeline:</h4>")
+        html.append("<ol>")
+        html.append("<li><strong>Source Text Analysis:</strong> Course descriptions, learning outcomes, assessment requirements</li>")
+        html.append("<li><strong>AI Skill Extraction:</strong> Using GenAI to identify explicit skills from text</li>")
+        html.append("<li><strong>Implicit Skill Detection:</strong> Identifying skills not explicitly mentioned but required</li>")
+        html.append("<li><strong>Composite Skill Decomposition:</strong> Breaking down broad skills into components</li>")
+        html.append("<li><strong>Context Determination:</strong> Classifying as theoretical, practical, or hybrid</li>")
+        html.append("<li><strong>Level Adjustment:</strong> Aligning skill levels with study level</li>")
+        html.append("<li><strong>Deduplication:</strong> Merging similar or duplicate skills</li>")
+        html.append("<li><strong>Quality Assessment:</strong> Calculating confidence scores</li>")
+        html.append("</ol>")
+        
+        if vet_qual or uni_qual:
+            html.append("<h4>Extraction Statistics:</h4>")
+            html.append("<table style='width: 50%; margin: 10px 0;'>")
+            
+            if vet_qual:
+                total_vet_skills = sum(len(unit.extracted_skills) for unit in vet_qual.units)
+                html.append(f"<tr><td>Total VET Skills Extracted:</td><td><strong>{total_vet_skills}</strong></td></tr>")
+                
+                # Categorize all VET skills
+                all_vet_skills = []
+                for unit in vet_qual.units:
+                    all_vet_skills.extend(unit.extracted_skills)
+                
+                vet_categories = self._categorize_skills_by_source(all_vet_skills)
+                for category, skills in vet_categories.items():
+                    if skills:
+                        html.append(f"<tr><td>&nbsp;&nbsp;- {category.title()}:</td><td>{len(skills)}</td></tr>")
+            
+            if uni_qual:
+                total_uni_skills = sum(len(course.extracted_skills) for course in uni_qual.courses)
+                html.append(f"<tr><td>Total University Skills Extracted:</td><td><strong>{total_uni_skills}</strong></td></tr>")
+                
+                # Categorize all Uni skills
+                all_uni_skills = []
+                for course in uni_qual.courses:
+                    all_uni_skills.extend(course.extracted_skills)
+                
+                uni_categories = self._categorize_skills_by_source(all_uni_skills)
+                for category, skills in uni_categories.items():
+                    if skills:
+                        html.append(f"<tr><td>&nbsp;&nbsp;- {category.title()}:</td><td>{len(skills)}</td></tr>")
+            
+            html.append("</table>")
+        
+        html.append("</div>")
+        
+        return "\n".join(html)
