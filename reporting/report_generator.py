@@ -140,10 +140,10 @@ class ReportGenerator:
             self.skill_export._export_combined_to_csv(vet_qual, uni_qual, Path(filepath))
     
     def _export_recommendations_json(self,
-                                    recommendations: List[CreditTransferRecommendation],
-                                    vet_qual: VETQualification,
-                                    uni_qual: UniQualification,
-                                    filepath: str):
+                                recommendations: List[CreditTransferRecommendation],
+                                vet_qual: VETQualification,
+                                uni_qual: UniQualification,
+                                filepath: str):
         """Export recommendations to JSON with skill details"""
         data = {
             "export_timestamp": datetime.now().isoformat(),
@@ -161,6 +161,7 @@ class ReportGenerator:
         }
         
         for rec in recommendations:
+            # Get base recommendation data
             rec_data = rec.to_dict()
             
             # Add detailed match analysis
@@ -182,28 +183,25 @@ class ReportGenerator:
             # Add skill details for mapped units and courses
             rec_data["vet_skills"] = []
             for unit in rec.vet_units:
-                rec_data["vet_skills"].extend([
-                    {
+                for skill in unit.extracted_skills:
+                    rec_data["vet_skills"].append({
                         "unit": unit.code,
                         "name": skill.name,
                         "category": skill.category.value,
                         "level": skill.level.name,
                         "context": skill.context.value,
                         "confidence": skill.confidence
-                    }
-                    for skill in unit.extracted_skills
-                ])
+                    })
             
-            rec_data["uni_skills"] = [
-                {
+            rec_data["uni_skills"] = []
+            for skill in rec.uni_course.extracted_skills:
+                rec_data["uni_skills"].append({
                     "name": skill.name,
                     "category": skill.category.value,
                     "level": skill.level.name,
                     "context": skill.context.value,
                     "confidence": skill.confidence
-                }
-                for skill in rec.uni_course.extracted_skills
-            ]
+                })
             
             data["recommendations"].append(rec_data)
         
@@ -439,7 +437,7 @@ class ReportGenerator:
         return "\n".join(lines)
     
     def generate_csv_report(self, recommendations: List[CreditTransferRecommendation]) -> str:
-        """Generate CSV report with skill counts"""
+        """Generate CSV report with skill counts and detailed match info"""
         output = StringIO()
         
         fieldnames = [
@@ -449,17 +447,19 @@ class ReportGenerator:
             'Edge_Penalty', 'Alignment_Score', 'Confidence', 'Recommendation_Type',
             'Transfer_Reasoning', 'Conditions', 'Evidence'
         ]
-                
+        
         writer = csv.DictWriter(output, fieldnames=fieldnames)
         writer.writeheader()
         
         for rec in recommendations:
+            # Extract detailed match info
+            match_info = self._extract_detailed_match_info(rec)
+            
             # Count VET skills
             vet_skill_count = sum(len(unit.extracted_skills) for unit in rec.vet_units)
             
             # Count university skills
             uni_skill_count = len(rec.uni_course.extracted_skills)
-            match_info = self._extract_detailed_match_info(rec)
             
             writer.writerow({
                 'VET_Units': ', '.join(rec.get_vet_unit_codes()),
@@ -468,14 +468,6 @@ class ReportGenerator:
                 'Uni_Course_Name': rec.uni_course.name,
                 'Uni_Skill_Count': uni_skill_count,
                 'Study_Level': rec.uni_course.study_level,
-                'Alignment_Score': f"{rec.alignment_score:.2%}",
-                'Confidence': f"{rec.confidence:.2%}",
-                'Recommendation_Type': rec.recommendation.value,
-                'Direct_Matches': len([e for e in rec.evidence if 'direct' in e.lower()]),
-                'Partial_Matches': len([e for e in rec.evidence if 'partial' in e.lower()]),
-                'Skill_Gaps': '; '.join([s.name for s in rec.gaps[:3]]),
-                'Conditions': '; '.join(rec.conditions[:3]),
-                'Evidence': '; '.join(rec.evidence[:3]),
                 'Direct_Matches': match_info['direct_matches'],
                 'Partial_Matches': match_info['partial_matches'],
                 'Unmapped_Skills': match_info['unmapped_critical'],
@@ -483,7 +475,12 @@ class ReportGenerator:
                 'Context_Score': f"{match_info['score_components']['context']:.2f}",
                 'Quality_Score': f"{match_info['score_components']['quality']:.2f}",
                 'Edge_Penalty': f"{match_info['score_components']['edge_penalty']:.2f}",
-                'Transfer_Reasoning': self._generate_transfer_reasoning(rec, match_info).replace('<br>', '; ')
+                'Alignment_Score': f"{rec.alignment_score:.2%}",
+                'Confidence': f"{rec.confidence:.2%}",
+                'Recommendation_Type': rec.recommendation.value,
+                'Transfer_Reasoning': self._generate_transfer_reasoning(rec, match_info).replace('<br>', '; '),
+                'Conditions': '; '.join(rec.conditions[:3]),
+                'Evidence': '; '.join(rec.evidence[:3])
             })
         
         return output.getvalue()
@@ -876,14 +873,18 @@ class ReportGenerator:
         # Get skill mapping details from metadata if available
         if 'skill_mapping' in rec.metadata:
             mapping = rec.metadata['skill_mapping']
-            direct_matches = len(mapping.get('direct_matches', []))
-            partial_matches = len(mapping.get('partial_matches', []))
-            unmapped_critical = len(mapping.get('unmapped_uni', []))
+            # Handle both list of skills and list of dicts
+            if mapping.get('direct_matches'):
+                direct_matches = len(mapping['direct_matches'])
+            if mapping.get('partial_matches'):
+                partial_matches = len(mapping['partial_matches'])
+            if mapping.get('unmapped_uni'):
+                unmapped_critical = len(mapping['unmapped_uni'])
         
         # Calculate quality scores breakdown
         quality_breakdown = {
-            'coverage_score': rec.skill_coverage,
-            'context_alignment': 0.0,
+            'coverage_score': rec.skill_coverage if isinstance(rec.skill_coverage, dict) else {},
+            'context_alignment': rec.metadata.get('skill_mapping', {}).get('context_alignment', 0.0),
             'level_alignment': 0.0,
             'confidence_average': rec.confidence
         }
@@ -899,26 +900,20 @@ class ReportGenerator:
                         'requirements': case_data.get('bridging_requirements', [])
                     }
         
-        # Get the total number of university skills (LENGTH of the list)
+        # Get the total number of university skills
         total_uni_skills = len(rec.uni_course.extracted_skills) if hasattr(rec.uni_course, 'extracted_skills') else 0
         
         # Calculate component scores
         coverage_component = 0.5 * (direct_matches + partial_matches * 0.5) / max(total_uni_skills, 1)
-        
-        # Get context alignment from metadata if available
-        if 'skill_mapping' in rec.metadata:
-            context_component = 0.25 * rec.metadata['skill_mapping'].get('context_alignment', 0)
-        else:
-            context_component = 0.25 * 0.5  # Default to 0.5 if not available
-        
+        context_component = 0.25 * quality_breakdown['context_alignment']
         quality_component = 0.15 * rec.confidence
-        edge_penalty = 0.1 * (len(edge_case_summary) / 10)  # Normalize penalty
+        edge_penalty = min(0.1, len(edge_case_summary) * 0.02)  # Cap penalty at 0.1
         
         return {
             'direct_matches': direct_matches,
             'partial_matches': partial_matches,
             'unmapped_critical': unmapped_critical,
-            'total_uni_skills': total_uni_skills,  # Now this is an integer
+            'total_uni_skills': total_uni_skills,
             'quality_breakdown': quality_breakdown,
             'score_components': {
                 'coverage': coverage_component,
@@ -929,7 +924,7 @@ class ReportGenerator:
             'edge_cases': edge_case_summary,
             'alignment_calculation': f"({coverage_component:.2f} + {context_component:.2f} + {quality_component:.2f} - {edge_penalty:.2f}) = {rec.alignment_score:.2%}"
         }
-    
+        
     def _analyze_gaps(self, recommendations: List[CreditTransferRecommendation]) -> Dict:
         """Analyze common gaps and conditions"""
         from collections import Counter
