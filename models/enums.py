@@ -81,77 +81,109 @@ class SkillCategory(Enum):
 
 
 class StudyLevel(Enum):
-    """Study levels for university courses with ordering support"""
-    INTRODUCTORY = 1
-    INTERMEDIATE = 2
-    ADVANCED = 3
-    SPECIALIZED = 4
-    POSTGRADUATE = 5
-    
-    def __lt__(self, other):
-        if self.__class__ is other.__class__:
-            return self.value < other.value
-        return NotImplemented
-    
-    def __le__(self, other):
-        if self.__class__ is other.__class__:
-            return self.value <= other.value
-        return NotImplemented
-    
-    def __gt__(self, other):
-        if self.__class__ is other.__class__:
-            return self.value > other.value
-        return NotImplemented
-    
-    def __ge__(self, other):
-        if self.__class__ is other.__class__:
-            return self.value >= other.value
-        return NotImplemented
+    """Study levels with expected skill level mappings"""
+    INTRODUCTORY = 'Introductory'
+    INTERMEDIATE = 'Intermediate'
+    ADVANCED = 'Advanced'
     
     @classmethod
     def from_string(cls, level_str: str):
-        """Parse study level from string"""
-        level_map = {
-            "introductory": cls.INTRODUCTORY,
-            "intro": cls.INTRODUCTORY,
-            "beginner": cls.INTRODUCTORY,
-            "foundation": cls.INTRODUCTORY,
-            "intermediate": cls.INTERMEDIATE,
-            "inter": cls.INTERMEDIATE,
-            "advanced": cls.ADVANCED,
-            "adv": cls.ADVANCED,
-            "specialized": cls.SPECIALIZED,
-            "spec": cls.SPECIALIZED,
-            "specialist": cls.SPECIALIZED,
-            "postgraduate": cls.POSTGRADUATE,
-            "postgrad": cls.POSTGRADUATE,
-            "graduate": cls.POSTGRADUATE
+        """Convert string to StudyLevel enum"""
+        if not level_str:
+            return cls.INTERMEDIATE
+        
+        level_str = level_str.lower().strip()
+        
+        # Map various representations to standard levels
+        mappings = {
+            'introductory': cls.INTRODUCTORY,
+            'intro': cls.INTRODUCTORY,
+            'beginner': cls.INTRODUCTORY,
+            'basic': cls.INTRODUCTORY,
+            'foundation': cls.INTRODUCTORY,
+            'elementary': cls.INTRODUCTORY,
+            '100': cls.INTRODUCTORY,
+            '1000': cls.INTRODUCTORY,
+            
+            'intermediate': cls.INTERMEDIATE,
+            'inter': cls.INTERMEDIATE,
+            'medium': cls.INTERMEDIATE,
+            'moderate': cls.INTERMEDIATE,
+            '200': cls.INTERMEDIATE,
+            '2000': cls.INTERMEDIATE,
+            '300': cls.INTERMEDIATE,
+            '3000': cls.INTERMEDIATE,
+            
+            'advanced': cls.ADVANCED,
+            'adv': cls.ADVANCED,
+            'high': cls.ADVANCED,
+            'senior': cls.ADVANCED,
+            'specialized': cls.ADVANCED,
+            'postgraduate': cls.ADVANCED,
+            'graduate': cls.ADVANCED,
+            '400': cls.ADVANCED,
+            '4000': cls.ADVANCED,
+            '500': cls.ADVANCED,
+            '5000': cls.ADVANCED,
+            '600': cls.ADVANCED,
+            '700': cls.ADVANCED,
+            '800': cls.ADVANCED,
+            '900': cls.ADVANCED
         }
-        return level_map.get(level_str.lower(), cls.INTERMEDIATE)
+        
+        # Check for exact match
+        for key, value in mappings.items():
+            if key in level_str:
+                return value
+        
+        # Default to intermediate
+        return cls.INTERMEDIATE
     
     @classmethod
-    def to_complexity_score(cls, level):
-        """Convert study level to complexity score (0-1)"""
-        scores = {
-            cls.INTRODUCTORY: 0.2,
-            cls.INTERMEDIATE: 0.4,
-            cls.ADVANCED: 0.6,
-            cls.SPECIALIZED: 0.8,
-            cls.POSTGRADUATE: 1.0
+    def get_expected_skill_level_range(cls, study_level):
+        """Get the expected skill level range for a study level"""
+        mappings = {
+            cls.INTRODUCTORY: (1, 3),  # Novice to Competent
+            cls.INTERMEDIATE: (2, 4),  # Beginner to Proficient  
+            cls.ADVANCED: (3, 5),      # Competent to Expert
         }
-        return scores.get(level, 0.5)
+        
+        # Handle both enum and string inputs
+        if isinstance(study_level, str):
+            study_level = cls.from_string(study_level)
+        
+        return mappings.get(study_level, (2, 4))
     
     @classmethod
-    def expected_skill_level(cls, study_level):
-        """Get expected skill level for a study level"""
-        mapping = {
-            cls.INTRODUCTORY: SkillLevel.NOVICE,
-            cls.INTERMEDIATE: SkillLevel.COMPETENT,
-            cls.ADVANCED: SkillLevel.PROFICIENT,
-            cls.SPECIALIZED: SkillLevel.EXPERT,
-            cls.POSTGRADUATE: SkillLevel.EXPERT
-        }
-        return mapping.get(study_level, SkillLevel.COMPETENT)
+    def infer_from_text(cls, text: str) -> 'StudyLevel':
+        """Infer study level from text content"""
+        text_lower = text.lower()
+        
+        # Keywords for different levels
+        intro_keywords = [
+            'introduction', 'introductory', 'basic', 'fundamental', 'beginner',
+            'foundation', 'elementary', 'principles', 'essentials', 'overview',
+            'first year', '100 level', '1000 level', 'entry level'
+        ]
+        
+        advanced_keywords = [
+            'advanced', 'complex', 'specialized', 'expert', 'professional',
+            'graduate', 'postgraduate', 'research', 'thesis', 'dissertation',
+            'mastery', 'comprehensive', 'in-depth', 'critical analysis',
+            'final year', '400 level', '4000 level', '500 level', 'senior'
+        ]
+        
+        # Count keyword occurrences
+        intro_count = sum(1 for keyword in intro_keywords if keyword in text_lower)
+        advanced_count = sum(1 for keyword in advanced_keywords if keyword in text_lower)
+        
+        # Determine level based on keyword frequency
+        if advanced_count > intro_count and advanced_count >= 2:
+            return cls.ADVANCED
+        elif intro_count > advanced_count and intro_count >= 2:
+            return cls.INTRODUCTORY
+        else:
+            return cls.INTERMEDIATE
 
 
 class RecommendationType(Enum):

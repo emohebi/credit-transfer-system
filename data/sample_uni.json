@@ -3,80 +3,34 @@
         "name": "Bachelor of Information Technology",
         "courses": [
             {
-                "code": "COMP1234",
-                "name": "Introduction to Programming",
-                "description": "This course introduces fundamental programming concepts",
-                "study_level": "introductory",
-                "learning_outcomes": [
-                    "Understand programming fundamentals",
-                    "Apply problem-solving techniques",
-                    "Develop simple applications"
-                ],
-                "prerequisites": [],
-                "credit_points": 6,
-                "topics": [
-                    "Variables and data types",
-                    "Control structures",
-                    "Functions and modules"
-                ],
-                "assessment": "Exam 50%, Assignments 50%"
-            },
-            {
-                "code": "COMP2345",
-                "name": "Advanced Programming Techniques",
-                "description": "Advanced programming concepts and design patterns",
-                "study_level": "intermediate",
-                "learning_outcomes": [
-                    "Apply object-oriented programming principles",
-                    "Implement design patterns",
-                    "Develop complex software systems"
-                ],
-                "prerequisites": ["COMP1234"],
-                "credit_points": 6,
-                "topics": [
-                    "Design patterns",
-                    "Software architecture",
-                    "Advanced data structures"
-                ],
-                "assessment": "Project 60%, Exam 40%"
-            },
-            {
-                "code": "COMP3456",
-                "name": "Software Engineering Practice",
-                "description": "Professional software engineering practices",
+                "code": "COMP3850",
+                "name": "Advanced Machine Learning and Neural Networks",
+                "description": "This advanced course examines sophisticated machine learning algorithms with emphasis on deep learning architectures and their theoretical foundations. Students explore various neural network types and their mathematical underpinnings while engaging with cutting-edge research.",
                 "study_level": "advanced",
                 "learning_outcomes": [
-                    "Analyze complex software requirements",
-                    "Design scalable systems",
-                    "Evaluate software quality"
+                "Analyze and implement deep learning architectures",
+                "Apply mathematical foundations of neural networks",
+                "Evaluate state-of-the-art machine learning research",
+                "Design and implement complex ML models using modern frameworks",
+                "Assess ethical implications of AI deployment",
+                "Conduct independent research in machine learning applications"
                 ],
-                "prerequisites": ["COMP2345"],
+                "prerequisites": [
+                "COMP2420",
+                "MATH2320", 
+                "STAT2008"
+                ],
                 "credit_points": 6,
                 "topics": [
-                    "Agile methodologies",
-                    "Testing strategies",
-                    "DevOps practices"
+                "Convolutional Neural Networks",
+                "Recurrent Neural Networks and LSTM",
+                "Transformer architectures and attention mechanisms",
+                "Generative Adversarial Networks",
+                "Transfer learning and fine-tuning",
+                "Reinforcement learning fundamentals",
+                "Ethical AI and bias detection"
                 ],
-                "assessment": "Team project 70%, Individual assessment 30%"
-            },
-            {
-                "code": "COMP4567",
-                "name": "Specialized Topics in AI",
-                "description": "Cutting-edge artificial intelligence techniques",
-                "study_level": "specialized",
-                "learning_outcomes": [
-                    "Evaluate state-of-the-art AI algorithms",
-                    "Create novel AI solutions",
-                    "Critically analyze AI ethics"
-                ],
-                "prerequisites": ["COMP3456"],
-                "credit_points": 6,
-                "topics": [
-                    "Deep learning architectures",
-                    "Reinforcement learning",
-                    "AI ethics and governance"
-                ],
-                "assessment": "Research project 80%, Presentation 20%"
+                "assessment": "Research project 40%, Midterm examination 25%, Assignments 25%, Research paper critique 10%"
             }
         ]
     }

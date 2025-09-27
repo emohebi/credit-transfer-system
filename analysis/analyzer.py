@@ -18,7 +18,7 @@ from mapping.skill_mapper import SkillMapper
 from mapping.edge_cases import EdgeCaseHandler
 from interfaces.genai_interface import GenAIInterface
 from interfaces.embedding_interface import EmbeddingInterface
-
+from utils.prompt_manager import PromptManager
 from analysis.bayesian_confidence import BayesianConfidenceEstimator
 from mapping.granularity_converter import SkillGranularityConverter
 from mapping.fuzzy_matcher import FuzzySkillMatcher
@@ -108,6 +108,8 @@ class CreditTransferAnalyzer:
         # Configuration
         self.min_alignment_score = self.config.get("min_alignment_score", 0.5)
         self.combination_limit = self.config.get("max_unit_combination", 3)
+        
+        self.prompt_manager = PromptManager()
         
         # Analysis cache
         self.analysis_cache = {}
@@ -699,3 +701,5 @@ class CreditTransferAnalyzer:
             return {"cache_size": len(self.extractor.cache)}
         else:
             return {"extractor_type": type(self.extractor).__name__}
+        
+    

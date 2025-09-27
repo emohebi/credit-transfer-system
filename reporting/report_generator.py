@@ -10,6 +10,8 @@ from typing import List, Dict, Any, Optional
 from io import StringIO
 from pathlib import Path
 
+import numpy as np
+
 from models.base_models import (
     CreditTransferRecommendation,
     VETQualification,
@@ -676,6 +678,7 @@ class ReportGenerator:
         html.append("<thead><tr>")
         html.append("<th>VET → Uni</th>")
         html.append("<th>Match Type</th>")
+        html.append("<th>Level Alignment</th>")
         html.append("<th>Score Breakdown</th>")
         html.append("<th>Quality Factors</th>")
         html.append("<th>Edge Cases</th>")
@@ -698,6 +701,16 @@ class ReportGenerator:
             html.append(f"<strong>Unmapped:</strong> {match_info['unmapped_critical']}")
             html.append(f"</td>")
             
+            level_analysis = match_info.get('level_analysis', {})
+            html.append(f"<td>")
+            html.append(f"<div style='color: {level_analysis.get('color', 'black')}'>")
+            html.append(f"<strong>{level_analysis.get('status', 'unknown').title()}</strong><br>")
+            html.append(f"VET Avg: {level_analysis.get('avg_vet_level', 0):.1f}<br>")
+            html.append(f"Uni Req: {level_analysis.get('avg_uni_level', 0):.1f}<br>")
+            html.append(f"<small>{level_analysis.get('message', '')}</small>")
+            html.append(f"</div>")
+            html.append(f"</td>")
+                        
             # Score components
             html.append(f"<td>")
             for comp, value in match_info['score_components'].items():
@@ -902,6 +915,9 @@ class ReportGenerator:
         partial_matches = 0
         unmapped_critical = 0
         
+        # Add level alignment analysis
+        level_analysis = self._analyze_level_alignment(rec)
+        
         # Get skill mapping details from metadata if available
         if 'skill_mapping' in rec.metadata:
             mapping = rec.metadata['skill_mapping']
@@ -954,7 +970,65 @@ class ReportGenerator:
                 'edge_penalty': edge_penalty
             },
             'edge_cases': edge_case_summary,
-            'alignment_calculation': f"({coverage_component:.2f} + {context_component:.2f} + {quality_component:.2f} - {edge_penalty:.2f}) = {rec.alignment_score:.2%}"
+            'alignment_calculation': f"({coverage_component:.2f} + {context_component:.2f} + {quality_component:.2f} - {edge_penalty:.2f}) = {rec.alignment_score:.2%}",
+            'level_analysis': level_analysis
+        }
+        
+    def _analyze_level_alignment(self, rec: CreditTransferRecommendation) -> Dict:
+        """Analyze skill level alignment between VET and University"""
+        
+        # Get average levels
+        vet_levels = []
+        for unit in rec.vet_units:
+            vet_levels.extend([s.level.value for s in unit.extracted_skills])
+        
+        uni_levels = [s.level.value for s in rec.uni_course.extracted_skills]
+        
+        if not vet_levels or not uni_levels:
+            return {
+                "status": "unknown",
+                "message": "Insufficient data"
+            }
+        
+        avg_vet = np.mean(vet_levels)
+        avg_uni = np.mean(uni_levels)
+        level_gap = avg_uni - avg_vet
+        
+        # Determine status
+        if level_gap <= 0:
+            status = "exceeds"
+            message = f"VET skills exceed requirement by {abs(level_gap):.1f} levels"
+            color = "green"
+        elif level_gap <= 1:
+            status = "adequate"
+            message = f"Minor gap of {level_gap:.1f} levels - bridgeable"
+            color = "yellow"
+        else:
+            status = "insufficient"
+            message = f"Significant gap of {level_gap:.1f} levels - substantial bridging required"
+            color = "red"
+        
+        return {
+            "avg_vet_level": avg_vet,
+            "avg_uni_level": avg_uni,
+            "level_gap": level_gap,
+            "status": status,
+            "message": message,
+            "color": color,
+            "vet_level_distribution": {
+                "Novice": sum(1 for l in vet_levels if l == 1),
+                "Beginner": sum(1 for l in vet_levels if l == 2),
+                "Competent": sum(1 for l in vet_levels if l == 3),
+                "Proficient": sum(1 for l in vet_levels if l == 4),
+                "Expert": sum(1 for l in vet_levels if l == 5)
+            },
+            "uni_level_distribution": {
+                "Novice": sum(1 for l in uni_levels if l == 1),
+                "Beginner": sum(1 for l in uni_levels if l == 2),
+                "Competent": sum(1 for l in uni_levels if l == 3),
+                "Proficient": sum(1 for l in uni_levels if l == 4),
+                "Expert": sum(1 for l in uni_levels if l == 5)
+            }
         }
         
     def _analyze_gaps(self, recommendations: List[CreditTransferRecommendation]) -> Dict:
@@ -1368,6 +1442,65 @@ class ReportGenerator:
             
             html.append("</table>")
         
+        html.append("</div>")
+        
+        return "\n".join(html)
+    
+    # Add study level analysis to the HTML report
+    def _generate_study_level_summary(self, recommendations: List[CreditTransferRecommendation]) -> str:
+        """Generate study level alignment summary"""
+        
+        html = []
+        html.append("<div class='summary-box'>")
+        html.append("<h3>Study Level Alignment Analysis</h3>")
+        
+        # Group by study level
+        by_level = {}
+        for rec in recommendations:
+            level = rec.uni_course.study_level
+            if level not in by_level:
+                by_level[level] = []
+            by_level[level].append(rec)
+        
+        html.append("<table style='width: 100%;'>")
+        html.append("<thead><tr>")
+        html.append("<th>University Study Level</th>")
+        html.append("<th>Expected Skill Range</th>")
+        html.append("<th>Courses</th>")
+        html.append("<th>Avg VET Level</th>")
+        html.append("<th>Alignment</th>")
+        html.append("</tr></thead>")
+        html.append("<tbody>")
+        
+        for level in sorted(by_level.keys()):
+            recs = by_level[level]
+            expected_min, expected_max = StudyLevel.get_expected_skill_level_range(level)
+            
+            # Calculate average VET levels for this study level
+            all_vet_levels = []
+            for rec in recs:
+                for unit in rec.vet_units:
+                    all_vet_levels.extend([s.level.value for s in unit.extracted_skills])
+            
+            avg_vet = np.mean(all_vet_levels) if all_vet_levels else 0
+            
+            # Determine alignment
+            if avg_vet < expected_min:
+                alignment = f"<span style='color: orange;'>Below ({avg_vet:.1f} < {expected_min})</span>"
+            elif avg_vet > expected_max:
+                alignment = f"<span style='color: green;'>Exceeds ({avg_vet:.1f} > {expected_max})</span>"
+            else:
+                alignment = f"<span style='color: green;'>Good ({expected_min} ≤ {avg_vet:.1f} ≤ {expected_max})</span>"
+            
+            html.append("<tr>")
+            html.append(f"<td><strong>{level.title()}</strong></td>")
+            html.append(f"<td>Level {expected_min}-{expected_max}</td>")
+            html.append(f"<td>{len(recs)} courses</td>")
+            html.append(f"<td>{avg_vet:.1f}</td>")
+            html.append(f"<td>{alignment}</td>")
+            html.append("</tr>")
+        
+        html.append("</tbody></table>")
         html.append("</div>")
         
         return "\n".join(html)

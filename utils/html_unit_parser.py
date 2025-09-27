@@ -102,12 +102,12 @@ def extract_course_info(html_file_path):
         cells = table.find_all('td')
         for cell in cells:
             cell_text = cell.get_text(strip=True)
-            if 'Level 1 - Undergraduate Introductory' in cell_text:
-                result["study_level"] = "introductory"
+            if 'Level 1' in cell_text or 'Introductory' in cell_text:
+                result["study_level"] = "Introductory"
             elif 'Level 2' in cell_text or 'Intermediate' in cell_text:
-                result["study_level"] = "intermediate"
+                result["study_level"] = "Intermediate"
             elif 'Level 3' in cell_text or 'Advanced' in cell_text:
-                result["study_level"] = "advanced"
+                result["study_level"] = "Advanced"
     
     # Extract assessment information
     assessment_section = soup.find(text=re.compile(r'Assessment requirements|Submission of assessment'))
@@ -145,17 +145,21 @@ def extract_course_info(html_file_path):
 def main():
     # Replace with your actual file path
     html_file_path = "/home/ehsan/Downloads/Business Decision Making (11009) - University of Canberra.html"
-    
+    qual = {
+        "code": "933AA",
+        "name": "Diploma of Business",
+        "courses": []
+        }
     try:
         course_info = extract_course_info(html_file_path)
-        
+        qual["courses"].append(course_info)
         # Output as formatted JSON
-        json_output = json.dumps(course_info, indent=2, ensure_ascii=False)
-        print(json_output)
+        # json_output = json.dumps(course_info, indent=2, ensure_ascii=False)
+        # print(json_output)
         
         # Optionally save to file
-        with open('./data/Business_Decision_Making.json"', 'w', encoding='utf-8') as f:
-            json.dump(course_info, f, indent=2, ensure_ascii=False)
+        with open(f"./data/{qual['code']}_{qual['name'].replace(' ', '_')}.json", 'w', encoding='utf-8') as f:
+            json.dump(qual, f, indent=2, ensure_ascii=False)
         
         print("\nJSON output saved to 'course_info.json'")
         

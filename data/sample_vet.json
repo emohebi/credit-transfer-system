@@ -4,15 +4,18 @@
   "level": "Diploma",
   "units": [
     {
-      "code": "ICTICT517",
-      "name": "Match IT needs with the strategic direction",
-      "description": "This unit describes the skills and knowledge required to match IT needs with the strategic direction of the organization.",
+      "code": "ICTICT214",
+      "name": "Operate Application Software Packages",
+      "description": "This foundational unit introduces students to the essential skills required to effectively use common business application software. Students will learn to navigate, customize, and operate word processing, spreadsheet, presentation, and database applications in a Windows environment.",
       "learning_outcomes": [
-        "Identify organizational IT requirements",
-        "Develop IT strategic plans",
-        "Implement IT governance frameworks"
+        "Navigate and customize business application software",
+        "Create and format professional documents using word processing software",
+        "Manage and manipulate data using spreadsheet applications",
+        "Develop presentations using presentation software",
+        "Perform basic database operations and queries",
+        "Apply file management techniques across multiple applications"
       ],
-      "assessment_requirements": "Assessment must include practical demonstration",
+      "assessment_requirements": "Assessment must include practical demonstration of software operation and portfolio submission showcasing competency in multiple applications",
       "nominal_hours": 60,
       "prerequisites": []
     }

@@ -316,3 +316,17 @@ Mapping summary: {json.dumps(mapping_info, indent=2)}"""
             logger.warning(f"JSON validation failed: {e}")
             # Fallback to original parser
             return self._parse_json_response(response)
+
+    def generate_response(self, system_prompt: str, user_prompt: str, max_tokens: int = None) -> str:
+        """
+        Unified method for generating responses
+        
+        Args:
+            system_prompt: System prompt
+            user_prompt: User prompt
+            max_tokens: Maximum tokens for response
+            
+        Returns:
+            Generated text response
+        """
+        return self._call_openai_api(system_prompt, user_prompt, max_tokens)

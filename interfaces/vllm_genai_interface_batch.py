@@ -386,3 +386,22 @@ Mapping summary: {json.dumps(mapping_info, indent=2)}"""
         response = self._generate_batch(system_prompt, [user_prompt], max_tokens=256)[0]
         result = self._parse_json_response(response)
         return result.get("category", "technical")
+    
+    # Add this method to VLLMGenAIInterfaceBatch class:
+    def generate_response(self, system_prompt: str, user_prompt: str, max_tokens: int = None) -> str:
+        """
+        Unified method for generating responses
+        
+        Args:
+            system_prompt: System prompt
+            user_prompt: User prompt
+            max_tokens: Maximum tokens for response
+            
+        Returns:
+            Generated text response
+        """
+        if max_tokens is None:
+            max_tokens = 2048
+        # Use batch method with single prompt
+        responses = self._generate_batch(system_prompt, [user_prompt], max_tokens)
+        return responses[0] if responses else ""
