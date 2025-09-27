@@ -89,7 +89,7 @@ class SimplifiedAnalyzer:
         # Extract skills (uses cache if available)
         vet_skills = self.extractor.extract_skills(vet_qual.units)
         uni_skills = self.extractor.extract_skills(uni_qual.courses)
-        
+        logger.info(f"Extracted {sum(len(s) for s in vet_skills.values())} VET skills and {sum(len(s) for s in uni_skills.values())} Uni skills")
         recommendations = []
         
         # Simple matching for each course
