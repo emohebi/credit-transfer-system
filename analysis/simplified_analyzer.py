@@ -118,6 +118,8 @@ class SimplifiedAnalyzer:
                 rec = self._create_recommendation(
                     [unit], course, best_score, best_match[1]
                 )
+                if hasattr(self.matcher, 'last_semantic_clusters'):
+                    rec.metadata['semantic_clusters'] = self.matcher.last_semantic_clusters
                 recommendations.append(rec)
         
         return recommendations

@@ -287,7 +287,18 @@ def main():
         
         logger.info(f"HTML report saved to {html_path}")
         
+        logger.info("Exporting extracted skills...")
+        
+        # Generate complete report package including skills
+        files = report_gen.generate_complete_report_package(
+            recommendations, vet_qual, uni_qual
+        )
+        
+        logger.info("Report package generated:")
+        for file_type, filepath in files.items():
+            logger.info(f"  {file_type}: {filepath}")
         # Save quality metrics if monitoring
+        monitor = False
         if monitor:
             # Log metrics
             if len(recommendations) > 0:

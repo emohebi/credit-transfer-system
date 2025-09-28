@@ -343,12 +343,13 @@ class SkillExportManager:
     # ========== CSV EXPORT METHODS ==========
     
     def _export_vet_to_csv(self, vet_qual: VETQualification, filepath: Path):
-        """Export VET skills to CSV file"""
+        """Export VET skills to CSV file with evidence and rationale"""
         with open(filepath, 'w', newline='', encoding='utf-8') as f:
             fieldnames = [
                 'qualification_code', 'qualification_name', 'unit_code', 'unit_name',
                 'unit_hours', 'skill_name', 'category', 'level', 'level_value',
-                'context', 'confidence', 'keywords', 'source', 'evidence_type'
+                'context', 'confidence', 'keywords', 'source', 'evidence_type',
+                'evidence', 'translation_rationale'  # Add new fields
             ]
             
             writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -370,16 +371,21 @@ class SkillExportManager:
                         'confidence': f"{skill.confidence:.2f}",
                         'keywords': '; '.join(skill.keywords),
                         'source': skill.source,
-                        'evidence_type': skill.evidence_type
+                        'evidence_type': skill.evidence_type,
+                        'evidence': skill.evidence,  # Include evidence
+                        'translation_rationale': skill.translation_rationale  # Include rationale
                     })
     
+    # In reporting/skill_export.py, update the _export_uni_to_csv method:
+
     def _export_uni_to_csv(self, uni_qual: UniQualification, filepath: Path):
-        """Export University skills to CSV file"""
+        """Export University skills to CSV file with evidence and rationale"""
         with open(filepath, 'w', newline='', encoding='utf-8') as f:
             fieldnames = [
                 'qualification_code', 'qualification_name', 'course_code', 'course_name',
                 'study_level', 'credit_points', 'skill_name', 'category', 'level',
-                'level_value', 'context', 'confidence', 'keywords', 'source', 'evidence_type'
+                'level_value', 'context', 'confidence', 'keywords', 'source', 'evidence_type',
+                'evidence', 'translation_rationale'  # Add new fields
             ]
             
             writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -402,19 +408,22 @@ class SkillExportManager:
                         'confidence': f"{skill.confidence:.2f}",
                         'keywords': '; '.join(skill.keywords),
                         'source': skill.source,
-                        'evidence_type': skill.evidence_type
+                        'evidence_type': skill.evidence_type,
+                        'evidence': skill.evidence,  # Include evidence
+                        'translation_rationale': skill.translation_rationale  # Include rationale
                     })
     
     def _export_combined_to_csv(self,
-                                vet_qual: VETQualification,
-                                uni_qual: UniQualification,
-                                filepath: Path):
-        """Export combined VET and University skills to CSV"""
+                            vet_qual: VETQualification,
+                            uni_qual: UniQualification,
+                            filepath: Path):
+        """Export combined VET and University skills to CSV with evidence and rationale"""
         with open(filepath, 'w', newline='', encoding='utf-8') as f:
             fieldnames = [
                 'source_type', 'qualification_code', 'qualification_name',
                 'unit_course_code', 'unit_course_name', 'study_level_or_hours',
-                'skill_name', 'category', 'level', 'context', 'confidence'
+                'skill_name', 'category', 'level', 'context', 'confidence',
+                'evidence', 'translation_rationale'  # Add new fields
             ]
             
             writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -434,7 +443,9 @@ class SkillExportManager:
                         'category': skill.category.value,
                         'level': skill.level.name,
                         'context': skill.context.value,
-                        'confidence': f"{skill.confidence:.2f}"
+                        'confidence': f"{skill.confidence:.2f}",
+                        'evidence': skill.evidence,  # Include evidence
+                        'translation_rationale': skill.translation_rationale  # Include rationale
                     })
             
             # Write University skills
@@ -451,7 +462,9 @@ class SkillExportManager:
                         'category': skill.category.value,
                         'level': skill.level.name,
                         'context': skill.context.value,
-                        'confidence': f"{skill.confidence:.2f}"
+                        'confidence': f"{skill.confidence:.2f}",
+                        'evidence': skill.evidence,  # Include evidence
+                        'translation_rationale': skill.translation_rationale  # Include rationale
                     })
     
     # ========== IMPORT METHODS ==========

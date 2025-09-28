@@ -1,13 +1,14 @@
 """
-Centralized prompt management for consistent prompts across all backends
+Enhanced Prompt Manager using Chain-of-Thought for Human Capability Extraction
 """
 
 from typing import Dict, List, Optional, Tuple
 from models.enums import StudyLevel
+import json
 
 
 class PromptManager:
-    """Manages all prompts for the system to ensure consistency across backends"""
+    """Manages prompts for extracting human capabilities from competency descriptions"""
     
     @staticmethod
     def get_skill_extraction_prompt(
@@ -18,86 +19,275 @@ class PromptManager:
         max_text_length: Optional[int] = None
     ) -> Tuple[str, str]:
         """
-        Get skill extraction prompt
-        
-        Args:
-            text: Text to analyze
-            item_type: Type of item (vet/uni)
-            study_level: Study level if known
-            backend_type: Backend type for optimization (not for different prompts!)
-            max_text_length: Maximum text length to include
-            
-        Returns:
-            Tuple of (system_prompt, user_prompt)
+        Get chain-of-thought skill extraction prompt for human capabilities
         """
         
-        # Determine text length based on backend (for performance only)
         if max_text_length is None:
             max_text_length = 2000 if backend_type == "vllm" else 3000
         
-        # System prompt - SAME for all backends
-        system_prompt = """You are an expert skill extractor specializing in educational competency analysis. 
-Extract skills accurately, comprehensively, and calibrated to the appropriate study level.
-Always return valid JSON arrays."""
-        
-        # Build study level guidance if provided
-        level_guidance = ""
+        # System prompt establishing the expert role
+        system_prompt = """You are a skill extraction expert specializing in identifying human capabilities implied in unit of competency (UOC) descriptions. Your task is to analyze the given unit of competency description and extract skills that represent human abilities rather than just keywords or tools.
+
+Your expertise includes understanding educational taxonomies (Bloom's, Australian Qualifications Framework, European Qualifications Framework) and translating competency statements into standardized human capabilities."""
+
+        # Chain of thought process
+        chain_of_thought = """
+## Chain of Thought Process:
+
+1. **Read and Analyze**: Carefully read the entire UOC/course description
+2. **Identify Context**: Look for tasks, responsibilities, and requirements that imply human abilities
+3. **Tool-to-Skill Translation**: Convert tool/technology mentions into the underlying human skills required
+4. **Contextualize Generic Terms**: Add specific context to broad terms
+5. **Standardize Language**: Ensure skills align with established VET and Higher Education taxonomies
+6. **Create Variations**: Consider both specific and broader versions for comprehensive coverage
+
+## Extraction Guidelines:
+
+### DO Extract:
+- Skills that represent **human abilities** and **cognitive processes**
+- Convert tools/technologies to underlying skills:
+  * "Excel" → "spreadsheet data analysis and modeling"
+  * "Python" → "algorithmic problem solving using Python"
+  * "AutoCAD" → "technical drawing and 3D modeling"
+  * "SAP" → "enterprise resource planning implementation"
+- Add specific context to generic skills:
+  * "communication" → "technical report writing" or "client consultation facilitation"
+  * "teamwork" → "cross-functional project collaboration" or "agile team coordination"
+  * "problem-solving" → "root cause analysis" or "systems troubleshooting"
+- Use standardized terminology from educational frameworks:
+  * Bloom's cognitive domains: analyzing, evaluating, creating
+  * AQF descriptors: application, analysis, synthesis
+- Focus on transferable skills applicable across roles
+- Include both technical and soft skills with proper context
+
+### DON'T Extract:
+- Bare tool names without skill context (just "Excel" or "Python")
+- Vague, uncontextualized skills ("communication," "teamwork")
+- Company-specific processes that aren't transferable
+- Personality traits or attitudes ("motivated," "enthusiastic")
+- Task descriptions ("complete reports," "attend meetings")
+
+### Skill Naming Convention:
+Follow the pattern: [Action/Process] + [Domain/Context] + [Object/Outcome]
+
+Examples of PROPER skill naming:
+- "financial data analysis" (action + domain + object)
+- "cross-functional team coordination" (context + object + action)
+- "regulatory compliance assessment" (domain + object + action)
+- "statistical model development" (domain + object + action)
+- "stakeholder requirements elicitation" (context + object + action)
+- "quality assurance process design" (domain + process + action)
+"""
+
+        # Skill categories with human capability focus
+        skill_categories = """
+## Skill Categories (Human Capabilities):
+
+### COGNITIVE/ANALYTICAL CAPABILITIES:
+Pattern: [Analytical Process] + [Domain]
+- "quantitative data analysis"
+- "systems thinking and analysis"
+- "critical evaluation of evidence"
+- "pattern recognition and interpretation"
+- "strategic problem decomposition"
+- "conceptual model development"
+- "hypothesis testing and validation"
+
+### TECHNICAL CAPABILITIES:
+Pattern: [Technical Action] + [Technology Context] + [Purpose]
+- "database design and optimization"
+- "algorithm development and implementation"
+- "software architecture planning"
+- "network infrastructure configuration"
+- "automated testing framework development"
+- "data pipeline engineering"
+- "API design and integration"
+
+### COMMUNICATION CAPABILITIES:
+Pattern: [Communication Type] + [Audience/Purpose]
+- "technical documentation authoring"
+- "stakeholder presentation delivery"
+- "cross-cultural business communication"
+- "scientific report writing"
+- "executive briefing preparation"
+- "instructional content development"
+- "conflict mediation and resolution"
+
+### MANAGEMENT CAPABILITIES:
+Pattern: [Management Function] + [Scope/Domain]
+- "project lifecycle management"
+- "resource allocation optimization"
+- "risk identification and mitigation"
+- "performance metrics development"
+- "change management facilitation"
+- "strategic planning and execution"
+- "vendor relationship management"
+
+### CREATIVE/DESIGN CAPABILITIES:
+Pattern: [Creative Process] + [Domain/Output]
+- "user experience research and design"
+- "visual communication design"
+- "innovative solution generation"
+- "prototype development and testing"
+- "creative problem formulation"
+- "design thinking facilitation"
+"""
+
+        # Translation examples
+        translation_examples = """
+## Translation Examples:
+
+WHEN TEXT SAYS → EXTRACT AS:
+
+"Use Excel for financial reports"
+→ "spreadsheet-based financial analysis"
+→ "financial data visualization"
+→ "financial reporting automation"
+
+"Work in teams on projects"
+→ "collaborative project execution"
+→ "cross-functional team coordination"
+→ "team-based problem solving"
+
+"Communicate with stakeholders"
+→ "stakeholder engagement management"
+→ "business requirements communication"
+→ "stakeholder expectation alignment"
+
+"Manage customer relationships"
+→ "customer relationship cultivation"
+→ "client needs assessment"
+→ "customer satisfaction optimization"
+
+"Implement software solutions"
+→ "software solution architecture"
+→ "technical implementation planning"
+→ "systems integration management"
+
+"Analyze business processes"
+→ "business process optimization"
+→ "operational efficiency analysis"
+→ "workflow improvement identification"
+"""
+
+        # Level calibration based on Bloom's taxonomy
+        level_rules = ""
         if study_level:
             study_enum = StudyLevel.from_string(study_level)
             expected_min, expected_max = StudyLevel.get_expected_skill_level_range(study_enum)
             
-            level_guidance = f"""
-            Study Level Context:
-            - This is a {study_level} level {item_type}
-            - Expected skill levels: {expected_min}-{expected_max}
-            - Level definitions:
-            * Level 1: Novice (basic awareness, requires supervision)
-            * Level 2: Advanced Beginner (limited experience, occasional supervision)
-            * Level 3: Competent (can perform independently)
-            * Level 4: Proficient (advanced application, can supervise others)
-            * Level 5: Expert (mastery, can teach/innovate)
-            """
-        
-        # User prompt - SAME for all backends
-        user_prompt = f"""Analyze this {item_type} text and extract ALL skills.
-            {level_guidance}
-            Task Requirements:
-            1. Extract both explicit skills (directly stated) and implicit skills (required but not stated)
-            2. Decompose composite skills into component skills
-            3. Remove duplicate or redundant skills
-            4. Consider prerequisites and assessment methods
+            level_rules = f"""
+## Level Assignment (Bloom's Taxonomy Aligned):
 
-            For EACH skill, provide these fields:
-            - name: Clear, concise skill name (3-50 characters)
-            - category: One of [technical, cognitive, practical, foundational, professional]
-            - level: Integer 1-5 (calibrated to study level if provided)
-            - context: One of [theoretical, practical, hybrid]
-            - confidence: Float 0.0-1.0 (your confidence in this extraction)
-            - is_explicit: Boolean (true if directly stated, false if inferred)
-            - keywords: Array of 3-5 relevant keywords
+For {study_level} (use levels {expected_min}-{expected_max}):
+- Level {expected_min}: Remember/Understand capabilities (identify, describe, explain)
+- Level {int((expected_min + expected_max) / 2)}: Apply/Analyze capabilities (implement, examine, differentiate)
+- Level {expected_max}: Evaluate/Create capabilities (design, critique, innovate)
+"""
 
-            Output Format: Return ONLY a valid JSON array of skill objects, no additional text.
-            """+"""
-            Example Output:
-            [
-            {
-                "name": "Database Design",
-                "category": "technical",
-                "level": 3,
-                "context": "hybrid",
-                "confidence": 0.9,
-                "is_explicit": true,
-                "keywords": ["SQL", "normalization", "ERD", "schemas"]
-            }
-            ]
-            """+f"""
-            Text to Analyze:
-            {text}
+        # Final prompt construction
+        user_prompt = f"""Analyze this {item_type} description and extract human capabilities using the chain-of-thought process.
 
-            Return JSON array:"""
-        
+{chain_of_thought}
+
+{skill_categories}
+
+{translation_examples}
+
+{level_rules}
+
+## TEXT TO ANALYZE:
+{text}
+
+## EXTRACTION STEPS:
+1. Read the text and identify all mentions of tasks, tools, and responsibilities
+2. For each identified element, determine the underlying human capability required
+3. Translate tools/technologies into human skills
+4. Add specific context to generic abilities
+5. Ensure each skill follows the naming convention: [Action/Process] + [Domain/Context] + [Object/Outcome]
+6. Validate that each skill represents a transferable human capability
+
+## OUTPUT REQUIREMENTS:
+Provide human capabilities in JSON format.
+
+Each skill must:
+- Represent a human ability (not a tool or task)
+- Include specific context
+- Follow the naming convention
+- Be transferable across roles
+- Align with educational taxonomies
+"""+"""
+JSON FORMAT:
+[
+  {
+    "name": "financial data analysis",  // Human capability with context
+    "category": "analytical",  // cognitive/technical/communication/management/creative
+    "level":"""+f""" {int((expected_min + expected_max) / 2) if study_level else 3}"""+""",  // Bloom's taxonomy level
+    "context": "practical",  // theoretical/practical/hybrid
+    "confidence": 0.7,  // Extraction confidence
+    "evidence": "...",  // Text excerpt showing this capability (max 100 chars)
+    "translation_rationale": "Excel reports → financial data analysis capability"  // How you derived this
+  }
+]
+
+Remember: Focus on HUMAN CAPABILITIES, not tools or generic terms!
+
+Return ONLY the JSON array:"""
+
         return system_prompt, user_prompt
-    
+
+    @staticmethod
+    def get_skill_comparison_prompt(
+        vet_skills: List[str],
+        uni_skills: List[str],
+        backend_type: str = "standard"
+    ) -> Tuple[str, str]:
+        """
+        Compare human capabilities between VET and University programs
+        """
+        
+        system_prompt = """You are comparing human capabilities between educational programs.
+Focus on whether the same underlying human abilities are present, considering different contexts and applications."""
+
+        user_prompt = f"""Compare these sets of HUMAN CAPABILITIES.
+
+VET CAPABILITIES ({len(vet_skills)} total):
+{chr(10).join(f'- {skill}' for skill in vet_skills[:30])}
+
+UNIVERSITY CAPABILITIES ({len(uni_skills)} total):
+{chr(10).join(f'- {skill}' for skill in uni_skills[:30])}
+
+## MATCHING METHODOLOGY:
+
+1. **Identical Capabilities (1.0)**:
+   - Same human ability, possibly different wording
+   - "financial data analysis" = "financial analytics"
+   - "project lifecycle management" = "project management"
+
+2. **Overlapping Capabilities (0.7)**:
+   - Related abilities with shared competencies
+   - "spreadsheet data analysis" overlaps with "quantitative analysis"
+   - "technical documentation writing" overlaps with "technical communication"
+
+3. **Related Domain (0.4)**:
+   - Same domain, different specific abilities
+   - "financial modeling" related to "financial analysis"
+   - "database design" related to "data management"
+
+4. **Different Capabilities (0.0)**:
+   - Unrelated human abilities
+
+## CALCULATION:
+For each university capability:
+1. Find best match in VET capabilities
+2. Assign score based on matching level
+3. Sum all scores
+4. Divide by total university capabilities
+
+Return ONLY the final score (0.0-1.0):"""
+
+        return system_prompt, user_prompt
+
     @staticmethod
     def get_batch_extraction_prompt(
         texts: List[str],
@@ -106,64 +296,56 @@ Always return valid JSON arrays."""
         backend_type: str = "standard"
     ) -> Tuple[str, str]:
         """
-        Get batch extraction prompt
-        
-        Returns:
-            Tuple of (system_prompt, user_prompt)
+        Batch extraction of human capabilities from multiple texts
         """
         
-        # System prompt - SAME for all backends
-        system_prompt = """You are an expert skill extractor specializing in educational competency analysis.
-Process multiple texts and extract skills from each, maintaining consistency across all extractions.
-Always return valid JSON."""
+        system_prompt = """You are a skill extraction expert identifying human capabilities from multiple competency descriptions.
+Apply the chain-of-thought process consistently across all texts."""
         
-        # Build batch prompt
-        batch_items = []
+        user_prompt = f"""Extract HUMAN CAPABILITIES from {len(texts)} competency descriptions.
+
+## Quick Reference:
+- Extract human abilities, not tools or tasks
+- Add context to generic terms
+- Use pattern: [Action/Process] + [Domain/Context] + [Object/Outcome]
+- Focus on transferable capabilities
+
+## Key Translations:
+- Tools → Underlying human skills
+- Tasks → Required capabilities
+- Generic terms → Contextualized abilities
+
+For each text, extract 5-20 human capabilities with:
+- name: Contextualized human capability
+- category: cognitive/technical/communication/management/creative
+- level: Based on Bloom's taxonomy (1-5)
+- context: theoretical/practical/hybrid
+- confidence: 0.7-1.0
+- evidence: Supporting text excerpt
+- translation_rationale: Brief explanation of derivation
+
+## TEXTS TO ANALYZE:
+"""
+        
         for idx, text in enumerate(texts):
             study_level = study_levels[idx] if study_levels and idx < len(study_levels) else None
+            level_info = f" [Study Level: {study_level}]" if study_level else ""
             
-            # Add study level info if available
-            level_info = ""
-            if study_level:
-                study_enum = StudyLevel.from_string(study_level)
-                expected_min, expected_max = StudyLevel.get_expected_skill_level_range(study_enum)
-                level_info = f"Study Level: {study_level} (expect skill levels {expected_min}-{expected_max})\n"
-            
-            # Limit text length for batch processing
-            max_length = 1500 if backend_type == "vllm" else 2000
-            
-            batch_items.append(f"""
-=== Text {idx} ===
-{level_info}Type: {item_type}
-Content: {text[:max_length]}
-""")
+            user_prompt += f"""
+=== Text {idx}{level_info} ===
+{text[:1500 if backend_type == "vllm" else 2000]}
+"""
         
-        # User prompt - SAME for all backends
-        user_prompt = f"""Analyze these {len(texts)} texts and extract skills from EACH one.
+        user_prompt += """
 
-        Requirements for EACH text:
-        1. Extract explicit and implicit skills
-        2. Decompose composite skills
-        3. Remove duplicates within each text
-        4. Calibrate skill levels to the study level if provided
+## OUTPUT:
+Return JSON array with one object per text:
+[{"text_index": 0, "skills": [...]}, {"text_index": 1, "skills": [...]}]
 
-        For EACH skill: name, category (technical/cognitive/practical/foundational/professional), 
-        level (1-5), context (theoretical/practical/hybrid), confidence (0-1), 
-        is_explicit (true/false), keywords (3-5 words).
-        """+"""
-        Output Format: JSON array with one object per text, each containing a "skills" array:
-        [
-        {{"text_index": 0, "skills": [...]}}, 
-        {{"text_index": 1, "skills": [...]}}
-        ]
-
-        Texts to Analyze:
-        {"".join(batch_items)}
-
-        Return JSON array:"""
+Apply the chain-of-thought process to each text to extract true HUMAN CAPABILITIES!"""
         
         return system_prompt, user_prompt
-    
+
     @staticmethod
     def get_study_level_inference_prompt(
         text: str,
@@ -171,122 +353,40 @@ Content: {text[:max_length]}
         backend_type: str = "standard"
     ) -> Tuple[str, str]:
         """
-        Get prompt for inferring study level
-        
-        Returns:
-            Tuple of (system_prompt, user_prompt)
+        Infer study level based on cognitive complexity of required capabilities
         """
         
-        # System prompt - SAME for all backends
-        system_prompt = """You are an expert education level classifier.
-            Analyze educational content and accurately determine its study level.
-            Be precise and consider complexity, prerequisites, and learning outcomes."""
-                    
-                    # Text length based on backend
-        max_length = 1000 if backend_type == "vllm" else 1500
+        system_prompt = """You are an educational taxonomy expert who classifies study levels based on the cognitive complexity of required human capabilities."""
         
-        # User prompt - SAME for all backends
-        user_prompt = f"""Analyze this {item_type.upper()} Course text and determine the study level.
+        user_prompt = f"""Analyze the cognitive complexity of capabilities in this {item_type}.
 
-            Classification Criteria:
-            - Introductory: Basic concepts, foundational knowledge, beginner-friendly, no prerequisites
-            - Intermediate: Standard complexity, some prerequisites, builds on basics, practical application
-            - Advanced: Complex topics, significant prerequisites, specialized knowledge, research/innovation
+## TEXT TO ANALYZE:
+{text}
 
-            Key Indicators to Consider:
-            1. Complexity of concepts
-            2. Prerequisites mentioned
-            3. Learning outcomes level
-            4. Assessment methods
-            5. Target audience
-            6. Depth of coverage
+## CLASSIFICATION BASED ON BLOOM'S TAXONOMY:
 
-            Text to Analyze:
-            {text}
+**INTRODUCTORY** - Lower-order cognitive capabilities:
+- Remember/Understand level verbs: identify, describe, explain, list, define
+- Basic application: follow procedures, apply simple rules
+- Foundational knowledge: basic concepts, terminology
+- Limited complexity: straightforward problems, guided tasks
 
-            Respond with ONLY ONE WORD: Introductory, Intermediate, or Advanced"""
-        
-        return system_prompt, user_prompt
-    
-    @staticmethod
-    def get_skill_comparison_prompt(
-        vet_skills: List[str],
-        uni_skills: List[str],
-        backend_type: str = "standard"
-    ) -> Tuple[str, str]:
-        """
-        Get prompt for comparing skills (used in refinement)
-        
-        Returns:
-            Tuple of (system_prompt, user_prompt)
-        """
-        
-        # System prompt - SAME for all backends
-        system_prompt = """You are an expert at skill comparison and alignment assessment.
-Evaluate skill alignments accurately considering coverage, level appropriateness, and practical relevance."""
-        
-        # Limit skills for prompt
-        max_skills = 50 if backend_type == "vllm" else 50
-        
-        # User prompt - SAME for all backends  
-        user_prompt = f"""Compare these skill sets and rate their alignment.
+**INTERMEDIATE** - Mid-level cognitive capabilities:
+- Apply/Analyze level verbs: implement, examine, compare, differentiate
+- Independent application: solve standard problems, analyze relationships
+- Integrated knowledge: connect concepts, apply theories
+- Moderate complexity: multi-step problems, some ambiguity
 
-        VET Skills:
-        {', '.join(vet_skills[:max_skills])}
+**ADVANCED** - Higher-order cognitive capabilities:
+- Evaluate/Create level verbs: design, critique, synthesize, innovate
+- Complex application: novel problems, original solutions
+- Deep knowledge: critique theories, develop new approaches
+- High complexity: ill-defined problems, research, innovation
 
-        University Skills:
-        {', '.join(uni_skills[:max_skills])}
+## DECISION:
+Based on the predominant level of cognitive capabilities required, classify as:
+Introductory, Intermediate, or Advanced
 
-        Evaluation Criteria:
-        1. Coverage: What percentage of university skills are covered by VET skills?
-        2. Level Match: Are the skill levels appropriate?
-        3. Practical Relevance: Do VET skills provide practical foundation for university requirements?
-
-        Provide alignment score as a single decimal number between 0.0 and 1.0.
-        Consider: 0.8+ = excellent alignment, 0.6-0.8 = good alignment, 0.4-0.6 = partial alignment, <0.4 = poor alignment
-
-        Return ONLY the decimal number (e.g., 0.75):"""
-        
-        return system_prompt, user_prompt
-    
-    @staticmethod
-    def get_composite_skill_decomposition_prompt(
-        skill_name: str,
-        context: str = "",
-        backend_type: str = "standard"
-    ) -> Tuple[str, str]:
-        """
-        Get prompt for decomposing composite skills
-        
-        Returns:
-            Tuple of (system_prompt, user_prompt)
-        """
-        
-        # System prompt - SAME for all backends
-        system_prompt = """You are an expert at skill decomposition and competency analysis.
-Break down complex skills into their constituent components accurately."""
-        
-        # User prompt - SAME for all backends
-        user_prompt = f"""Decompose this composite skill into component skills.
-
-        Composite Skill: {skill_name}
-        Context: {context if context else "General educational context"}
-        """+"""
-        Requirements:
-        1. Identify 3-7 component skills that make up this composite skill
-        2. Each component should be a distinct, assessable skill
-        3. Components should collectively cover the composite skill
-
-        For each component skill provide:
-        - name: Clear component skill name
-        - category: technical/cognitive/practical/foundational/professional
-        - importance: high/medium/low (relative to the composite skill)
-
-        Return as JSON array:
-        [
-        {{"name": "...", "category": "...", "importance": "..."}}
-        ]
-
-        Return JSON array:"""
+Return ONLY ONE WORD:"""
         
         return system_prompt, user_prompt

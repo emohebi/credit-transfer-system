@@ -104,7 +104,7 @@ class GenAIInterface:
             completion = self.client.chat.completions.create(
                 model=self.deployment,
                 messages=messages,
-                max_tokens=max_tokens or self.max_tokens,
+                # max_tokens=max_tokens or self.max_tokens,
                 temperature=0.0,  # Always use 0 for consistency
                 top_p=1.0,
                 frequency_penalty=0,

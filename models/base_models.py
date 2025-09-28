@@ -7,17 +7,21 @@ from typing import List, Dict, Any, Optional
 from .enums import SkillLevel, SkillContext, SkillCategory, RecommendationType
 
 
+# In models/base_models.py, update the Skill dataclass:
+
 @dataclass
 class Skill:
-    """Represents an extracted skill"""
+    """Represents an extracted skill with evidence and derivation tracking"""
     name: str
     category: SkillCategory
     level: SkillLevel
     context: SkillContext
     keywords: List[str] = field(default_factory=list)
-    evidence_type: str = ""
+    evidence_type: str = ""  # Keep existing field for backward compatibility
     confidence: float = 1.0
     source: str = ""  # Where it was extracted from
+    evidence: str = ""  # NEW: Text excerpt showing this capability
+    translation_rationale: str = ""  # NEW: How the skill was derived
     metadata: Dict[str, Any] = field(default_factory=dict)
     
     def __hash__(self):
@@ -39,6 +43,8 @@ class Skill:
             "evidence_type": self.evidence_type,
             "confidence": self.confidence,
             "source": self.source,
+            "evidence": self.evidence,  # Include new field
+            "translation_rationale": self.translation_rationale,  # Include new field
             "metadata": self.metadata
         }
     
@@ -54,9 +60,10 @@ class Skill:
             evidence_type=data.get("evidence_type", ""),
             confidence=data.get("confidence", 1.0),
             source=data.get("source", ""),
+            evidence=data.get("evidence", ""),  # Handle new field
+            translation_rationale=data.get("translation_rationale", ""),  # Handle new field
             metadata=data.get("metadata", {})
         )
-
 
 @dataclass
 class UnitOfCompetency:

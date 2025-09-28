@@ -269,13 +269,15 @@ class UnifiedSkillExtractor:
         
         return inferred_level
     
+    # In the UnifiedSkillExtractor class, update the _single_extract method:
+
     def _single_extract(self, text: str, item_type: str, study_level: str = None) -> List[Skill]:
-        """Extract skills from single text with study level calibration"""
+        """Extract skills from single text with built-in standardization"""
         
         if not self.genai:
             return self._fallback_extraction(text, study_level)
         
-        # Get standardized prompt from PromptManager
+        # Get standardized extraction prompt (standardization is now embedded)
         system_prompt, user_prompt = self.prompt_manager.get_skill_extraction_prompt(
             text=text,
             item_type=item_type,
@@ -287,31 +289,69 @@ class UnifiedSkillExtractor:
             response = self._call_genai(user_prompt, system_prompt)
             skills_data = self._parse_json_response(response)
             
+            # Convert to Skill objects
             skills = []
+            seen_names = set()  # Track seen names for deduplication
+            
             for skill_dict in skills_data:
                 if isinstance(skill_dict, dict):
+                    skill_name = skill_dict.get("name", "").lower().strip()
+                    
+                    # Skip if we've already seen this exact name
+                    if skill_name in seen_names:
+                        continue
+                    
+                    seen_names.add(skill_name)
                     skill = self._dict_to_skill(skill_dict)
                     
-                    # Ensure skill level aligns with study level
+                    # Ensure level is within expected range
                     if study_level:
                         study_enum = StudyLevel.from_string(study_level)
                         expected_min, expected_max = StudyLevel.get_expected_skill_level_range(study_enum)
                         
-                        original_level = skill.level.value
-                        adjusted_level = self._adjust_skill_level_for_study(
-                            original_level, expected_min, expected_max
-                        )
-                        if adjusted_level != original_level:
-                            skill.level = SkillLevel(adjusted_level)
-                            skill.confidence *= 0.95
+                        if skill.level.value < expected_min:
+                            skill.level = SkillLevel(expected_min)
+                        elif skill.level.value > expected_max:
+                            skill.level = SkillLevel(expected_max)
                     
-                    skills.append(skill)
+                    # Only include skills with sufficient confidence
+                    if skill.confidence >= self.config.get("MIN_CONFIDENCE", 0.7):
+                        skills.append(skill)
+            
+            # Limit to configured maximum
+            max_skills = self.config.get("MAX_SKILLS_PER_UNIT", 100)
+            if len(skills) > max_skills:
+                # Sort by confidence and take top N
+                skills.sort(key=lambda s: s.confidence, reverse=True)
+                skills = skills[:max_skills]
             
             return skills
             
         except Exception as e:
             logger.error(f"Error in skill extraction: {e}")
             return self._fallback_extraction(text, study_level)
+        
+    def _final_deduplication(self, skills: List[Skill]) -> List[Skill]:
+        """Final deduplication based on standardized names"""
+        
+        seen_names = {}
+        final_skills = []
+        
+        for skill in skills:
+            std_name = skill.name.lower().strip()
+            
+            if std_name not in seen_names:
+                seen_names[std_name] = skill
+                final_skills.append(skill)
+            else:
+                # Keep the one with higher confidence
+                if skill.confidence > seen_names[std_name].confidence:
+                    # Remove old one and add new one
+                    final_skills = [s for s in final_skills if s.name.lower().strip() != std_name]
+                    final_skills.append(skill)
+                    seen_names[std_name] = skill
+        
+        return final_skills
     
     def _batch_extract(self, texts: List[str], item_type: str, study_levels: List[str]) -> List[List[Skill]]:
         """Batch extract skills with study level consideration"""
@@ -475,7 +515,7 @@ class UnifiedSkillExtractor:
         return results[:expected_count]
     
     def _dict_to_skill(self, skill_dict: Dict) -> Skill:
-        """Convert dictionary to Skill object"""
+        """Convert dictionary to Skill object with evidence and rationale"""
         return Skill(
             name=skill_dict.get("name", "Unknown").strip()[:100],
             category=self._map_category(skill_dict.get("category", "technical")),
@@ -483,7 +523,9 @@ class UnifiedSkillExtractor:
             context=self._map_context(skill_dict.get("context", "hybrid")),
             confidence=min(1.0, max(0.0, skill_dict.get("confidence", 0.7))),
             keywords=skill_dict.get("keywords", [])[:5],
-            source=skill_dict.get("source", f"{self.backend_type}_extracted")
+            source=skill_dict.get("source", f"{self.backend_type}_extracted"),
+            evidence=skill_dict.get("evidence", "")[:100],  # Limit to 100 chars
+            translation_rationale=skill_dict.get("translation_rationale", "")[:200]  # Limit to 200 chars
         )
     
     def _get_cache_key(self, item) -> str:

@@ -19,6 +19,7 @@ from models.base_models import (
 )
 from models.enums import RecommendationType
 from .skill_export import SkillExportManager
+from utils.json_encoder import dumps, loads, make_json_serializable
 
 
 class ReportGenerator:
@@ -112,6 +113,22 @@ class ReportGenerator:
         files['package_summary'] = str(package_dir / "package_summary.json")
         self._create_package_summary(files, recommendations, vet_qual, uni_qual, files['package_summary'])
         
+        semantic_clusters = []
+        for rec in recommendations:
+            if 'semantic_clusters' in rec.metadata:
+                semantic_clusters.extend(rec.metadata['semantic_clusters'])
+        
+        # Alternative: Load from JSON file if available
+        import os
+        if os.path.exists("./output/semantic_clusters.json"):
+            import json
+            with open("./output/semantic_clusters.json", 'r') as f:
+                semantic_clusters = json.load(f)
+        
+        if semantic_clusters:
+            files['semantic_clusters_csv'] = str(package_dir / "semantic_clusters.csv")
+            self.export_semantic_clusters_to_csv(semantic_clusters, files['semantic_clusters_csv'])
+            
         # In generate_complete_report_package, after the main reports:
 
         # Generate skill extraction journey report
@@ -230,7 +247,7 @@ class ReportGenerator:
                 })
             
             data["recommendations"].append(rec_data)
-        
+        data = make_json_serializable(data)
         with open(filepath, 'w') as f:
             json.dump(data, f, indent=2)
     
@@ -793,6 +810,9 @@ class ReportGenerator:
         )
         html.append(journey_html)
         
+        html.append(self._generate_semantic_clusters_html(recommendations))
+
+        
         # Footer
         html.append("""
         </body>
@@ -1230,6 +1250,13 @@ class ReportGenerator:
                     html.append(f"Context: {skill.context.value}<br>")
                     confidence_class = self._get_confidence_class(skill.confidence)
                     html.append(f"Confidence: <span class='{confidence_class}'>{skill.confidence:.2f}</span><br>")
+                    
+                    # Add evidence and rationale display
+                    if skill.evidence:
+                        html.append(f"<strong>Evidence:</strong> <em>\"{skill.evidence}\"</em><br>")
+                    if skill.translation_rationale:
+                        html.append(f"<strong>Derivation:</strong> {skill.translation_rationale}<br>")
+                    
                     if skill.keywords:
                         html.append(f"Keywords: {', '.join(skill.keywords[:3])}")
                     html.append("</span>")
@@ -1333,6 +1360,12 @@ class ReportGenerator:
                     html.append(f"Context: {skill.context.value}<br>")
                     confidence_class = self._get_confidence_class(skill.confidence)
                     html.append(f"Confidence: <span class='{confidence_class}'>{skill.confidence:.2f}</span><br>")
+                    # Add evidence and rationale display
+                    if skill.evidence:
+                        html.append(f"<strong>Evidence:</strong> <em>\"{skill.evidence}\"</em><br>")
+                    if skill.translation_rationale:
+                        html.append(f"<strong>Derivation:</strong> {skill.translation_rationale}<br>")
+
                     if skill.keywords:
                         html.append(f"Keywords: {', '.join(skill.keywords[:3])}")
                     html.append("</span>")
@@ -1502,5 +1535,289 @@ class ReportGenerator:
         
         html.append("</tbody></table>")
         html.append("</div>")
+        
+        return "\n".join(html)
+    
+    def export_semantic_clusters_to_csv(self, 
+                                        semantic_clusters: List[Dict],
+                                        filepath: str = None) -> str:
+        """
+        Export semantic clusters to CSV for analysis
+        
+        Args:
+            semantic_clusters: List of cluster dictionaries from matching
+            filepath: Optional path for CSV file
+            
+        Returns:
+            Path to exported CSV file
+        """
+        import csv
+        from datetime import datetime
+        
+        if filepath is None:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filepath = f"output/semantic_clusters_{timestamp}.csv"
+        
+        with open(filepath, 'w', newline='', encoding='utf-8') as f:
+            fieldnames = [
+                'cluster_id', 'cluster_size', 'avg_semantic_similarity',
+                'vet_skills', 'vet_skill_count', 'vet_skill_names',
+                'uni_skills', 'uni_skill_count', 'uni_skill_names',
+                'match_type', 'level_alignment_potential'
+            ]
+            
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            
+            for cluster in semantic_clusters:
+                # Extract VET skill details
+                vet_skill_objects = [item['skill'] for item in cluster.get('vet_skills', [])]
+                vet_skill_names = [skill["name"] for skill in vet_skill_objects]
+                vet_levels = [skill["level"] for skill in vet_skill_objects]
+                
+                # Extract Uni skill details
+                uni_skill_objects = [item['skill'] for item in cluster.get('uni_skills', [])]
+                uni_skill_names = [skill["name"] for skill in uni_skill_objects]
+                uni_levels = [skill["level"] for skill in uni_skill_objects]
+                
+                # Determine match type
+                if len(vet_skill_objects) == 1 and len(uni_skill_objects) == 1:
+                    match_type = "one-to-one"
+                elif len(vet_skill_objects) > 1 and len(uni_skill_objects) == 1:
+                    match_type = "many-to-one"
+                elif len(vet_skill_objects) == 1 and len(uni_skill_objects) > 1:
+                    match_type = "one-to-many"
+                else:
+                    match_type = "many-to-many"
+                
+                # Calculate level alignment
+                avg_vet_level = sum(vet_levels) / len(vet_levels) if vet_levels else 0
+                avg_uni_level = sum(uni_levels) / len(uni_levels) if uni_levels else 0
+                level_gap = avg_uni_level - avg_vet_level
+                
+                if level_gap <= 0:
+                    level_alignment = "VET exceeds"
+                elif level_gap <= 1:
+                    level_alignment = "Well aligned"
+                else:
+                    level_alignment = "Gap exists"
+                
+                writer.writerow({
+                    'cluster_id': cluster.get('cluster_id', ''),
+                    'cluster_size': cluster.get('size', len(cluster.get('vet_skills', [])) + len(cluster.get('uni_skills', []))),
+                    'avg_semantic_similarity': f"{cluster.get('avg_semantic_similarity', 0):.3f}",
+                    'vet_skills': '; '.join([f"{s['skill']['name']} ({s['skill']['level']})" for s in cluster.get('vet_skills', [])]),
+                    'vet_skill_count': len(vet_skill_objects),
+                    'vet_skill_names': '; '.join(vet_skill_names),
+                    'uni_skills': '; '.join([f"{s['skill']['name']} ({s['skill']['level']})" for s in cluster.get('uni_skills', [])]),
+                    'uni_skill_count': len(uni_skill_objects),
+                    'uni_skill_names': '; '.join(uni_skill_names),
+                    'match_type': match_type,
+                    'level_alignment_potential': level_alignment
+                })
+        
+        return filepath
+    
+    def _generate_semantic_clusters_html(self, recommendations: List[CreditTransferRecommendation]) -> str:
+        """Generate HTML section for semantic clusters visualization"""
+        
+        html = []
+        
+        # Add CSS for clusters
+        html.append("""
+        <style>
+            .cluster-section { margin: 30px 0; }
+            .cluster-card {
+                background: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 8px;
+                padding: 15px;
+                margin: 10px 0;
+            }
+            .cluster-header {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 10px;
+                border-radius: 5px;
+                margin-bottom: 10px;
+            }
+            .skill-column {
+                display: inline-block;
+                width: 45%;
+                vertical-align: top;
+                padding: 10px;
+                background: white;
+                border-radius: 5px;
+                margin: 5px;
+            }
+            .vet-column { border-left: 4px solid #28a745; }
+            .uni-column { border-left: 4px solid #007bff; }
+            .skill-item {
+                padding: 5px;
+                margin: 3px 0;
+                background: #f0f0f0;
+                border-radius: 3px;
+                font-size: 14px;
+            }
+            .similarity-score {
+                display: inline-block;
+                padding: 3px 8px;
+                background: #ffc107;
+                color: #000;
+                border-radius: 12px;
+                font-weight: bold;
+                font-size: 12px;
+            }
+            .level-badge {
+                display: inline-block;
+                padding: 2px 6px;
+                background: #6c757d;
+                color: white;
+                border-radius: 3px;
+                font-size: 11px;
+                margin-left: 5px;
+            }
+            .cluster-stats {
+                display: flex;
+                justify-content: space-around;
+                margin: 10px 0;
+                font-size: 13px;
+            }
+            .stat-item {
+                text-align: center;
+                padding: 5px;
+            }
+            .stat-value {
+                font-size: 18px;
+                font-weight: bold;
+                color: #495057;
+            }
+            .stat-label {
+                color: #6c757d;
+                font-size: 11px;
+            }
+        </style>
+        """)
+        
+        html.append("<div class='cluster-section'>")
+        html.append("<h2>Semantic Skill Clusters</h2>")
+        html.append("<p>Skills grouped by semantic similarity, showing potential matches between VET and University competencies.</p>")
+        
+        # Get semantic clusters from recommendations metadata
+        # Note: This assumes clusters are stored in recommendation metadata
+        # You may need to modify based on your actual data structure
+        
+        clusters_to_display = []
+        for rec in recommendations:
+            if 'semantic_clusters' in rec.metadata:
+                clusters_to_display.extend(rec.metadata['semantic_clusters'])
+        
+        # Alternative: Load from the JSON file if saved
+        import json
+        import os
+        if os.path.exists("./output/semantic_clusters.json"):
+            with open("./output/semantic_clusters.json", 'r') as f:
+                clusters_data = json.load(f)
+                clusters_to_display = clusters_data if isinstance(clusters_data, list) else []
+        
+        if not clusters_to_display:
+            html.append("<p><em>No semantic clusters available. Run the analysis with clustering enabled.</em></p>")
+        else:
+            # Display statistics
+            html.append("<div class='cluster-stats'>")
+            html.append(f"<div class='stat-item'><div class='stat-value'>{len(clusters_to_display)}</div><div class='stat-label'>Total Clusters</div></div>")
+            
+            one_to_one = sum(1 for c in clusters_to_display if len(c.get('vet_skills', [])) == 1 and len(c.get('uni_skills', [])) == 1)
+            many_to_many = sum(1 for c in clusters_to_display if len(c.get('vet_skills', [])) > 1 and len(c.get('uni_skills', [])) > 1)
+            
+            html.append(f"<div class='stat-item'><div class='stat-value'>{one_to_one}</div><div class='stat-label'>One-to-One Matches</div></div>")
+            html.append(f"<div class='stat-item'><div class='stat-value'>{many_to_many}</div><div class='stat-label'>Many-to-Many Matches</div></div>")
+            
+            avg_sim = sum(c.get('avg_semantic_similarity', 0) for c in clusters_to_display) / len(clusters_to_display) if clusters_to_display else 0
+            html.append(f"<div class='stat-item'><div class='stat-value'>{avg_sim:.2%}</div><div class='stat-label'>Avg Similarity</div></div>")
+            html.append("</div>")
+            
+            # Display top clusters (limit to 20 for readability)
+            html.append("<h3>Top Semantic Clusters</h3>")
+            
+            # Sort by similarity score
+            sorted_clusters = sorted(clusters_to_display, 
+                                key=lambda x: x.get('avg_semantic_similarity', 0), 
+                                reverse=True)[:20]
+            
+            for idx, cluster in enumerate(sorted_clusters, 1):
+                html.append(f"<div class='cluster-card'>")
+                
+                # Cluster header
+                html.append(f"<div class='cluster-header'>")
+                html.append(f"<strong>Cluster {cluster.get('cluster_id', idx)}</strong>")
+                html.append(f"<span class='similarity-score'>Similarity: {cluster.get('avg_semantic_similarity', 0):.1%}</span>")
+                html.append(f"</div>")
+                
+                # Two columns for VET and Uni skills
+                html.append("<div style='display: flex; justify-content: space-between;'>")
+                
+                # VET skills column
+                html.append("<div class='skill-column vet-column'>")
+                html.append("<strong>VET Skills:</strong><br>")
+                for skill_item in cluster.get('vet_skills', [])[:5]:  # Limit to 5 for readability
+                    skill = skill_item.get('skill')
+                    if hasattr(skill, 'name'):
+                        html.append(f"<div class='skill-item'>")
+                        html.append(f"{skill['name']}")
+                        html.append(f"<span class='level-badge'>L{skill['level']}</span>")
+                        if skill["evidence"]:
+                            html.append(f"<br><small style='color: #666;'>Evidence: \"{skill['evidence'][:50]}...\"</small>")
+                        html.append(f"</div>")
+                
+                if len(cluster.get('vet_skills', [])) > 5:
+                    html.append(f"<small>... and {len(cluster.get('vet_skills', [])) - 5} more</small>")
+                html.append("</div>")
+                
+                # University skills column
+                html.append("<div class='skill-column uni-column'>")
+                html.append("<strong>University Skills:</strong><br>")
+                for skill_item in cluster.get('uni_skills', [])[:5]:
+                    skill = skill_item.get('skill')
+                    if hasattr(skill, 'name'):
+                        html.append(f"<div class='skill-item'>")
+                        html.append(f"{skill['name']}")
+                        html.append(f"<span class='level-badge'>L{skill['level']}</span>")
+                        if skill.evidence:
+                            html.append(f"<br><small style='color: #666;'>Evidence: \"{skill['evidence'][:50]}...\"</small>")
+                        html.append(f"</div>")
+                
+                if len(cluster.get('uni_skills', [])) > 5:
+                    html.append(f"<small>... and {len(cluster.get('uni_skills', [])) - 5} more</small>")
+                html.append("</div>")
+                
+                html.append("</div>")  # End columns
+                
+                # Cluster analysis
+                vet_count = len(cluster.get('vet_skills', []))
+                uni_count = len(cluster.get('uni_skills', []))
+                
+                if vet_count > 0 and uni_count > 0:
+                    if vet_count == 1 and uni_count == 1:
+                        match_desc = "Direct one-to-one skill correspondence"
+                    elif vet_count > uni_count:
+                        match_desc = f"Multiple VET skills ({vet_count}) map to fewer university skills ({uni_count})"
+                    elif uni_count > vet_count:
+                        match_desc = f"Few VET skills ({vet_count}) map to multiple university skills ({uni_count})"
+                    else:
+                        match_desc = f"Complex many-to-many relationship ({vet_count} to {uni_count})"
+                    
+                    html.append(f"<div style='margin-top: 10px; padding: 8px; background: #e9ecef; border-radius: 4px; font-size: 13px;'>")
+                    html.append(f"<strong>Analysis:</strong> {match_desc}")
+                    html.append(f"</div>")
+                
+                html.append("</div>")  # End cluster card
+            
+            # Add link to full CSV export
+            html.append("<div style='margin-top: 20px; padding: 10px; background: #d1ecf1; border-radius: 5px;'>")
+            html.append("<strong>📊 Full Analysis:</strong> Semantic clusters have been exported to CSV for detailed analysis.")
+            html.append("</div>")
+        
+        html.append("</div>")  # End cluster section
         
         return "\n".join(html)

@@ -87,6 +87,7 @@ class ClusterSkillMatcher:
         # Calculate statistics
         stats = self._calculate_statistics(final_matches, vet_skills, uni_skills)
         
+        self.last_semantic_clusters = semantic_clusters
         return {
             "matches": final_matches,
             "semantic_clusters": semantic_clusters,
