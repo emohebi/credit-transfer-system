@@ -6,12 +6,14 @@ from enum import Enum
 
 
 class SkillLevel(Enum):
-    """Proficiency levels for skills with ordering support"""
-    NOVICE = 1
-    ADVANCED_BEGINNER = 2
-    COMPETENT = 3
-    PROFICIENT = 4
-    EXPERT = 5
+    """SFIA proficiency levels for skills with ordering support"""
+    FOLLOW = 1          # Level 1: Follow
+    ASSIST = 2          # Level 2: Assist  
+    APPLY = 3           # Level 3: Apply
+    ENABLE = 4          # Level 4: Enable
+    ENSURE_ADVISE = 5   # Level 5: Ensure and advise
+    INITIATE_INFLUENCE = 6  # Level 6: Initiate and influence
+    SET_STRATEGY = 7    # Level 7: Set strategy, inspire, mobilise
     
     def __lt__(self, other):
         if self.__class__ is other.__class__:
@@ -35,16 +37,52 @@ class SkillLevel(Enum):
     
     @classmethod
     def from_string(cls, level_str: str):
-        """Parse skill level from string"""
+        """Parse SFIA skill level from string"""
         level_map = {
-            "novice": cls.NOVICE,
-            "beginner": cls.ADVANCED_BEGINNER,
-            "competent": cls.COMPETENT,
-            "proficient": cls.PROFICIENT,
-            "expert": cls.EXPERT
+            "follow": cls.FOLLOW,
+            "assist": cls.ASSIST,
+            "apply": cls.APPLY,
+            "enable": cls.ENABLE,
+            "ensure": cls.ENSURE_ADVISE,
+            "advise": cls.ENSURE_ADVISE,
+            "initiate": cls.INITIATE_INFLUENCE,
+            "influence": cls.INITIATE_INFLUENCE,
+            "strategy": cls.SET_STRATEGY,
+            "set_strategy": cls.SET_STRATEGY,
+            # Legacy mappings for backward compatibility
+            "novice": cls.FOLLOW,
+            "beginner": cls.ASSIST,
+            "competent": cls.APPLY,
+            "proficient": cls.ENABLE,
+            "expert": cls.ENSURE_ADVISE
         }
-        return level_map.get(level_str.lower(), cls.COMPETENT)
-
+        return level_map.get(level_str.lower(), cls.APPLY)
+    
+    def get_sfia_description(self) -> str:
+        """Get SFIA level description"""
+        descriptions = {
+            self.FOLLOW: "Works under close supervision, follows instructions, performs routine tasks",
+            self.ASSIST: "Provides assistance, works under routine supervision, uses limited discretion",
+            self.APPLY: "Performs varied tasks, works under general direction, exercises discretion",
+            self.ENABLE: "Performs diverse complex activities, guides others, works autonomously",
+            self.ENSURE_ADVISE: "Provides authoritative guidance, accountable for significant outcomes",
+            self.INITIATE_INFLUENCE: "Has significant organizational influence, makes high-level decisions",
+            self.SET_STRATEGY: "Operates at highest level, determines vision and strategy"
+        }
+        return descriptions.get(self, "Unknown level")
+    
+    def get_sfia_autonomy_level(self) -> str:
+        """Get SFIA autonomy characteristics"""
+        autonomy_levels = {
+            self.FOLLOW: "close_supervision",
+            self.ASSIST: "routine_supervision", 
+            self.APPLY: "general_direction",
+            self.ENABLE: "autonomous",
+            self.ENSURE_ADVISE: "broad_direction",
+            self.INITIATE_INFLUENCE: "strategic_authority",
+            self.SET_STRATEGY: "full_authority"
+        }
+        return autonomy_levels.get(self, "general_direction")
 
 class SkillContext(Enum):
     """Context where skill is applied"""
@@ -141,11 +179,11 @@ class StudyLevel(Enum):
     
     @classmethod
     def get_expected_skill_level_range(cls, study_level):
-        """Get the expected skill level range for a study level"""
+        """Get the expected SFIA skill level range for a study level"""
         mappings = {
-            cls.INTRODUCTORY: (1, 3),  # Novice to Competent
-            cls.INTERMEDIATE: (2, 4),  # Beginner to Proficient  
-            cls.ADVANCED: (3, 5),      # Competent to Expert
+            cls.INTRODUCTORY: (1, 3),  # Follow to Apply
+            cls.INTERMEDIATE: (2, 4),  # Assist to Enable  
+            cls.ADVANCED: (3, 6),      # Apply to Initiate/Influence
         }
         
         # Handle both enum and string inputs

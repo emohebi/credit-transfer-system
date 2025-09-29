@@ -448,34 +448,42 @@ class UnifiedSkillExtractor:
             return None
     
     def _adjust_skill_level_for_study(self, skill_level: int, expected_min: int, expected_max: int) -> int:
-        """Adjust skill level to fit within expected range"""
+        """Adjust SFIA skill level to fit within expected range"""
         
-        # Allow some flexibility (1 level outside range)
+        # Ensure we stay within SFIA bounds (1-7)
+        skill_level = max(1, min(7, skill_level))
+        expected_min = max(1, min(7, expected_min))
+        expected_max = max(1, min(7, expected_max))
+        
+        # Allow some flexibility (1 level outside range) but respect SFIA bounds
         if skill_level < expected_min - 1:
-            return expected_min
+            return max(1, expected_min)
         elif skill_level > expected_max + 1:
-            return expected_max
+            return min(7, expected_max)
         else:
             return skill_level
     
     def _fallback_extraction(self, text: str, study_level: str = None) -> List[Skill]:
-        """Fallback extraction without AI, considering study level"""
+        """Fallback extraction without AI, considering SFIA study level"""
         skills = []
         
-        # Determine expected skill level based on study level
+        # Determine expected SFIA skill level based on study level
         if study_level:
             study_enum = StudyLevel.from_string(study_level)
             expected_min, expected_max = StudyLevel.get_expected_skill_level_range(study_enum)
             default_level = int((expected_min + expected_max) / 2)
         else:
-            default_level = 3
+            default_level = 3  # SFIA Level 3 (Apply) as default
+        
+        # Ensure default level is within SFIA bounds
+        default_level = max(1, min(7, default_level))
         
         lines = text.split('\n')
         for line in lines[:20]:
             line = line.strip()
             if len(line) > 10 and len(line) < 200:
                 if any(keyword in line.lower() for keyword in 
-                       ['ability', 'understand', 'develop', 'apply', 'analyze']):
+                    ['ability', 'understand', 'develop', 'apply', 'analyze']):
                     skill = Skill(
                         name=line[:100],
                         category=SkillCategory.TECHNICAL,
@@ -569,21 +577,26 @@ class UnifiedSkillExtractor:
         return mapping.get(category_str.lower(), SkillCategory.TECHNICAL)
     
     def _map_level(self, level_val: Union[int, str]) -> SkillLevel:
-        """Map to SkillLevel"""
+        """Map to SFIA SkillLevel"""
         if isinstance(level_val, str):
             try:
                 level_val = int(level_val)
             except:
                 level_val = 3
         
+        # Ensure level is within SFIA range (1-7)
+        level_val = max(1, min(7, level_val))
+        
         level_map = {
-            1: SkillLevel.NOVICE,
-            2: SkillLevel.ADVANCED_BEGINNER,
-            3: SkillLevel.COMPETENT,
-            4: SkillLevel.PROFICIENT,
-            5: SkillLevel.EXPERT
+            1: SkillLevel.FOLLOW,
+            2: SkillLevel.ASSIST,
+            3: SkillLevel.APPLY,
+            4: SkillLevel.ENABLE,
+            5: SkillLevel.ENSURE_ADVISE,
+            6: SkillLevel.INITIATE_INFLUENCE,
+            7: SkillLevel.SET_STRATEGY
         }
-        return level_map.get(level_val, SkillLevel.COMPETENT)
+        return level_map.get(level_val, SkillLevel.APPLY)
     
     def _map_context(self, context_str: str) -> SkillContext:
         """Map to SkillContext"""

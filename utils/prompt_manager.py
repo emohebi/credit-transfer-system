@@ -3,7 +3,7 @@ Enhanced Prompt Manager using Chain-of-Thought for Human Capability Extraction
 """
 
 from typing import Dict, List, Optional, Tuple
-from models.enums import StudyLevel
+from models.enums import StudyLevel, SkillLevel
 import json
 
 
@@ -171,19 +171,111 @@ WHEN TEXT SAYS → EXTRACT AS:
 """
 
         # Level calibration based on Bloom's taxonomy
-        level_rules = ""
         if study_level:
             study_enum = StudyLevel.from_string(study_level)
             expected_min, expected_max = StudyLevel.get_expected_skill_level_range(study_enum)
             
             level_rules = f"""
-## Level Assignment (Bloom's Taxonomy Aligned):
+        ## SFIA Level Assignment:
 
-For {study_level} (use levels {expected_min}-{expected_max}):
-- Level {expected_min}: Remember/Understand capabilities (identify, describe, explain)
-- Level {int((expected_min + expected_max) / 2)}: Apply/Analyze capabilities (implement, examine, differentiate)
-- Level {expected_max}: Evaluate/Create capabilities (design, critique, innovate)
-"""
+        ### SFIA Level Definitions:
+        - **Level 1 (Follow)**: Works under close supervision, follows instructions, performs routine tasks
+        - **Level 2 (Assist)**: Provides assistance, works under routine supervision, uses limited discretion  
+        - **Level 3 (Apply)**: Performs varied tasks, works under general direction, exercises discretion
+        - **Level 4 (Enable)**: Performs diverse complex activities, guides others, works autonomously
+        - **Level 5 (Ensure/Advise)**: Provides authoritative guidance, accountable for significant outcomes
+        - **Level 6 (Initiate/Influence)**: Has significant organizational influence, makes high-level decisions
+        - **Level 7 (Set Strategy)**: Operates at highest level, determines vision and strategy
+
+        Use these five attributes to determine the appropriate SFIA level for each skill:
+
+        #### 1. AUTONOMY (Independence and Accountability)
+        - **Level 1-2**: Works under close/routine supervision, seeks guidance frequently
+        - **Level 3-4**: Works under general direction, exercises discretion, escalates appropriately  
+        - **Level 5-6**: Works under broad direction, substantial responsibility and authority
+        - **Level 7**: Full authority for significant areas, policy formation
+
+        #### 2. INFLUENCE (Reach and Impact)
+        - **Level 1-2**: Minimal influence, interacts with immediate colleagues
+        - **Level 3-4**: Influences colleagues and team members, some customer contact
+        - **Level 5-6**: Influences at account/senior management level, cross-functional impact
+        - **Level 7**: Influences industry leaders, shapes organizational strategy
+
+        #### 3. COMPLEXITY (Range and Intricacy)
+        - **Level 1-2**: Routine tasks, simple problems with standard solutions
+        - **Level 3-4**: Complex and non-routine work, moderately complex problem-solving
+        - **Level 5-6**: Highly complex activities covering technical, financial, quality aspects
+        - **Level 7**: Strategic complexity, formulation and implementation of strategy
+
+        #### 4. BUSINESS SKILLS/BEHAVIOURAL FACTORS
+        Assess these capabilities at each level:
+
+        **Communication**:
+        - Level 1-2: Basic information exchange
+        - Level 3-4: Effective team communication, some stakeholder interaction
+        - Level 5-6: Authoritative communication, influences decision-making
+        - Level 7: Strategic communication, shapes organizational narrative
+
+        **Leadership**:
+        - Level 1-2: Follows direction, learns from others
+        - Level 3-4: Guides individuals, supports team objectives
+        - Level 5-6: Leads teams/projects, develops others
+        - Level 7: Organizational leadership, inspires transformation
+
+        **Planning**:
+        - Level 1-2: Plans own immediate work
+        - Level 3-4: Plans work sequences, coordinates with others
+        - Level 5-6: Strategic planning, resource allocation
+        - Level 7: Organizational planning, long-term strategy
+
+        **Problem-solving**:
+        - Level 1-2: Solves routine problems with guidance
+        - Level 3-4: Solves complex problems independently
+        - Level 5-6: Solves multifaceted problems, develops new approaches
+        - Level 7: Addresses strategic challenges, creates frameworks
+
+        #### 5. KNOWLEDGE (Depth and Breadth)
+        - **Level 1-2**: Basic role-specific knowledge, learning fundamentals
+        - **Level 3-4**: Working knowledge with methodical approach
+        - **Level 5-6**: Deep expertise in specialization, broad business understanding
+        - **Level 7**: Strategic business knowledge, industry expertise
+
+        ### SFIA Level Determination Process:
+        For each extracted skill, assess ALL FIVE generic attributes:
+
+        1. **Analyze the capability description** for indicators of autonomy, influence, complexity, business skills, and knowledge
+        2. **Map each attribute** to the appropriate SFIA level (1-7)
+        3. **Determine the predominant level** across all five attributes
+        4. **Validate consistency** across the skill set
+
+        ### Level Assessment Examples:
+
+        **"financial data analysis"**:
+        - Autonomy: Level 3 (works under general direction)
+        - Influence: Level 3 (influences team decisions)  
+        - Complexity: Level 4 (complex analytical work)
+        - Business Skills: Level 3 (effective communication of findings)
+        - Knowledge: Level 4 (deep analytical knowledge)
+        → **Result: Level 3-4**
+
+        **"strategic business planning"**:
+        - Autonomy: Level 6 (works under broad direction)
+        - Influence: Level 6 (influences senior management)
+        - Complexity: Level 6 (highly complex strategic work)
+        - Business Skills: Level 6 (leadership and strategic communication)
+        - Knowledge: Level 6 (broad business and strategic knowledge)
+        → **Result: Level 6**
+
+        **"routine data entry"**:
+        - Autonomy: Level 1 (works under close supervision)
+        - Influence: Level 1 (minimal influence)
+        - Complexity: Level 1 (routine tasks)
+        - Business Skills: Level 1 (basic communication)
+        - Knowledge: Level 1 (basic role-specific knowledge)
+        → **Result: Level 1**
+
+        
+        """
 
         # Final prompt construction
         user_prompt = f"""Analyze this {item_type} description and extract human capabilities using the chain-of-thought process.
@@ -222,11 +314,13 @@ JSON FORMAT:
   {
     "name": "financial data analysis",  // Human capability with context
     "category": "analytical",  // cognitive/technical/communication/management/creative
-    "level":"""+f""" {int((expected_min + expected_max) / 2) if study_level else 3}"""+""",  // Bloom's taxonomy level
+    "level": """+f"""{int((expected_min + expected_max) / 2) if study_level else 3}"""+""",  // SFIA level (1-7)
     "context": "practical",  // theoretical/practical/hybrid
     "confidence": 0.7,  // Extraction confidence
     "evidence": "...",  // Text excerpt showing this capability (max 100 chars)
-    "translation_rationale": "Excel reports → financial data analysis capability"  // How you derived this
+    "translation_rationale": "Excel reports → financial data analysis capability",  // How you derived this
+    "sfia_autonomy": "general_direction",  // SFIA autonomy level
+    "sfia_influence": "team_level"  // SFIA influence scope
   }
 ]
 

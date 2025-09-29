@@ -199,8 +199,8 @@ def main():
     args.vet_file = "./data/diploma_of_business.json"
     args.uni_file = "./data/933AA_Diploma_of_Business.json"
     
-    # args.vet_file = "./data/sample_vet.json"
-    # args.uni_file = "./data/sample_uni.json"
+    args.vet_file = "./data/sample_vet.json"
+    args.uni_file = "./data/sample_uni.json"
     try:
         # Load data
         logger.info("Loading qualifications...")

@@ -50,17 +50,19 @@ class ClusterSkillMatcher:
     
     def _build_level_compatibility_matrix(self) -> np.ndarray:
         """
-        Build a compatibility matrix for skill levels
+        Build a compatibility matrix for SFIA skill levels
         Higher values = better compatibility
         """
-        # 5x5 matrix for skill levels 1-5
+        # 7x7 matrix for SFIA levels 1-7
         matrix = np.array([
-            # VET→  1    2    3    4    5   (rows = VET levels)
-            [1.0, 0.7, 0.4, 0.2, 0.1],  # Uni level 1
-            [0.7, 1.0, 0.7, 0.4, 0.2],  # Uni level 2
-            [0.4, 0.7, 1.0, 0.7, 0.4],  # Uni level 3
-            [0.2, 0.4, 0.7, 1.0, 0.8],  # Uni level 4
-            [0.1, 0.2, 0.4, 0.8, 1.0],  # Uni level 5
+            # VET→  1    2    3    4    5    6    7   (rows = VET levels)
+            [1.0, 0.8, 0.6, 0.4, 0.2, 0.1, 0.0],  # Uni level 1 (Follow)
+            [0.8, 1.0, 0.8, 0.6, 0.4, 0.2, 0.1],  # Uni level 2 (Assist)
+            [0.6, 0.8, 1.0, 0.8, 0.6, 0.4, 0.2],  # Uni level 3 (Apply)
+            [0.4, 0.6, 0.8, 1.0, 0.8, 0.6, 0.4],  # Uni level 4 (Enable)
+            [0.2, 0.4, 0.6, 0.8, 1.0, 0.8, 0.6],  # Uni level 5 (Ensure/Advise)
+            [0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 0.8],  # Uni level 6 (Initiate/Influence)
+            [0.0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0],  # Uni level 7 (Set Strategy)
         ])
         return matrix
     
@@ -269,8 +271,8 @@ class ClusterSkillMatcher:
             for uni_level, uni_group in uni_by_level.items():
                 # Check level compatibility
                 compatibility = self.level_compatibility_matrix[
-                    min(vet_level - 1, 4), 
-                    min(uni_level - 1, 4)
+                    min(vet_level - 1, 6), 
+                    min(uni_level - 1, 6)
                 ]
                 
                 if compatibility >= 0.4:  # Threshold for acceptable compatibility
