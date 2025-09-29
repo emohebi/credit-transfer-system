@@ -90,8 +90,8 @@ def main():
     # Profile selection
     parser.add_argument(
         "--profile",
-        choices=["fast", "balanced", "thorough", "dev"],
-        default="dev",
+        choices=["fast", "balanced", "thorough", "dev", "robust"],
+        default="robust",
         help="Analysis profile (default: balanced)"
     )
     
@@ -183,7 +183,12 @@ def main():
         profile_name=args.profile,
         backend=args.backend,
         embedding=args.embedding,  # Add embedding selection
-        overrides=overrides
+        overrides={
+            "use_cache": False,
+            "ensemble_runs": 5,  # Run extraction 3 times and take consensus
+            "temperature": 0.0,  # Ensure deterministic AI responses
+            "min_confidence": 0.7  # Only keep high-confidence skills
+        } 
     )
 
     args.verbose = True  # Set to True for detailed config output
@@ -199,8 +204,8 @@ def main():
     args.vet_file = "./data/diploma_of_business.json"
     args.uni_file = "./data/933AA_Diploma_of_Business.json"
     
-    args.vet_file = "./data/sample_vet.json"
-    args.uni_file = "./data/sample_uni.json"
+    # args.vet_file = "./data/sample_vet.json"
+    # args.uni_file = "./data/sample_uni.json"
     try:
         # Load data
         logger.info("Loading qualifications...")

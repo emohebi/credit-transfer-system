@@ -67,7 +67,7 @@ class GenAIInterface:
         from extraction.genai_prompts import GenAIPrompts
         self.prompts = GenAIPrompts()
     
-    def _call_openai_api(self, system_prompt: str, user_prompt: str, max_tokens: Optional[int] = None) -> str:
+    def _call_openai_api(self, system_prompt: str, user_prompt: str, max_tokens: Optional[int] = None, temperature: float = 0.0, top_p=1.0) -> str:
         """
         Make API call to Azure OpenAI
         
@@ -75,6 +75,7 @@ class GenAIInterface:
             system_prompt: System prompt
             user_prompt: User prompt
             max_tokens: Override max tokens for this call
+            temperature: Temperature for sampling (default 0.0 for deterministic)
             
         Returns:
             Model response as string
@@ -104,13 +105,13 @@ class GenAIInterface:
             completion = self.client.chat.completions.create(
                 model=self.deployment,
                 messages=messages,
-                # max_tokens=max_tokens or self.max_tokens,
-                temperature=0.0,  # Always use 0 for consistency
-                top_p=1.0,
+                temperature=temperature,  # Use passed temperature
+                top_p=top_p,  # Deterministic
                 frequency_penalty=0,
                 presence_penalty=0,
                 stop=None,
-                stream=False
+                stream=False,
+                seed=42  # Add seed for additional determinism if supported
             )
             
             return completion.choices[0].message.content
@@ -317,7 +318,7 @@ Mapping summary: {json.dumps(mapping_info, indent=2)}"""
             # Fallback to original parser
             return self._parse_json_response(response)
 
-    def generate_response(self, system_prompt: str, user_prompt: str, max_tokens: int = None) -> str:
+    def generate_response(self, system_prompt: str, user_prompt: str, max_tokens: int = None, temperature=0.0, top_p=1.0) -> str:
         """
         Unified method for generating responses
         
@@ -329,4 +330,4 @@ Mapping summary: {json.dumps(mapping_info, indent=2)}"""
         Returns:
             Generated text response
         """
-        return self._call_openai_api(system_prompt, user_prompt, max_tokens)
+        return self._call_openai_api(system_prompt, user_prompt, max_tokens, temperature=temperature, top_p=top_p)

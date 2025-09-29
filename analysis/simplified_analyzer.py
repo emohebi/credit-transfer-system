@@ -28,8 +28,23 @@ class SimplifiedAnalyzer:
         self.embeddings = embeddings
         self.config = config or {}
         
-        # Initialize components
-        self.extractor = UnifiedSkillExtractor(genai, config)
+        # Check if robust mode is enabled
+        if self.config.get("ensemble_runs".upper(), 0) > 1:
+            from extraction.ensemble_extractor import EnsembleSkillExtractor
+            base_extractor = UnifiedSkillExtractor(genai, config)
+            
+            # Create ensemble extractor with embeddings for similarity matching
+            ensemble_extractor = EnsembleSkillExtractor(
+                base_extractor, 
+                num_runs=self.config.get("ensemble_runs".upper(), 3),
+                embeddings=embeddings,  # Pass the embedding model
+                similarity_threshold=self.config.get("ensemble_similarity_threshold".upper(), 0.9)
+            )
+            # Use the ensemble extractor
+            self.extractor = ensemble_extractor
+        else:
+            self.extractor = UnifiedSkillExtractor(genai, config)
+        
         self.matcher = ClusterSkillMatcher(embeddings, config)
         self.prompt_manager = PromptManager()
         

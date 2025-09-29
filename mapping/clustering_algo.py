@@ -356,7 +356,7 @@ class GridSearchSkillsClusterer:
         print(f"k values: {k_values}")
         
         best_score = -1
-        best_k = 10  # Default for skills
+        best_k = 4  # Default for skills
         scores = []
         
         for k in k_values:

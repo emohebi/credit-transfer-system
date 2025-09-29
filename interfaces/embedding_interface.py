@@ -3,8 +3,12 @@ Interface for local embedding model integration with multi-GPU support
 """
 
 import logging
+import random
 import numpy as np
 import torch
+seed = 42
+random.seed(seed)
+np.random.seed(seed)
 from typing import List, Optional, Union, Dict
 import shutil
 from pathlib import Path

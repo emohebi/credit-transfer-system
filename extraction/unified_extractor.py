@@ -26,6 +26,7 @@ class UnifiedSkillExtractor:
         self.cache = {}
         self.cache_file = Path("cache/skill_extraction_cache.pkl")
         
+        
         # Detect backend type
         self.backend_type = self._detect_backend_type()
         self.is_openai = self.backend_type == "openai"
@@ -40,10 +41,6 @@ class UnifiedSkillExtractor:
         
         self.prompt_manager = PromptManager()
         
-        # Load cache if enabled
-        if self.config.get("USE_CACHE", True):
-            self._load_cache()
-        
         logger.info(f"Initialized UnifiedSkillExtractor with backend: {self.backend_type}")
     
     def _detect_backend_type(self) -> str:
@@ -57,6 +54,15 @@ class UnifiedSkillExtractor:
             return "openai"
         elif "VLLM" in class_name or hasattr(self.genai, 'llm'):
             return "vllm"
+        else:
+            return "unknown"
+        
+    def _get_model_name(self) -> str:
+        """Get the model name for cache key generation"""
+        if self.is_openai and hasattr(self.genai, 'deployment'):
+            return self.genai.deployment
+        elif self.is_vllm and hasattr(self.genai, 'model_name'):
+            return self.genai.model_name
         else:
             return "unknown"
     
@@ -116,25 +122,27 @@ class UnifiedSkillExtractor:
             """
     
     def _call_genai(self, prompt: str, system_prompt: str = None) -> str:
-        """Call GenAI with appropriate method for backend"""
+        """Call GenAI with appropriate method for backend - DETERMINISTIC"""
         
         self._enforce_rate_limit()
         
         if not system_prompt:
             system_prompt = "You are an expert skill extractor and education level classifier."
         
+        # Add deterministic instruction
+        system_prompt += "\nIMPORTANT: Be comprehensive and consistent. Extract ALL identifiable skills. List skills in alphabetical order for consistency."
+        
         try:
-            # Try unified method first
+            # Force deterministic settings
             if hasattr(self.genai, 'generate_response'):
-                return self.genai.generate_response(system_prompt, prompt)
-            
-            # Fallback to backend-specific methods
+                return self.genai.generate_response(system_prompt, prompt, 
+                                                temperature=0.0, top_p=1.0)
             elif self.is_openai and hasattr(self.genai, '_call_openai_api'):
-                return self.genai._call_openai_api(system_prompt, prompt)
-            
+                return self.genai._call_openai_api(system_prompt, prompt, 
+                                                temperature=0.0)
             elif self.is_vllm and hasattr(self.genai, '_generate_with_prompt'):
-                return self.genai._generate_with_prompt(system_prompt, prompt)
-            
+                return self.genai._generate_with_prompt(system_prompt, prompt, 
+                                                    temperature=0.0, top_p=1.0)
             else:
                 logger.warning("No compatible GenAI method found")
                 return "[]"
@@ -160,10 +168,10 @@ class UnifiedSkillExtractor:
             return results
     
     def extract_skills(self, 
-                       items: Union[List, Any],
-                       item_type: str = "auto") -> Union[List[Skill], Dict[str, List[Skill]]]:
+                   items: Union[List, Any],
+                   item_type: str = "auto") -> Union[List[Skill], Dict[str, List[Skill]]]:
         """
-        Universal extraction method supporting both backends with study level consideration
+        Universal extraction method without caching
         """
         # Convert single item to list
         single_item = not isinstance(items, list)
@@ -181,20 +189,14 @@ class UnifiedSkillExtractor:
         study_levels_to_process = []
         
         for item in items:
-            cache_key = self._get_cache_key(item)
+            texts_to_process.append(self._get_item_text(item))
+            items_to_process.append(item)
             
-            if cache_key in self.cache and self.config.get("USE_CACHE", True):
-                results[self._get_item_code(item)] = self.cache[cache_key]
-                logger.debug(f"Using cached skills for {self._get_item_code(item)}")
-            else:
-                texts_to_process.append(self._get_item_text(item))
-                items_to_process.append(item)
-                
-                # Get or infer study level
-                study_level = self._get_or_infer_study_level(item, item_type)
-                study_levels_to_process.append(study_level)
+            # Get or infer study level
+            study_level = self._get_or_infer_study_level(item, item_type)
+            study_levels_to_process.append(study_level)
         
-        # Process uncached items
+        # Process items
         if texts_to_process:
             if self.genai and len(texts_to_process) > 1 and self.config.get("USE_BATCH", True):
                 # Batch processing with study levels
@@ -216,16 +218,6 @@ class UnifiedSkillExtractor:
                     item.extracted_skills = skills
                 if hasattr(item, 'study_level'):
                     item.study_level = study_level
-                
-                # Cache results
-                if self.config.get("USE_CACHE", True):
-                    cache_key = self._get_cache_key(item)
-                    self.cache[cache_key] = skills
-                    self.study_level_cache[cache_key] = study_level
-        
-        # Save cache
-        if self.config.get("USE_CACHE", True):
-            self._save_cache()
         
         # Return results
         if single_item:
@@ -272,12 +264,12 @@ class UnifiedSkillExtractor:
     # In the UnifiedSkillExtractor class, update the _single_extract method:
 
     def _single_extract(self, text: str, item_type: str, study_level: str = None) -> List[Skill]:
-        """Extract skills from single text with built-in standardization"""
+        """Extract skills from single text with deterministic ordering"""
         
         if not self.genai:
             return self._fallback_extraction(text, study_level)
         
-        # Get standardized extraction prompt (standardization is now embedded)
+        # Get standardized extraction prompt
         system_prompt, user_prompt = self.prompt_manager.get_skill_extraction_prompt(
             text=text,
             item_type=item_type,
@@ -291,13 +283,13 @@ class UnifiedSkillExtractor:
             
             # Convert to Skill objects
             skills = []
-            seen_names = set()  # Track seen names for deduplication
+            seen_names = set()
             
             for skill_dict in skills_data:
                 if isinstance(skill_dict, dict):
                     skill_name = skill_dict.get("name", "").lower().strip()
                     
-                    # Skip if we've already seen this exact name
+                    # Skip duplicates
                     if skill_name in seen_names:
                         continue
                     
@@ -318,11 +310,12 @@ class UnifiedSkillExtractor:
                     if skill.confidence >= self.config.get("MIN_CONFIDENCE", 0.7):
                         skills.append(skill)
             
+            # Sort skills by name for consistent ordering
+            skills.sort(key=lambda s: (s.name.lower(), -s.confidence))
+            
             # Limit to configured maximum
             max_skills = self.config.get("MAX_SKILLS_PER_UNIT", 100)
             if len(skills) > max_skills:
-                # Sort by confidence and take top N
-                skills.sort(key=lambda s: s.confidence, reverse=True)
                 skills = skills[:max_skills]
             
             return skills
@@ -630,55 +623,9 @@ class UnifiedSkillExtractor:
         
         return []
     
-    def _load_cache(self):
-        """Load cache from disk"""
-        if self.cache_file.exists():
-            try:
-                with open(self.cache_file, 'rb') as f:
-                    cache_data = pickle.load(f)
-                    if "timestamp" in cache_data:
-                        cache_age = datetime.now() - cache_data["timestamp"]
-                        ttl_days = self.config.get("CACHE_TTL_DAYS", 7)
-                        if cache_age < timedelta(days=ttl_days):
-                            self.cache = cache_data.get("data", {})
-                            logger.info(f"Loaded cache with {len(self.cache)} entries")
-            except Exception as e:
-                logger.warning(f"Could not load cache: {e}")
-    
-    def _save_cache(self):
-        """Save cache to disk including study levels"""
-        try:
-            self.cache_file.parent.mkdir(exist_ok=True)
-            with open(self.cache_file, 'wb') as f:
-                pickle.dump({
-                    "timestamp": datetime.now(),
-                    "data": self.cache,
-                    "study_levels": self.study_level_cache
-                }, f)
-        except Exception as e:
-            logger.warning(f"Could not save cache: {e}")
-    
-    def _load_cache(self):
-        """Load cache from disk including study levels"""
-        if self.cache_file.exists():
-            try:
-                with open(self.cache_file, 'rb') as f:
-                    cache_data = pickle.load(f)
-                    if "timestamp" in cache_data:
-                        cache_age = datetime.now() - cache_data["timestamp"]
-                        ttl_days = self.config.get("CACHE_TTL_DAYS", 7)
-                        if cache_age < timedelta(days=ttl_days):
-                            self.cache = cache_data.get("data", {})
-                            self.study_level_cache = cache_data.get("study_levels", {})
-                            logger.info(f"Loaded cache with {len(self.cache)} entries")
-            except Exception as e:
-                logger.warning(f"Could not load cache: {e}")
-    
     def get_stats(self) -> Dict:
-        """Get statistics including study level info"""
+        """Get statistics"""
         return {
-            "cache_entries": len(self.cache),
-            "study_level_cache_entries": len(self.study_level_cache),
             "backend_type": self.backend_type,
             "is_openai": self.is_openai,
             "is_vllm": self.is_vllm,

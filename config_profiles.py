@@ -98,6 +98,33 @@ class ConfigProfiles:
             "level_weight": 0.3,
             "study_level_importance": 0.8,
             "embedding_device": "cuda"  # Force CPU for dev
+        },
+        "robust": {
+            "name": "Robust Analysis",
+            "description": "Consistent results with ensemble extraction",
+            "use_batch": False,  # Process one at a time for consistency
+            "batch_size": 1,
+            "use_cache": False,  # Disable caching
+            "cache_ttl_days": 0,  # No cache
+            "edge_cases_enabled": True,
+            "max_skills_per_unit": 100,
+            "min_confidence": 0.7,
+            "use_clustering": True,
+            "clustering_threshold": 0.75,  # Fixed threshold
+            "ai_calls": "moderate",
+            "embedding_only_matching": False,
+            "progressive_depth": "balanced",
+            "default_backend": "openai",
+            "default_embedding": "jina",
+            "semantic_weight": 0.7,
+            "level_weight": 0.3,
+            "study_level_importance": 0.8,
+            "embedding_device": "cuda",
+            "ensemble_runs": 3,  # Use ensemble extraction
+            "temperature": 0.0,  # Deterministic
+            "top_p": 1.0,  # No sampling
+            "seed": 42,  # Fixed seed
+            "ensemble_similarity_threshold": 0.95
         }
     }
     

@@ -17,7 +17,7 @@ from models.base_models import (
     VETQualification,
     UniQualification
 )
-from models.enums import RecommendationType
+from models.enums import RecommendationType, StudyLevel
 from .skill_export import SkillExportManager
 from utils.json_encoder import dumps, loads, make_json_serializable
 
@@ -128,6 +128,10 @@ class ReportGenerator:
         if semantic_clusters:
             files['semantic_clusters_csv'] = str(package_dir / "semantic_clusters.csv")
             self.export_semantic_clusters_to_csv(semantic_clusters, files['semantic_clusters_csv'])
+            
+        # Add after the semantic clusters export
+        files['skill_mappings_csv'] = str(package_dir / "skill_mappings.csv")
+        self.export_skill_mappings_to_csv(recommendations, files['skill_mappings_csv'])
             
         # In generate_complete_report_package, after the main reports:
 
@@ -588,6 +592,51 @@ class ReportGenerator:
                     font-size: 11px;
                     margin: 2px 0;
                 }
+                /* Add these styles to the existing <style> section */
+                .skill-mapping-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 20px 0;
+                    font-size: 13px;
+                }
+                .skill-mapping-table th {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 10px;
+                    text-align: left;
+                    position: sticky;
+                    top: 0;
+                    z-index: 10;
+                }
+                .skill-mapping-table td {
+                    padding: 8px;
+                    border: 1px solid #e0e0e0;
+                    vertical-align: top;
+                }
+                .mapping-direct {
+                    background-color: #d4edda;
+                    color: #155724;
+                    font-weight: bold;
+                }
+                .mapping-partial {
+                    background-color: #fff3cd;
+                    color: #856404;
+                    font-weight: bold;
+                }
+                .mapping-unmapped {
+                    background-color: #f8d7da;
+                    color: #721c24;
+                    font-weight: bold;
+                }
+                .skill-level-badge {
+                    display: inline-block;
+                    padding: 2px 6px;
+                    margin-left: 5px;
+                    background: #6c757d;
+                    color: white;
+                    border-radius: 3px;
+                    font-size: 10px;
+                }
             </style>
         </head>
         <body>
@@ -763,18 +812,79 @@ class ReportGenerator:
 
         html.append("</tbody></table>")
 
-        # Add Score Calculation Legend
-        html.append("<div class='summary-box'>")
-        html.append("<h3>Score Calculation Method</h3>")
-        html.append("<p><strong>Alignment Score = </strong>")
-        html.append("(0.5 × Coverage) + (0.25 × Context) + (0.15 × Quality) - (0.1 × Edge Penalties)</p>")
-        html.append("<ul>")
-        html.append("<li><strong>Coverage:</strong> Direct matches count 100%, partial matches count 50%</li>")
-        html.append("<li><strong>Context:</strong> Alignment between practical/theoretical requirements</li>")
-        html.append("<li><strong>Quality:</strong> Match confidence and skill level alignment</li>")
-        html.append("<li><strong>Edge Penalties:</strong> Deductions for outdated content, missing prerequisites, etc.</li>")
-        html.append("</ul>")
-        html.append("</div>")
+        # Add Skill-Level Mapping Table
+        html.append("<h2>Skill-Level Mapping Details</h2>")
+        html.append("<p>Detailed mapping between individual VET and University skills based on semantic clustering analysis.</p>")
+
+        # Get skill mappings
+        skill_mappings = self._extract_skill_mappings(recommendations[:10])  # Limit to top 10 recommendations for readability
+
+        if skill_mappings:
+            html.append("<table class='detail-table'>")
+            html.append("<thead><tr>")
+            html.append("<th>VET Unit</th>")
+            html.append("<th>VET Skill</th>")
+            html.append("<th>Uni Course</th>")
+            html.append("<th>Uni Skill</th>")
+            html.append("<th>Mapping Type</th>")
+            html.append("<th>Similarity</th>")
+            html.append("<th>Reasoning</th>")
+            html.append("</tr></thead>")
+            html.append("<tbody>")
+            
+            # Group mappings by type for better organization
+            direct_mappings = [m for m in skill_mappings if m['mapping_type'] == 'Direct']
+            partial_mappings = [m for m in skill_mappings if m['mapping_type'] == 'Partial']
+            unmapped_mappings = [m for m in skill_mappings if m['mapping_type'] == 'Unmapped']
+            
+            # Display direct mappings first
+            for mapping in direct_mappings[:30]:  # Limit to 30 for readability
+                html.append("<tr style='background-color: #d4edda;'>")  # Green background for direct
+                html.append(f"<td>{mapping['vet_unit']}</td>")
+                html.append(f"<td>{mapping['vet_skill']}<br><small>Level: {mapping['vet_level']}</small></td>")
+                html.append(f"<td>{mapping['uni_course']}</td>")
+                html.append(f"<td>{mapping['uni_skill']}<br><small>Level: {mapping['uni_level']}</small></td>")
+                html.append(f"<td><strong style='color: green;'>{mapping['mapping_type']}</strong></td>")
+                html.append(f"<td>{mapping['similarity']:.1%}</td>")
+                html.append(f"<td>{mapping['reasoning']}</td>")
+                html.append("</tr>")
+            
+            # Display partial mappings
+            for mapping in partial_mappings[:20]:  # Limit to 20
+                html.append("<tr style='background-color: #fff3cd;'>")  # Yellow background for partial
+                html.append(f"<td>{mapping['vet_unit']}</td>")
+                html.append(f"<td>{mapping['vet_skill']}<br><small>Level: {mapping['vet_level']}</small></td>")
+                html.append(f"<td>{mapping['uni_course']}</td>")
+                html.append(f"<td>{mapping['uni_skill']}<br><small>Level: {mapping['uni_level']}</small></td>")
+                html.append(f"<td><strong style='color: orange;'>{mapping['mapping_type']}</strong></td>")
+                html.append(f"<td>{mapping['similarity']:.1%}</td>")
+                html.append(f"<td>{mapping['reasoning']}</td>")
+                html.append("</tr>")
+            
+            # Display some unmapped skills
+            for mapping in unmapped_mappings[:20]:  # Limit to 20
+                html.append("<tr style='background-color: #f8d7da;'>")  # Red background for unmapped
+                html.append(f"<td>{mapping['vet_unit']}</td>")
+                html.append(f"<td>{mapping['vet_skill'] if mapping['vet_skill'] != '-' else '-'}<br><small>Level: {mapping['vet_level']}</small></td>")
+                html.append(f"<td>{mapping['uni_course']}</td>")
+                html.append(f"<td>{mapping['uni_skill'] if mapping['uni_skill'] != '-' else '-'}<br><small>Level: {mapping['uni_level']}</small></td>")
+                html.append(f"<td><strong style='color: red;'>{mapping['mapping_type']}</strong></td>")
+                html.append(f"<td>-</td>")
+                html.append(f"<td>{mapping['reasoning']}</td>")
+                html.append("</tr>")
+            
+            html.append("</tbody></table>")
+            
+            # Add summary statistics
+            html.append("<div class='summary-box' style='margin-top: 20px;'>")
+            html.append("<h3>Mapping Summary Statistics</h3>")
+            html.append(f"<p><strong>Total Mappings Analyzed:</strong> {len(skill_mappings)}</p>")
+            html.append(f"<p><strong>Direct Matches:</strong> {len(direct_mappings)} ({len(direct_mappings)*100/max(1,len(skill_mappings)):.1f}%)</p>")
+            html.append(f"<p><strong>Partial Matches:</strong> {len(partial_mappings)} ({len(partial_mappings)*100/max(1,len(skill_mappings)):.1f}%)</p>")
+            html.append(f"<p><strong>Unmapped Skills:</strong> {len(unmapped_mappings)} ({len(unmapped_mappings)*100/max(1,len(skill_mappings)):.1f}%)</p>")
+            html.append("</div>")
+        else:
+            html.append("<p><em>No skill mapping data available. Ensure semantic clustering is enabled in the analysis.</em></p>")
                 
         # Top Skills Section
         html.append("<h2>Top Extracted Skills</h2>")
@@ -1821,3 +1931,159 @@ class ReportGenerator:
         html.append("</div>")  # End cluster section
         
         return "\n".join(html)
+    
+    def _extract_skill_mappings(self, recommendations: List[CreditTransferRecommendation]) -> List[Dict]:
+        """Extract detailed skill-to-skill mappings from recommendations"""
+        
+        all_mappings = []
+        
+        for rec in recommendations:
+            # Get semantic clusters from metadata if available
+            semantic_clusters = rec.metadata.get('semantic_clusters', [])
+            
+            # Create a mapping of skills to their cluster types
+            vet_skill_mapping = {}
+            uni_skill_mapping = {}
+            
+            # Process semantic clusters to identify mapped skills
+            for cluster in semantic_clusters:
+                cluster_vet_items = cluster.get('vet_skills', [])
+                cluster_uni_items = cluster.get('uni_skills', [])
+                
+                # Extract skills from cluster items
+                cluster_vet_skills = []
+                for item in cluster_vet_items:
+                    skill_obj = item.get('skill', item)  # Handle both dict wrapper and direct skill
+                    cluster_vet_skills.append(skill_obj)
+                
+                cluster_uni_skills = []
+                for item in cluster_uni_items:
+                    skill_obj = item.get('skill', item)  # Handle both dict wrapper and direct skill
+                    cluster_uni_skills.append(skill_obj)
+                
+                # Determine mapping type based on cluster composition
+                if len(cluster_vet_skills) == 1 and len(cluster_uni_skills) == 1:
+                    mapping_type = "Direct"
+                    reasoning = f"One-to-one match (Similarity: {cluster.get('avg_semantic_similarity', 0):.1%})"
+                elif len(cluster_vet_skills) > 0 and len(cluster_uni_skills) > 0:
+                    mapping_type = "Partial"
+                    reasoning = f"Many-to-many match ({len(cluster_vet_skills)} VET to {len(cluster_uni_skills)} Uni skills)"
+                else:
+                    continue
+                
+                # Add mappings for each VET-Uni skill pair in the cluster
+                for vet_skill in cluster_vet_skills:
+                    for uni_skill in cluster_uni_skills:
+                        # Handle both Skill objects and dictionaries
+                        if isinstance(vet_skill, dict):
+                            vet_skill_name = vet_skill.get('name', 'Unknown')
+                            vet_skill_level = vet_skill.get('level', 'N/A')
+                        else:  # Skill object
+                            vet_skill_name = getattr(vet_skill, 'name', 'Unknown')
+                            vet_skill_level = getattr(vet_skill.level, 'value', str(vet_skill.level)) if hasattr(vet_skill, 'level') else 'N/A'
+                        
+                        if isinstance(uni_skill, dict):
+                            uni_skill_name = uni_skill.get('name', 'Unknown')
+                            uni_skill_level = uni_skill.get('level', 'N/A')
+                        else:  # Skill object
+                            uni_skill_name = getattr(uni_skill, 'name', 'Unknown')
+                            uni_skill_level = getattr(uni_skill.level, 'value', str(uni_skill.level)) if hasattr(uni_skill, 'level') else 'N/A'
+                        
+                        # Find which VET unit this skill belongs to
+                        vet_unit_code = 'Unknown'
+                        for unit in rec.vet_units:
+                            if any(s.name == vet_skill_name for s in unit.extracted_skills):
+                                vet_unit_code = unit.code
+                                break
+                        
+                        mapping = {
+                            'vet_unit': vet_unit_code,
+                            'uni_course': rec.uni_course.code,
+                            'vet_skill': vet_skill_name,
+                            'vet_level': vet_skill_level,
+                            'uni_skill': uni_skill_name,
+                            'uni_level': uni_skill_level,
+                            'mapping_type': mapping_type,
+                            'similarity': cluster.get('avg_semantic_similarity', 0),
+                            'reasoning': reasoning
+                        }
+                        all_mappings.append(mapping)
+                        
+                        # Track mapped skills
+                        vet_skill_mapping[vet_skill_name] = mapping_type
+                        uni_skill_mapping[uni_skill_name] = mapping_type
+            
+            # Add unmapped VET skills
+            for unit in rec.vet_units:
+                for skill in unit.extracted_skills:
+                    if skill.name not in vet_skill_mapping:
+                        mapping = {
+                            'vet_unit': unit.code,
+                            'uni_course': rec.uni_course.code,
+                            'vet_skill': skill.name,
+                            'vet_level': skill.level.value if hasattr(skill.level, 'value') else str(skill.level),
+                            'uni_skill': '-',
+                            'uni_level': '-',
+                            'mapping_type': 'Unmapped',
+                            'similarity': 0,
+                            'reasoning': 'No matching university skill found'
+                        }
+                        all_mappings.append(mapping)
+            
+            # Add unmapped Uni skills
+            for skill in rec.uni_course.extracted_skills:
+                if skill.name not in uni_skill_mapping:
+                    mapping = {
+                        'vet_unit': '-',
+                        'uni_course': rec.uni_course.code,
+                        'vet_skill': '-',
+                        'vet_level': '-',
+                        'uni_skill': skill.name,
+                        'uni_level': skill.level.value if hasattr(skill.level, 'value') else str(skill.level),
+                        'mapping_type': 'Unmapped',
+                        'similarity': 0,
+                        'reasoning': 'No matching VET skill found'
+                    }
+                    all_mappings.append(mapping)
+        
+        return all_mappings
+    
+    def export_skill_mappings_to_csv(self, 
+                                 recommendations: List[CreditTransferRecommendation],
+                                 filepath: str = None) -> str:
+        """
+        Export detailed skill mappings to CSV
+        """
+        import csv
+        from datetime import datetime
+        
+        if filepath is None:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filepath = f"output/skill_mappings_{timestamp}.csv"
+        
+        skill_mappings = self._extract_skill_mappings(recommendations)
+        
+        with open(filepath, 'w', newline='', encoding='utf-8') as f:
+            fieldnames = [
+                'vet_unit', 'vet_skill', 'vet_level',
+                'uni_course', 'uni_skill', 'uni_level',
+                'mapping_type', 'similarity_score', 'reasoning'
+            ]
+            
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            
+            for mapping in skill_mappings:
+                writer.writerow({
+                    'vet_unit': mapping['vet_unit'],
+                    'vet_skill': mapping['vet_skill'],
+                    'vet_level': mapping['vet_level'],
+                    'uni_course': mapping['uni_course'],
+                    'uni_skill': mapping['uni_skill'],
+                    'uni_level': mapping['uni_level'],
+                    'mapping_type': mapping['mapping_type'],
+                    'similarity_score': f"{mapping['similarity']:.3f}",
+                    'reasoning': mapping['reasoning']
+                })
+        
+        return filepath

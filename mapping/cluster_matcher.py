@@ -126,7 +126,7 @@ class ClusterSkillMatcher:
                                                       batch_size=256,
                                                       embedding_models=[self.config.get("EMBEDDING_MODEL", None)] if self.embeddings else [None],
                                                       embedders={self.config.get("EMBEDDING_MODEL", None): embeddings_matrix},
-                                                      clustering_algorithms=['kmeans', 'gmm'])
+                                                      clustering_algorithms=['kmeans'])
         labels = grid_clusterer.grid_search_clustering(skills=[s.name for s in all_skills], embeddings_available=True)
         
         # Process clusters
