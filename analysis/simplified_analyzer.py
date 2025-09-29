@@ -16,6 +16,8 @@ from models.enums import RecommendationType
 from extraction.unified_extractor import UnifiedSkillExtractor
 from mapping.cluster_matcher import ClusterSkillMatcher
 from utils.prompt_manager import PromptManager
+from mapping.unified_scorer import UnifiedScorer, MatchScore
+
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +49,7 @@ class SimplifiedAnalyzer:
         
         self.matcher = ClusterSkillMatcher(embeddings, config)
         self.prompt_manager = PromptManager()
+        self.unified_scorer = UnifiedScorer()
         
         # Simple thresholds
         self.thresholds = {
@@ -54,6 +57,20 @@ class SimplifiedAnalyzer:
             "partial": self.config.get("PARTIAL_TRANSFER", 0.5),
             "minimum": self.config.get("MINIMUM_VIABLE", 0.3)
         }
+        
+    def _validate_qualification_data(self, vet_qual: VETQualification, uni_qual: UniQualification):
+        """Validate and fix qualification data before analysis"""
+        # Fix missing nominal hours in VET units
+        for unit in vet_qual.units:
+            if unit.nominal_hours is None:
+                logger.warning(f"Unit {unit.code} has no nominal_hours specified, defaulting to 0")
+                unit.nominal_hours = 0
+        
+        # Fix missing credit points in Uni courses
+        for course in uni_qual.courses:
+            if course.credit_points is None:
+                logger.warning(f"Course {course.code} has no credit_points specified, defaulting to 0")
+                course.credit_points = 0
     
     def analyze(self, 
                 vet_qual: VETQualification,
@@ -70,6 +87,8 @@ class SimplifiedAnalyzer:
         Returns:
             List of recommendations
         """
+        self._validate_qualification_data(vet_qual, uni_qual)
+        
         logger.info(f"Starting simplified analysis: {vet_qual.code} -> {uni_qual.code}")
         
         # Determine depth automatically if needed
@@ -128,10 +147,20 @@ class SimplifiedAnalyzer:
                     best_match = (unit_code, match_result)
             
             if best_match and best_score >= self.thresholds["minimum"]:
-                # Create recommendation
+                # Create recommendation with edge case analysis
                 unit = next(u for u in vet_qual.units if u.code == best_match[0])
+                
+                # Run edge case analysis if enabled
+                edge_case_results = {}
+                if self.config.get("EDGE_CASES_ENABLED", False):
+                    from mapping.edge_cases import EdgeCaseHandler
+                    edge_handler = EdgeCaseHandler(self.genai)
+                    edge_case_results = edge_handler.process_edge_cases(
+                        [unit], course, None
+                    )
+                
                 rec = self._create_recommendation(
-                    [unit], course, best_score, best_match[1]
+                    [unit], course, best_match[1], edge_case_results
                 )
                 if hasattr(self.matcher, 'last_semantic_clusters'):
                     rec.metadata['semantic_clusters'] = self.matcher.last_semantic_clusters
@@ -197,65 +226,54 @@ class SimplifiedAnalyzer:
     def _create_recommendation(self, 
                            vet_units: List,
                            uni_course: Any,
-                           score: float,
-                           match_result: Dict) -> CreditTransferRecommendation:
-        """Create a recommendation from match results"""
+                           match_result: Dict,
+                           edge_case_results: Dict = None) -> CreditTransferRecommendation:
+        """Create a recommendation using unified scoring"""
         
-        # Determine recommendation type
-        if score >= self.thresholds["full"]:
+        # Collect all skills
+        vet_skills = []
+        for unit in vet_units:
+            vet_skills.extend(unit.extracted_skills)
+        
+        uni_skills = uni_course.extracted_skills
+        
+        # Calculate unified score
+        score_result = self.unified_scorer.calculate_alignment_score(
+            vet_skills,
+            uni_skills,
+            match_result,
+            edge_case_results
+        )
+        
+        # Determine recommendation type based on final score
+        final_score = score_result.final_score
+        if final_score >= self.thresholds["full"]:
             rec_type = RecommendationType.FULL
-        elif score >= self.thresholds["partial"]:
+        elif final_score >= self.thresholds["partial"]:
             rec_type = RecommendationType.PARTIAL
         else:
             rec_type = RecommendationType.NONE
         
-        # Generate evidence
+        # Generate evidence with score breakdown
         evidence = []
-        evidence.append(f"Skill coverage: {score:.1%}")
+        evidence.append(f"Skill coverage: {score_result.skill_coverage:.1%}")
+        evidence.append(f"Match quality: {score_result.skill_quality:.1%}")
+        evidence.append(f"Level alignment: {score_result.level_alignment:.1%}")
+        evidence.append(f"Context alignment: {score_result.context_alignment:.1%}")
         
-        # Handle different matcher output formats
+        # Add penalties if any
+        if score_result.edge_penalties:
+            for penalty_type, penalty_value in score_result.edge_penalties.items():
+                if penalty_value > 0:
+                    evidence.append(f"Penalty - {penalty_type}: -{penalty_value:.1%}")
+        
+        # Add match statistics
         stats = match_result.get("statistics", {})
-        
-        # Get match count (handle both 'total_matches' and 'total_clusters')
-        match_count = len(match_result.get('matches', []))
-        if match_count > 0:
-            evidence.append(f"{match_count} skill clusters matched")
-        
-        # Add match type info if available
-        match_types = stats.get("match_types", {})
-        if match_types.get("one-to-one", 0) > 0:
-            evidence.append(f"{match_types['one-to-one']} direct skill matches")
-        
-        # Add level alignment info if available
-        if "avg_level_alignment" in stats:
-            level_align = stats["avg_level_alignment"]
-            if level_align >= 0.8:
-                evidence.append("Excellent level alignment")
-            elif level_align >= 0.6:
-                evidence.append("Good level alignment")
-            elif level_align >= 0.4:
-                evidence.append("Moderate level alignment")
-            else:
-                evidence.append("Weak level alignment - bridging may be required")
-        
-        # Add semantic similarity info if available
-        if "avg_semantic_similarity" in stats:
-            sem_sim = stats["avg_semantic_similarity"]
-            evidence.append(f"Semantic similarity: {sem_sim:.1%}")
+        if stats.get("total_matches", 0) > 0:
+            evidence.append(f"{stats['total_matches']} skill clusters matched")
         
         # Identify gaps
         gaps = match_result.get("unmapped_uni", [])
-        
-        # Calculate confidence (with fallback)
-        confidence = stats.get("avg_confidence", 0.0)
-        if confidence == 0 and match_result.get("matches"):
-            # Fallback: calculate from individual matches
-            matches = match_result["matches"]
-            if matches:
-                confidences = [m.get("confidence", 0.7) for m in matches]
-                confidence = np.mean(confidences) if confidences else 0.7
-            else:
-                confidence = score * 0.8  # Fallback based on score
         
         # Get study level if available
         study_level = getattr(uni_course, 'study_level', 'Unknown')
@@ -265,18 +283,26 @@ class SimplifiedAnalyzer:
         return CreditTransferRecommendation(
             vet_units=vet_units,
             uni_course=uni_course,
-            alignment_score=score,
-            skill_coverage={"overall": score},
-            gaps=gaps[:5] if gaps else [],  # Limit gaps
+            alignment_score=final_score,
+            skill_coverage={
+                "overall": score_result.skill_coverage,
+                "quality": score_result.skill_quality,
+                "level": score_result.level_alignment,
+                "context": score_result.context_alignment
+            },
+            gaps=gaps[:5] if gaps else [],
             evidence=evidence,
             recommendation=rec_type,
             conditions=[],
-            confidence=confidence,
+            confidence=score_result.confidence,
+            edge_case_results=edge_case_results,
             metadata={
                 "match_statistics": stats,
-                "match_count": match_count,
+                "match_count": stats.get("total_matches", 0),
                 "analysis_depth": self.config.get("PROGRESSIVE_DEPTH", "balanced"),
-                "study_level": study_level
+                "study_level": study_level,
+                "score_breakdown": score_result.components,
+                "penalties": score_result.edge_penalties
             }
         )
     
@@ -335,8 +361,10 @@ class SimplifiedAnalyzer:
         
         for i, unit1 in enumerate(vet_units):
             for unit2 in vet_units[i+1:]:
-                # Combine skills
-                combined_skills = unit1.extracted_skills + unit2.extracted_skills
+                # Combine skills with deduplication
+                combined_skills = self._deduplicate_combined_skills(
+                    unit1.extracted_skills + unit2.extracted_skills
+                )
                 
                 # Match against course
                 match_result = self.matcher.match_skills(
@@ -351,11 +379,41 @@ class SimplifiedAnalyzer:
                     best_combo = ([unit1, unit2], match_result)
         
         if best_combo and best_score > self.thresholds["partial"]:
+            # Run edge case analysis for combination
+            edge_case_results = {}
+            if self.config.get("EDGE_CASES_ENABLED", False):
+                from mapping.edge_cases import EdgeCaseHandler
+                edge_handler = EdgeCaseHandler(self.genai)
+                edge_case_results = edge_handler.process_edge_cases(
+                    best_combo[0], course, None
+                )
+            
             return self._create_recommendation(
-                best_combo[0], course, best_score, best_combo[1]
+                best_combo[0], course, best_combo[1], edge_case_results
             )
-        
+    
         return None
+    
+    def _deduplicate_combined_skills(self, skills: List[Skill]) -> List[Skill]:
+        """Deduplicate skills when combining multiple VET units"""
+        seen = {}
+        deduplicated = []
+        
+        for skill in skills:
+            skill_key = skill.name.lower().strip()
+            
+            if skill_key not in seen:
+                seen[skill_key] = skill
+                deduplicated.append(skill)
+            else:
+                # Keep the one with higher confidence
+                if skill.confidence > seen[skill_key].confidence:
+                    # Replace with higher confidence version
+                    deduplicated = [s for s in deduplicated if s.name.lower().strip() != skill_key]
+                    deduplicated.append(skill)
+                    seen[skill_key] = skill
+        
+        return deduplicated
     
     def _simple_edge_check(self, rec: CreditTransferRecommendation) -> Dict:
         """Simplified edge case checking"""

@@ -6,9 +6,6 @@ import logging
 import random
 import numpy as np
 import torch
-seed = 42
-random.seed(seed)
-np.random.seed(seed)
 from typing import List, Optional, Union, Dict
 import shutil
 from pathlib import Path
@@ -279,15 +276,25 @@ class EmbeddingInterface:
         return self.encode(texts, batch_size=batch_size)
     
     def similarity(self, embeddings1: np.ndarray, 
-                  embeddings2: np.ndarray) -> np.ndarray:
+              embeddings2: np.ndarray) -> np.ndarray:
         """
         Calculate cosine similarity between embeddings
         """
-        # Handle single embedding
+        # Ensure we have numpy arrays
+        if not isinstance(embeddings1, np.ndarray):
+            embeddings1 = np.array(embeddings1)
+        if not isinstance(embeddings2, np.ndarray):
+            embeddings2 = np.array(embeddings2)
+        
+        # Handle single embedding - ensure proper 2D shape
         if embeddings1.ndim == 1:
             embeddings1 = embeddings1.reshape(1, -1)
         if embeddings2.ndim == 1:
             embeddings2 = embeddings2.reshape(1, -1)
+        
+        # Verify shapes are correct
+        if embeddings1.shape[1] != embeddings2.shape[1]:
+            raise ValueError(f"Embedding dimensions don't match: {embeddings1.shape[1]} vs {embeddings2.shape[1]}")
         
         # Use numpy operations to avoid device issues
         # Normalize embeddings

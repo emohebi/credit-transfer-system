@@ -13,6 +13,8 @@ from mapping.clustering_algo import GridSearchSkillsClusterer
 from models.base_models import Skill
 from models.enums import SkillLevel
 from utils.json_encoder import dumps, loads, make_json_serializable
+from mapping.simple_mapping_types import SimpleMappingClassifier
+
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +49,9 @@ class ClusterSkillMatcher:
         
         # Level compatibility matrix (how well different levels match)
         self.level_compatibility_matrix = self._build_level_compatibility_matrix()
+        self.mapping_classifier = SimpleMappingClassifier()
+
+
     
     def _build_level_compatibility_matrix(self) -> np.ndarray:
         """
@@ -270,10 +275,9 @@ class ClusterSkillMatcher:
         for vet_level, vet_group in vet_by_level.items():
             for uni_level, uni_group in uni_by_level.items():
                 # Check level compatibility
-                compatibility = self.level_compatibility_matrix[
-                    min(vet_level - 1, 6), 
-                    min(uni_level - 1, 6)
-                ]
+                vet_idx = min(max(0, vet_level - 1), 6)
+                uni_idx = min(max(0, uni_level - 1), 6)
+                compatibility = self.level_compatibility_matrix[vet_idx, uni_idx]
                 
                 if compatibility >= 0.4:  # Threshold for acceptable compatibility
                     match = SkillMatch(
@@ -302,24 +306,44 @@ class ClusterSkillMatcher:
         return matches
     
     def _score_and_rank_matches(self, matches: List[SkillMatch]) -> List[Dict]:
-        """
-        Stage 3: Calculate final scores and rank matches
-        """
-        # Sort by combined score
+        """Stage 3: Calculate final scores and rank matches"""
         sorted_matches = sorted(matches, key=lambda m: m.combined_score, reverse=True)
         
-        # Convert to dictionary format for compatibility
         final_matches = []
         for match in sorted_matches:
+            # Calculate average level gap
+            vet_avg_level = np.mean([s.level.value for s in match.vet_skills])
+            uni_avg_level = np.mean([s.level.value for s in match.uni_skills])
+            level_gap = abs(int(uni_avg_level - vet_avg_level))
+            
+            # Check context match (simple majority)
+            vet_contexts = [s.context.value for s in match.vet_skills]
+            uni_contexts = [s.context.value for s in match.uni_skills]
+            context_match = (
+                max(set(vet_contexts), key=vet_contexts.count) == 
+                max(set(uni_contexts), key=uni_contexts.count)
+            )
+            
+            # Classify the mapping
+            mapping_type, reason = self.mapping_classifier.classify_mapping(
+                match.semantic_similarity,
+                level_gap,
+                context_match
+            )
+            
+            quality = self.mapping_classifier.get_match_quality(match.semantic_similarity)
+            
             final_matches.append({
                 "vet_skills": match.vet_skills,
                 "uni_skills": match.uni_skills,
                 "match_type": match.match_type,
+                "mapping_classification": mapping_type,  # NEW
+                "mapping_reason": reason,                # NEW
+                "match_quality": quality,                # SIMPLIFIED
                 "confidence": match.confidence,
                 "semantic_similarity": match.semantic_similarity,
                 "level_alignment": match.level_alignment,
                 "combined_score": match.combined_score,
-                "match_quality": self._categorize_match_quality(match.combined_score),
                 "metadata": match.metadata
             })
         
@@ -327,29 +351,33 @@ class ClusterSkillMatcher:
     
     def _calculate_combined_score(self, semantic_sim: float, level_align: float) -> float:
         """
-        Calculate combined score from semantic similarity and level alignment
-        Uses configurable weights
+        Calculate combined score - DEPRECATED, use UnifiedScorer instead
+        For backward compatibility only
         """
-        return (self.semantic_importance * semantic_sim + 
-                self.level_importance * level_align)
+        # Import the unified scorer
+        from mapping.unified_scorer import UnifiedScorer
+        scorer = UnifiedScorer()
+        
+        # Use weighted average similar to unified scorer
+        return (scorer.WEIGHTS['skill_quality'] * semantic_sim + 
+                scorer.WEIGHTS['level_alignment'] * level_align) / (
+                scorer.WEIGHTS['skill_quality'] + scorer.WEIGHTS['level_alignment'])
     
     def _calculate_level_alignment_score(self, 
-                                         vet_dist: Dict[int, float], 
-                                         uni_dist: Dict[int, float]) -> float:
-        """
-        Calculate alignment between two level distributions
-        Uses weighted compatibility based on the compatibility matrix
-        """
+                                     vet_dist: Dict[int, float], 
+                                     uni_dist: Dict[int, float]) -> float:
+        """Calculate alignment between two level distributions"""
         total_alignment = 0.0
         total_weight = 0.0
         
         for vet_level, vet_prop in vet_dist.items():
             for uni_level, uni_prop in uni_dist.items():
+                # Fix: Ensure indices are within bounds (0-6 for 7x7 matrix)
+                vet_idx = min(max(0, vet_level - 1), 6)
+                uni_idx = min(max(0, uni_level - 1), 6)
+                
                 # Get compatibility from matrix
-                compatibility = self.level_compatibility_matrix[
-                    min(vet_level - 1, 4),
-                    min(uni_level - 1, 4)
-                ]
+                compatibility = self.level_compatibility_matrix[vet_idx, uni_idx]
                 
                 # Weight by proportion of skills at each level
                 weight = vet_prop * uni_prop

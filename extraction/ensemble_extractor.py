@@ -38,7 +38,13 @@ class EnsembleSkillExtractor:
         """Get embedding for a skill name, using cache"""
         if skill_name not in self.skill_embeddings_cache:
             if self.embeddings:
-                embedding = self.embeddings.encode([skill_name])[0]
+                # Get embedding - ensure it returns a 1D array
+                embeddings = self.embeddings.encode([skill_name])
+                # embeddings should be shape (1, embedding_dim), we want just the vector
+                if embeddings.ndim == 2:
+                    embedding = embeddings[0]  # Get the first (and only) row
+                else:
+                    embedding = embeddings
                 self.skill_embeddings_cache[skill_name] = embedding
             else:
                 # Fallback if no embeddings available
@@ -71,11 +77,13 @@ class EnsembleSkillExtractor:
             # Get representative embedding for the group
             representative_embedding = group_info.get('embedding')
             if representative_embedding is not None:
+                # Both embeddings should be 1D arrays at this point
+                # Reshape them for similarity calculation
+                skill_emb_2d = skill_embedding.reshape(1, -1)
+                rep_emb_2d = representative_embedding.reshape(1, -1)
+                
                 # Calculate cosine similarity
-                similarity = self.embeddings.similarity(
-                    skill_embedding.reshape(1, -1),
-                    representative_embedding.reshape(1, -1)
-                )[0, 0]
+                similarity = self.embeddings.similarity(skill_emb_2d, rep_emb_2d)[0, 0]
                 
                 if similarity >= self.similarity_threshold:
                     logger.debug(f"Skill '{skill_name}' matched to group '{group_key}' with similarity {similarity:.3f}")

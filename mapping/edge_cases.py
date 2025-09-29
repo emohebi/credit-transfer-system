@@ -547,8 +547,8 @@ class EdgeCaseHandler:
         return result
     
     def handle_credit_hour_mismatch(self,
-                                    vet_units: List[UnitOfCompetency],
-                                    uni_course: UniCourse) -> Dict[str, Any]:
+                                vet_units: List[UnitOfCompetency],
+                                uni_course: UniCourse) -> Dict[str, Any]:
         """Handle credit hour/nominal hour mismatches"""
         result = {
             "vet_total_hours": 0,
@@ -558,11 +558,25 @@ class EdgeCaseHandler:
             "adjustment_needed": False
         }
         
-        # Calculate total VET hours
-        result["vet_total_hours"] = sum(unit.nominal_hours for unit in vet_units)
+        # Calculate total VET hours - handle None values
+        vet_hours_list = []
+        for unit in vet_units:
+            if unit.nominal_hours is not None:
+                vet_hours_list.append(unit.nominal_hours)
+            else:
+                # Use default value for units without hours specified
+                vet_hours_list.append(0)
+        
+        result["vet_total_hours"] = sum(vet_hours_list)
+        
+        # If we have no valid hours data, mark as unavailable
+        if result["vet_total_hours"] == 0:
+            result["recommendation"] = "VET hours data unavailable - manual review required"
+            result["adjustment_needed"] = False
+            return result
         
         # Typical conversion: 1 credit point = 10-15 hours of study
-        estimated_uni_hours = uni_course.credit_points * 12.5
+        estimated_uni_hours = uni_course.credit_points * 12.5 if uni_course.credit_points else 0
         
         if estimated_uni_hours > 0:
             result["hour_ratio"] = result["vet_total_hours"] / estimated_uni_hours

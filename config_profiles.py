@@ -120,7 +120,7 @@ class ConfigProfiles:
             "level_weight": 0.3,
             "study_level_importance": 0.8,
             "embedding_device": "cuda",
-            "ensemble_runs": 3,  # Use ensemble extraction
+            "ensemble_runs": 5,  # Use ensemble extraction
             "temperature": 0.0,  # Deterministic
             "top_p": 1.0,  # No sampling
             "seed": 42,  # Fixed seed

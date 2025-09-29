@@ -24,6 +24,19 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# At system initialization:
+import random
+import numpy as np
+import torch
+
+def set_global_seed(seed=42):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
 
 def load_vet_data(filepath: str) -> VETQualification:
     """Load VET qualification data"""
@@ -43,7 +56,7 @@ def load_vet_data(filepath: str) -> VETQualification:
             description=unit_data.get("description", ""),
             learning_outcomes=unit_data.get("learning_outcomes", []),
             assessment_requirements=unit_data.get("assessment_requirements", ""),
-            nominal_hours=unit_data.get("nominal_hours", 0),
+            nominal_hours=unit_data.get("nominal_hours", 0) if unit_data.get("nominal_hours") is not None else 0,  # Default to 0 instead of None
             prerequisites=unit_data.get("prerequisites", [])
         )
         vet_qual.units.append(unit)
@@ -179,16 +192,12 @@ def main():
     if args.embedding_device:
         overrides["EMBEDDING_DEVICE"] = args.embedding_device
     
+    set_global_seed(42)  # Set global seed for reproducibility
+    
     config = ConfigProfiles.create_config(
         profile_name=args.profile,
         backend=args.backend,
-        embedding=args.embedding,  # Add embedding selection
-        overrides={
-            "use_cache": False,
-            "ensemble_runs": 5,  # Run extraction 3 times and take consensus
-            "temperature": 0.0,  # Ensure deterministic AI responses
-            "min_confidence": 0.7  # Only keep high-confidence skills
-        } 
+        embedding=args.embedding  # Add embedding selection
     )
 
     args.verbose = True  # Set to True for detailed config output

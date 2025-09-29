@@ -1038,20 +1038,20 @@ class ReportGenerator:
         return "<br>".join(reasoning[:4])  # Limit to 4 key points
             
     def _extract_detailed_match_info(self, rec: CreditTransferRecommendation) -> Dict:
-        """Extract detailed matching information from recommendation"""
+        """Extract detailed matching information using unified scoring logic"""
+        
+        # Get score breakdown from metadata if available
+        score_breakdown = rec.metadata.get('score_breakdown', {})
+        penalties = rec.metadata.get('penalties', {})
         
         # Initialize counters
         direct_matches = 0
         partial_matches = 0
         unmapped_critical = 0
         
-        # Add level alignment analysis
-        level_analysis = self._analyze_level_alignment(rec)
-        
         # Get skill mapping details from metadata if available
         if 'skill_mapping' in rec.metadata:
             mapping = rec.metadata['skill_mapping']
-            # Handle both list of skills and list of dicts
             if mapping.get('direct_matches'):
                 direct_matches = len(mapping['direct_matches'])
             if mapping.get('partial_matches'):
@@ -1059,48 +1059,70 @@ class ReportGenerator:
             if mapping.get('unmapped_uni'):
                 unmapped_critical = len(mapping['unmapped_uni'])
         
-        # Calculate quality scores breakdown
-        quality_breakdown = {
-            'coverage_score': rec.skill_coverage if isinstance(rec.skill_coverage, dict) else {},
-            'context_alignment': rec.metadata.get('skill_mapping', {}).get('context_alignment', 0.0),
-            'level_alignment': 0.0,
-            'confidence_average': rec.confidence
-        }
+        # Get level alignment analysis
+        level_analysis = self._analyze_level_alignment(rec)
         
-        # Extract edge case information
+        # Get the total number of university skills
+        total_uni_skills = len(rec.uni_course.extracted_skills) if hasattr(rec.uni_course, 'extracted_skills') else 0
+        
+        # Get score components from metadata or calculate them
+        if score_breakdown:
+            score_components = {
+                'coverage': score_breakdown.get('coverage_weighted', 0),
+                'quality': score_breakdown.get('quality_weighted', 0),
+                'level': score_breakdown.get('level_weighted', 0),
+                'context': score_breakdown.get('context_weighted', 0),
+                'confidence': score_breakdown.get('confidence_weighted', 0),
+                'edge_penalty': score_breakdown.get('total_penalty', 0)
+            }
+        else:
+            # Fallback calculation
+            from mapping.unified_scorer import UnifiedScorer
+            scorer = UnifiedScorer()
+            coverage_component = scorer.WEIGHTS['skill_coverage'] * rec.skill_coverage.get('overall', 0)
+            quality_component = scorer.WEIGHTS['skill_quality'] * rec.skill_coverage.get('quality', 0)
+            level_component = scorer.WEIGHTS['level_alignment'] * rec.skill_coverage.get('level', 0)
+            context_component = scorer.WEIGHTS['context_alignment'] * rec.skill_coverage.get('context', 0)
+            confidence_component = scorer.WEIGHTS['confidence'] * rec.confidence
+            
+            score_components = {
+                'coverage': coverage_component,
+                'quality': quality_component,
+                'level': level_component,
+                'context': context_component,
+                'confidence': confidence_component,
+                'edge_penalty': sum(penalties.values()) if penalties else 0
+            }
+        
+        # Get edge case summary
         edge_case_summary = {}
         if rec.edge_case_results:
             for case_type, case_data in rec.edge_case_results.items():
                 if isinstance(case_data, dict) and case_data.get('applicable'):
                     edge_case_summary[case_type] = {
-                        'impact': case_data.get('imbalance_score', 0),
+                        'impact': penalties.get(case_type, 0),
                         'recommendation': case_data.get('recommendation', ''),
                         'requirements': case_data.get('bridging_requirements', [])
                     }
         
-        # Get the total number of university skills
-        total_uni_skills = len(rec.uni_course.extracted_skills) if hasattr(rec.uni_course, 'extracted_skills') else 0
-        
-        # Calculate component scores
-        coverage_component = 0.5 * (direct_matches + partial_matches * 0.5) / max(total_uni_skills, 1)
-        context_component = 0.25 * quality_breakdown['context_alignment']
-        quality_component = 0.15 * rec.confidence
-        edge_penalty = min(0.1, len(edge_case_summary) * 0.02)  # Cap penalty at 0.1
+        # Calculate alignment formula string
+        base_score = sum(score_components.values()) - score_components['edge_penalty']
+        alignment_calculation = (
+            f"({score_components['coverage']:.2f} + {score_components['quality']:.2f} + "
+            f"{score_components['level']:.2f} + {score_components['context']:.2f} + "
+            f"{score_components['confidence']:.2f}) * (1 - {score_components['edge_penalty']:.2f}) = "
+            f"{rec.alignment_score:.2%}"
+        )
         
         return {
             'direct_matches': direct_matches,
             'partial_matches': partial_matches,
             'unmapped_critical': unmapped_critical,
             'total_uni_skills': total_uni_skills,
-            'quality_breakdown': quality_breakdown,
-            'score_components': {
-                'coverage': coverage_component,
-                'context': context_component,
-                'quality': quality_component,
-                'edge_penalty': edge_penalty
-            },
+            'quality_breakdown': rec.skill_coverage,
+            'score_components': score_components,
             'edge_cases': edge_case_summary,
-            'alignment_calculation': f"({coverage_component:.2f} + {context_component:.2f} + {quality_component:.2f} - {edge_penalty:.2f}) = {rec.alignment_score:.2%}",
+            'alignment_calculation': alignment_calculation,
             'level_analysis': level_analysis
         }
         
@@ -1932,122 +1954,70 @@ class ReportGenerator:
         
         return "\n".join(html)
     
+    def _get_mapping_color(self, mapping_type: str) -> str:
+        """Get color for mapping type"""
+        colors = {
+            'Direct': '#d4edda',     # Green
+            'Partial': '#fff3cd',    # Yellow
+            'Unmapped': '#f8d7da'    # Red
+        }
+        return colors.get(mapping_type, '#ffffff')
+    
     def _extract_skill_mappings(self, recommendations: List[CreditTransferRecommendation]) -> List[Dict]:
-        """Extract detailed skill-to-skill mappings from recommendations"""
+        """Extract simplified skill mappings"""
+        
+        from mapping.simple_mapping_types import SimpleMappingClassifier
+        classifier = SimpleMappingClassifier()
         
         all_mappings = []
         
         for rec in recommendations:
-            # Get semantic clusters from metadata if available
             semantic_clusters = rec.metadata.get('semantic_clusters', [])
             
-            # Create a mapping of skills to their cluster types
-            vet_skill_mapping = {}
-            uni_skill_mapping = {}
-            
-            # Process semantic clusters to identify mapped skills
             for cluster in semantic_clusters:
-                cluster_vet_items = cluster.get('vet_skills', [])
-                cluster_uni_items = cluster.get('uni_skills', [])
+                # Get average similarity
+                avg_similarity = cluster.get('avg_semantic_similarity', 0)
                 
-                # Extract skills from cluster items
-                cluster_vet_skills = []
-                for item in cluster_vet_items:
-                    skill_obj = item.get('skill', item)  # Handle both dict wrapper and direct skill
-                    cluster_vet_skills.append(skill_obj)
+                # Get skills
+                vet_skills = [item['skill'] for item in cluster.get('vet_skills', [])]
+                uni_skills = [item['skill'] for item in cluster.get('uni_skills', [])]
                 
-                cluster_uni_skills = []
-                for item in cluster_uni_items:
-                    skill_obj = item.get('skill', item)  # Handle both dict wrapper and direct skill
-                    cluster_uni_skills.append(skill_obj)
-                
-                # Determine mapping type based on cluster composition
-                if len(cluster_vet_skills) == 1 and len(cluster_uni_skills) == 1:
-                    mapping_type = "Direct"
-                    reasoning = f"One-to-one match (Similarity: {cluster.get('avg_semantic_similarity', 0):.1%})"
-                elif len(cluster_vet_skills) > 0 and len(cluster_uni_skills) > 0:
-                    mapping_type = "Partial"
-                    reasoning = f"Many-to-many match ({len(cluster_vet_skills)} VET to {len(cluster_uni_skills)} Uni skills)"
-                else:
+                if not vet_skills or not uni_skills:
                     continue
                 
-                # Add mappings for each VET-Uni skill pair in the cluster
-                for vet_skill in cluster_vet_skills:
-                    for uni_skill in cluster_uni_skills:
-                        # Handle both Skill objects and dictionaries
-                        if isinstance(vet_skill, dict):
-                            vet_skill_name = vet_skill.get('name', 'Unknown')
-                            vet_skill_level = vet_skill.get('level', 'N/A')
-                        else:  # Skill object
-                            vet_skill_name = getattr(vet_skill, 'name', 'Unknown')
-                            vet_skill_level = getattr(vet_skill.level, 'value', str(vet_skill.level)) if hasattr(vet_skill, 'level') else 'N/A'
-                        
-                        if isinstance(uni_skill, dict):
-                            uni_skill_name = uni_skill.get('name', 'Unknown')
-                            uni_skill_level = uni_skill.get('level', 'N/A')
-                        else:  # Skill object
-                            uni_skill_name = getattr(uni_skill, 'name', 'Unknown')
-                            uni_skill_level = getattr(uni_skill.level, 'value', str(uni_skill.level)) if hasattr(uni_skill, 'level') else 'N/A'
-                        
-                        # Find which VET unit this skill belongs to
-                        vet_unit_code = 'Unknown'
-                        for unit in rec.vet_units:
-                            if any(s.name == vet_skill_name for s in unit.extracted_skills):
-                                vet_unit_code = unit.code
-                                break
-                        
+                # Calculate simple metrics
+                avg_vet_level = np.mean([s.level.value for s in vet_skills])
+                avg_uni_level = np.mean([s.level.value for s in uni_skills])
+                level_gap = abs(int(avg_uni_level - avg_vet_level))
+                
+                # Simple context check
+                vet_contexts = [s.context.value for s in vet_skills]
+                uni_contexts = [s.context.value for s in uni_skills]
+                context_match = (vet_contexts[0] == uni_contexts[0]) if vet_contexts and uni_contexts else False
+                
+                # Classify
+                mapping_type, reason = classifier.classify_mapping(
+                    avg_similarity, level_gap, context_match
+                )
+                
+                # Create simple mapping entries
+                for vet_skill in vet_skills:
+                    for uni_skill in uni_skills:
                         mapping = {
-                            'vet_unit': vet_unit_code,
+                            'vet_unit': rec.get_vet_unit_codes()[0] if rec.vet_units else 'Unknown',
+                            'vet_skill': vet_skill.name,
+                            'vet_level': vet_skill.level.value,
                             'uni_course': rec.uni_course.code,
-                            'vet_skill': vet_skill_name,
-                            'vet_level': vet_skill_level,
-                            'uni_skill': uni_skill_name,
-                            'uni_level': uni_skill_level,
+                            'uni_skill': uni_skill.name,
+                            'uni_level': uni_skill.level.value,
                             'mapping_type': mapping_type,
-                            'similarity': cluster.get('avg_semantic_similarity', 0),
-                            'reasoning': reasoning
+                            'similarity': avg_similarity,
+                            'reasoning': reason
                         }
                         all_mappings.append(mapping)
-                        
-                        # Track mapped skills
-                        vet_skill_mapping[vet_skill_name] = mapping_type
-                        uni_skill_mapping[uni_skill_name] = mapping_type
-            
-            # Add unmapped VET skills
-            for unit in rec.vet_units:
-                for skill in unit.extracted_skills:
-                    if skill.name not in vet_skill_mapping:
-                        mapping = {
-                            'vet_unit': unit.code,
-                            'uni_course': rec.uni_course.code,
-                            'vet_skill': skill.name,
-                            'vet_level': skill.level.value if hasattr(skill.level, 'value') else str(skill.level),
-                            'uni_skill': '-',
-                            'uni_level': '-',
-                            'mapping_type': 'Unmapped',
-                            'similarity': 0,
-                            'reasoning': 'No matching university skill found'
-                        }
-                        all_mappings.append(mapping)
-            
-            # Add unmapped Uni skills
-            for skill in rec.uni_course.extracted_skills:
-                if skill.name not in uni_skill_mapping:
-                    mapping = {
-                        'vet_unit': '-',
-                        'uni_course': rec.uni_course.code,
-                        'vet_skill': '-',
-                        'vet_level': '-',
-                        'uni_skill': skill.name,
-                        'uni_level': skill.level.value if hasattr(skill.level, 'value') else str(skill.level),
-                        'mapping_type': 'Unmapped',
-                        'similarity': 0,
-                        'reasoning': 'No matching VET skill found'
-                    }
-                    all_mappings.append(mapping)
         
         return all_mappings
-    
+        
     def export_skill_mappings_to_csv(self, 
                                  recommendations: List[CreditTransferRecommendation],
                                  filepath: str = None) -> str:
