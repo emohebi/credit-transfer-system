@@ -265,3 +265,14 @@ class CreditTransferRecommendation:
             "is_combination": self.is_combination_transfer(),
             "metadata": self.metadata
         }
+        
+@dataclass
+class SkillMatchResult:
+    """Result of matching two individual skills"""
+    vet_skill: 'Skill'
+    uni_skill: Optional['Skill']
+    similarity_score: float
+    level_compatibility: float
+    match_type: str  # "Direct", "Partial", "Unmapped"
+    reasoning: str
+    combined_score: float  # Similarity + level compatibility

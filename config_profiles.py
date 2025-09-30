@@ -124,7 +124,9 @@ class ConfigProfiles:
             "temperature": 0.0,  # Deterministic
             "top_p": 1.0,  # No sampling
             "seed": 42,  # Fixed seed
-            "ensemble_similarity_threshold": 0.95
+            "ensemble_similarity_threshold": 0.95,
+            "matching_strategy": "direct",  # Options: "clustering", "direct", "hybrid"
+            "direct_match_threshold": 0.85  # Threshold for direct skill name matching
         }
     }
     

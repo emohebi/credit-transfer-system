@@ -171,6 +171,12 @@ def main():
         help="Device for embeddings (e.g., cuda:0, cuda:1, cpu)"
     )
     
+    parser.add_argument(
+        "--matching",
+        choices=["clustering", "direct", "hybrid"],
+        default="clustering",
+        help="Skill matching strategy (default: clustering)"
+    )
     args = parser.parse_args()
     
     # List available backends if requested
