@@ -340,5 +340,10 @@ class Config:
             "model_id": "/Volumes/jsa_external_prod/external_vols/scratch/Scratch/Ehsan/Models/gpt-oss-120b",
             "revision": None,
             "template": "GPT"
+        },
+        "gpt-oss-20b": {
+            "model_id": "openai/gpt-oss-20b",
+            "revision": None,
+            "template": "GPT"
         }
     }

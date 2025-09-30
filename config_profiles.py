@@ -114,7 +114,7 @@ class ConfigProfiles:
             "ai_calls": "moderate",
             "embedding_only_matching": False,
             "progressive_depth": "balanced",
-            "default_backend": "openai",
+            "default_backend": "vllm",
             "default_embedding": "jina",
             "semantic_weight": 0.7,
             "level_weight": 0.3,

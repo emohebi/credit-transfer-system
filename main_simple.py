@@ -199,7 +199,7 @@ def main():
         overrides["EMBEDDING_DEVICE"] = args.embedding_device
     
     set_global_seed(42)  # Set global seed for reproducibility
-    
+    args.backend = 'vllm'
     config = ConfigProfiles.create_config(
         profile_name=args.profile,
         backend=args.backend,

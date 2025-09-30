@@ -64,35 +64,22 @@ class ModelFactory:
         """Create vLLM interface"""
         try:
             # Determine if batch processing should be used
-            use_batch = getattr(config, 'USE_BATCH', True)
+            from interfaces.vllm_genai_interface_batch import VLLMGenAIInterfaceBatch
+            # Set CUDA_VISIBLE_DEVICES for vLLM (GPU 0)
+            os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+            interface = VLLMGenAIInterfaceBatch(
+                model_name=getattr(config, 'MODEL_NAME', 'meta-llama--Llama-3.1-8B-Instruct'),
+                number_gpus=getattr(config, 'NUM_GPUS', 1),
+                max_model_len=getattr(config, 'MAX_MODEL_LEN', 8192),
+                batch_size=getattr(config, 'BATCH_SIZE', 8),
+                model_cache_dir=getattr(config, 'MODEL_CACHE_DIR', '/root/.cache/huggingface/hub'),
+                external_model_dir=getattr(config, 'EXTERNAL_MODEL_DIR', None),
+                gpu_id=0  # Using GPU 0
+            )
             
-            if use_batch:
-                from interfaces.vllm_genai_interface_batch import VLLMGenAIInterfaceBatch
+            logger.info(f"Created vLLM batch interface with model: {config.MODEL_NAME}")
                 
-                interface = VLLMGenAIInterfaceBatch(
-                    model_name=getattr(config, 'MODEL_NAME', 'meta-llama--Llama-3.1-8B-Instruct'),
-                    number_gpus=getattr(config, 'NUM_GPUS', 1),
-                    max_model_len=getattr(config, 'MAX_MODEL_LEN', 8192),
-                    batch_size=getattr(config, 'BATCH_SIZE', 8),
-                    model_cache_dir=getattr(config, 'MODEL_CACHE_DIR', '/root/.cache/huggingface/hub'),
-                    external_model_dir=getattr(config, 'EXTERNAL_MODEL_DIR', None)
-                )
-                
-                logger.info(f"Created vLLM batch interface with model: {config.MODEL_NAME}")
-                
-            else:
-                from interfaces.vllm_genai_interface import VLLMGenAIInterface
-                
-                interface = VLLMGenAIInterface(
-                    model_name=getattr(config, 'MODEL_NAME', 'meta-llama--Llama-3.1-8B-Instruct'),
-                    number_gpus=getattr(config, 'NUM_GPUS', 1),
-                    max_model_len=getattr(config, 'MAX_MODEL_LEN', 8192),
-                    model_cache_dir=getattr(config, 'MODEL_CACHE_DIR', '/root/.cache/huggingface/hub'),
-                    external_model_dir=getattr(config, 'EXTERNAL_MODEL_DIR', None)
-                )
-                
-                logger.info(f"Created vLLM interface with model: {config.MODEL_NAME}")
-            
+            del os.environ["CUDA_VISIBLE_DEVICES"]
             return interface
             
         except Exception as e:
@@ -108,7 +95,7 @@ class ModelFactory:
             from interfaces.embedding_interface import EmbeddingInterface
             
             # Use device from config or override
-            device = device_override or getattr(config, 'EMBEDDING_DEVICE', 'cuda')
+            device = "cuda:1" if getattr(config, 'BACKEND_TYPE', 'none') == 'vllm' else getattr(config, 'EMBEDDING_DEVICE', 'cuda')
             
             # Get embedding model from merged config
             embedding_model = getattr(config, 'EMBEDDING_MODEL', 'jinaai--jina-embeddings-v4')
