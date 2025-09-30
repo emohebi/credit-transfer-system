@@ -265,7 +265,7 @@ class CreditTransferRecommendation:
             "is_combination": self.is_combination_transfer(),
             "metadata": self.metadata
         }
-        
+
 @dataclass
 class SkillMatchResult:
     """Result of matching two individual skills"""
@@ -275,4 +275,5 @@ class SkillMatchResult:
     level_compatibility: float
     match_type: str  # "Direct", "Partial", "Unmapped"
     reasoning: str
-    combined_score: float  # Similarity + level compatibility
+    combined_score: float
+    metadata: Dict[str, Any] = field(default_factory=dict)  # NEW: for context_similarity and other data

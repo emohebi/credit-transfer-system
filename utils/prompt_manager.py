@@ -177,7 +177,7 @@ WHEN TEXT SAYS → EXTRACT AS:
             
             level_rules = f"""
         ## SFIA Level Assignment:
-
+            For each skill, assign a SFIA level (1-7) based on the following attributes, make sure to think twice before assigning a level:
         ### SFIA Level Definitions:
         - **Level 1 (Follow)**: Works under close supervision, follows instructions, performs routine tasks
         - **Level 2 (Assist)**: Provides assistance, works under routine supervision, uses limited discretion  
@@ -246,7 +246,8 @@ WHEN TEXT SAYS → EXTRACT AS:
         1. **Analyze the capability description** for indicators of autonomy, influence, complexity, business skills, and knowledge
         2. **Map each attribute** to the appropriate SFIA level (1-7)
         3. **Determine the predominant level** across all five attributes
-        4. **Validate consistency** across the skill set
+        4. **Apply study level constraints** (levels {expected_min}-{expected_max} for {study_level} study level)
+        5. **Validate consistency** across the skill set
 
         ### Level Assessment Examples:
 
@@ -274,7 +275,8 @@ WHEN TEXT SAYS → EXTRACT AS:
         - Knowledge: Level 1 (basic role-specific knowledge)
         → **Result: Level 1**
 
-        
+        ### For {study_level} study level:
+        - Expected Target SFIA levels: {expected_min}-{expected_max}
         """
 
         # Final prompt construction
@@ -308,6 +310,7 @@ Each skill must:
 - Follow the naming convention
 - Be transferable across roles
 - Align with educational taxonomies
+- Make sure to assign an appropriate SFIA level (1-7) based on the provided guidelines, do not output levels outside the expected range for the given study level
 """+"""
 JSON FORMAT:
 [

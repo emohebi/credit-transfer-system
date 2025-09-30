@@ -120,13 +120,19 @@ class ConfigProfiles:
             "level_weight": 0.3,
             "study_level_importance": 0.8,
             "embedding_device": "cuda",
-            "ensemble_runs": 5,  # Use ensemble extraction
+            "ensemble_runs": 3,  # Use ensemble extraction
             "temperature": 0.0,  # Deterministic
             "top_p": 1.0,  # No sampling
             "seed": 42,  # Fixed seed
-            "ensemble_similarity_threshold": 0.95,
+            "ensemble_similarity_threshold": 0.98,
             "matching_strategy": "direct",  # Options: "clustering", "direct", "hybrid"
-            "direct_match_threshold": 0.85  # Threshold for direct skill name matching
+            "direct_match_threshold": 0.85,  # Threshold for direct skill name matching
+            "context_weight": 0.15,  # Weight for context similarity
+            "partial_threshold": 0.5,  # Threshold for partial matches
+            "enable_bidirectional_coverage": True,  # Use bidirectional coverage
+            "enable_one_to_many": True,  # Support one-to-many skill mappings
+            "enable_clustering_validation": True,  # Validate direct matches with clustering
+            "pre_filter_categories": True  # Pre-filter by categories for performance
         }
     }
     

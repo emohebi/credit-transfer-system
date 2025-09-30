@@ -174,9 +174,9 @@ class SimplifiedAnalyzer:
                 recommendations.append(rec)
         
         return recommendations
-    
+  
     def _calculate_skill_match(self, vet_skill, uni_skill) -> SkillMatchResult:
-        """Calculate match between two skills including semantic and level compatibility"""
+        """Calculate match between two skills including semantic, level, and context compatibility"""
         
         # Calculate semantic similarity
         if self.embeddings:
@@ -191,34 +191,63 @@ class SimplifiedAnalyzer:
         uni_idx = min(max(0, uni_skill.level.value - 1), 6)
         level_compatibility = self.unified_scorer.level_compatibility_matrix[vet_idx, uni_idx]
         
-        # Check context match
-        context_match = vet_skill.context == uni_skill.context
+        # Calculate context similarity (NEW - using graduated scoring)
+        context_similarity_matrix = {
+            ('practical', 'practical'): 1.0,
+            ('practical', 'hybrid'): 0.7,
+            ('practical', 'theoretical'): 0.3,
+            ('theoretical', 'theoretical'): 1.0,
+            ('theoretical', 'hybrid'): 0.7,
+            ('theoretical', 'practical'): 0.3,
+            ('hybrid', 'practical'): 0.7,
+            ('hybrid', 'theoretical'): 0.7,
+            ('hybrid', 'hybrid'): 1.0,
+        }
         
-        # Calculate combined score (weighted average)
-        semantic_weight = self.config.get("SEMANTIC_WEIGHT", 0.7)
-        level_weight = self.config.get("LEVEL_WEIGHT", 0.3)
-        combined_score = (semantic_similarity * semantic_weight + 
-                        level_compatibility * level_weight)
+        vet_context = vet_skill.context.value
+        uni_context = uni_skill.context.value
+        context_similarity = context_similarity_matrix.get(
+            (vet_context, uni_context), 0.5
+        )
         
-        # Determine match type using SimpleMappingClassifier logic
+        # Calculate combined score with context weighting
+        semantic_weight = self.config.get("SEMANTIC_WEIGHT", 0.6)
+        level_weight = self.config.get("LEVEL_WEIGHT", 0.25)
+        context_weight = self.config.get("CONTEXT_WEIGHT", 0.15)
+        
+        # Normalize weights
+        total_weight = semantic_weight + level_weight + context_weight
+        semantic_weight /= total_weight
+        level_weight /= total_weight
+        context_weight /= total_weight
+        
+        combined_score = (
+            semantic_similarity * semantic_weight + 
+            level_compatibility * level_weight +
+            context_similarity * context_weight
+        )
+        
+        # Determine match type with context consideration
         from mapping.simple_mapping_types import SimpleMappingClassifier
         classifier = SimpleMappingClassifier()
         level_gap = abs(uni_skill.level.value - vet_skill.level.value)
-        match_type, reasoning = classifier.classify_mapping(
-            semantic_similarity, level_gap, context_match
-        )
         
-        # Override match type based on combined score for direct matching
+        # Modified classification considering context similarity
         if self.matching_strategy == "direct":
             if combined_score >= self.direct_threshold and semantic_similarity >= 0.7:
                 match_type = "Direct"
-                reasoning = f"High semantic ({semantic_similarity:.0%}) and level compatibility ({level_compatibility:.0%})"
-            elif combined_score >= 0.5:
+                reasoning = f"High match (sem: {semantic_similarity:.0%}, lvl: {level_compatibility:.0%}, ctx: {context_similarity:.0%}, cmb: {combined_score:.0%})"
+            elif combined_score >= 0.65 and semantic_similarity >= 0.7:
                 match_type = "Partial"
-                reasoning = f"Moderate match (semantic: {semantic_similarity:.0%}, level: {level_compatibility:.0%})"
+                reasoning = f"Moderate match (sem: {semantic_similarity:.0%}, lvl: {level_compatibility:.0%}, ctx: {context_similarity:.0%}, cmb: {combined_score:.0%})"
             else:
                 match_type = "Unmapped"
-                reasoning = f"Insufficient match (combined score: {combined_score:.0%})"
+                reasoning = f"Insufficient match (sem: {semantic_similarity:.0%}, lvl: {level_compatibility:.0%}, ctx: {context_similarity:.0%}, cmb: {combined_score:.0%})"
+        else:
+            match_type, base_reasoning = classifier.classify_mapping(
+                semantic_similarity, level_gap, context_similarity > 0.7
+            )
+            reasoning = f"{base_reasoning} (ctx similarity: {context_similarity:.0%})"
         
         return SkillMatchResult(
             vet_skill=vet_skill,
@@ -227,7 +256,8 @@ class SimplifiedAnalyzer:
             level_compatibility=level_compatibility,
             match_type=match_type,
             reasoning=reasoning,
-            combined_score=combined_score
+            combined_score=combined_score,
+            metadata={'context_similarity': context_similarity}
         )
 
     def _calculate_all_skill_matches(self, vet_skills_list, uni_skills_list):
@@ -292,123 +322,244 @@ class SimplifiedAnalyzer:
         return best_match
 
     def _find_best_direct_match(self, vet_skills: Dict, course_skills: List, course_code: str) -> Tuple:
-        """Direct skill matching with semantic and level compatibility"""
+        """Direct skill matching with one-to-many relationship support"""
         best_match = None
         best_score = 0
-        best_skill_matches = []
+        best_skill_matches_uni = {}
+        
+        # Pre-filter optimization
+        # if not self._has_potential_overlap(vet_skills, course_skills):
+        #     return None
         
         for unit_code, unit_skills in vet_skills.items():
-            # Calculate all skill matches for this unit
-            skill_matches = self._calculate_all_skill_matches(unit_skills, course_skills)
+            # Calculate ALL skill matches (not just best)
+            all_skill_matches = []
+            vet_skill_coverage = {}  # Track which VET skills are used
+            uni_skill_coverage = {}  # Track which Uni skills are covered
             
-            # Count match types
-            direct_matches = sum(1 for m in skill_matches if m.match_type == "Direct")
-            partial_matches = sum(1 for m in skill_matches if m.match_type == "Partial")
-            unmapped = sum(1 for m in skill_matches if m.match_type == "Unmapped" and m.uni_skill is not None)
+            # Build complete match matrix
+            for vet_skill in unit_skills:
+                vet_matches = []
+                for uni_skill in course_skills:
+                    match_result = self._calculate_skill_match(vet_skill, uni_skill)
+                    if match_result.combined_score >= 0.4:  # Keep all reasonable matches
+                        vet_matches.append({
+                            'uni_skill': uni_skill,
+                            'match_result': match_result,
+                            'score': match_result.combined_score
+                        })
+                
+                # Sort matches for this VET skill by score
+                vet_matches.sort(key=lambda x: x['score'], reverse=True)
+                
+                # Track all valid matches (one-to-many support)
+                for match in vet_matches:
+                    if match['score'] >= self.config.get("PARTIAL_THRESHOLD", 0.5):
+                        all_skill_matches.append(match['match_result'])
+                        
+                        vet_skill_coverage[vet_skill.name] = max(
+                            vet_skill_coverage.get(vet_skill.name, 0),
+                            match['score']
+                        )
+                        if match['score'] >= uni_skill_coverage.get(match['uni_skill'].name, 0):
+                            best_skill_matches_uni[match['uni_skill'].name] = match['match_result']
+                        uni_skill_coverage[match['uni_skill'].name] = max(
+                            uni_skill_coverage.get(match['uni_skill'].name, 0),
+                            match['score']
+                        )
+            
+            # Calculate bidirectional coverage
+            uni_coverage = len(uni_skill_coverage) / len(course_skills) if course_skills else 0
+            vet_coverage = len(vet_skill_coverage) / len(unit_skills) if unit_skills else 0
+            
+            # Use minimum coverage (addresses the coverage calculation issue)
+            bidirectional_coverage = min(uni_coverage, vet_coverage)
             
             # Calculate weighted coverage score
             total_score = 0
-            for match in skill_matches:
-                if match.uni_skill:  # Only count matches TO university skills
-                    if match.match_type == "Direct":
+            for uni_skill in course_skills:
+                if uni_skill.name in uni_skill_coverage:
+                    score = uni_skill_coverage[uni_skill.name]
+                    if score >= self.direct_threshold:
                         total_score += 1.0
-                    elif match.match_type == "Partial":
+                    elif score >= 0.5:
                         total_score += 0.5
             
             coverage_score = total_score / len(course_skills) if course_skills else 0
             
-            if coverage_score > best_score:
-                best_score = coverage_score
-                best_skill_matches = skill_matches
+            # Consider both coverage metrics
+            final_score = (coverage_score * 0.8 + bidirectional_coverage * 0.2)
+            
+            if final_score > best_score:
+                best_score = final_score
+                best_skill_matches = list(best_skill_matches_uni.values())
                 
-                # Create match_result dict with skill match details
+                # Count match types from all matches
+                direct_matches = sum(1 for m in best_skill_matches if m.match_type == "Direct")
+                partial_matches = sum(1 for m in best_skill_matches if m.match_type == "Partial")
+                unmapped = len(course_skills) - len(uni_skill_coverage)
+                
+                # Create detailed match result
                 match_result = {
                     "matches": [{
                         "vet_skills": unit_skills,
                         "uni_skills": course_skills,
                         "semantic_similarity": coverage_score,
-                        "level_alignment": np.mean([m.level_compatibility for m in skill_matches if m.uni_skill]),
-                        "combined_score": coverage_score,
+                        "level_alignment": np.mean([m.level_compatibility for m in best_skill_matches]) if best_skill_matches else 0,
+                        "combined_score": final_score,
                         "match_type": "direct"
                     }],
                     "statistics": {
-                        "uni_coverage": coverage_score,
-                        "total_matches": direct_matches + partial_matches,
+                        "uni_coverage": uni_coverage,
+                        "vet_coverage": vet_coverage,
+                        "bidirectional_coverage": bidirectional_coverage,
+                        "total_matches": len(best_skill_matches),
+                        "unique_uni_matched": len(uni_skill_coverage),
+                        "unique_vet_matched": len(vet_skill_coverage),
                         "direct_matches": direct_matches,
                         "partial_matches": partial_matches,
-                        "unmapped_count": unmapped
+                        "unmapped_count": unmapped,
+                        "one_to_many_mappings": sum(1 for matches in [m for m in best_skill_matches] 
+                                                if len([m2 for m2 in best_skill_matches 
+                                                        if m2.vet_skill == m2.vet_skill]) > 1)
                     },
-                    "skill_match_details": [  # Store individual skill matches
+                    "skill_match_details": [
                         {
                             "vet_skill": m.vet_skill.name if m.vet_skill else None,
                             "uni_skill": m.uni_skill.name if m.uni_skill else None,
                             "match_type": m.match_type,
                             "similarity": m.similarity_score,
                             "level_compatibility": m.level_compatibility,
+                            "context_similarity": m.metadata.get('context_similarity', 0),
                             "combined_score": m.combined_score,
                             "reasoning": m.reasoning
-                        } for m in skill_matches
+                        } for m in best_skill_matches
                     ],
-                    "unmapped_vet": [m.vet_skill for m in skill_matches if m.match_type == "Unmapped" and m.vet_skill],
-                    "unmapped_uni": [m.uni_skill for m in skill_matches if m.match_type == "Unmapped" and m.uni_skill]
+                    "unmapped_vet": [s for s in unit_skills if s.name not in vet_skill_coverage],
+                    "unmapped_uni": [s for s in course_skills if s.name not in uni_skill_coverage]
                 }
-                best_match = (unit_code, coverage_score, match_result)
+                best_match = (unit_code, final_score, match_result)
         
         return best_match
 
-    def _find_best_hybrid_match(self, vet_skills: Dict, course_skills: List, course_code: str) -> Tuple:
-        """Hybrid approach with skill-level matching"""
+    # Add helper method for pre-filtering:
+    def _has_potential_overlap(self, vet_skills: Dict, course_skills: List) -> bool:
+        """Quick pre-filter based on skill categories and keywords"""
+        if not course_skills:
+            return False
         
-        # First, get direct matches with level compatibility
+        # Get categories from course skills
+        course_categories = set(s.category.value for s in course_skills)
+        
+        # Check if any VET unit has overlapping categories
+        for unit_code, unit_skills in vet_skills.items():
+            vet_categories = set(s.category.value for s in unit_skills)
+            if vet_categories.intersection(course_categories):
+                return True
+        
+        # If no category overlap, check for keyword overlap (sampling for speed)
+        course_keywords = set()
+        for skill in course_skills[:10]:  # Sample first 10
+            course_keywords.update(skill.keywords)
+        
+        if course_keywords:
+            for unit_code, unit_skills in vet_skills.items():
+                for skill in unit_skills[:10]:  # Sample first 10
+                    if any(kw in course_keywords for kw in skill.keywords):
+                        return True
+        
+        return False
+
+    def _find_best_hybrid_match(self, vet_skills: Dict, course_skills: List, course_code: str) -> Tuple:
+        """Enhanced hybrid approach with direct matching validation via clustering"""
+        
+        # First, get direct matches with all relationships
         direct_result = self._find_best_direct_match(vet_skills, course_skills, course_code)
         
-        if direct_result and direct_result[1] >= self.thresholds["full"]:
-            return direct_result
+        if not direct_result:
+            # Fall back to pure clustering if no direct matches
+            return self._find_best_cluster_match(vet_skills, course_skills)
         
-        # Get unmapped skills from direct matching
-        if direct_result:
-            unit_code = direct_result[0]
-            match_result = direct_result[2]
-            
-            # Extract unmapped uni skills from skill match details
-            skill_details = match_result.get("skill_match_details", [])
-            unmapped_uni_skills = []
-            
-            for detail in skill_details:
-                if detail["match_type"] == "Unmapped" and detail["uni_skill"]:
-                    # Find the actual skill object
-                    for skill in course_skills:
-                        if skill.name == detail["uni_skill"]:
-                            unmapped_uni_skills.append(skill)
-                            break
-            
-            if unmapped_uni_skills:
-                # Try clustering on unmapped skills
-                cluster_result = self.matcher.match_skills(
-                    vet_skills[unit_code], 
-                    unmapped_uni_skills
-                )
-                
-                # Combine results
-                combined_direct = match_result["statistics"]["direct_matches"]
-                combined_partial = match_result["statistics"]["partial_matches"]
-                cluster_matches = cluster_result["statistics"].get("total_matches", 0)
-                
-                combined_coverage = (
-                    (combined_direct + combined_partial * 0.5 + cluster_matches * 0.7) / 
-                    len(course_skills)
-                )
-                
-                # Merge results
-                match_result["statistics"]["uni_coverage"] = combined_coverage
-                match_result["statistics"]["hybrid_mode"] = True
-                match_result["statistics"]["cluster_supplement"] = cluster_result["statistics"]
-                match_result["statistics"]["total_matches"] = combined_direct + combined_partial + cluster_matches
-                
-                return (unit_code, combined_coverage, match_result)
+        unit_code = direct_result[0]
+        match_result = direct_result[2]
         
-        # Fallback to clustering
-        return self._find_best_cluster_match(vet_skills, course_skills)
+        # Extract matched and unmapped skills
+        skill_details = match_result.get("skill_match_details", [])
+        matched_uni_skills = set()
+        matched_vet_skills = set()
+        
+        for detail in skill_details:
+            if detail["match_type"] in ["Direct", "Partial"]:
+                if detail["uni_skill"]:
+                    matched_uni_skills.add(detail["uni_skill"])
+                if detail["vet_skill"]:
+                    matched_vet_skills.add(detail["vet_skill"])
+        
+        # Get unmapped skills for clustering
+        unmapped_uni_skills = [s for s in course_skills if s.name not in matched_uni_skills]
+        unmapped_vet_skills = [s for s in vet_skills[unit_code] if s.name not in matched_vet_skills]
+        
+        # Use clustering for validation and unmapped skills
+        validation_result = None
+        cluster_supplement = None
+        
+        if len(matched_uni_skills) > 2:  # Validate if we have enough matches
+            # Use clustering to validate direct matches
+            sample_matched_uni = [s for s in course_skills if s.name in matched_uni_skills][:5]
+            sample_matched_vet = [s for s in vet_skills[unit_code] if s.name in matched_vet_skills][:5]
+            
+            if sample_matched_uni and sample_matched_vet:
+                validation_result = self.matcher.match_skills(sample_matched_vet, sample_matched_uni)
+                validation_score = validation_result["statistics"].get("uni_coverage", 0)
+                
+                # Adjust confidence based on validation
+                if validation_score < 0.5:
+                    # Clustering disagrees with direct matching
+                    match_result["statistics"]["confidence_adjustment"] = 0.8
+                else:
+                    # Clustering confirms direct matching
+                    match_result["statistics"]["confidence_adjustment"] = 1.1
+        
+        # Use clustering on unmapped skills
+        if unmapped_uni_skills and unmapped_vet_skills:
+            cluster_supplement = self.matcher.match_skills(unmapped_vet_skills, unmapped_uni_skills)
+            
+            # Add cluster matches to statistics
+            cluster_matches = cluster_supplement["statistics"].get("total_matches", 0)
+            
+            # Update statistics with hybrid information
+            match_result["statistics"]["hybrid_mode"] = True
+            match_result["statistics"]["cluster_validation"] = validation_result["statistics"] if validation_result else None
+            match_result["statistics"]["cluster_supplement"] = cluster_supplement["statistics"]
+            match_result["statistics"]["cluster_supplement_matches"] = cluster_matches
+            
+            # Recalculate coverage with supplement
+            direct_matched = match_result["statistics"]["unique_uni_matched"]
+            cluster_matched = cluster_supplement["statistics"].get("total_matches", 0)
+            
+            total_matched = min(len(course_skills), direct_matched + cluster_matched)
+            enhanced_coverage = total_matched / len(course_skills) if course_skills else 0
+            
+            # Weighted combination of direct and cluster scores
+            direct_weight = 0.7
+            cluster_weight = 0.3
+            
+            final_score = (
+                direct_result[1] * direct_weight + 
+                cluster_supplement["statistics"]["uni_coverage"] * cluster_weight
+            )
+            
+            # Apply confidence adjustment if validation was performed
+            if "confidence_adjustment" in match_result["statistics"]:
+                final_score *= match_result["statistics"]["confidence_adjustment"]
+            
+            match_result["statistics"]["enhanced_coverage"] = enhanced_coverage
+            match_result["statistics"]["hybrid_final_score"] = final_score
+            
+            return (unit_code, final_score, match_result)
+        
+        # Return original if no enhancement possible
+        return direct_result
 
     def _is_skill_matched(self, target_skill: Any, skill_list: List) -> bool:
         """Check if a skill is matched in a list"""

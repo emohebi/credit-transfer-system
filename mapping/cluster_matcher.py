@@ -49,6 +49,8 @@ class ClusterSkillMatcher:
         
         # Level compatibility matrix (how well different levels match)
         self.level_compatibility_matrix = self._build_level_compatibility_matrix()
+        self.context_similarity_matrix = self._build_context_similarity_matrix()
+
         self.mapping_classifier = SimpleMappingClassifier()
 
 
@@ -70,6 +72,20 @@ class ClusterSkillMatcher:
             [0.0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0],  # Uni level 7 (Set Strategy)
         ])
         return matrix
+    
+    def _build_context_similarity_matrix(self) -> Dict[tuple, float]:
+        """Build context similarity matrix for nuanced context matching"""
+        return {
+            ('practical', 'practical'): 1.0,
+            ('practical', 'hybrid'): 0.7,
+            ('practical', 'theoretical'): 0.3,
+            ('theoretical', 'theoretical'): 1.0,
+            ('theoretical', 'hybrid'): 0.7,
+            ('theoretical', 'practical'): 0.3,
+            ('hybrid', 'practical'): 0.7,
+            ('hybrid', 'theoretical'): 0.7,
+            ('hybrid', 'hybrid'): 1.0,
+        }
     
     def match_skills(self, 
                      vet_skills: List[Skill], 

@@ -183,7 +183,7 @@ class StudyLevel(Enum):
         mappings = {
             cls.INTRODUCTORY: (1, 3),  # Follow to Apply
             cls.INTERMEDIATE: (2, 4),  # Assist to Enable  
-            cls.ADVANCED: (3, 6),      # Apply to Initiate/Influence
+            cls.ADVANCED: (5, 7),      # Apply to Initiate/Influence
         }
         
         # Handle both enum and string inputs
