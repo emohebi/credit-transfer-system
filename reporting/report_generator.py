@@ -1970,6 +1970,9 @@ class ReportGenerator:
         classifier = SimpleMappingClassifier()
         
         all_mappings = []
+        # Create a mapping of skills to their cluster types
+        vet_skill_mapping = {}
+        uni_skill_mapping = {}
         
         for rec in recommendations:
             semantic_clusters = rec.metadata.get('semantic_clusters', [])
@@ -2015,6 +2018,41 @@ class ReportGenerator:
                             'reasoning': reason
                         }
                         all_mappings.append(mapping)
+                        vet_skill_mapping[vet_skill.name] = mapping_type
+                        uni_skill_mapping[uni_skill.name] = mapping_type
+                        
+            # Add unmapped VET skills
+            for unit in rec.vet_units:
+                for skill in unit.extracted_skills:
+                    if skill.name not in vet_skill_mapping:
+                        mapping = {
+                            'vet_unit': unit.code,
+                            'uni_course': rec.uni_course.code,
+                            'vet_skill': skill.name,
+                            'vet_level': skill.level.value if hasattr(skill.level, 'value') else str(skill.level),
+                            'uni_skill': '-',
+                            'uni_level': '-',
+                            'mapping_type': 'Unmapped',
+                            'similarity': 0,
+                            'reasoning': 'No matching university skill found'
+                        }
+                        all_mappings.append(mapping)
+            
+            # Add unmapped Uni skills
+            for skill in rec.uni_course.extracted_skills:
+                if skill.name not in uni_skill_mapping:
+                    mapping = {
+                        'vet_unit': '-',
+                        'uni_course': rec.uni_course.code,
+                        'vet_skill': '-',
+                        'vet_level': '-',
+                        'uni_skill': skill.name,
+                        'uni_level': skill.level.value if hasattr(skill.level, 'value') else str(skill.level),
+                        'mapping_type': 'Unmapped',
+                        'similarity': 0,
+                        'reasoning': 'No matching VET skill found'
+                    }
+                    all_mappings.append(mapping)
         
         return all_mappings
         

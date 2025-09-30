@@ -185,6 +185,7 @@ class ClusterSkillMatcher:
                 })
         # Write to file
         serializable_dict = make_json_serializable(semantic_clusters)
+        logger.info(f"length of semantic clusters: {len(semantic_clusters)}")
         with open("./output/semantic_clusters.json", 'w', encoding='utf-8') as f:
             json.dump(serializable_dict, f, indent=2, ensure_ascii=False)
         return semantic_clusters
