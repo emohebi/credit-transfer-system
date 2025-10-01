@@ -387,8 +387,8 @@ Mapping summary: {json.dumps(mapping_info, indent=2)}"""
         result = self._parse_json_response(response)
         return result.get("category", "technical")
     
-    # Add this method to VLLMGenAIInterfaceBatch class:
-    def generate_response(self, system_prompt: str, user_prompt: str, max_tokens: int = None) -> str:
+    # Add this method to VLLMGenAIInterfaceBatch class for single prompt:
+    def generate_response(self, system_prompt: str, user_prompt: str, max_tokens: int = 2048) -> str:
         """
         Unified method for generating responses
         

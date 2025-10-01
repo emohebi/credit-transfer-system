@@ -2,7 +2,7 @@
 .env
 .env.local
 .env.*.local
-
+.vs*
 # Python
 __pycache__/
 *.py[cod]

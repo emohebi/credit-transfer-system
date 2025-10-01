@@ -134,15 +134,11 @@ class UnifiedSkillExtractor:
         
         try:
             # Force deterministic settings
-            if hasattr(self.genai, 'generate_response'):
+            if self.is_openai:
                 return self.genai.generate_response(system_prompt, prompt, 
                                                 temperature=0.0, top_p=1.0)
-            elif self.is_openai and hasattr(self.genai, '_call_openai_api'):
-                return self.genai._call_openai_api(system_prompt, prompt, 
-                                                temperature=0.0)
-            elif self.is_vllm and hasattr(self.genai, '_generate_with_prompt'):
-                return self.genai._generate_with_prompt(system_prompt, prompt, 
-                                                    temperature=0.0, top_p=1.0)
+            elif self.is_vllm:
+                return self.genai.generate_response(system_prompt, prompt)
             else:
                 logger.warning("No compatible GenAI method found")
                 return "[]"
