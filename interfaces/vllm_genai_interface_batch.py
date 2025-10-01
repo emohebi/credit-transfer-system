@@ -160,7 +160,7 @@ class VLLMGenAIInterfaceBatch:
             best_of=1
         )
         
-        outputs = self.llm.generate(full_prompts, sampling_params=sampling_params)
+        outputs = self.llm.generate(full_prompts, sampling_params=sampling_params, use_tqdm=False)
         return [output.outputs[0].text for output in outputs]
     
     def _parse_json_response(self, response: str) -> Dict:
@@ -404,4 +404,5 @@ Mapping summary: {json.dumps(mapping_info, indent=2)}"""
             max_tokens = 2048
         # Use batch method with single prompt
         responses = self._generate_batch(system_prompt, [user_prompt], max_tokens)
+        # logger.info(f"{responses[0]}")
         return responses[0] if responses else ""

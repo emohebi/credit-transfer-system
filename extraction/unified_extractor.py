@@ -318,7 +318,7 @@ class UnifiedSkillExtractor:
             
         except Exception as e:
             logger.error(f"Error in skill extraction: {e}")
-            return self._fallback_extraction(text, study_level)
+            # return self._fallback_extraction(text, study_level)
         
     def _final_deduplication(self, skills: List[Skill]) -> List[Skill]:
         """Final deduplication based on standardized names"""
@@ -610,12 +610,16 @@ class UnifiedSkillExtractor:
             return [response]
         
         # Extract JSON from string
-        json_match = re.search(r'[\[\{].*[\]\}]', response, re.DOTALL)
+        # pattern = r'[\[\{].*[\]\}]'
+        pattern = r'(?:assistantfinal.*?)?(\[\s*\{[^[\]]*\}(?:\s*,\s*\{[^[\]]*\})*\s*\])'
+        # if self.is_vllm:
+        #     pattern = r'[assistantfinal\[\{].*[\]\}]'
+        json_match = re.search(pattern, response, re.DOTALL)
         if json_match:
             try:
-                return json.loads(json_match.group())
+                return json.loads(json_match.group(1))
             except:
-                pass
+                logger.error(f"Failed to parse json from response: {response}")
         
         return []
     

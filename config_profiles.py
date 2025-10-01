@@ -108,19 +108,19 @@ class ConfigProfiles:
             "cache_ttl_days": 0,  # No cache
             "edge_cases_enabled": True,
             "max_skills_per_unit": 100,
-            "min_confidence": 0.7,
+            "min_confidence": 0.0,
             "use_clustering": True,
             "clustering_threshold": 0.75,  # Fixed threshold
             "ai_calls": "moderate",
             "embedding_only_matching": False,
             "progressive_depth": "balanced",
-            "default_backend": "vllm",
+            "backend_type": "vllm",
             "default_embedding": "jina",
             "semantic_weight": 0.7,
             "level_weight": 0.3,
             "study_level_importance": 0.8,
             "embedding_device": "cuda",
-            "ensemble_runs": 3,  # Use ensemble extraction
+            "ensemble_runs": 1,  # Use ensemble extraction
             "temperature": 0.0,  # Deterministic
             "top_p": 1.0,  # No sampling
             "seed": 42,  # Fixed seed
@@ -151,9 +151,9 @@ class ConfigProfiles:
         },
         "vllm": {
             "type": "vllm",
-            "model_name": os.getenv("VLLM_MODEL_NAME", "meta-llama--Llama-3.1-8B-Instruct"),
+            "model_name": os.getenv("VLLM_MODEL_NAME", "gpt-oss-120b"),
             "num_gpus": int(os.getenv("VLLM_NUM_GPUS", "1")),
-            "max_model_len": int(os.getenv("VLLM_MAX_MODEL_LEN", "8192")),
+            "max_model_len": int(os.getenv("VLLM_MAX_MODEL_LEN", "10240")),
             "model_cache_dir": os.getenv("MODEL_CACHE_DIR", "/root/.cache/huggingface/hub"),
             "external_model_dir": os.getenv("EXTERNAL_MODEL_DIR", "/Volumes/jsa_external_prod/external_vols/scratch/Scratch/Ehsan/Models"),
             "tensor_parallel_size": 1,
@@ -260,7 +260,7 @@ class ConfigProfiles:
         
         # Determine backend
         if backend is None:
-            backend = profile.get("default_backend", "auto")
+            backend = profile.get("backend_type", "auto")
         
         # Determine embedding
         if embedding is None:

@@ -46,13 +46,13 @@ Your expertise includes understanding educational taxonomies (Bloom's, Australia
 ### DO Extract:
 - Skills that represent **human abilities** and **cognitive processes**
 - Convert tools/technologies to underlying skills:
-  * "Excel" → "spreadsheet data analysis and modeling"
-  * "Python" → "algorithmic problem solving using Python"
-  * "AutoCAD" → "technical drawing and 3D modeling"
-  * "SAP" → "enterprise resource planning implementation"
+  * "Excel" → "spreadsheet analysis"
+  * "Python" → "Python programming"
+  * "AutoCAD" → "technical drawing"
+  * "SAP" → "ERP implementation"
 - Add specific context to generic skills:
-  * "communication" → "technical report writing" or "client consultation facilitation"
-  * "teamwork" → "cross-functional project collaboration" or "agile team coordination"
+  * "communication" → "technical writing" or "client consultation"
+  * "teamwork" → "cross-functional collaboration" or "agile coordination"
   * "problem-solving" → "root cause analysis" or "systems troubleshooting"
 - Use standardized terminology from educational frameworks:
   * Bloom's cognitive domains: analyzing, evaluating, creating
@@ -67,16 +67,19 @@ Your expertise includes understanding educational taxonomies (Bloom's, Australia
 - Personality traits or attitudes ("motivated," "enthusiastic")
 - Task descriptions ("complete reports," "attend meetings")
 
-### Skill Naming Convention:
-Follow the pattern: [Action/Process] + [Domain/Context] + [Object/Outcome]
+### CRITICAL Skill Naming Convention:
+- **MUST BE 3-4 WORDS MAXIMUM**
+- **Remove unnecessary qualifiers and redundant descriptors**
+- Follow the pattern: [Action/Process] + [Domain/Context] + [Object/Outcome]
+- **Optimal length is 3-4 words**: Provide enough context while maintaining clarity
 
-Examples of PROPER skill naming:
-- "financial data analysis" (action + domain + object)
-- "cross-functional team coordination" (context + object + action)
-- "regulatory compliance assessment" (domain + object + action)
-- "statistical model development" (domain + object + action)
-- "stakeholder requirements elicitation" (context + object + action)
-- "quality assurance process design" (domain + process + action)
+Examples of PROPER skill naming (3-4 words):
+- "financial data analysis" (NOT "comprehensive financial data analysis and modeling")
+- "stakeholder engagement management" (NOT "multi-stakeholder engagement and communication management")
+- "business process optimization" (NOT "enterprise-wide business process optimization and improvement")
+- "risk identification assessment" (NOT "comprehensive enterprise risk identification and assessment")
+- "project lifecycle management" (NOT "end-to-end project lifecycle management")
+- "database design modeling" (NOT "relational database design and modeling")
 """
 
         # Skill categories with human capability focus
@@ -84,70 +87,70 @@ Examples of PROPER skill naming:
 ## Skill Categories (Human Capabilities):
 
 ### COGNITIVE/ANALYTICAL CAPABILITIES:
-Pattern: [Analytical Process] + [Domain]
+Pattern: [Analytical Process] + [Domain] (3-4 words optimal)
 - "quantitative data analysis"
-- "systems thinking and analysis"
-- "critical evaluation of evidence"
-- "pattern recognition and interpretation"
+- "systems thinking approach"
+- "critical evidence evaluation"
+- "pattern recognition analysis"
 - "strategic problem decomposition"
 - "conceptual model development"
-- "hypothesis testing and validation"
+- "hypothesis testing validation"
 
 ### TECHNICAL CAPABILITIES:
-Pattern: [Technical Action] + [Technology Context] + [Purpose]
-- "database design and optimization"
-- "algorithm development and implementation"
+Pattern: [Technical Action] + [Technology Context] (3-4 words optimal)
+- "database design optimization"
+- "algorithm development implementation"
 - "software architecture planning"
 - "network infrastructure configuration"
-- "automated testing framework development"
+- "automated testing framework"
 - "data pipeline engineering"
-- "API design and integration"
+- "API design integration"
 
 ### COMMUNICATION CAPABILITIES:
-Pattern: [Communication Type] + [Audience/Purpose]
+Pattern: [Communication Type] + [Purpose] (3-4 words optimal)
 - "technical documentation authoring"
 - "stakeholder presentation delivery"
 - "cross-cultural business communication"
 - "scientific report writing"
 - "executive briefing preparation"
 - "instructional content development"
-- "conflict mediation and resolution"
+- "conflict mediation resolution"
 
 ### MANAGEMENT CAPABILITIES:
-Pattern: [Management Function] + [Scope/Domain]
+Pattern: [Management Function] + [Domain] (3-4 words optimal)
 - "project lifecycle management"
 - "resource allocation optimization"
-- "risk identification and mitigation"
+- "risk identification mitigation"
 - "performance metrics development"
 - "change management facilitation"
-- "strategic planning and execution"
+- "strategic planning execution"
 - "vendor relationship management"
 
 ### CREATIVE/DESIGN CAPABILITIES:
-Pattern: [Creative Process] + [Domain/Output]
-- "user experience research and design"
+Pattern: [Creative Process] + [Output] (3-4 words optimal)
+- "user experience design"
 - "visual communication design"
 - "innovative solution generation"
-- "prototype development and testing"
+- "prototype development testing"
 - "creative problem formulation"
 - "design thinking facilitation"
 """
 
         # Translation examples
         translation_examples = """
-## Translation Examples:
+## Translation Examples (KEEP NAMES 3-4 WORDS):
 
-WHEN TEXT SAYS → EXTRACT AS:
+WHEN TEXT SAYS → EXTRACT AS (3-4 words):
 
 "Use Excel for financial reports"
-→ "spreadsheet-based financial analysis"
+→ "spreadsheet financial analysis"
 → "financial data visualization"
 → "financial reporting automation"
 
 "Work in teams on projects"
 → "collaborative project execution"
 → "cross-functional team coordination"
-→ "team-based problem solving"
+→ "team problem solving"
 
 "Communicate with stakeholders"
 → "stakeholder engagement management"
@@ -168,6 +171,13 @@ WHEN TEXT SAYS → EXTRACT AS:
 → "business process optimization"
 → "operational efficiency analysis"
 → "workflow improvement identification"
+
+## Optimal Length Examples:
+- "strategic business planning" (3 words) ✓
+- "financial data analysis" (3 words) ✓
+- "cross-functional team collaboration" (3 words) ✓
+- "comprehensive risk assessment" → "risk assessment planning" (3 words) ✓
+- "budget compliance monitoring" (3 words) ✓
 """
 
         # Level calibration based on Bloom's taxonomy
@@ -249,7 +259,7 @@ WHEN TEXT SAYS → EXTRACT AS:
         4. **Apply study level constraints** (levels {expected_min}-{expected_max} for {study_level} study level)
         5. **Validate consistency** across the skill set
 
-        ### Level Assessment Examples:
+        ### Level Assessment Examples (with 3-4 word skill names):
 
         **"financial data analysis"**:
         - Autonomy: Level 3 (works under general direction)
@@ -298,15 +308,17 @@ WHEN TEXT SAYS → EXTRACT AS:
 2. For each identified element, determine the underlying human capability required
 3. Translate tools/technologies into human skills
 4. Add specific context to generic abilities
-5. Ensure each skill follows the naming convention: [Action/Process] + [Domain/Context] + [Object/Outcome]
-6. Validate that each skill represents a transferable human capability
+5. **CRITICAL: Keep skill names to 3-4 words for optimal context**
+6. Ensure each skill follows the naming convention: [Action/Process] + [Domain/Context] + [Object/Outcome]
+7. Validate that each skill represents a transferable human capability
 
 ## OUTPUT REQUIREMENTS:
-Provide human capabilities in JSON format.
+Output maximum 15 high quality skills or human capabilities in JSON format.
 
 Each skill must:
 - Represent a human ability (not a tool or task)
 - Include specific context
+- **BE 3-4 WORDS OPTIMAL** (provide sufficient context)
 - Follow the naming convention
 - Be transferable across roles
 - Align with educational taxonomies
@@ -315,7 +327,7 @@ Each skill must:
 JSON FORMAT:
 [
   {
-    "name": "financial data analysis",  // Human capability with context
+    "name": "financial data analysis",  // Human capability with context (3-4 WORDS OPTIMAL)
     "category": "analytical",  // cognitive/technical/communication/management/creative
     "level": """+f"""{int((expected_min + expected_max) / 2) if study_level else 3}"""+""",  // SFIA level (1-7)
     "context": "practical",  // theoretical/practical/hybrid
@@ -327,7 +339,7 @@ JSON FORMAT:
   }
 ]
 
-Remember: Focus on HUMAN CAPABILITIES, not tools or generic terms!
+Remember: Focus on HUMAN CAPABILITIES, not tools or generic terms! Keep names at 3-4 words for optimal context!
 
 Return ONLY the JSON array:"""
 
@@ -358,13 +370,13 @@ UNIVERSITY CAPABILITIES ({len(uni_skills)} total):
 
 1. **Identical Capabilities (1.0)**:
    - Same human ability, possibly different wording
-   - "financial data analysis" = "financial analytics"
-   - "project lifecycle management" = "project management"
+   - "financial analysis" = "financial analytics"
+   - "project management" = "project lifecycle management"
 
 2. **Overlapping Capabilities (0.7)**:
    - Related abilities with shared competencies
-   - "spreadsheet data analysis" overlaps with "quantitative analysis"
-   - "technical documentation writing" overlaps with "technical communication"
+   - "spreadsheet analysis" overlaps with "quantitative analysis"
+   - "technical writing" overlaps with "technical communication"
 
 3. **Related Domain (0.4)**:
    - Same domain, different specific abilities
@@ -404,16 +416,22 @@ Apply the chain-of-thought process consistently across all texts."""
 ## Quick Reference:
 - Extract human abilities, not tools or tasks
 - Add context to generic terms
+- **KEEP SKILL NAMES TO 3-4 WORDS OPTIMAL**
 - Use pattern: [Action/Process] + [Domain/Context] + [Object/Outcome]
 - Focus on transferable capabilities
 
-## Key Translations:
-- Tools → Underlying human skills
-- Tasks → Required capabilities
-- Generic terms → Contextualized abilities
+## Key Translations (3-4 WORD NAMES):
+- Tools → Underlying human skills (3-4 words)
+- Tasks → Required capabilities (3-4 words)
+- Generic terms → Contextualized abilities (3-4 words)
+
+Examples of PROPER naming:
+- "comprehensive risk assessment" (3 words)
+- "quantitative data analysis" (3 words) 
+- "project lifecycle management" (3 words)
 
 For each text, extract 5-20 human capabilities with:
-- name: Contextualized human capability
+- name: Contextualized human capability (3-4 WORDS OPTIMAL)
 - category: cognitive/technical/communication/management/creative
 - level: Based on Bloom's taxonomy (1-5)
 - context: theoretical/practical/hybrid
@@ -439,7 +457,7 @@ For each text, extract 5-20 human capabilities with:
 Return JSON array with one object per text:
 [{"text_index": 0, "skills": [...]}, {"text_index": 1, "skills": [...]}]
 
-Apply the chain-of-thought process to each text to extract true HUMAN CAPABILITIES!"""
+Apply the chain-of-thought process to each text to extract true HUMAN CAPABILITIES with optimal names (3-4 words)!"""
         
         return system_prompt, user_prompt
 
