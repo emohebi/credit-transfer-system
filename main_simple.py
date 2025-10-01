@@ -1,7 +1,8 @@
 """
 Simplified main entry point with backend selection
 """
-
+import os 
+os.environ['VLLM_WORKER_MULTIPROC_METHOD'] = 'spawn'
 import argparse
 import logging
 import sys
@@ -199,7 +200,7 @@ def main():
         overrides["EMBEDDING_DEVICE"] = args.embedding_device
     
     set_global_seed(42)  # Set global seed for reproducibility
-    args.backend = 'vllm'
+    args.backend = 'openai'
     config = ConfigProfiles.create_config(
         profile_name=args.profile,
         backend=args.backend,
@@ -219,8 +220,8 @@ def main():
     args.vet_file = "./data/diploma_of_business.json"
     args.uni_file = "./data/933AA_Diploma_of_Business.json"
     
-    args.vet_file = "./data/sample_vet.json"
-    args.uni_file = "./data/sample_uni.json"
+    # args.vet_file = "./data/sample_vet.json"
+    # args.uni_file = "./data/sample_uni.json"
     try:
         # Load data
         logger.info("Loading qualifications...")

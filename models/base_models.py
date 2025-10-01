@@ -9,6 +9,8 @@ from .enums import SkillLevel, SkillContext, SkillCategory, RecommendationType
 
 # In models/base_models.py, update the Skill dataclass:
 
+# In models/base_models.py, update the Skill dataclass:
+
 @dataclass
 class Skill:
     """Represents an extracted skill with evidence and derivation tracking"""
@@ -16,12 +18,13 @@ class Skill:
     category: SkillCategory
     level: SkillLevel
     context: SkillContext
+    description: str = ""  # NEW: Brief description of skill application in context
     keywords: List[str] = field(default_factory=list)
-    evidence_type: str = ""  # Keep existing field for backward compatibility
+    evidence_type: str = ""  
     confidence: float = 1.0
-    source: str = ""  # Where it was extracted from
-    evidence: str = ""  # NEW: Text excerpt showing this capability
-    translation_rationale: str = ""  # NEW: How the skill was derived
+    source: str = ""
+    evidence: str = ""  # Text excerpt showing this capability
+    translation_rationale: str = ""  # How the skill was derived
     metadata: Dict[str, Any] = field(default_factory=dict)
     
     def __hash__(self):
@@ -39,12 +42,13 @@ class Skill:
             "category": self.category.value,
             "level": self.level.name,
             "context": self.context.value,
+            "description": self.description,  # NEW: Include description
             "keywords": self.keywords,
             "evidence_type": self.evidence_type,
             "confidence": self.confidence,
             "source": self.source,
-            "evidence": self.evidence,  # Include new field
-            "translation_rationale": self.translation_rationale,  # Include new field
+            "evidence": self.evidence,
+            "translation_rationale": self.translation_rationale,
             "metadata": self.metadata
         }
     
@@ -56,12 +60,13 @@ class Skill:
             category=SkillCategory(data["category"]),
             level=SkillLevel[data["level"]],
             context=SkillContext(data["context"]),
+            description=data.get("description", ""),  # NEW: Handle description
             keywords=data.get("keywords", []),
             evidence_type=data.get("evidence_type", ""),
             confidence=data.get("confidence", 1.0),
             source=data.get("source", ""),
-            evidence=data.get("evidence", ""),  # Handle new field
-            translation_rationale=data.get("translation_rationale", ""),  # Handle new field
+            evidence=data.get("evidence", ""),
+            translation_rationale=data.get("translation_rationale", ""),
             metadata=data.get("metadata", {})
         )
 

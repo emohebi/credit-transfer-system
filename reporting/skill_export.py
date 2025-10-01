@@ -343,13 +343,14 @@ class SkillExportManager:
     # ========== CSV EXPORT METHODS ==========
     
     def _export_vet_to_csv(self, vet_qual: VETQualification, filepath: Path):
-        """Export VET skills to CSV file with evidence and rationale"""
+        """Export VET skills to CSV file with description"""
         with open(filepath, 'w', newline='', encoding='utf-8') as f:
             fieldnames = [
                 'qualification_code', 'qualification_name', 'unit_code', 'unit_name',
-                'unit_hours', 'skill_name', 'category', 'level', 'level_value',
+                'unit_hours', 'skill_name', 'skill_description',  # NEW: Added skill_description
+                'category', 'level', 'level_value',
                 'context', 'confidence', 'keywords', 'source', 'evidence_type',
-                'evidence', 'translation_rationale'  # Add new fields
+                'evidence', 'translation_rationale'
             ]
             
             writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -364,6 +365,7 @@ class SkillExportManager:
                         'unit_name': unit.name,
                         'unit_hours': unit.nominal_hours,
                         'skill_name': skill.name,
+                        'skill_description': skill.description,  # NEW: Include description
                         'category': skill.category.value,
                         'level': skill.level.name,
                         'level_value': skill.level.value,
@@ -372,20 +374,18 @@ class SkillExportManager:
                         'keywords': '; '.join(skill.keywords),
                         'source': skill.source,
                         'evidence_type': skill.evidence_type,
-                        'evidence': skill.evidence,  # Include evidence
-                        'translation_rationale': skill.translation_rationale  # Include rationale
+                        'evidence': skill.evidence,
+                        'translation_rationale': skill.translation_rationale
                     })
-    
-    # In reporting/skill_export.py, update the _export_uni_to_csv method:
 
     def _export_uni_to_csv(self, uni_qual: UniQualification, filepath: Path):
-        """Export University skills to CSV file with evidence and rationale"""
+        """Export University skills to CSV file with description"""
         with open(filepath, 'w', newline='', encoding='utf-8') as f:
             fieldnames = [
                 'qualification_code', 'qualification_name', 'course_code', 'course_name',
-                'study_level', 'credit_points', 'skill_name', 'category', 'level',
-                'level_value', 'context', 'confidence', 'keywords', 'source', 'evidence_type',
-                'evidence', 'translation_rationale'  # Add new fields
+                'study_level', 'credit_points', 'skill_name', 'skill_description',  # NEW
+                'category', 'level', 'level_value', 'context', 'confidence', 
+                'keywords', 'source', 'evidence_type', 'evidence', 'translation_rationale'
             ]
             
             writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -401,6 +401,7 @@ class SkillExportManager:
                         'study_level': course.study_level,
                         'credit_points': course.credit_points,
                         'skill_name': skill.name,
+                        'skill_description': skill.description,  # NEW
                         'category': skill.category.value,
                         'level': skill.level.name,
                         'level_value': skill.level.value,
@@ -409,8 +410,8 @@ class SkillExportManager:
                         'keywords': '; '.join(skill.keywords),
                         'source': skill.source,
                         'evidence_type': skill.evidence_type,
-                        'evidence': skill.evidence,  # Include evidence
-                        'translation_rationale': skill.translation_rationale  # Include rationale
+                        'evidence': skill.evidence,
+                        'translation_rationale': skill.translation_rationale
                     })
     
     def _export_combined_to_csv(self,

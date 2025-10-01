@@ -108,7 +108,7 @@ class ConfigProfiles:
             "cache_ttl_days": 0,  # No cache
             "edge_cases_enabled": True,
             "max_skills_per_unit": 100,
-            "min_confidence": 0.7,
+            "min_confidence": 0.0,
             "use_clustering": True,
             "clustering_threshold": 0.75,  # Fixed threshold
             "ai_calls": "moderate",

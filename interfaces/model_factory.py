@@ -74,6 +74,7 @@ class ModelFactory:
                 batch_size=getattr(config, 'BATCH_SIZE', 8),
                 model_cache_dir=getattr(config, 'MODEL_CACHE_DIR', '/root/.cache/huggingface/hub'),
                 external_model_dir=getattr(config, 'EXTERNAL_MODEL_DIR', None),
+                gpu_memory_utilization=getattr(config, 'GPU_MEMORY_UTILIZATION', 0.85),
                 gpu_id=0  # Using GPU 0
             )
             

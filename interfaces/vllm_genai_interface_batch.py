@@ -27,6 +27,7 @@ class VLLMGenAIInterfaceBatch:
                  batch_size: int = 8,
                  model_cache_dir: str = "/root/.cache/huggingface/hub",
                  external_model_dir: str = "/Volumes/jsa_external_prod/external_vols/scratch/Scratch/Ehsan/Models",
+                 gpu_memory_utilization: float = 0.85,
                  gpu_id: int = 0):  # Add explicit GPU ID parameter
         """
         Initialize vLLM GenAI interface with batch processing
@@ -47,6 +48,7 @@ class VLLMGenAIInterfaceBatch:
         self.batch_size = batch_size
         self.model_cache_dir = Path(model_cache_dir)
         self.external_model_dir = Path(external_model_dir)
+        self.gpu_memory_utilization = gpu_memory_utilization
         self.gpu_id = gpu_id
         
         # Set environment variable to control GPU visibility for vLLM
@@ -85,7 +87,7 @@ class VLLMGenAIInterfaceBatch:
                 model=snapshot_location,
                 tensor_parallel_size=self.number_gpus,
                 max_model_len=self.max_model_len,
-                gpu_memory_utilization=0.9  # Allow vLLM to use 90% of GPU memory
+                gpu_memory_utilization=self.gpu_memory_utilization  # Allow vLLM to use 90% of GPU memory
             )
             logger.info(f"Successfully loaded model: {self.model_name} on GPU(s) specified by CUDA_VISIBLE_DEVICES")
             

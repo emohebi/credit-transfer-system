@@ -1443,6 +1443,8 @@ class ReportGenerator:
                 for skill in unit.extracted_skills[:max_skills_per_unit]:
                     html.append("<div class='final-skill'>")
                     html.append(f"<strong>{skill.name}</strong><br>")
+                    if skill.description:  # NEW: Display description
+                        html.append(f"<em style='color: #555; font-size: 12px;'>{skill.description}</em><br>")
                     html.append(f"<span class='skill-meta'>")
                     html.append(f"Category: {skill.category.value}<br>")
                     html.append(f"Level: {skill.level.name}<br>")
@@ -1553,6 +1555,8 @@ class ReportGenerator:
                 for skill in course.extracted_skills[:max_skills_per_unit]:
                     html.append("<div class='final-skill'>")
                     html.append(f"<strong>{skill.name}</strong><br>")
+                    if skill.description:  # NEW: Display description
+                        html.append(f"<em style='color: #555; font-size: 12px;'>{skill.description}</em><br>")
                     html.append(f"<span class='skill-meta'>")
                     html.append(f"Category: {skill.category.value}<br>")
                     html.append(f"Level: {skill.level.name}<br>")

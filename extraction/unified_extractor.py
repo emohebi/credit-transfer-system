@@ -511,19 +511,21 @@ class UnifiedSkillExtractor:
         
         return results[:expected_count]
     
-    def _dict_to_skill(self, skill_dict: Dict) -> Skill:
-        """Convert dictionary to Skill object with evidence and rationale"""
-        return Skill(
+    def _dict_to_skill(self, skill_dict: Dict, study_level: str = None) -> Skill:
+        """Convert dictionary to Skill object with description"""
+        skill = Skill(
             name=skill_dict.get("name", "Unknown").strip()[:100],
+            description=skill_dict.get("description", "").strip()[:200],  # NEW: Extract description
             category=self._map_category(skill_dict.get("category", "technical")),
             level=self._map_level(skill_dict.get("level", 3)),
             context=self._map_context(skill_dict.get("context", "hybrid")),
             confidence=min(1.0, max(0.0, skill_dict.get("confidence", 0.7))),
             keywords=skill_dict.get("keywords", [])[:5],
             source=skill_dict.get("source", f"{self.backend_type}_extracted"),
-            evidence=skill_dict.get("evidence", "")[:100],  # Limit to 100 chars
-            translation_rationale=skill_dict.get("translation_rationale", "")[:200]  # Limit to 200 chars
+            evidence=skill_dict.get("evidence", "")[:200],
+            translation_rationale=skill_dict.get("level_justification", skill_dict.get("reasoning", ""))[:200]
         )
+        return skill
     
     def _get_cache_key(self, item) -> str:
         """Generate cache key"""
@@ -615,7 +617,7 @@ class UnifiedSkillExtractor:
             try:
                 return json.loads(json_match.group())
             except:
-                pass
+                logger.error(f"Failed to parse JSON from response: {response}")
         
         return []
     

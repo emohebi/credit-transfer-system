@@ -342,7 +342,7 @@ class Config:
             "template": "GPT"
         },
         "gpt-oss-20b": {
-            "model_id": "openai/gpt-oss-20b",
+            "model_id": "unsloth/gpt-oss-20b-unsloth-bnb-4bit",
             "revision": None,
             "template": "GPT"
         }
