@@ -468,44 +468,76 @@ Apply the chain-of-thought process to each text to extract true HUMAN CAPABILITI
         backend_type: str = "standard"
     ) -> Tuple[str, str]:
         """
-        Infer study level based on cognitive complexity of required capabilities
+        Infer study level based on cognitive complexity with better calibration
         """
         
-        system_prompt = """You are an educational taxonomy expert who classifies study levels based on the cognitive complexity of required human capabilities."""
+        system_prompt = """You are an educational taxonomy expert who classifies study levels based on cognitive complexity and prerequisite assumptions. You must be conservative and precise in your classification, avoiding bias toward higher levels."""
         
-        user_prompt = f"""Analyze the cognitive complexity of capabilities in this {item_type}.
+        user_prompt = f"""Analyze the cognitive complexity and prerequisite assumptions in this {item_type}.
 
-## TEXT TO ANALYZE:
-{text}
+    ## TEXT TO ANALYZE:
+    {text}
 
-## CLASSIFICATION BASED ON BLOOM'S TAXONOMY:
+    ## CLASSIFICATION CRITERIA (MUST meet majority of indicators):
 
-**INTRODUCTORY** - Lower-order cognitive capabilities:
-- Remember/Understand level verbs: identify, describe, explain, list, define
-- Basic application: follow procedures, apply simple rules
-- Foundational knowledge: basic concepts, terminology
-- Limited complexity: straightforward problems, guided tasks
+    **INTRODUCTORY** (DEFAULT if uncertain) - Foundation level:
+    STRONG INDICATORS:
+    - Words: "introduction", "basic", "fundamental", "overview", "foundation", "elementary", "beginning"
+    - Verbs: identify, define, list, describe, explain, summarize, recall, recognize
+    - Phrases: "no prerequisites", "assumes no prior knowledge", "first exposure", "getting started"
+    - Content: Basic concepts, terminology, simple procedures, guided practice
+    - Assessment: Multiple choice, definitions, simple calculations, guided exercises
+    - Course codes: 100-level, 1000-level, first-year, entry-level
 
-**INTERMEDIATE** - Mid-level cognitive capabilities:
-- Apply/Analyze level verbs: implement, examine, compare, differentiate
-- Independent application: solve standard problems, analyze relationships
-- Integrated knowledge: connect concepts, apply theories
-- Moderate complexity: multi-step problems, some ambiguity
+    DISQUALIFIERS for Introductory:
+    - Any mention of "advanced", "complex analysis", "critical evaluation"
+    - Prerequisites beyond basic math/English
+    - Research or independent project requirements
 
-**ADVANCED** - Higher-order cognitive capabilities:
-- Evaluate/Create level verbs: design, critique, synthesize, innovate
-- Complex application: novel problems, original solutions
-- Deep knowledge: critique theories, develop new approaches
-- High complexity: ill-defined problems, research, innovation
+    **INTERMEDIATE** - Building competence:
+    STRONG INDICATORS:
+    - Words: "develop", "apply", "analyze", "examine", "integrate"  
+    - Verbs: apply, analyze, compare, differentiate, organize, relate, compute
+    - Phrases: "builds on introductory", "some experience required", "working knowledge"
+    - Content: Application of theories, standard problem-solving, case studies
+    - Assessment: Problem sets, reports, group projects, practical applications
+    - Course codes: 200-300 level, 2000-3000 level, second/third year
 
-## DECISION:
-Based on the predominant level of cognitive capabilities required, classify as:
-Introductory, Intermediate, or Advanced
+    DISQUALIFIERS for Intermediate:
+    - Words like "mastery", "expertise", "research", "thesis"
+    - Highly specialized or niche topics
+    - Assumption of professional experience
 
-Return ONLY ONE WORD:"""
+    **ADVANCED** - High expertise (ONLY if clear evidence):
+    STRONG INDICATORS:
+    - Words: "advanced", "complex", "critical", "research", "specialized", "expert"
+    - Verbs: evaluate, create, design, critique, synthesize, theorize, innovate
+    - Phrases: "extensive prerequisites", "assumes strong background", "professional level"
+    - Content: Original research, complex synthesis, cutting-edge topics, independent work
+    - Assessment: Thesis, dissertation, original projects, peer review, publication
+    - Course codes: 400+ level, 4000+ level, graduate, postgraduate, final year
+
+    REQUIRED for Advanced:
+    - MUST have at least 3 strong indicators
+    - MUST mention complex prerequisites or assumed knowledge
+    - MUST involve creation/evaluation level work
+
+    ## DECISION RULES:
+    1. Count indicators for each level
+    2. If unclear or mixed signals → choose INTERMEDIATE
+    3. If basic/introductory indicators ≥ advanced indicators → choose INTRODUCTORY
+    4. Only choose ADVANCED if overwhelming evidence (>60% advanced indicators)
+    5. When in doubt, choose the LOWER level
+
+    ## Based on the evidence, classify as:
+    - If mostly basic concepts and foundational skills → Introductory
+    - If building on basics with application focus → Intermediate  
+    - If ONLY if clear research/expert focus → Advanced
+
+    Return ONLY ONE WORD (Introductory/Intermediate/Advanced):"""
         
         return system_prompt, user_prompt
-    
+        
     @staticmethod
     def get_skill_description_prompt(
         skills_with_evidence: List[Dict[str, Any]],
