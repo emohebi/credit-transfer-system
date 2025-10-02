@@ -242,6 +242,64 @@ class UnifiedSkillExtractor:
             
             # Sort skills by name for consistent ordering
             skills.sort(key=lambda s: (s.name.lower(), -s.confidence))
+            # Generate descriptions for extracted skills if GenAI is available
+            if self.genai and skills:
+                try:
+                    # Prepare skills with evidence for description generation
+                    skills_for_description = []
+                    for skill in skills:  # Limit to first 20 for efficiency
+                        skill_dict = {
+                            'name': skill.name,
+                            'category': skill.category.value,
+                            'level': skill.level.value,
+                            'context': skill.context.value,
+                            'evidence': skill.evidence
+                        }
+                        skills_for_description.append(skill_dict)
+                    if self.is_openai:
+                        # Get description generation prompt
+                        system_prompt, user_prompt = self.prompt_manager.get_skill_description_prompt(
+                            skills_with_evidence=skills_for_description,
+                            context_type=item_type,
+                            backend_type=self.backend_type
+                        )
+                        
+                        # Generate descriptions
+                        response = self._call_genai(user_prompt, system_prompt)
+                        descriptions_data = self._parse_json_response(response)
+                    else:
+                        user_prompts = []
+                        for skill_dict in skills_for_description:  # Limit to 20 for efficiency
+                            system_prompt, user_prompt = self.prompt_manager.get_skill_description_prompt(
+                                skills_with_evidence=[skill_dict],
+                                context_type=item_type,
+                                backend_type=self.backend_type
+                            )
+                            user_prompts.append(user_prompt)
+                        responses = self.genai._generate_batch(system_prompt, user_prompts)
+                        descriptions_data = self._parse_json_response(responses)
+                    
+                    # Map descriptions back to skills
+                    if isinstance(descriptions_data, list):
+                        description_map = {}
+                        for desc_item in descriptions_data:
+                            if isinstance(desc_item, dict):
+                                skill_name = desc_item.get('name', '').lower().strip()
+                                description = desc_item.get('description', '')
+                                if skill_name and description:
+                                    description_map[skill_name] = description
+                        
+                        # Update skill objects with descriptions
+                        for skill in skills:
+                            skill_name_lower = skill.name.lower().strip()
+                            if skill_name_lower in description_map:
+                                skill.description = description_map[skill_name_lower]
+                                logger.debug(f"Added description for skill '{skill.name}': {skill.description[:50]}...")
+                    
+                    logger.info(f"Generated descriptions for {len([s for s in skills if s.description])} skills")
+                    
+                except Exception as e:
+                    logger.warning(f"Failed to generate skill descriptions: {e}")
             
             # Limit to configured maximum
             max_skills = self.config.get("MAX_SKILLS_PER_UNIT", 100)
@@ -469,32 +527,35 @@ class UnifiedSkillExtractor:
         }
         return mapping.get(context_str.lower(), SkillContext.HYBRID)
     
-    def _parse_json_response(self, response: str) -> Any:
-        """Parse JSON from response"""
+    def _parse_single_response(self, response: str) -> Any:
         import re
-        
-        # Handle different response formats
-        if isinstance(response, list):
-            return response
-        
-        if isinstance(response, dict):
-            if "skills" in response:
-                return response["skills"]
-            return [response]
-        
-        # Extract JSON from string
         # pattern = r'[\[\{].*[\]\}]'
         pattern = r'(?:assistantfinal.*?)?(\[\s*\{[^[\]]*\}(?:\s*,\s*\{[^[\]]*\})*\s*\])'
-        # if self.is_vllm:
-        #     pattern = r'[assistantfinal\[\{].*[\]\}]'
         json_match = re.search(pattern, response, re.DOTALL)
         if json_match:
             try:
                 return json.loads(json_match.group(1))
             except:
                 logger.error(f"Failed to parse JSON from response: {response}")
+        return None
+           
+    def _parse_json_response(self, response: str) -> Any:
+        """Parse JSON from response"""
+        # Handle different response formats
+        if isinstance(response, list):
+            out_list = []
+            for item in response:
+                out_single = self._parse_single_response(item)
+                if out_single and isinstance(out_single, list):
+                    out_list.extend(out_single)
+            return out_list
         
-        return []
+        if isinstance(response, dict):
+            if "skills" in response:
+                return response["skills"]
+            return [response]
+        
+        return self._parse_single_response(response)
     
     def get_stats(self) -> Dict:
         """Get statistics"""

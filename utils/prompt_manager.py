@@ -2,7 +2,7 @@
 Enhanced Prompt Manager using Chain-of-Thought for Human Capability Extraction
 """
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 from models.enums import StudyLevel, SkillLevel
 import json
 
@@ -504,4 +504,72 @@ Introductory, Intermediate, or Advanced
 
 Return ONLY ONE WORD:"""
         
+        return system_prompt, user_prompt
+    
+    @staticmethod
+    def get_skill_description_prompt(
+        skills_with_evidence: List[Dict[str, Any]],
+        context_type: str = "VET",
+        backend_type: str = "standard"
+    ) -> Tuple[str, str]:
+        """
+        Generate detailed descriptions for skills based on their evidence and context
+        """
+        
+        system_prompt = """You are an expert at creating concise, context-aware descriptions for professional skills and capabilities. 
+    Your task is to generate clear, actionable descriptions that explain HOW each skill is applied in practice, based on the evidence provided.
+
+    Each description should:
+    - Be 1-2 sentences (20-40 words)
+    - Explain the practical application of the skill
+    - Connect to the specific context shown in the evidence
+    - Use active voice and professional language
+    - Avoid generic or vague descriptions"""
+
+        user_prompt = f"""Generate practical descriptions for these {context_type} skills based on their evidence.
+
+    ## Skills to Describe:
+    """
+        
+        for idx, skill in enumerate(skills_with_evidence):  # Limit to 20 for token efficiency
+            skill_name = skill.get('name', '')
+            evidence = skill.get('evidence', '')
+            category = skill.get('category', '')
+            level = skill.get('level', 3)
+            context = skill.get('context', 'practical')
+            
+            user_prompt += f"""
+            ### Skill {idx + 1}:
+            - Name: {skill_name}
+            - Category: {category}
+            - Level: {level}
+            - Context: {context}
+            - Evidence: {evidence[:150]}
+            """
+
+        user_prompt += """
+
+        ## Description Guidelines:
+        1. Focus on WHAT the person does and HOW they apply this skill
+        2. Reference the specific context from the evidence
+        3. Match the complexity to the skill level
+        4. Make it actionable and measurable where possible
+
+        ## Examples:
+        - "financial data analysis" with evidence about Excel reports → "Analyzes financial datasets using spreadsheet tools to identify trends and create reports for business decision-making"
+        - "stakeholder communication" with evidence about meetings → "Facilitates clear communication with internal and external stakeholders through presentations, meetings, and written updates"
+        - "project planning" with evidence about timelines → "Develops and maintains project schedules, milestones, and resource allocations to ensure timely delivery"
+
+        ## Output Format:
+        Return a JSON array with descriptions for each skill:
+        [
+        {
+            "skill_index": 0,
+            "name": "skill name",
+            "description": "Practical description of how this skill is applied..."
+        }
+        ]
+
+        Return ONLY the JSON array:"""
+
         return system_prompt, user_prompt
