@@ -96,6 +96,7 @@ class ClusterSkillMatcher:
         2. Level-based refinement and scoring
         """
         if not vet_skills or not uni_skills:
+            logger.warning("One or both skill lists are empty")
             return self._empty_result()
         
         # Stage 1: Semantic Clustering
@@ -134,7 +135,7 @@ class ClusterSkillMatcher:
             skill_texts = [s.name for s in all_skills]
             embeddings_matrix = self.embeddings.encode(skill_texts)
         else:
-            embeddings_matrix = self._simple_vectorize([s.name for s in all_skills])
+            logger.error("Embeddings model not provided")
         
         # Compute similarity matrix
         similarity_matrix = cosine_similarity(embeddings_matrix)
@@ -439,19 +440,6 @@ class ClusterSkillMatcher:
         
         return min(1.0, base_confidence * (0.7 + 0.3 * size_penalty))
     
-    def _categorize_match_quality(self, score: float) -> str:
-        """Categorize match quality based on combined score"""
-        if score >= 0.85:
-            return "excellent"
-        elif score >= 0.70:
-            return "good"
-        elif score >= 0.55:
-            return "moderate"
-        elif score >= 0.40:
-            return "weak"
-        else:
-            return "poor"
-    
     def _determine_match_type(self, vet_skills: List, uni_skills: List) -> str:
         """Determine match type"""
         if len(vet_skills) == 1 and len(uni_skills) == 1:
@@ -551,12 +539,6 @@ class ClusterSkillMatcher:
         "level_gap_matches": 0
     }
     
-    def _simple_vectorize(self, texts: List[str]) -> np.ndarray:
-        """Fallback vectorization"""
-        from sklearn.feature_extraction.text import TfidfVectorizer
-        
-        vectorizer = TfidfVectorizer(max_features=100, stop_words='english')
-        return vectorizer.fit_transform(texts).toarray()
     
     def _empty_result(self) -> Dict:
         """Return empty result structure"""
@@ -566,17 +548,4 @@ class ClusterSkillMatcher:
             "statistics": self._empty_statistics(),
             "unmapped_vet": [],
             "unmapped_uni": []
-        }
-    
-    def _empty_statistics(self) -> Dict:
-        """Return empty statistics"""
-        return {
-            "total_matches": 0,
-            "vet_coverage": 0,
-            "uni_coverage": 0,
-            "avg_semantic_similarity": 0,
-            "avg_level_alignment": 0,
-            "avg_combined_score": 0,
-            "match_quality_distribution": {},
-            "match_types": {}
         }

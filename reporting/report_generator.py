@@ -2,7 +2,7 @@
 Report generator for credit transfer analysis
 Integrated with skill export functionality
 """
-
+import logging
 import json
 import csv
 from datetime import datetime
@@ -21,6 +21,7 @@ from models.enums import RecommendationType, StudyLevel
 from .skill_export import SkillExportManager
 from utils.json_encoder import dumps, loads, make_json_serializable
 
+logger = logging.getLogger(__name__)
 
 class ReportGenerator:
     """Generate various report formats for credit transfer analysis"""
@@ -2064,53 +2065,54 @@ class ReportGenerator:
         
         if skill_match_details:
             # Use backend-calculated matches
-            for detail in skill_match_details:
+            for detail in skill_match_details['mapped']:
                 if detail['vet_skill'] and detail['uni_skill']:
                     # Both skills present - normal match
                     mapping = {
-                        'vet_unit': rec.get_vet_unit_codes()[0] if rec.vet_units else 'Unknown',
-                        'vet_skill': detail['vet_skill'],
-                        'vet_level': self._get_skill_level(rec, detail['vet_skill'], 'vet'),
-                        'uni_course': rec.uni_course.code,
-                        'uni_skill': detail['uni_skill'],
-                        'uni_level': self._get_skill_level(rec, detail['uni_skill'], 'uni'),
+                        'vet_unit': detail['vet_skill'].code,
+                        'vet_skill': detail['vet_skill'].name,
+                        'vet_level': detail['vet_skill'].level.value,
+                        'uni_course': detail['uni_skill'].code,
+                        'uni_skill': detail['uni_skill'].name,
+                        'uni_level': detail['uni_skill'].level.value,
                         'mapping_type': detail['match_type'],
                         'similarity': detail['similarity'],
                         'reasoning': detail['reasoning']
                     }
-                elif detail['vet_skill']:
-                    # Only VET skill - unmapped VET
-                    mapping = {
-                        'vet_unit': rec.get_vet_unit_codes()[0] if rec.vet_units else 'Unknown',
-                        'vet_skill': detail['vet_skill'],
-                        'vet_level': self._get_skill_level(rec, detail['vet_skill'], 'vet'),
-                        'uni_course': rec.uni_course.code,
-                        'uni_skill': '-',
-                        'uni_level': '-',
-                        'mapping_type': 'Unmapped',
-                        'similarity': 0,
-                        'reasoning': detail['reasoning']
-                    }
-                elif detail['uni_skill']:
+                    mappings.append(mapping)
+            for unmapped in skill_match_details['unmapped_uni']:
                     # Only Uni skill - unmapped Uni
-                    mapping = {
-                        'vet_unit': '-',
-                        'vet_skill': '-',
-                        'vet_level': '-',
-                        'uni_course': rec.uni_course.code,
-                        'uni_skill': detail['uni_skill'],
-                        'uni_level': self._get_skill_level(rec, detail['uni_skill'], 'uni'),
-                        'mapping_type': 'Unmapped',
-                        'similarity': 0,
-                        'reasoning': detail['reasoning']
-                    }
-                else:
-                    continue
-                
+                mapping = {
+                    'vet_unit': '-',
+                    'vet_skill': '-',
+                    'vet_level': '-',
+                    'uni_course': unmapped.code,
+                    'uni_skill': unmapped.name,
+                    'uni_level': unmapped.level.value,
+                    'mapping_type': 'Unmapped',
+                    'similarity': 0,
+                    'reasoning': '-'
+                }               
                 mappings.append(mapping)
+            for unmapped in skill_match_details['unmapped_vet']:
+                    # Only VET skill - unmapped VET
+                mapping = {
+                    'vet_unit': unmapped.code,
+                    'vet_skill': unmapped.name,
+                    'vet_level': unmapped.level.value,
+                    'uni_course': '-',
+                    'uni_skill': '-',
+                    'uni_level': '-',
+                    'mapping_type': 'Unmapped',
+                    'similarity': 0,
+                    'reasoning': '-'
+                }
+                mappings.append(mapping)
+            
         else:
             # Fallback if no pre-calculated matches (shouldn't happen)
-            return self._fallback_skill_mapping_extraction(rec, classifier)
+            logger.warning(f"No skill match details found for recommendation {rec.id}")
+            
         
         return mappings
 

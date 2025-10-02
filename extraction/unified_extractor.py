@@ -81,46 +81,6 @@ class UnifiedSkillExtractor:
         
         self.last_request_time = time.time()
     
-    def _generate_prompt(self, text: str, item_type: str) -> str:
-        """Generate extraction prompt optimized for backend"""
-        
-        if self.is_openai:
-            # More detailed prompt for OpenAI
-            return f"""
-            Analyze this {item_type} text and extract ALL skills comprehensively.
-            
-            For each skill provide:
-            1. name: Clear, concise skill name (3-50 characters)
-            2. category: One of [technical, cognitive, practical, foundational, professional]
-            3. level: Rate 1-5 where 1=novice, 5=expert
-            4. context: One of [theoretical, practical, hybrid]
-            5. confidence: Your confidence score (0.0-1.0)
-            6. is_explicit: true if directly stated, false if implied
-            7. keywords: 3-5 relevant keywords
-            
-            Requirements:
-            - Include both explicit and implicit skills
-            - Decompose composite skills
-            - Remove duplicates
-            - Consider prerequisites
-            
-            Text: {text[:3000]}
-            
-            Return ONLY a JSON array of skill objects.
-            """
-        else:
-            # Shorter prompt for vLLM (local models)
-            return f"""
-            Extract skills from this {item_type} text.
-            
-            For each skill: name, category (technical/cognitive/practical/foundational/professional), 
-            level (1-5), context (theoretical/practical/hybrid), confidence (0-1).
-            
-            Text: {text[:2000]}
-            
-            Return JSON array.
-            """
-    
     def _call_genai(self, prompt: str, system_prompt: str = None) -> str:
         """Call GenAI with appropriate method for backend - DETERMINISTIC"""
         
@@ -146,22 +106,6 @@ class UnifiedSkillExtractor:
         except Exception as e:
             logger.error(f"GenAI call failed: {e}")
             return "[]"
-    
-    def _batch_call_genai(self, prompts: List[str], system_prompt: str = None) -> List[str]:
-        """Batch call GenAI if supported"""
-        
-        if self.is_vllm and hasattr(self.genai, '_generate_batch'):
-            # vLLM batch processing
-            return self.genai._generate_batch(
-                system_prompt or "You are an expert skill extractor.",
-                prompts
-            )
-        else:
-            # Fall back to individual calls
-            results = []
-            for prompt in prompts:
-                results.append(self._call_genai(prompt, system_prompt))
-            return results
     
     def extract_skills(self, 
                    items: Union[List, Any],
@@ -194,15 +138,11 @@ class UnifiedSkillExtractor:
         
         # Process items
         if texts_to_process:
-            if self.genai and len(texts_to_process) > 1 and self.config.get("USE_BATCH", True):
-                # Batch processing with study levels
-                extracted_skills = self._batch_extract(texts_to_process, item_type, study_levels_to_process)
-            else:
-                # Individual processing with study levels
-                extracted_skills = []
-                for text, study_level in zip(texts_to_process, study_levels_to_process):
-                    skills = self._single_extract(text, item_type, study_level)
-                    extracted_skills.append(skills)
+            # Individual processing with study levels
+            extracted_skills = []
+            for text, study_level, it in zip(texts_to_process, study_levels_to_process, items_to_process):
+                skills = self._single_extract(text, item_type, study_level, item=it)
+                extracted_skills.append(skills)
             
             # Store results
             for item, skills, study_level in zip(items_to_process, extracted_skills, study_levels_to_process):
@@ -225,14 +165,9 @@ class UnifiedSkillExtractor:
         """Get study level from item or infer it"""
         
         # For University courses, use existing study level or infer
-        if item_type == "uni" and hasattr(item, 'study_level'):
-            if item.study_level and item.study_level.lower() != "unknown":
-                return item.study_level
-        
-        # Check cache first
-        cache_key = self._get_cache_key(item) + "_level"
-        if cache_key in self.study_level_cache:
-            return self.study_level_cache[cache_key]
+        # if item_type == "University Course" and hasattr(item, 'study_level'):
+        #     if item.study_level and item.study_level.lower() != "unknown":
+        #         return item.study_level
         
         # For VET or missing study levels, infer from text
         text = self._get_item_text(item)
@@ -250,20 +185,18 @@ class UnifiedSkillExtractor:
         if hasattr(inferred_level, 'value'):
             inferred_level = inferred_level.value
         
-        # Cache the result
-        self.study_level_cache[cache_key] = inferred_level
-        
-        logger.debug(f"Inferred study level for {self._get_item_code(item)}: {inferred_level}")
+        logger.info(f"Inferred study level for {self._get_item_code(item)}: {inferred_level}")
         
         return inferred_level
     
     # In the UnifiedSkillExtractor class, update the _single_extract method:
 
-    def _single_extract(self, text: str, item_type: str, study_level: str = None) -> List[Skill]:
+    def _single_extract(self, text: str, item_type: str, study_level: str = None, item = None) -> List[Skill]:
         """Extract skills from single text with deterministic ordering"""
         
         if not self.genai:
-            return self._fallback_extraction(text, study_level)
+            logger.error("No GenAI interface available for extraction")
+            return []
         
         # Get standardized extraction prompt
         system_prompt, user_prompt = self.prompt_manager.get_skill_extraction_prompt(
@@ -290,6 +223,7 @@ class UnifiedSkillExtractor:
                         continue
                     
                     seen_names.add(skill_name)
+                    skill_dict['code'] = self._get_item_code(item)
                     skill = self._dict_to_skill(skill_dict)
                     
                     # Ensure level is within expected range
@@ -341,72 +275,6 @@ class UnifiedSkillExtractor:
                     seen_names[std_name] = skill
         
         return final_skills
-    
-    def _batch_extract(self, texts: List[str], item_type: str, study_levels: List[str]) -> List[List[Skill]]:
-        """Batch extract skills with study level consideration"""
-        
-        batch_size = self.config.get("BATCH_SIZE", 8)
-        all_results = []
-        
-        # Process in batches
-        for i in range(0, len(texts), batch_size):
-            batch_texts = texts[i:i + batch_size]
-            batch_levels = study_levels[i:i + batch_size]
-            
-            if self.is_vllm and len(batch_texts) > 1:
-                # Get standardized batch prompt
-                system_prompt, user_prompt = self.prompt_manager.get_batch_extraction_prompt(
-                    texts=batch_texts,
-                    item_type=item_type,
-                    study_levels=batch_levels,
-                    backend_type=self.backend_type
-                )
-                
-                try:
-                    # For batch, we send a single consolidated prompt
-                    response = self._call_genai(user_prompt, system_prompt)
-                    batch_results = self._parse_batch_response(response, len(batch_texts))
-                    
-                    # Process each result with level adjustment
-                    for idx, skills_data in enumerate(batch_results):
-                        skills = []
-                        study_level = batch_levels[idx] if idx < len(batch_levels) else None
-                        
-                        if study_level:
-                            study_enum = StudyLevel.from_string(study_level)
-                            expected_min, expected_max = StudyLevel.get_expected_skill_level_range(study_enum)
-                        else:
-                            expected_min, expected_max = 2, 4
-                        
-                        for s in skills_data:
-                            if isinstance(s, dict):
-                                skill = self._dict_to_skill(s)
-                                
-                                # Adjust skill level
-                                if study_level:
-                                    original_level = skill.level.value
-                                    adjusted_level = self._adjust_skill_level_for_study(
-                                        original_level, expected_min, expected_max
-                                    )
-                                    if adjusted_level != original_level:
-                                        skill.level = SkillLevel(adjusted_level)
-                                        skill.confidence *= 0.95
-                                
-                                skills.append(skill)
-                        
-                        all_results.append(skills)
-                        
-                except Exception as e:
-                    logger.error(f"Batch extraction failed: {e}")
-                    # Fall back to individual processing
-                    for text, study_level in zip(batch_texts, batch_levels):
-                        all_results.append(self._single_extract(text, item_type, study_level))
-            else:
-                # Process individually
-                for text, study_level in zip(batch_texts, batch_levels):
-                    all_results.append(self._single_extract(text, item_type, study_level))
-        
-        return all_results
     
     def _infer_study_level_with_ai(self, text: str, item_type: str) -> Optional[str]:
         """Use AI to infer study level from text"""
@@ -514,6 +382,7 @@ class UnifiedSkillExtractor:
     def _dict_to_skill(self, skill_dict: Dict, study_level: str = None) -> Skill:
         """Convert dictionary to Skill object with description"""
         skill = Skill(
+            code=skill_dict.get("code", "").strip()[:50],
             name=skill_dict.get("name", "Unknown").strip()[:100],
             description=skill_dict.get("description", "").strip()[:200],  # NEW: Extract description
             category=self._map_category(skill_dict.get("category", "technical")),
@@ -544,6 +413,8 @@ class UnifiedSkillExtractor:
         """Get text from item"""
         if hasattr(item, 'get_full_text'):
             return item.get_full_text()
+        elif hasattr(item, 'description') and hasattr(item, 'learning_outcomes'):
+            return item.description + "\n" + "\n".join(item.learning_outcomes)
         elif hasattr(item, 'description'):
             return item.description
         return str(item)

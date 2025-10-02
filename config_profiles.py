@@ -116,8 +116,8 @@ class ConfigProfiles:
             "progressive_depth": "balanced",
             "backend_type": "vllm",
             "default_embedding": "jina",
-            "semantic_weight": 0.7,
-            "level_weight": 0.3,
+            "semantic_weight": 0.65,
+            "level_weight": 0.25,
             "study_level_importance": 0.8,
             "embedding_device": "cuda",
             "ensemble_runs": 1,  # Use ensemble extraction
@@ -127,7 +127,7 @@ class ConfigProfiles:
             "ensemble_similarity_threshold": 0.98,
             "matching_strategy": "direct",  # Options: "clustering", "direct", "hybrid"
             "direct_match_threshold": 0.85,  # Threshold for direct skill name matching
-            "context_weight": 0.15,  # Weight for context similarity
+            "context_weight": 0.10,  # Weight for context similarity
             "partial_threshold": 0.5,  # Threshold for partial matches
             "enable_bidirectional_coverage": True,  # Use bidirectional coverage
             "enable_one_to_many": True,  # Support one-to-many skill mappings
@@ -321,7 +321,7 @@ class SimpleConfig:
         self.THRESHOLDS = {
             "full_transfer": 0.8,
             "partial_transfer": 0.5,
-            "minimum_viable": 0.3
+            "minimum_viable": 0.1
         }
         
         # Store backend types for easy checking

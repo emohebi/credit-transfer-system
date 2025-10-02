@@ -18,6 +18,7 @@ class Skill:
     category: SkillCategory
     level: SkillLevel
     context: SkillContext
+    code: str = ""  # Optional standardized skill code
     description: str = ""  # NEW: Brief description of skill application in context
     keywords: List[str] = field(default_factory=list)
     evidence_type: str = ""  
@@ -38,6 +39,7 @@ class Skill:
     def to_dict(self) -> Dict:
         """Convert to dictionary for serialization"""
         return {
+            "code": self.code,
             "name": self.name,
             "category": self.category.value,
             "level": self.level.name,
@@ -56,6 +58,7 @@ class Skill:
     def from_dict(cls, data: Dict):
         """Create from dictionary"""
         return cls(
+            code=data.get("code", ""),
             name=data["name"],
             category=SkillCategory(data["category"]),
             level=SkillLevel[data["level"]],
