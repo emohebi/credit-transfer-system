@@ -209,7 +209,7 @@ class UnifiedSkillExtractor:
         try:
             response = self._call_genai(user_prompt, system_prompt)
             skills_data = self._parse_json_response(response)
-            
+            logger.info(f"{skills_data}")
             # Convert to Skill objects
             skills = []
             seen_names = set()
@@ -310,6 +310,7 @@ class UnifiedSkillExtractor:
             
         except Exception as e:
             logger.error(f"Error in skill extraction: {e}")
+            return []
             # return self._fallback_extraction(text, study_level)
         
     def _final_deduplication(self, skills: List[Skill]) -> List[Skill]:

@@ -321,7 +321,7 @@ class SimpleConfig:
         self.THRESHOLDS = {
             "full_transfer": 0.8,
             "partial_transfer": 0.5,
-            "minimum_viable": 0.1
+            "minimum_viable": 0.0
         }
         
         # Store backend types for easy checking

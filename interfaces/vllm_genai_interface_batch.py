@@ -183,3 +183,68 @@ class VLLMGenAIInterfaceBatch:
         responses = self._generate_batch(system_prompt, [user_prompt], max_tokens)
         # logger.info(f"{responses[0]}")
         return responses[0] if responses else ""
+    
+    def detect_edge_cases(self, vet_text: str, uni_text: str, mapping_info: Dict) -> Dict:
+        """Detect edge cases in credit mapping"""
+        system_prompt = self.prompts.edge_case_detection_prompt()
+        user_prompt = f"""VET content: {vet_text[:1000]}
+University content: {uni_text[:1000]}
+Mapping summary: {json.dumps(mapping_info, indent=2)}"""
+        
+        response = self._generate_batch(system_prompt, [user_prompt])[0]
+        return self._parse_json_response(response)
+    
+    def _parse_json_response(self, response: str) -> Dict:
+        """Parse JSON from model response"""
+        try:
+            json_match = JSONExtraction.extract_json_from_text(response)
+            if json_match:
+                return json.loads(json_match)
+        except json.JSONDecodeError as e:
+            logger.warning(f"Failed to parse JSON response: {e}")
+        return {}
+    
+    def determine_context(self, text: str) -> Dict:
+        """Determine context for single text (delegates to batch)"""
+        results = self.determine_contexts_batch([text])
+        return results[0] if results else {}
+    
+    def determine_contexts_batch(self, texts: List[str]) -> List[Dict]:
+        """Determine theoretical vs practical context for multiple texts"""
+        system_prompt = self.prompts.context_determination_prompt()
+        user_prompts = [f"Text to analyze:\n{text[:2000]}" for text in texts]
+        
+        all_results = []
+        for i in range(0, len(user_prompts), self.batch_size):
+            batch = user_prompts[i:i + self.batch_size]
+            responses = self._generate_batch(system_prompt, batch, max_tokens=512)
+            
+            for response in responses:
+                all_results.append(self._parse_json_response(response))
+        
+        return all_results
+    
+    def extract_technology_versions(self, text: str) -> Dict:
+        """Extract technology versions and assess currency"""
+        system_prompt = self.prompts.technology_version_extraction_prompt()
+        user_prompt = f"Text to analyze:\n{text[:2000]}"
+        
+        response = self._generate_batch(system_prompt, [user_prompt])[0]
+        return self._parse_json_response(response)
+    
+    def analyze_prerequisites(self, prerequisites: List[str], course_text: str) -> Dict:
+        """Analyze prerequisites and dependencies"""
+        system_prompt = self.prompts.prerequisite_analysis_prompt()
+        user_prompt = f"""Prerequisites: {', '.join(prerequisites)}
+Course context: {course_text[:1000]}"""
+        
+        response = self._generate_batch(system_prompt, [user_prompt])[0]
+        return self._parse_json_response(response)
+    
+    def decompose_composite_skills(self, skills: List[str]) -> Dict:
+        """Decompose composite skills into components"""
+        system_prompt = self.prompts.composite_skill_decomposition_prompt()
+        user_prompt = f"Skills to analyze:\n{json.dumps(skills[:30], indent=2)}"
+        
+        response = self._generate_batch(system_prompt, [user_prompt])[0]
+        return self._parse_json_response(response)

@@ -68,7 +68,9 @@ Your expertise includes understanding educational taxonomies (Bloom's, Australia
 - Task descriptions ("complete reports," "attend meetings")
 
 ### CRITICAL Skill Naming Convention:
+- **Use NATURAL, PROFESSIONAL terminology with sufficient context**
 - **MUST BE 3-4 WORDS MAXIMUM**
+- **Match existing taxonomies**: ESCO, O*NET, SFIA, job postings
 - **Remove unnecessary qualifiers and redundant descriptors**
 - Follow the pattern: [Action/Process] + [Domain/Context] + [Object/Outcome]
 - **Optimal length is 3-4 words**: Provide enough context while maintaining clarity
@@ -552,7 +554,7 @@ Apply the chain-of-thought process to each text to extract true HUMAN CAPABILITI
     Your task is to generate clear, actionable descriptions that explain HOW each skill is applied in practice, based on the evidence provided.
 
     Each description should:
-    - Be 1-2 sentences (20-40 words)
+    - Be 1 sentences (max 10-15 words)
     - Explain the practical application of the skill
     - Connect to the specific context shown in the evidence
     - Use active voice and professional language
