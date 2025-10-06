@@ -3,6 +3,7 @@ Simplified credit transfer analyzer with progressive analysis
 """
 
 import logging
+from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime
 
@@ -62,6 +63,72 @@ class SimplifiedAnalyzer:
         self.matching_strategy = self.config.get("matching_strategy".upper(), "clustering")
         self.direct_threshold = self.config.get("direct_match_threshold".upper(), 0.85)
         
+    def load_pre_extracted_skills(self, vet_qual: VETQualification, uni_qual: UniQualification) -> bool:
+        """
+        Try to load pre-extracted skills from disk
+        
+        Returns:
+            True if skills were loaded successfully, False otherwise
+        """
+        try:
+            from reporting.skill_export import SkillExportManager
+            skill_export = SkillExportManager(output_dir="output/skills")
+            
+            # Look for most recent skill files
+            vet_dir = Path("output/skills/vet")
+            uni_dir = Path("output/skills/uni")
+            
+            # Find matching VET skills file
+            vet_files = list(vet_dir.glob(f"{vet_qual.code}_skills_*.json"))
+            if vet_files:
+                # Get most recent file
+                latest_vet = max(vet_files, key=lambda p: p.stat().st_mtime)
+                logger.info(f"Loading pre-extracted VET skills from {latest_vet}")
+                
+                # Load the skills
+                loaded_vet_qual = skill_export.import_vet_skills(str(latest_vet))
+                
+                # Map loaded skills back to original qualification units
+                for unit in vet_qual.units:
+                    for loaded_unit in loaded_vet_qual.units:
+                        if unit.code == loaded_unit.code:
+                            unit.extracted_skills = loaded_unit.extracted_skills
+                            logger.info(f"Loaded {len(unit.extracted_skills)} skills for VET unit {unit.code}")
+                            break
+            
+            # Find matching University skills file
+            uni_files = list(uni_dir.glob(f"{uni_qual.code}_skills_*.json"))
+            if uni_files:
+                # Get most recent file
+                latest_uni = max(uni_files, key=lambda p: p.stat().st_mtime)
+                logger.info(f"Loading pre-extracted University skills from {latest_uni}")
+                
+                # Load the skills
+                loaded_uni_qual = skill_export.import_uni_skills(str(latest_uni))
+                
+                # Map loaded skills back to original qualification courses
+                for course in uni_qual.courses:
+                    for loaded_course in loaded_uni_qual.courses:
+                        if course.code == loaded_course.code:
+                            course.extracted_skills = loaded_course.extracted_skills
+                            logger.info(f"Loaded {len(course.extracted_skills)} skills for Uni course {course.code}")
+                            break
+            
+            # Check if we have skills for all units/courses
+            vet_has_skills = all(len(unit.extracted_skills) > 0 for unit in vet_qual.units)
+            uni_has_skills = all(len(course.extracted_skills) > 0 for course in uni_qual.courses)
+            
+            if vet_has_skills and uni_has_skills:
+                logger.info("Successfully loaded all pre-extracted skills")
+                return True
+            else:
+                logger.warning("Some units/courses missing extracted skills")
+                return False
+                
+        except Exception as e:
+            logger.warning(f"Could not load pre-extracted skills: {e}")
+            return False
+            
     def _validate_qualification_data(self, vet_qual: VETQualification, uni_qual: UniQualification):
         """Validate and fix qualification data before analysis"""
         # Fix missing nominal hours in VET units
@@ -77,9 +144,10 @@ class SimplifiedAnalyzer:
                 course.credit_points = 0
     
     def analyze(self, 
-                vet_qual: VETQualification,
-                uni_qual: UniQualification,
-                depth: str = "auto") -> List[CreditTransferRecommendation]:
+            vet_qual: VETQualification,
+            uni_qual: UniQualification,
+            depth: str = "auto",
+            use_cached_skills: bool = True) -> List[CreditTransferRecommendation]:
         """
         Analyze credit transfer with progressive depth
         
@@ -87,6 +155,7 @@ class SimplifiedAnalyzer:
             vet_qual: VET qualification
             uni_qual: University qualification  
             depth: Analysis depth ('quick', 'balanced', 'deep', or 'auto')
+            use_cached_skills: Whether to try loading pre-extracted skills
             
         Returns:
             List of recommendations
@@ -94,6 +163,26 @@ class SimplifiedAnalyzer:
         self._validate_qualification_data(vet_qual, uni_qual)
         
         logger.info(f"Starting simplified analysis: {vet_qual.code} -> {uni_qual.code}")
+        
+        # Try to load pre-extracted skills if requested
+        skills_loaded = False
+        if use_cached_skills:
+            skills_loaded = self.load_pre_extracted_skills(vet_qual, uni_qual)
+        
+        if not skills_loaded:
+            logger.info("Extracting skills (not found in cache)...")
+            # Extract skills using the extractor
+            vet_skills = self.extractor.extract_skills(vet_qual.units)
+            uni_skills = self.extractor.extract_skills(uni_qual.courses)
+            
+            # Assign extracted skills back to objects
+            for unit in vet_qual.units:
+                if unit.code in vet_skills:
+                    unit.extracted_skills = vet_skills[unit.code]
+            
+            for course in uni_qual.courses:
+                if course.code in uni_skills:
+                    course.extracted_skills = uni_skills[course.code]
         
         # Determine depth automatically if needed
         if depth == "auto":
@@ -124,10 +213,24 @@ class SimplifiedAnalyzer:
         """Quick analysis using embeddings only"""
         logger.info("Performing quick analysis")
         
-        # Extract skills (uses cache if available)
-        vet_skills = self.extractor.extract_skills(vet_qual.units)
-        uni_skills = self.extractor.extract_skills(uni_qual.courses)
-        logger.info(f"Extracted {sum(len(s) for s in vet_skills.values())} VET skills and {sum(len(s) for s in uni_skills.values())} Uni skills")
+        # Skills should already be loaded in the qualification objects
+        # Build skill dictionaries from loaded skills
+        vet_skills = {}
+        for unit in vet_qual.units:
+            if unit.extracted_skills:
+                vet_skills[unit.code] = unit.extracted_skills
+        
+        uni_skills = {}
+        for course in uni_qual.courses:
+            if course.extracted_skills:
+                uni_skills[course.code] = course.extracted_skills
+        
+        if not vet_skills or not uni_skills:
+            logger.error("No skills available for analysis. Please extract skills first.")
+            return []
+        
+        logger.info(f"Using {sum(len(s) for s in vet_skills.values())} VET skills and {sum(len(s) for s in uni_skills.values())} Uni skills")
+        
         recommendations = []
         logger.info(f"Using matching strategy: {self.matching_strategy}")
         # Simple matching for each course

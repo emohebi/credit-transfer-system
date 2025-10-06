@@ -178,7 +178,31 @@ def main():
         default="clustering",
         help="Skill matching strategy (default: clustering)"
     )
+    
+    parser.add_argument(
+        "--extract-skills",
+        action="store_true",
+        help="Extract and save skills before analysis (use --skip-analysis to only extract)"
+    )
+
+    parser.add_argument(
+        "--skip-analysis",
+        action="store_true",
+        help="Skip analysis after skill extraction"
+    )
+
+    parser.add_argument(
+        "--use-cached-skills",
+        action="store_true",
+        default=True,
+        help="Use pre-extracted skills if available (default: True)"
+    )
     args = parser.parse_args()
+    
+    args.extract_skills = False
+    args.skip_analysis = args.extract_skills
+    args.use_cached_skills = True
+    args.verbose = True  # Set to True for detailed config output
     
     # List available backends if requested
     if args.list_backends:
@@ -217,7 +241,7 @@ def main():
     
     # Initialize quality monitor
     monitor = QualityMonitor() if args.monitor else None
-    args.vet_file = "./data/diploma_of_business.json"
+    args.vet_file = "./data/diploma_of_business copy.json"
     args.uni_file = "./data/933AA_Diploma_of_Business.json"
     
     # args.vet_file = "./data/sample_vet.json"
@@ -230,6 +254,21 @@ def main():
         
         logger.info(f"Loaded VET: {vet_qual.name} ({len(vet_qual.units)} units)")
         logger.info(f"Loaded Uni: {uni_qual.name} ({len(uni_qual.courses)} courses)")
+        
+        if args.extract_skills:
+            logger.info("Extracting and saving skills...")
+            from extract_skills import extract_and_save_skills
+            vet_filepath, uni_filepath = extract_and_save_skills(
+                args.vet_file, 
+                args.uni_file, 
+                args.profile, 
+                args.backend
+            )
+            logger.info(f"Skills saved to {vet_filepath} and {uni_filepath}")
+            
+            if args.skip_analysis:
+                logger.info("Skipping analysis as requested")
+                sys.exit(0)
         
         # Create interfaces using factory
         logger.info("Initializing AI interfaces...")
@@ -263,7 +302,8 @@ def main():
         recommendations = analyzer.analyze(
             vet_qual,
             uni_qual,
-            depth=args.depth
+            depth=args.depth,
+            use_cached_skills=args.use_cached_skills
         )
         
         analysis_time = time.time() - start_time

@@ -333,6 +333,10 @@ class SimpleConfig:
         self.EMBEDDING_MODEL_NAME = getattr(self, 'EMBEDDING_MODEL', 'unknown')
         self.EMBEDDING_DEVICE = getattr(self, 'EMBEDDING_DEVICE', 'cpu')
     
+    def get(self, key: str, default=None):
+        """Get configuration value with default"""
+        return getattr(self, key.upper(), default)
+    
     def to_dict(self) -> Dict:
         """Export configuration as dictionary"""
         return {k: v for k, v in self.__dict__.items() 

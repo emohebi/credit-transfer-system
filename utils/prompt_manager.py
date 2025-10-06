@@ -334,7 +334,7 @@ JSON FORMAT:
     "level": """+f"""{int((expected_min + expected_max) / 2) if study_level else 3}"""+""",  // SFIA level (1-7)
     "context": "practical",  // theoretical/practical/hybrid
     "confidence": 0.7,  // Extraction confidence
-    "evidence": "...",  // Text excerpt showing this capability (max 100 chars)
+    "evidence": "...",  // The exact unmodified text in the input showing this capability (max 200 chars)
     "translation_rationale": "Excel reports → financial data analysis capability",  // How you derived this
     "sfia_autonomy": "general_direction",  // SFIA autonomy level
     "sfia_influence": "team_level"  // SFIA influence scope

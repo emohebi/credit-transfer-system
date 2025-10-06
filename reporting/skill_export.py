@@ -133,10 +133,10 @@ class SkillExportManager:
     # ========== JSON EXPORT METHODS ==========
     
     def _export_vet_to_json(self, 
-                           vet_qual: VETQualification, 
-                           filepath: Path,
-                           include_metadata: bool = True):
-        """Export VET skills to JSON file"""
+                       vet_qual: VETQualification, 
+                       filepath: Path,
+                       include_metadata: bool = True):
+        """Export VET skills to JSON file with ALL metadata"""
         data = {
             "qualification": {
                 "code": vet_qual.code,
@@ -163,18 +163,22 @@ class SkillExportManager:
                 "skills": []
             }
             
-            # Add each skill with all attributes
+            # Add each skill with ALL attributes
             for skill in unit.extracted_skills:
                 skill_data = {
                     "name": skill.name,
+                    "code": skill.code,  # Add skill code
+                    "description": skill.description,  # Add description
                     "category": skill.category.value,
                     "level": skill.level.name,
                     "level_value": skill.level.value,
                     "context": skill.context.value,
                     "keywords": skill.keywords,
-                    "evidence_type": skill.evidence_type,
+                    # "evidence_type": skill.evidence_type,
                     "confidence": skill.confidence,
-                    "source": skill.source
+                    # "source": skill.source,
+                    "evidence": skill.evidence  # Add evidence
+                    # "translation_rationale": skill.translation_rationale  # Add translation rationale
                 }
                 
                 if include_metadata and skill.metadata:
@@ -200,10 +204,10 @@ class SkillExportManager:
             json.dump(data, f, indent=2, ensure_ascii=False)
     
     def _export_uni_to_json(self,
-                           uni_qual: UniQualification,
-                           filepath: Path,
-                           include_metadata: bool = True):
-        """Export University skills to JSON file"""
+                       uni_qual: UniQualification,
+                       filepath: Path,
+                       include_metadata: bool = True):
+        """Export University skills to JSON file with ALL metadata"""
         data = {
             "qualification": {
                 "code": uni_qual.code,
@@ -233,18 +237,22 @@ class SkillExportManager:
                 "skills": []
             }
             
-            # Add each skill with all attributes
+            # Add each skill with ALL attributes
             for skill in course.extracted_skills:
                 skill_data = {
                     "name": skill.name,
+                    "code": skill.code,  # Add skill code
+                    "description": skill.description,  # Add description
                     "category": skill.category.value,
                     "level": skill.level.name,
                     "level_value": skill.level.value,
                     "context": skill.context.value,
                     "keywords": skill.keywords,
-                    "evidence_type": skill.evidence_type,
+                    # "evidence_type": skill.evidence_type,
                     "confidence": skill.confidence,
-                    "source": skill.source
+                    # "source": skill.source,
+                    "evidence": skill.evidence  # Add evidence
+                    # "translation_rationale": skill.translation_rationale  # Add translation rationale
                 }
                 
                 if include_metadata and skill.metadata:
@@ -472,7 +480,7 @@ class SkillExportManager:
     
     def import_vet_skills(self, filepath: str) -> VETQualification:
         """
-        Import VET skills from JSON file
+        Import VET skills from JSON file with ALL metadata
         
         Args:
             filepath: Path to JSON file with VET skills
@@ -501,10 +509,12 @@ class SkillExportManager:
                 prerequisites=unit_data.get("prerequisites", [])
             )
             
-            # Load skills
+            # Load skills with ALL metadata
             for skill_data in unit_data["skills"]:
                 skill = Skill(
+                    code=skill_data.get("code", ""),
                     name=skill_data["name"],
+                    description=skill_data.get("description", ""),  # Load description
                     category=SkillCategory(skill_data["category"]),
                     level=SkillLevel[skill_data["level"]],
                     context=SkillContext(skill_data["context"]),
@@ -512,6 +522,8 @@ class SkillExportManager:
                     evidence_type=skill_data.get("evidence_type", ""),
                     confidence=skill_data.get("confidence", 1.0),
                     source=skill_data.get("source", ""),
+                    evidence=skill_data.get("evidence", ""),  # Load evidence
+                    translation_rationale=skill_data.get("translation_rationale", ""),  # Load rationale
                     metadata=skill_data.get("metadata", {})
                 )
                 unit.extracted_skills.append(skill)
@@ -520,10 +532,10 @@ class SkillExportManager:
         
         logger.info(f"Imported VET skills from {filepath}")
         return vet_qual
-    
+
     def import_uni_skills(self, filepath: str) -> UniQualification:
         """
-        Import University skills from JSON file
+        Import University skills from JSON file with ALL metadata
         
         Args:
             filepath: Path to JSON file with University skills
@@ -555,10 +567,12 @@ class SkillExportManager:
                 topics=course_data.get("topics", [])
             )
             
-            # Load skills
+            # Load skills with ALL metadata
             for skill_data in course_data["skills"]:
                 skill = Skill(
+                    code=skill_data.get("code", ""),
                     name=skill_data["name"],
+                    description=skill_data.get("description", ""),  # Load description
                     category=SkillCategory(skill_data["category"]),
                     level=SkillLevel[skill_data["level"]],
                     context=SkillContext(skill_data["context"]),
@@ -566,6 +580,8 @@ class SkillExportManager:
                     evidence_type=skill_data.get("evidence_type", ""),
                     confidence=skill_data.get("confidence", 1.0),
                     source=skill_data.get("source", ""),
+                    evidence=skill_data.get("evidence", ""),  # Load evidence
+                    translation_rationale=skill_data.get("translation_rationale", ""),  # Load rationale
                     metadata=skill_data.get("metadata", {})
                 )
                 course.extracted_skills.append(skill)
