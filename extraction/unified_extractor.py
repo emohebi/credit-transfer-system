@@ -204,149 +204,165 @@ class UnifiedSkillExtractor:
             study_level=study_level,
             backend_type=self.backend_type
         )
-        
-        try:
-            response = self._call_genai(user_prompt, system_prompt)
-            skills_data = self._parse_json_response(response)
-            # logger.info(f"{skills_data}")
-            # Convert to Skill objects
-            skills = []
-            seen_names = set()
-            
-            for skill_dict in skills_data:
-                if isinstance(skill_dict, dict):
-                    skill_name = skill_dict.get("name", "").lower().strip()
-                    
-                    # Skip duplicates
-                    if skill_name in seen_names:
-                        continue
-                    
-                    seen_names.add(skill_name)
-                    skill_dict['code'] = self._get_item_code(item)
-                    skill = self._dict_to_skill(skill_dict)
-                    
-                    # Ensure level is within expected range
-                    if study_level:
-                        study_enum = StudyLevel.from_string(study_level)
-                        expected_min, expected_max = StudyLevel.get_expected_skill_level_range(study_enum)
+        counter_1 = 0
+        loop = True
+        while loop:
+            loop = False
+            try:
+                response = self._call_genai(user_prompt, system_prompt)
+                skills_data = self._parse_json_response(response)
+                # logger.info(f"{skills_data}")
+                # Convert to Skill objects
+                skills = []
+                seen_names = set()
+                
+                for skill_dict in skills_data:
+                    if isinstance(skill_dict, dict):
+                        skill_name = skill_dict.get("name", "").lower().strip()
                         
-                        if skill.level.value < expected_min:
-                            skill.level = SkillLevel(expected_min)
-                        elif skill.level.value > expected_max:
-                            skill.level = SkillLevel(expected_max)
-                    
-                    # Only include skills with sufficient confidence
-                    if skill.confidence >= self.config.get("MIN_CONFIDENCE", 0.7):
-                        skills.append(skill)
-            
-            # Sort skills by name for consistent ordering
-            skills.sort(key=lambda s: (s.name.lower(), -s.confidence))
-            # Generate descriptions for extracted skills if GenAI is available
-            if self.genai and skills:
-                try:
-                    # Prepare skills with evidence for description generation
-                    skills_for_description = []
-                    for skill in skills:  # Limit to first 20 for efficiency
-                        skill_dict = {
-                            'name': skill.name,
-                            'category': skill.category.value,
-                            'level': skill.level.value,
-                            'context': skill.context.value,
-                            'evidence': skill.evidence
-                        }
-                        skills_for_description.append(skill_dict)
-                    if self.is_openai:
-                        # Get description generation prompt
-                        system_prompt, user_prompt = self.prompt_manager.get_skill_description_prompt(
-                            skills_with_evidence=skills_for_description,
-                            context_type=item_type,
-                            backend_type=self.backend_type
-                        )
+                        # Skip duplicates
+                        if skill_name in seen_names:
+                            continue
                         
-                        # Generate descriptions
-                        response = self._call_genai(user_prompt, system_prompt)
-                        descriptions_data = self._parse_json_response(response)
-                    else:
-                        user_prompts = []
-                        for skill_dict in skills_for_description:  # Limit to 20 for efficiency
+                        seen_names.add(skill_name)
+                        skill_dict['code'] = self._get_item_code(item)
+                        skill = self._dict_to_skill(skill_dict)
+                        
+                        # Ensure level is within expected range
+                        if study_level:
+                            study_enum = StudyLevel.from_string(study_level)
+                            expected_min, expected_max = StudyLevel.get_expected_skill_level_range(study_enum)
+                            
+                            if skill.level.value < expected_min:
+                                skill.level = SkillLevel(expected_min)
+                            elif skill.level.value > expected_max:
+                                skill.level = SkillLevel(expected_max)
+                        
+                        # Only include skills with sufficient confidence
+                        if skill.confidence >= self.config.get("MIN_CONFIDENCE", 0.7):
+                            skills.append(skill)
+                
+                # Sort skills by name for consistent ordering
+                skills.sort(key=lambda s: (s.name.lower(), -s.confidence))
+                # Generate descriptions for extracted skills if GenAI is available
+                if self.genai and skills:
+                    try:
+                        # Prepare skills with evidence for description generation
+                        skills_for_description = []
+                        for skill in skills:  # Limit to first 20 for efficiency
+                            skill_dict = {
+                                'name': skill.name,
+                                'category': skill.category.value,
+                                'level': skill.level.value,
+                                'context': skill.context.value,
+                                'evidence': skill.evidence
+                            }
+                            skills_for_description.append(skill_dict)
+                        if self.is_openai:
+                            # Get description generation prompt
                             system_prompt, user_prompt = self.prompt_manager.get_skill_description_prompt(
-                                skills_with_evidence=[skill_dict],
+                                skills_with_evidence=skills_for_description,
                                 context_type=item_type,
                                 backend_type=self.backend_type
                             )
-                            user_prompts.append(user_prompt)
-                        responses = self.genai._generate_batch(system_prompt, user_prompts)
-                        descriptions_data = self._parse_json_response(responses)
-                    
-                    # Map descriptions back to skills
-                    if isinstance(descriptions_data, list):
-                        description_map = {}
-                        for desc_item in descriptions_data:
-                            if isinstance(desc_item, dict):
-                                skill_name = desc_item.get('name', '').lower().strip()
-                                description = desc_item.get('description', '')
-                                if skill_name and description:
-                                    description_map[skill_name] = description
+                            
+                            # Generate descriptions
+                            response = self._call_genai(user_prompt, system_prompt)
+                            descriptions_data = self._parse_json_response(response)
+                        else:
+                            user_prompts = []
+                            for skill_dict in skills_for_description:  # Limit to 20 for efficiency
+                                system_prompt, user_prompt = self.prompt_manager.get_skill_description_prompt(
+                                    skills_with_evidence=[skill_dict],
+                                    context_type=item_type,
+                                    backend_type=self.backend_type
+                                )
+                                user_prompts.append(user_prompt)
+                            responses = self.genai._generate_batch(system_prompt, user_prompts)
+                            descriptions_data = self._parse_json_response(responses)
                         
-                        # Update skill objects with descriptions
-                        for skill in skills:
-                            skill_name_lower = skill.name.lower().strip()
-                            if skill_name_lower in description_map:
-                                skill.description = description_map[skill_name_lower]
-                                logger.debug(f"Added description for skill '{skill.name}': {skill.description[:50]}...")
-                    
-                    logger.info(f"Generated descriptions for {len([s for s in skills if s.description])} skills")
-                    
-                    # Generate keywords for extracted skills
-                    if self.genai and skills:
-                        try:
-                            logger.info("Generating keywords for extracted skills...")
+                        # Map descriptions back to skills
+                        if isinstance(descriptions_data, list):
+                            description_map = {}
+                            for desc_item in descriptions_data:
+                                if isinstance(desc_item, dict):
+                                    skill_name = desc_item.get('name', '').lower().strip()
+                                    description = desc_item.get('description', '')
+                                    if skill_name and description:
+                                        description_map[skill_name] = description
                             
-                            # Extract keywords using AI
-                            keyword_map = self._extract_keywords_for_skills(skills, item_type)
-                            
-                            # Update skill objects with keywords
+                            # Update skill objects with descriptions
                             for skill in skills:
                                 skill_name_lower = skill.name.lower().strip()
-                                if skill_name_lower in keyword_map:
-                                    skill.keywords = keyword_map[skill_name_lower]
-                                    logger.debug(f"Added {len(skill.keywords)} keywords for skill '{skill.name}'")
-                                else:
-                                    # Use fallback keyword generation
-                                    skill.keywords = self._generate_fallback_keywords(
-                                        skill.name,
-                                        skill.evidence,
-                                        skill.category.value
-                                    )
-                                    logger.info(f"Generated {len(skill.keywords)} fallback keywords for skill '{skill.name}'")
-                            
-                            logger.info(f"Generated keywords for {len(skills)} skills")
-                            
-                        except Exception as e:
-                            logger.warning(f"Failed to generate skill keywords: {e}")
-                            # Fallback: generate basic keywords for all skills
-                            for skill in skills:
-                                if not skill.keywords:
-                                    skill.keywords = self._generate_fallback_keywords(
-                                        skill.name,
-                                        skill.evidence,
-                                        skill.category.value
-                                    )
-                    
-                except Exception as e:
-                    logger.warning(f"Failed to generate skill descriptions: {e}")
-            
-            # Limit to configured maximum
-            max_skills = self.config.get("MAX_SKILLS_PER_UNIT", 100)
-            if len(skills) > max_skills:
-                skills = skills[:max_skills]
-            
-            return skills
-            
-        except Exception as e:
-            logger.error(f"Error in skill extraction: {e}")
-            return []
-            # return self._fallback_extraction(text, study_level)
+                                if skill_name_lower in description_map:
+                                    skill.description = description_map[skill_name_lower]
+                                    logger.debug(f"Added description for skill '{skill.name}': {skill.description[:50]}...")
+                        
+                        logger.info(f"Generated descriptions for {len([s for s in skills if s.description])} skills")
+                        
+                    except Exception as e:
+                        logger.warning(f"Failed to generate skill descriptions: {e}")
+
+                # Generate keywords for extracted skills
+                if self.genai and skills:
+                    try:
+                        logger.info("Generating keywords for extracted skills...")
+                        
+                        counter_2 = 0
+                        loop_2 = True
+                        # Extract keywords using AI
+                        while loop_2:
+                            loop_2 = False
+                            keyword_map = self._extract_keywords_for_skills(skills, item_type)
+                            if len(keyword_map) == 0 and counter_2 <= 3:
+                                loop = True
+                                counter_2 += 1
+                                logger.info(f"keyword gen trying {counter_2} out of 3 ... ") 
+
+                        
+                        # Update skill objects with keywords
+                        for skill in skills:
+                            skill_name_lower = skill.name.lower().strip()
+                            if skill_name_lower in keyword_map:
+                                skill.keywords = keyword_map[skill_name_lower]
+                                logger.debug(f"Added {len(skill.keywords)} keywords for skill '{skill.name}'")
+                            else:
+                                # Use fallback keyword generation
+                                skill.keywords = self._generate_fallback_keywords(
+                                    skill.name,
+                                    skill.evidence,
+                                    skill.category.value
+                                )
+                                logger.info(f"Generated {len(skill.keywords)} fallback keywords for skill '{skill.name}'")
+                        
+                        logger.info(f"Generated keywords for {len(skills)} skills")
+                        
+                    except Exception as e:
+                        logger.warning(f"Failed to generate skill keywords: {e}")
+                        # Fallback: generate basic keywords for all skills
+                        for skill in skills:
+                            if not skill.keywords:
+                                skill.keywords = self._generate_fallback_keywords(
+                                    skill.name,
+                                    skill.evidence,
+                                    skill.category.value
+                                )
+                
+                # Limit to configured maximum
+                max_skills = self.config.get("MAX_SKILLS_PER_UNIT", 100)
+                if len(skills) > max_skills:
+                    skills = skills[:max_skills]
+                
+                return skills
+                
+            except Exception as e:
+                logger.error(f"Error in skill extraction: {e}")
+                counter_1 += 1
+                if counter_l <= 3:
+                    logger.info(f"tring again {e} out of 3 ...")
+                    loop = True
+        return []
+        # return self._fallback_extraction(text, study_level)
             
     def _extract_keywords_for_skills(self, skills: List[Skill], context_type: str = "VET") -> Dict[str, List[str]]:
         """
@@ -397,7 +413,7 @@ class UnifiedSkillExtractor:
                         backend_type=self.backend_type
                     )
                     user_prompts.append(user_prompt)
-                response = self._generate_batch(system_prompt, user_prompts)
+                response = self.genai._generate_batch(system_prompt, user_prompts)
                 keywords_data = self._parse_keyword_response(response)
             
             # Map keywords back to skills
@@ -577,11 +593,12 @@ class UnifiedSkillExtractor:
         try:
             # Try to find JSON array in the response
             # Look for pattern [...] 
-            json_array_pattern = r'\[\s*\{[^[\]]*\}\s*(?:,\s*\{[^[\]]*\}\s*)*\]'
+            json_array_pattern = r'(?:assistantfinal.*?)?(\[\s*\{[^}]*\}\s*(?:\s*,\s*\{[^}]*\}\s*)*\])'
             match = re.search(json_array_pattern, response, re.DOTALL)
             
             if match:
-                json_str = match.group(0)
+                json_str = match.group(1)
+                # logger.info(f"{response} >>> {json_str}")
                 # Clean up the JSON string
                 json_str = json_str.replace('\n', ' ').replace('\r', '')
                 parsed = json.loads(json_str)
@@ -611,7 +628,7 @@ class UnifiedSkillExtractor:
                 return [parsed]
                 
         except json.JSONDecodeError as e:
-            logger.info(f"JSON decode error in keyword parsing: {e}")
+            logger.error(f"JSON decode error in keyword parsing: {e}")
             
             # Fallback: try to extract keyword arrays manually
             try:
@@ -639,7 +656,7 @@ class UnifiedSkillExtractor:
         except Exception as e:
             logger.warning(f"Error parsing keyword response: {e}")
         
-        return []
+        return None
     
     def _generate_fallback_keywords(self, skill_name: str, evidence: str = "", category: str = "") -> List[str]:
         """Generate fallback keywords if AI extraction fails"""
@@ -795,7 +812,7 @@ class UnifiedSkillExtractor:
             try:
                 return json.loads(json_match.group(1))
             except:
-                logger.error(f"Failed to parse JSON from response: {response}")
+                logger.error(f"Failed to parse JSON from response")
         return None
            
     def _parse_json_response(self, response: str) -> Any:

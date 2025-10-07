@@ -220,7 +220,7 @@ Each skill must:
 - Align with educational taxonomies is a MUST
 - Make sure to assign an appropriate SFIA level (1-7) based on the provided guidelines, do not output levels outside the expected range for the given study level
 """+"""
-JSON FORMAT:
+Strict below JSON FORMAT for direct parsing:
 [
   {
     "name": "financial data analysis",  // Human capability with context (2-4 WORDS OPTIMAL)
@@ -229,7 +229,6 @@ JSON FORMAT:
     "context": "practical",  // theoretical/practical/hybrid
     "confidence": 0.7,  // Extraction confidence
     "evidence": "...",  // The exact unmodified text in the input showing this capability (max 200 chars)
-    "translation_rationale": "Excel reports → financial data analysis capability"  // How you derived this
   }
 ]
 
@@ -302,7 +301,7 @@ Return ONLY the JSON array:"""
         - "database design optimization" → ["SQL", "database", "schema", "performance", "indexing", "queries", "normalization", "data modeling", "optimization"]
 
         ## Output Format:
-        Return a JSON array with keywords for each skill:
+        Strict below JSON FORMAT for direct parsing:
         [
         {
             "skill_index": 0,
@@ -311,7 +310,7 @@ Return ONLY the JSON array:"""
         }
         ]
 
-        Return ONLY the JSON array with 3-5 keywords per skill:"""
+        Return ONLY the JSON:"""
 
         return system_prompt, user_prompt
 
