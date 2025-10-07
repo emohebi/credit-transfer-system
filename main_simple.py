@@ -199,7 +199,7 @@ def main():
     )
     args = parser.parse_args()
     
-    args.extract_skills = False
+    args.extract_skills = True
     args.skip_analysis = args.extract_skills
     args.use_cached_skills = True
     args.verbose = True  # Set to True for detailed config output

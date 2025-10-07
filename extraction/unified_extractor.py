@@ -189,7 +189,6 @@ class UnifiedSkillExtractor:
         
         return inferred_level
     
-    # In the UnifiedSkillExtractor class, update the _single_extract method:
 
     def _single_extract(self, text: str, item_type: str, study_level: str = None, item = None) -> List[Skill]:
         """Extract skills from single text with deterministic ordering"""
@@ -298,6 +297,42 @@ class UnifiedSkillExtractor:
                     
                     logger.info(f"Generated descriptions for {len([s for s in skills if s.description])} skills")
                     
+                    # Generate keywords for extracted skills
+                    if self.genai and skills:
+                        try:
+                            logger.info("Generating keywords for extracted skills...")
+                            
+                            # Extract keywords using AI
+                            keyword_map = self._extract_keywords_for_skills(skills, item_type)
+                            
+                            # Update skill objects with keywords
+                            for skill in skills:
+                                skill_name_lower = skill.name.lower().strip()
+                                if skill_name_lower in keyword_map:
+                                    skill.keywords = keyword_map[skill_name_lower]
+                                    logger.debug(f"Added {len(skill.keywords)} keywords for skill '{skill.name}'")
+                                else:
+                                    # Use fallback keyword generation
+                                    skill.keywords = self._generate_fallback_keywords(
+                                        skill.name,
+                                        skill.evidence,
+                                        skill.category.value
+                                    )
+                                    logger.info(f"Generated {len(skill.keywords)} fallback keywords for skill '{skill.name}'")
+                            
+                            logger.info(f"Generated keywords for {len(skills)} skills")
+                            
+                        except Exception as e:
+                            logger.warning(f"Failed to generate skill keywords: {e}")
+                            # Fallback: generate basic keywords for all skills
+                            for skill in skills:
+                                if not skill.keywords:
+                                    skill.keywords = self._generate_fallback_keywords(
+                                        skill.name,
+                                        skill.evidence,
+                                        skill.category.value
+                                    )
+                    
                 except Exception as e:
                     logger.warning(f"Failed to generate skill descriptions: {e}")
             
@@ -312,6 +347,75 @@ class UnifiedSkillExtractor:
             logger.error(f"Error in skill extraction: {e}")
             return []
             # return self._fallback_extraction(text, study_level)
+            
+    def _extract_keywords_for_skills(self, skills: List[Skill], context_type: str = "VET") -> Dict[str, List[str]]:
+        """
+        Extract keywords for skills using GenAI
+        
+        Args:
+            skills: List of Skill objects
+            context_type: Type of qualification (VET/University)
+            
+        Returns:
+            Dictionary mapping skill names to keywords
+        """
+        if not self.genai or not skills:
+            return {}
+        
+        try:
+            # Prepare skills for keyword generation
+            skills_for_keywords = []
+            for skill in skills[:50]:  # Limit to first 50 for efficiency
+                skill_dict = {
+                    'name': skill.name,
+                    'category': skill.category.value,
+                    'level': skill.level.value,
+                    'context': skill.context.value,
+                    'evidence': skill.evidence
+                }
+                skills_for_keywords.append(skill_dict)
+            
+            # Batch processing for different backends
+            if self.is_openai:
+                # Get keyword generation prompt
+                system_prompt, user_prompt = self.prompt_manager.get_skill_keywords_prompt(
+                    skills_with_evidence=skills_for_keywords,
+                    context_type=context_type,
+                    backend_type=self.backend_type
+                )
+                
+                # Generate keywords
+                response = self._call_genai(user_prompt, system_prompt)
+                keywords_data = self._parse_keyword_response(response)
+            else:  # vLLM or other backends
+                # Process in smaller batches for vLLM
+                user_prompts = []
+                for skill_dict in skills_for_keywords:
+                    system_prompt, user_prompt = self.prompt_manager.get_skill_keywords_prompt(
+                        skills_with_evidence=[skill_dict],
+                        context_type=context_type,
+                        backend_type=self.backend_type
+                    )
+                    user_prompts.append(user_prompt)
+                response = self._generate_batch(system_prompt, user_prompts)
+                keywords_data = self._parse_keyword_response(response)
+            
+            # Map keywords back to skills
+            keyword_map = {}
+            if isinstance(keywords_data, list):
+                for item in keywords_data:
+                    if isinstance(item, dict):
+                        skill_name = item.get('name', '').lower().strip()
+                        keywords = item.get('keywords', [])
+                        if skill_name and keywords:
+                            keyword_map[skill_name] = keywords
+            
+            # logger.info(f"Generated keywords for {len(keyword_map)} skills")
+            return keyword_map
+            
+        except Exception as e:
+            logger.warning(f"Failed to generate skill keywords: {e}")
+            return {}
         
     def _final_deduplication(self, skills: List[Skill]) -> List[Skill]:
         """Final deduplication based on standardized names"""
@@ -438,77 +542,161 @@ class UnifiedSkillExtractor:
         
         return results[:expected_count]
     
-    def _generate_keywords(self, skill_name: str, evidence: str = "", category: str = "") -> List[str]:
-        """Generate keywords from skill name and evidence if not provided"""
+    def _parse_keyword_response(self, response: str) -> List[Dict]:
+        """Parse keyword extraction response from AI"""
+        import re
+        import json
+        
+        # Handle different response formats
+        if isinstance(response, list):
+            # If it's already a list, process each item
+            all_keywords = []
+            for item in response:
+                parsed = self._parse_single_keyword_response(item)
+                if parsed:
+                    all_keywords.extend(parsed)
+            return all_keywords
+        
+        # Single response
+        return self._parse_single_keyword_response(response) or []
+
+    def _parse_single_keyword_response(self, response: str) -> List[Dict]:
+        """Parse a single keyword response string"""
+        import re
+        import json
+        
+        if not response:
+            return []
+        
+        # If it's already a dict/list, return it
+        if isinstance(response, (list, dict)):
+            if isinstance(response, list):
+                return response
+            return [response]
+        
+        try:
+            # Try to find JSON array in the response
+            # Look for pattern [...] 
+            json_array_pattern = r'\[\s*\{[^[\]]*\}\s*(?:,\s*\{[^[\]]*\}\s*)*\]'
+            match = re.search(json_array_pattern, response, re.DOTALL)
+            
+            if match:
+                json_str = match.group(0)
+                # Clean up the JSON string
+                json_str = json_str.replace('\n', ' ').replace('\r', '')
+                parsed = json.loads(json_str)
+                if isinstance(parsed, list):
+                    return parsed
+            
+            # Try parsing the entire response as JSON
+            # Remove any markdown code blocks
+            clean_response = response.strip()
+            if clean_response.startswith('```json'):
+                clean_response = clean_response[7:]
+            if clean_response.startswith('```'):
+                clean_response = clean_response[3:]
+            if clean_response.endswith('```'):
+                clean_response = clean_response[:-3]
+            
+            clean_response = clean_response.strip()
+            
+            # Try to parse as JSON
+            parsed = json.loads(clean_response)
+            if isinstance(parsed, list):
+                return parsed
+            elif isinstance(parsed, dict):
+                # If it's a dict with a 'keywords' key
+                if 'keywords' in parsed:
+                    return parsed['keywords']
+                return [parsed]
+                
+        except json.JSONDecodeError as e:
+            logger.info(f"JSON decode error in keyword parsing: {e}")
+            
+            # Fallback: try to extract keyword arrays manually
+            try:
+                # Look for patterns like "keywords": ["word1", "word2", ...]
+                keyword_pattern = r'"keywords"\s*:\s*\[(.*?)\]'
+                matches = re.findall(keyword_pattern, response, re.DOTALL)
+                
+                results = []
+                for i, match in enumerate(matches):
+                    # Extract words from the array
+                    word_pattern = r'"([^"]+)"'
+                    words = re.findall(word_pattern, match)
+                    if words:
+                        results.append({
+                            'skill_index': i,
+                            'keywords': words
+                        })
+                
+                if results:
+                    return results
+                    
+            except Exception as e2:
+                logger.error(f"Fallback keyword extraction failed: {e2}")
+        
+        except Exception as e:
+            logger.warning(f"Error parsing keyword response: {e}")
+        
+        return []
+    
+    def _generate_fallback_keywords(self, skill_name: str, evidence: str = "", category: str = "") -> List[str]:
+        """Generate fallback keywords if AI extraction fails"""
         keywords = []
         
         # Extract words from skill name
-        name_words = skill_name.lower().split()
+        name_words = [w.lower() for w in skill_name.split() if len(w) > 2]
         keywords.extend(name_words)
         
-        # Add category as keyword
+        # Add category
         if category:
             keywords.append(category.lower())
         
-        # Extract key terms from evidence if available
-        if evidence:
-            # Common important words to look for in evidence
-            important_terms = ['analysis', 'management', 'design', 'development', 'planning', 
-                            'implementation', 'testing', 'optimization', 'communication',
-                            'database', 'software', 'system', 'process', 'strategy',
-                            'financial', 'technical', 'business', 'project', 'data']
-            
-            evidence_lower = evidence.lower()
-            for term in important_terms:
-                if term in evidence_lower and term not in keywords:
-                    keywords.append(term)
-        
-        # Common skill-related keywords based on skill name patterns
+        # Common domain keywords based on skill patterns
         skill_lower = skill_name.lower()
-        if 'data' in skill_lower:
-            keywords.extend(['data', 'information', 'analytics'])
-        if 'project' in skill_lower:
-            keywords.extend(['project', 'planning', 'coordination'])
-        if 'communication' in skill_lower:
-            keywords.extend(['communication', 'collaboration', 'teamwork'])
-        if 'analysis' in skill_lower or 'analytical' in skill_lower:
-            keywords.extend(['analysis', 'evaluation', 'assessment'])
-        if 'management' in skill_lower or 'manage' in skill_lower:
-            keywords.extend(['management', 'leadership', 'coordination'])
         
-        # Remove duplicates and limit to 10
+        keyword_patterns = {
+            'data': ['data', 'information', 'analytics', 'insights'],
+            'analysis': ['analysis', 'evaluation', 'assessment', 'metrics'],
+            'project': ['project', 'planning', 'coordination', 'delivery'],
+            'communication': ['communication', 'collaboration', 'presentation', 'reporting'],
+            'management': ['management', 'leadership', 'strategy', 'coordination'],
+            'design': ['design', 'architecture', 'development', 'implementation'],
+            'financial': ['finance', 'accounting', 'budget', 'revenue'],
+            'technical': ['technical', 'engineering', 'technology', 'systems'],
+            'customer': ['customer', 'client', 'service', 'relationship'],
+            'software': ['software', 'programming', 'development', 'coding']
+        }
+        
+        for pattern, related_keywords in keyword_patterns.items():
+            if pattern in skill_lower:
+                keywords.extend(related_keywords)
+        
+        # Remove duplicates and limit
         seen = set()
         unique_keywords = []
         for kw in keywords:
-            if kw not in seen and len(kw) > 2:  # Skip very short words
+            if kw not in seen and len(kw) > 2:
                 seen.add(kw)
                 unique_keywords.append(kw)
                 if len(unique_keywords) >= 10:
                     break
         
+        # Ensure we have at least 5 keywords
+        if len(unique_keywords) < 5:
+            # Add some generic professional keywords
+            generic = ['professional', 'competency', 'capability', 'expertise', 'proficiency']
+            for g in generic:
+                if g not in unique_keywords:
+                    unique_keywords.append(g)
+                    if len(unique_keywords) >= 5:
+                        break
+        
         return unique_keywords
     
     def _dict_to_skill(self, skill_dict: Dict, study_level: str = None) -> Skill:
-        """Convert dictionary to Skill object with description and keywords"""
-        
-        # Extract keywords - handle both list and string formats
-        keywords = skill_dict.get("keywords", [])
-        if isinstance(keywords, str):
-            # If keywords came as a string, split it
-            keywords = [k.strip() for k in keywords.split(',') if k.strip()]
-        elif not isinstance(keywords, list):
-            keywords = []
-            
-        if not keywords:
-            keywords = self._generate_keywords(
-                skill_dict.get("name", ""),
-                skill_dict.get("evidence", ""),
-                skill_dict.get("category", "")
-            )
-        
-        # Ensure keywords is a list of strings
-        keywords = [str(k) for k in keywords[:10]]  # Limit to 10 keywords
-        
+        """Convert dictionary to Skill object - keywords will be added separately"""
         skill = Skill(
             code=skill_dict.get("code", "").strip()[:50],
             name=skill_dict.get("name", "Unknown").strip()[:100],
@@ -517,11 +705,11 @@ class UnifiedSkillExtractor:
             level=self._map_level(skill_dict.get("level", 3)),
             context=self._map_context(skill_dict.get("context", "hybrid")),
             confidence=min(1.0, max(0.0, skill_dict.get("confidence", 0.7))),
-            keywords=keywords,  # Now properly extracted
-            # source=skill_dict.get("source", f"{self.backend_type}_extracted"),
+            keywords=[],  # Initialize as empty, will be populated later
+            source=skill_dict.get("source", f"{self.backend_type}_extracted"),
             evidence=skill_dict.get("evidence", "")[:200],
-            # translation_rationale=skill_dict.get("level_justification", skill_dict.get("reasoning", ""))[:200]
-            # evidence_type=skill_dict.get("evidence_type", "")
+            translation_rationale=skill_dict.get("level_justification", skill_dict.get("reasoning", ""))[:200],
+            evidence_type=skill_dict.get("evidence_type", "")
         )
         return skill
     

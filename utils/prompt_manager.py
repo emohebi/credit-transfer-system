@@ -271,21 +271,21 @@ Return ONLY the JSON array:"""
         ## Skills to Generate Keywords For:
         """
             
-            for idx, skill in enumerate(skills_with_evidence[:50]):  # Limit to 50 for token efficiency
-                skill_name = skill.get('name', '')
-                evidence = skill.get('evidence', '')
-                category = skill.get('category', '')
-                level = skill.get('level', 3)
-                context = skill.get('context', 'practical')
-                
-                user_prompt += f"""
-        ### Skill {idx + 1}:
-        - Name: {skill_name}
-        - Category: {category}
-        - Level: {level}
-        - Context: {context}
-        - Evidence: {evidence[:150]}
-        """
+        for idx, skill in enumerate(skills_with_evidence[:50]):  # Limit to 50 for token efficiency
+            skill_name = skill.get('name', '')
+            evidence = skill.get('evidence', '')
+            category = skill.get('category', '')
+            level = skill.get('level', 3)
+            context = skill.get('context', 'practical')
+            
+            user_prompt += f"""
+            ### Skill {idx + 1}:
+            - Name: {skill_name}
+            - Category: {category}
+            - Level: {level}
+            - Context: {context}
+            - Evidence: {evidence[:150]}
+            """
 
         user_prompt += """
 
