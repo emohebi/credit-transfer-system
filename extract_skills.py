@@ -72,21 +72,21 @@ def load_uni_data(filepath: str) -> UniQualification:
     return uni_qual
 
 
-def extract_and_save_skills(vet_file: str, uni_file: str, profile: str = "balanced", backend: str = "auto"):
+def extract_and_save_skills(genai, embeddings, config, vet_file: str, uni_file: str):
     """
     Extract skills from VET and University qualifications and save them
     """
     logger.info("Starting skill extraction process...")
     
     # Create configuration
-    config = ConfigProfiles.create_config(
-        profile_name=profile,
-        backend=backend
-    )
+    # config = ConfigProfiles.create_config(
+    #     profile_name=profile,
+    #     backend=backend
+    # )
     
     # Create interfaces
-    genai = ModelFactory.create_genai_interface(config)
-    embeddings = ModelFactory.create_embedding_interface(config)
+    # genai = ModelFactory.create_genai_interface(config)
+    # embeddings = ModelFactory.create_embedding_interface(config)
     
     if genai is None:
         logger.warning("No GenAI interface available - using fallback extraction")

@@ -69,19 +69,19 @@ Your expertise includes understanding educational taxonomies (Bloom's, Australia
 
 ### CRITICAL Skill Naming Convention:
 - **Use NATURAL, PROFESSIONAL terminology with sufficient context**
-- **MUST BE 3-4 WORDS MAXIMUM**
+- **MUST BE 2-4 WORDS MAXIMUM**
 - **Match existing taxonomies**: ESCO, O*NET, SFIA, job postings
 - **Remove unnecessary qualifiers and redundant descriptors**
 - Follow the pattern: [Action/Process] + [Domain/Context] + [Object/Outcome]
-- **Optimal length is 3-4 words**: Provide enough context while maintaining clarity
+- **Optimal length is 2-4 words**: Provide enough context while maintaining clarity
 
-Examples of PROPER skill naming (3-4 words):
+Examples of PROPER skill naming (2-4 words):
 - "financial data analysis" (NOT "comprehensive financial data analysis and modeling")
 - "stakeholder engagement management" (NOT "multi-stakeholder engagement and communication management")
 - "business process optimization" (NOT "enterprise-wide business process optimization and improvement")
-- "risk identification assessment" (NOT "comprehensive enterprise risk identification and assessment")
-- "project lifecycle management" (NOT "end-to-end project lifecycle management")
-- "database design modeling" (NOT "relational database design and modeling")
+- "enterprise risk assessment" (NOT "comprehensive enterprise risk identification and assessment")
+- "project management" (NOT "end-to-end project lifecycle management")
+- "database design" (NOT "relational database design and modeling")
 """
 
         # Skill categories with human capability focus
@@ -89,90 +89,54 @@ Examples of PROPER skill naming (3-4 words):
 ## Skill Categories (Human Capabilities):
 
 ### COGNITIVE/ANALYTICAL CAPABILITIES:
-Pattern: [Analytical Process] + [Domain] (3-4 words optimal)
+Pattern: [Analytical Process] + [Domain] (2-4 words optimal)
 - "quantitative data analysis"
-- "systems thinking approach"
-- "critical evidence evaluation"
-- "pattern recognition analysis"
-- "strategic problem decomposition"
-- "conceptual model development"
-- "hypothesis testing validation"
+- "pattern recognition"
 
 ### TECHNICAL CAPABILITIES:
-Pattern: [Technical Action] + [Technology Context] (3-4 words optimal)
-- "database design optimization"
-- "algorithm development implementation"
-- "software architecture planning"
-- "network infrastructure configuration"
-- "automated testing framework"
-- "data pipeline engineering"
+Pattern: [Technical Action] + [Technology Context] (2-4 words optimal)
+- "AI algorithm development"
 - "API design integration"
 
 ### COMMUNICATION CAPABILITIES:
-Pattern: [Communication Type] + [Purpose] (3-4 words optimal)
-- "technical documentation authoring"
-- "stakeholder presentation delivery"
+Pattern: [Communication Type] + [Purpose] (2-4 words optimal)
 - "cross-cultural business communication"
 - "scientific report writing"
-- "executive briefing preparation"
-- "instructional content development"
-- "conflict mediation resolution"
 
 ### MANAGEMENT CAPABILITIES:
-Pattern: [Management Function] + [Domain] (3-4 words optimal)
-- "project lifecycle management"
-- "resource allocation optimization"
-- "risk identification mitigation"
-- "performance metrics development"
-- "change management facilitation"
-- "strategic planning execution"
+Pattern: [Management Function] + [Domain] (2-4 words optimal)
+- "project management"
 - "vendor relationship management"
 
 ### CREATIVE/DESIGN CAPABILITIES:
-Pattern: [Creative Process] + [Output] (3-4 words optimal)
+Pattern: [Creative Process] + [Output] (2-4 words optimal)
 - "user experience design"
-- "visual communication design"
-- "innovative solution generation"
-- "prototype development testing"
-- "creative problem formulation"
-- "design thinking facilitation"
+- "innovative solution design"
 """
 
         # Translation examples
         translation_examples = """
-## Translation Examples (KEEP NAMES 3-4 WORDS):
+## Translation Examples (KEEP NAMES 2-4 WORDS):
 
-WHEN TEXT SAYS → EXTRACT AS (3-4 words):
+WHEN TEXT SAYS → EXTRACT AS (2-4 words):
 
 "Use Excel for financial reports"
 → "spreadsheet financial analysis"
-→ "financial data visualization"
-→ "financial reporting automation"
 
 "Work in teams on projects"
-→ "collaborative project execution"
-→ "cross-functional team coordination"
-→ "team problem solving"
+→ "cross-functional team collaboration"
 
 "Communicate with stakeholders"
-→ "stakeholder engagement management"
-→ "business requirements communication"
 → "stakeholder expectation alignment"
 
 "Manage customer relationships"
-→ "customer relationship cultivation"
-→ "client needs assessment"
-→ "customer satisfaction optimization"
+→ "customer relationship management"
 
 "Implement software solutions"
 → "software solution architecture"
-→ "technical implementation planning"
-→ "systems integration management"
 
 "Analyze business processes"
-→ "business process optimization"
-→ "operational efficiency analysis"
-→ "workflow improvement identification"
+→ "business process analysis"
 
 ## Optimal Length Examples:
 - "strategic business planning" (3 words) ✓
@@ -199,77 +163,7 @@ WHEN TEXT SAYS → EXTRACT AS (3-4 words):
         - **Level 6 (Initiate/Influence)**: Has significant organizational influence, makes high-level decisions
         - **Level 7 (Set Strategy)**: Operates at highest level, determines vision and strategy
 
-        Use these five attributes to determine the appropriate SFIA level for each skill:
-
-        #### 1. AUTONOMY (Independence and Accountability)
-        - **Level 1-2**: Works under close/routine supervision, seeks guidance frequently
-        - **Level 3-4**: Works under general direction, exercises discretion, escalates appropriately  
-        - **Level 5-6**: Works under broad direction, substantial responsibility and authority
-        - **Level 7**: Full authority for significant areas, policy formation
-
-        #### 2. INFLUENCE (Reach and Impact)
-        - **Level 1-2**: Minimal influence, interacts with immediate colleagues
-        - **Level 3-4**: Influences colleagues and team members, some customer contact
-        - **Level 5-6**: Influences at account/senior management level, cross-functional impact
-        - **Level 7**: Influences industry leaders, shapes organizational strategy
-
-        #### 3. COMPLEXITY (Range and Intricacy)
-        - **Level 1-2**: Routine tasks, simple problems with standard solutions
-        - **Level 3-4**: Complex and non-routine work, moderately complex problem-solving
-        - **Level 5-6**: Highly complex activities covering technical, financial, quality aspects
-        - **Level 7**: Strategic complexity, formulation and implementation of strategy
-
-        #### 4. BUSINESS SKILLS/BEHAVIOURAL FACTORS
-        Assess these capabilities at each level:
-
-        **Communication**:
-        - Level 1-2: Basic information exchange
-        - Level 3-4: Effective team communication, some stakeholder interaction
-        - Level 5-6: Authoritative communication, influences decision-making
-        - Level 7: Strategic communication, shapes organizational narrative
-
-        **Leadership**:
-        - Level 1-2: Follows direction, learns from others
-        - Level 3-4: Guides individuals, supports team objectives
-        - Level 5-6: Leads teams/projects, develops others
-        - Level 7: Organizational leadership, inspires transformation
-
-        **Planning**:
-        - Level 1-2: Plans own immediate work
-        - Level 3-4: Plans work sequences, coordinates with others
-        - Level 5-6: Strategic planning, resource allocation
-        - Level 7: Organizational planning, long-term strategy
-
-        **Problem-solving**:
-        - Level 1-2: Solves routine problems with guidance
-        - Level 3-4: Solves complex problems independently
-        - Level 5-6: Solves multifaceted problems, develops new approaches
-        - Level 7: Addresses strategic challenges, creates frameworks
-
-        #### 5. KNOWLEDGE (Depth and Breadth)
-        - **Level 1-2**: Basic role-specific knowledge, learning fundamentals
-        - **Level 3-4**: Working knowledge with methodical approach
-        - **Level 5-6**: Deep expertise in specialization, broad business understanding
-        - **Level 7**: Strategic business knowledge, industry expertise
-
-        ### SFIA Level Determination Process:
-        For each extracted skill, assess ALL FIVE generic attributes:
-
-        1. **Analyze the capability description** for indicators of autonomy, influence, complexity, business skills, and knowledge
-        2. **Map each attribute** to the appropriate SFIA level (1-7)
-        3. **Determine the predominant level** across all five attributes
-        4. **Apply study level constraints** (levels {expected_min}-{expected_max} for {study_level} study level)
-        5. **Validate consistency** across the skill set
-
-        ### Level Assessment Examples (with 3-4 word skill names):
-
-        **"financial data analysis"**:
-        - Autonomy: Level 3 (works under general direction)
-        - Influence: Level 3 (influences team decisions)  
-        - Complexity: Level 4 (complex analytical work)
-        - Business Skills: Level 3 (effective communication of findings)
-        - Knowledge: Level 4 (deep analytical knowledge)
-        → **Result: Level 3-4**
+        ### Level Assessment Examples (with 2-4 word skill names):
 
         **"strategic business planning"**:
         - Autonomy: Level 6 (works under broad direction)
@@ -310,42 +204,117 @@ WHEN TEXT SAYS → EXTRACT AS (3-4 words):
 2. For each identified element, determine the underlying human capability required
 3. Translate tools/technologies into human skills
 4. Add specific context to generic abilities
-5. **CRITICAL: Keep skill names to 3-4 words for optimal context**
+5. **CRITICAL: Keep skill names to 2-4 words for optimal context but make sure the skill names are aligned with other existing taxonomies**
 6. Ensure each skill follows the naming convention: [Action/Process] + [Domain/Context] + [Object/Outcome]
 7. Validate that each skill represents a transferable human capability
 
 ## OUTPUT REQUIREMENTS:
-Output maximum 15 high quality skills or human capabilities in JSON format.
+Output maximum 15 high quality distinct skills or human capabilities in JSON format.
 
 Each skill must:
 - Represent a human ability (not a tool or task)
 - Include specific context
-- **BE 3-4 WORDS OPTIMAL** (provide sufficient context)
-- Follow the naming convention
+- **BE 2-4 WORDS OPTIMAL** (provide sufficient context)
+- Follow the naming convention if possible
 - Be transferable across roles
-- Align with educational taxonomies
+- Align with educational taxonomies is a MUST
 - Make sure to assign an appropriate SFIA level (1-7) based on the provided guidelines, do not output levels outside the expected range for the given study level
 """+"""
 JSON FORMAT:
 [
   {
-    "name": "financial data analysis",  // Human capability with context (3-4 WORDS OPTIMAL)
+    "name": "financial data analysis",  // Human capability with context (2-4 WORDS OPTIMAL)
     "category": "analytical",  // cognitive/technical/communication/management/creative
     "level": """+f"""{int((expected_min + expected_max) / 2) if study_level else 3}"""+""",  // SFIA level (1-7)
     "context": "practical",  // theoretical/practical/hybrid
     "confidence": 0.7,  // Extraction confidence
     "evidence": "...",  // The exact unmodified text in the input showing this capability (max 200 chars)
-    "translation_rationale": "Excel reports → financial data analysis capability",  // How you derived this
-    "sfia_autonomy": "general_direction",  // SFIA autonomy level
-    "sfia_influence": "team_level"  // SFIA influence scope
+    "translation_rationale": "Excel reports → financial data analysis capability"  // How you derived this
   }
 ]
 
-Remember: Focus on HUMAN CAPABILITIES, not tools or generic terms! Keep names at 3-4 words for optimal context!
+Remember: Focus on HUMAN CAPABILITIES, not tools or generic terms! Keep names at 2-4 words for optimal context!
 
 Return ONLY the JSON array:"""
 
         return system_prompt, user_prompt
+    
+    @staticmethod
+    def get_skill_keywords_prompt(
+        skills_with_evidence: List[Dict[str, Any]],
+        context_type: str = "VET",
+        backend_type: str = "standard"
+    ) -> Tuple[str, str]:
+        """
+        Generate relevant keywords for skills based on their evidence and context
+        """
+        
+        system_prompt = """You are an expert at identifying relevant keywords for professional skills and capabilities.
+        Your task is to generate 3-5 highly relevant keywords for each skill based on the skill name, evidence, and context.
+
+        Keywords should:
+        - Be specific and relevant to the skill
+        - Include related tools, technologies, methods, and concepts
+        - Help with searching and matching similar skills
+        - Not be redundant with the skill name itself
+        - Include both specific terms and broader domain terms
+
+        Categories of keywords to consider:
+        1. Domain terms (e.g., finance, healthcare, engineering)
+        2. Tools/technologies (e.g., Excel, Python, AutoCAD)
+        3. Methods/approaches (e.g., analysis, optimization, agile)
+        4. Industry terms (e.g., compliance, governance, audit)
+        5. Related concepts (e.g., for "data analysis": statistics, visualization, reporting)"""
+
+        user_prompt = f"""Generate relevant keywords for these {context_type} skills based on their evidence and context.
+
+        ## Skills to Generate Keywords For:
+        """
+            
+            for idx, skill in enumerate(skills_with_evidence[:50]):  # Limit to 50 for token efficiency
+                skill_name = skill.get('name', '')
+                evidence = skill.get('evidence', '')
+                category = skill.get('category', '')
+                level = skill.get('level', 3)
+                context = skill.get('context', 'practical')
+                
+                user_prompt += f"""
+        ### Skill {idx + 1}:
+        - Name: {skill_name}
+        - Category: {category}
+        - Level: {level}
+        - Context: {context}
+        - Evidence: {evidence[:150]}
+        """
+
+        user_prompt += """
+
+        ## Keyword Generation Guidelines:
+        1. Extract key terms from the evidence that relate to the skill
+        2. Add domain-specific terminology
+        3. Include tools or technologies mentioned or implied
+        4. Add broader category terms for better matching
+        5. Include both specific and general terms
+
+        ## Examples:
+        - "financial data analysis" → ["finance", "accounting", "spreadsheet", "Excel", "reporting", "budgeting", "quantitative", "metrics", "dashboard"]
+        - "project lifecycle management" → ["project", "planning", "agile", "scrum", "timeline", "milestones", "resources", "coordination", "delivery"]
+        - "database design optimization" → ["SQL", "database", "schema", "performance", "indexing", "queries", "normalization", "data modeling", "optimization"]
+
+        ## Output Format:
+        Return a JSON array with keywords for each skill:
+        [
+        {
+            "skill_index": 0,
+            "name": "skill name",
+            "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"]
+        }
+        ]
+
+        Return ONLY the JSON array with 3-5 keywords per skill:"""
+
+        return system_prompt, user_prompt
+
 
     @staticmethod
     def get_skill_comparison_prompt(

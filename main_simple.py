@@ -255,20 +255,7 @@ def main():
         logger.info(f"Loaded VET: {vet_qual.name} ({len(vet_qual.units)} units)")
         logger.info(f"Loaded Uni: {uni_qual.name} ({len(uni_qual.courses)} courses)")
         
-        if args.extract_skills:
-            logger.info("Extracting and saving skills...")
-            from extract_skills import extract_and_save_skills
-            vet_filepath, uni_filepath = extract_and_save_skills(
-                args.vet_file, 
-                args.uni_file, 
-                args.profile, 
-                args.backend
-            )
-            logger.info(f"Skills saved to {vet_filepath} and {uni_filepath}")
-            
-            if args.skip_analysis:
-                logger.info("Skipping analysis as requested")
-                sys.exit(0)
+        
         
         # Create interfaces using factory
         logger.info("Initializing AI interfaces...")
@@ -282,6 +269,20 @@ def main():
         
         if embeddings is None:
             logger.warning("No embedding interface available - using simple matching")
+
+        if args.extract_skills:
+            logger.info("Extracting and saving skills...")
+            from extract_skills import extract_and_save_skills
+            vet_filepath, uni_filepath = extract_and_save_skills(
+                genai, embeddings, config,
+                args.vet_file, 
+                args.uni_file
+            )
+            logger.info(f"Skills saved to {vet_filepath} and {uni_filepath}")
+            
+            if args.skip_analysis:
+                logger.info("Skipping analysis as requested")
+                sys.exit(0)
         
         # Create analyzer
         analyzer = SimplifiedAnalyzer(

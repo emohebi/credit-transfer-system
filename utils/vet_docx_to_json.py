@@ -2,6 +2,7 @@ import json
 import re
 from docx import Document
 from typing import Dict, List, Optional
+from pathlib import Path
 
 def extract_vet_course_info(docx_path: str, debug: bool = False) -> Dict:
     """
@@ -282,18 +283,22 @@ def main():
     "units": []
     }
     # Input file path
-    docx_file = "/home/ehsan/Downloads/BSBOPS501_Complete_R1.docx"  # Update with your actual file path
+    parent_dir = "/Volumes/jsa_external_prod/external_vols/scratch/Scratch/Ehsan/NST/MiniProjOct25/data"
+    dir_ = Path(parent_dir) / "raw/BSB50120 Diploma_filtered/"
+    files = [str(f) for f in dir_.glob("*.docx")]
+    # docx_file = "/home/ehsan/Downloads/BSBOPS501_Complete_R1.docx"  # Update with your actual file path
     
     try:
         # Extract course information
-        course_info = extract_vet_course_info(docx_file)
-        qual["units"].append(course_info)
+        for docx_file in files:
+            course_info = extract_vet_course_info(docx_file)
+            qual["units"].append(course_info)
         # Print the result
         # print("Extracted Course Information:")
         # print(json.dumps(course_info, indent=2, ensure_ascii=False))
         
         # Save to JSON file
-        save_to_json(qual, output_path="./data/diploma_of_business.json")
+        save_to_json(qual, output_path=Path(parent_dir) / f"{qual['code']}_{qual['name'].replace(' ', '_')}.json")
         
     except FileNotFoundError:
         print(f"Error: File '{docx_file}' not found.")

@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 import json
 import re
+from pathlib import Path
 
 def extract_course_info(html_file_path):
     """
@@ -45,22 +46,45 @@ def extract_course_info(html_file_path):
     for detail in unit_details:
         text_content = detail.get_text(separator='\n', strip=True)
         
-        # Extract description (Introduction section)
-        if 'university graduates aim to become managers' in text_content.lower():
-            # Find the introduction paragraph
-            intro_start = text_content.find('Many university graduates')
-            intro_end = text_content.find('Learning outcomes')
-            if intro_start != -1 and intro_end != -1:
-                result["description"] = text_content[intro_start:intro_end].strip()
-            elif intro_start != -1:
-                # Take first substantial paragraph as description
-                lines = text_content[intro_start:].split('\n')
-                desc_lines = []
-                for line in lines:
-                    if line.strip() and not line.startswith('Learning outcomes'):
-                        desc_lines.append(line.strip())
-                    if len(desc_lines) > 3:  # Get a reasonable description length
-                        break
+        # Extract description - content between Introduction and Learning outcomes
+        intro_start_idx = text_content.find('Introduction')
+        learning_outcomes_idx = text_content.find('Learning outcomes')
+        
+        if intro_start_idx != -1 and learning_outcomes_idx != -1 and learning_outcomes_idx > intro_start_idx:
+            # Extract content between these two headers
+            description_text = text_content[intro_start_idx + len('Introduction'):learning_outcomes_idx].strip()
+            
+            # Clean up the extracted text
+            lines = description_text.split('\n')
+            cleaned_lines = []
+            for line in lines:
+                line = line.strip()
+                # Skip empty lines and lines that look like headers
+                if line and not line.endswith(':') and len(line) > 10:
+                    cleaned_lines.append(line)
+            
+            if cleaned_lines:
+                result["description"] = ' '.join(cleaned_lines)
+        
+        # Fallback if Introduction header not found but Learning outcomes exists
+        elif learning_outcomes_idx != -1:
+            # Take substantial content before Learning outcomes
+            intro_text = text_content[:learning_outcomes_idx].strip()
+            lines = intro_text.split('\n')
+            desc_lines = []
+            
+            # Start collecting after we pass metadata/headers
+            start_collecting = False
+            for line in lines:
+                line = line.strip()
+                # Start collecting after we see substantial content
+                if not start_collecting and len(line) > 50:
+                    start_collecting = True
+                
+                if start_collecting and line and not line.endswith(':'):
+                    desc_lines.append(line)
+            
+            if desc_lines:
                 result["description"] = ' '.join(desc_lines)
         
         # Extract learning outcomes
@@ -102,12 +126,12 @@ def extract_course_info(html_file_path):
         cells = table.find_all('td')
         for cell in cells:
             cell_text = cell.get_text(strip=True)
-            if 'Level 1' in cell_text or 'Introductory' in cell_text:
-                result["study_level"] = "Introductory"
+            if 'Level 1 - Undergraduate Introductory' in cell_text:
+                result["study_level"] = "introductory"
             elif 'Level 2' in cell_text or 'Intermediate' in cell_text:
-                result["study_level"] = "Intermediate"
+                result["study_level"] = "intermediate"
             elif 'Level 3' in cell_text or 'Advanced' in cell_text:
-                result["study_level"] = "Advanced"
+                result["study_level"] = "advanced"
     
     # Extract assessment information
     assessment_section = soup.find(text=re.compile(r'Assessment requirements|Submission of assessment'))
@@ -142,6 +166,7 @@ def extract_course_info(html_file_path):
     
     return result
 
+
 def main():
     # Replace with your actual file path
     html_file_path = "/home/ehsan/Downloads/Business Decision Making (11009) - University of Canberra.html"
@@ -150,18 +175,23 @@ def main():
         "name": "Diploma of Business",
         "courses": []
         }
+    parent_dir = "/Volumes/jsa_external_prod/external_vols/scratch/Scratch/Ehsan/NST/MiniProjOct25/data"
+    dir_ = Path(parent_dir) / "raw/MGB106 Bachelor of Business (Marketing)/"
+    files = [str(f) for f in dir_.glob("*.html")]
     try:
-        course_info = extract_course_info(html_file_path)
-        qual["courses"].append(course_info)
+        for html_file_path in files:
+            course_info = extract_course_info(html_file_path)
+            qual["courses"].append(course_info)
         # Output as formatted JSON
         # json_output = json.dumps(course_info, indent=2, ensure_ascii=False)
         # print(json_output)
         
         # Optionally save to file
-        with open(f"./data/{qual['code']}_{qual['name'].replace(' ', '_')}.json", 'w', encoding='utf-8') as f:
+        output_path = Path(parent_dir) / f"{qual['code']}_{qual['name'].replace(' ', '_')}.json"
+        with open(output_path, 'w', encoding='utf-8') as f:
             json.dump(qual, f, indent=2, ensure_ascii=False)
         
-        print("\nJSON output saved to 'course_info.json'")
+        print(f"\nJSON output saved to {output_path}")
         
     except FileNotFoundError:
         print(f"Error: File '{html_file_path}' not found.")
