@@ -205,9 +205,9 @@ class UnifiedSkillExtractor:
             backend_type=self.backend_type
         )
         counter_1 = 0
-        loop = True
-        while loop:
-            loop = False
+        loop_1 = True
+        while loop_1:
+            loop_1 = False
             try:
                 response = self._call_genai(user_prompt, system_prompt)
                 skills_data = self._parse_json_response(response)
@@ -315,7 +315,7 @@ class UnifiedSkillExtractor:
                             loop_2 = False
                             keyword_map = self._extract_keywords_for_skills(skills, item_type)
                             if len(keyword_map) == 0 and counter_2 <= 3:
-                                loop = True
+                                loop_1 = True
                                 counter_2 += 1
                                 logger.info(f"keyword gen trying {counter_2} out of 3 ... ") 
 
@@ -358,9 +358,9 @@ class UnifiedSkillExtractor:
             except Exception as e:
                 logger.error(f"Error in skill extraction: {e}")
                 counter_1 += 1
-                if counter_l <= 3:
+                if counter_1 <= 3:
                     logger.info(f"tring again {e} out of 3 ...")
-                    loop = True
+                    loop_1 = True
         return []
         # return self._fallback_extraction(text, study_level)
             

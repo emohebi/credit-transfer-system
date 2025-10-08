@@ -199,7 +199,7 @@ def main():
     )
     args = parser.parse_args()
     
-    args.extract_skills = True
+    args.extract_skills = False
     args.skip_analysis = args.extract_skills
     args.use_cached_skills = True
     args.verbose = True  # Set to True for detailed config output
@@ -241,7 +241,7 @@ def main():
     
     # Initialize quality monitor
     monitor = QualityMonitor() if args.monitor else None
-    args.vet_file = "./data/diploma_of_business copy.json"
+    args.vet_file = "./data/BSB50120_Diploma_of_Business.json"
     args.uni_file = "./data/933AA_Diploma_of_Business.json"
     
     # args.vet_file = "./data/sample_vet.json"
@@ -274,7 +274,9 @@ def main():
             logger.info("Extracting and saving skills...")
             from extract_skills import extract_and_save_skills
             vet_filepath, uni_filepath = extract_and_save_skills(
-                genai, embeddings, config,
+                genai, 
+                embeddings, 
+                config,
                 args.vet_file, 
                 args.uni_file
             )

@@ -106,7 +106,7 @@ class ConfigProfiles:
             "batch_size": 1,
             "use_cache": False,  # Disable caching
             "cache_ttl_days": 0,  # No cache
-            "edge_cases_enabled": True,
+            "edge_cases_enabled": False,
             "max_skills_per_unit": 100,
             "min_confidence": 0.0,
             "use_clustering": True,

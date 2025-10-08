@@ -251,7 +251,7 @@ class CreditTransferRecommendation:
     
     def get_vet_unit_codes(self) -> List[str]:
         """Get list of VET unit codes"""
-        return [u.code for u in self.vet_units]
+        return [f"{u.code}: {u.name}" for u in self.vet_units]
     
     def is_combination_transfer(self) -> bool:
         """Check if this is a combination of multiple VET units"""
