@@ -43,15 +43,6 @@ class UnifiedScorer:
         'excessive_size_mismatch': 0.10 # Too many or too few skills
     }
     
-    # Match quality thresholds
-    MATCH_QUALITY = {
-        'exact': (0.90, 1.0),      # similarity >= 0.90: weight = 1.0
-        'strong': (0.75, 0.85),    # similarity >= 0.75: weight = 0.85
-        'moderate': (0.60, 0.60),  # similarity >= 0.60: weight = 0.60
-        'weak': (0.45, 0.30),      # similarity >= 0.45: weight = 0.30
-        'none': (0.0, 0.0)         # similarity < 0.45: weight = 0.0
-    }
-    
     def __init__(self):
         self.level_compatibility_matrix = self._build_level_compatibility_matrix()
     
@@ -70,9 +61,7 @@ class UnifiedScorer:
         return matrix
     
     def calculate_alignment_score(self,
-                                 vet_skills: List[Skill],
-                                 uni_skills: List[Skill],
-                                 skill_matches: Dict[str, Any],
+                                 match_result: Dict[str, Any],
                                  edge_case_results: Dict[str, Any] = None) -> MatchScore:
         """
         Calculate unified alignment score with all components
@@ -86,27 +75,25 @@ class UnifiedScorer:
         Returns:
             MatchScore object with detailed breakdown
         """
-        
+        match_result = match_result.get('best_match', {})
         # 1. Calculate weighted skill coverage
-        coverage_score = self._calculate_weighted_coverage(
-            uni_skills, vet_skills, skill_matches
-        )
+        coverage_score = match_result.get('weighted_uni_coverage', 0.0)
         
         # 2. Calculate skill match quality
-        quality_score = self._calculate_match_quality(skill_matches)
+        quality_score = self._calculate_match_quality(match_result)
         
         # 3. Calculate level alignment
-        level_score = self._calculate_level_alignment(vet_skills, uni_skills)
+        level_score = self._calculate_level_alignment(match_result)
         
         # 4. Calculate context alignment
-        context_score = self._calculate_context_alignment(vet_skills, uni_skills)
+        context_score = self._calculate_context_alignment(match_result)
         
         # 5. Calculate confidence score
-        confidence_score = self._calculate_confidence(vet_skills, uni_skills)
+        confidence_score = self._calculate_confidence(match_result)
         
         # 6. Calculate edge case penalties
         penalties = self._calculate_penalties(
-            vet_skills, uni_skills, edge_case_results
+            match_result, edge_case_results
         )
         
         # 7. Combine scores
@@ -141,111 +128,46 @@ class UnifiedScorer:
             }
         )
     
-    def _calculate_weighted_coverage(self,
-                                    uni_skills: List[Skill],
-                                    vet_skills: List[Skill],
-                                    matches: Dict) -> float:
-        """Calculate weighted coverage based on match quality"""
-        if not uni_skills:
-            return 0.0
-        
-        total_weight = 0.0
-        
-        # Process each university skill
-        for uni_skill in uni_skills:
-            best_match_weight = 0.0
-            
-            # Find best match in the match results
-            for match in matches.get('matches', []):
-                for matched_uni in match.get('uni_skills', []):
-                    if matched_uni.name == uni_skill.name:
-                        # Get similarity score for this match
-                        similarity = match.get('semantic_similarity', 0)
-                        weight = self._get_match_weight(similarity)
-                        best_match_weight = max(best_match_weight, weight)
-                        break
-            
-            total_weight += best_match_weight
-        
-        return total_weight / len(uni_skills)
-    
-    def _get_match_weight(self, similarity: float) -> float:
-        """Get weight based on match similarity"""
-        for quality, (threshold, weight) in self.MATCH_QUALITY.items():
-            if quality == 'none':
-                continue
-            if similarity >= threshold:
-                return weight
-        return 0.0
-    
-    def _calculate_match_quality(self, matches: Dict) -> float:
+    def _calculate_match_quality(self, best_match: Dict) -> float:
         """Calculate average quality of matches"""
-        if not matches.get('matches'):
-            return 0.0
         
-        qualities = []
-        for match in matches['matches']:
-            semantic_sim = match.get('semantic_similarity', 0)
-            level_align = match.get('level_alignment', 0)
+        quality = 0.0
+        for match in best_match['best_uni_skill_matches']:
+            if match['match_type'] in ('none', 'unmapped'):
+                continue
+            semantic_sim = match.get('similarity', 0)
+            level_align = match.get('level_compatibility', 0)
             combined_quality = 0.7 * semantic_sim + 0.3 * level_align
-            qualities.append(combined_quality)
+            quality += combined_quality
         
-        return np.mean(qualities) if qualities else 0.0
+        return quality / len(best_match['best_uni_skill_matches'])
     
-    def _calculate_level_alignment(self,
-                                  vet_skills: List[Skill],
-                                  uni_skills: List[Skill]) -> float:
+    def _calculate_level_alignment(self, best_match: Dict) -> float:
         """Calculate level compatibility between skill sets"""
-        if not vet_skills or not uni_skills:
-            return 0.0
+        level_align = 0.0
+        for match in best_match['best_uni_skill_matches']:
+            if match['match_type'] in ('none', 'unmapped'):
+                continue
+            level_compat = match.get('level_compatibility', 0)
+            level_align += level_compat
         
-        # Get average levels
-        vet_levels = [s.level.value for s in vet_skills]
-        uni_levels = [s.level.value for s in uni_skills]
-        
-        avg_vet = np.mean(vet_levels)
-        avg_uni = np.mean(uni_levels)
-        
-        # Look up compatibility
-        vet_idx = min(max(0, int(avg_vet) - 1), 6)
-        uni_idx = min(max(0, int(avg_uni) - 1), 6)
-        
-        return self.level_compatibility_matrix[vet_idx, uni_idx]
+        return level_align / len(best_match['best_uni_skill_matches'])
     
-    def _calculate_context_alignment(self,
-                                    vet_skills: List[Skill],
-                                    uni_skills: List[Skill]) -> float:
+    def _calculate_context_alignment(self, best_match: Dict) -> float:
         """Calculate context (theoretical vs practical) alignment"""
-        if not vet_skills or not uni_skills:
-            return 0.0
+        context_align = 0.0
+        for match in best_match['best_uni_skill_matches']:
+            if match['match_type'] in ('none', 'unmapped'):
+                continue
+            context_similarity = match.get('context_similarity', 0)
+            context_align += context_similarity
         
-        # Count contexts
-        vet_contexts = {'theoretical': 0, 'practical': 0, 'hybrid': 0}
-        uni_contexts = {'theoretical': 0, 'practical': 0, 'hybrid': 0}
-        
-        for skill in vet_skills:
-            vet_contexts[skill.context.value] += 1
-        
-        for skill in uni_skills:
-            uni_contexts[skill.context.value] += 1
-        
-        # Calculate distributions
-        vet_total = len(vet_skills)
-        uni_total = len(uni_skills)
-        
-        # Calculate alignment (1 - average difference)
-        alignment = 0
-        for context in ['theoretical', 'practical', 'hybrid']:
-            vet_ratio = vet_contexts[context] / vet_total
-            uni_ratio = uni_contexts[context] / uni_total
-            alignment += 1 - abs(vet_ratio - uni_ratio)
-        
-        return alignment / 3  # Average across three contexts
+        return context_align / len(best_match['best_uni_skill_matches'])
     
-    def _calculate_confidence(self,
-                             vet_skills: List[Skill],
-                             uni_skills: List[Skill]) -> float:
+    def _calculate_confidence(self, best_match: Dict) -> float:
         """Calculate average confidence of skill extractions"""
+        vet_skills = [match['vet_skill'] for match in best_match['best_uni_skill_matches'] if match['match_type'] != 'unmapped']
+        uni_skills = [match['uni_skill'] for match in best_match['best_uni_skill_matches'] if match['match_type'] != 'unmapped']
         all_skills = vet_skills + uni_skills
         if not all_skills:
             return 0.0
@@ -253,11 +175,10 @@ class UnifiedScorer:
         confidences = [s.confidence for s in all_skills]
         return np.mean(confidences)
     
-    def _calculate_penalties(self,
-                            vet_skills: List[Skill],
-                            uni_skills: List[Skill],
-                            edge_case_results: Dict = None) -> Dict[str, float]:
+    def _calculate_penalties(self,best_match: Dict, edge_case_results: Dict = None) -> Dict[str, float]:
         """Calculate penalties based on edge cases"""
+        vet_skills = [match['vet_skill'] for match in best_match['best_uni_skill_matches'] if match['match_type'] != 'unmapped']
+        uni_skills = [match['uni_skill'] for match in best_match['best_uni_skill_matches'] if match['match_type'] != 'unmapped']
         penalties = {}
         
         if not edge_case_results:

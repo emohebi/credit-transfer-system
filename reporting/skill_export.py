@@ -10,6 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Union
 from io import StringIO
+import pandas as pd 
 
 from models.base_models import (
     VETQualification, UniQualification, 
@@ -63,9 +64,9 @@ class SkillExportManager:
         if format == "json":
             filepath = self.vet_dir / f"{vet_qual.code}_skills_{timestamp}.json"
             self._export_vet_to_json(vet_qual, filepath, include_metadata)
-        elif format == "csv":
-            filepath = self.vet_dir / f"{vet_qual.code}_skills_{timestamp}.csv"
-            self._export_vet_to_csv(vet_qual, filepath)
+        elif format == "excel":
+            filepath = self.vet_dir / f"{vet_qual.code}_skills_{timestamp}.xlsx"
+            self._export_vet_to_excel(vet_qual, filepath)
         else:
             raise ValueError(f"Unsupported format: {format}")
         
@@ -92,9 +93,9 @@ class SkillExportManager:
         if format == "json":
             filepath = self.uni_dir / f"{uni_qual.code}_skills_{timestamp}.json"
             self._export_uni_to_json(uni_qual, filepath, include_metadata)
-        elif format == "csv":
-            filepath = self.uni_dir / f"{uni_qual.code}_skills_{timestamp}.csv"
-            self._export_uni_to_csv(uni_qual, filepath)
+        elif format == "excel":
+            filepath = self.uni_dir / f"{uni_qual.code}_skills_{timestamp}.xlsx"
+            self._export_uni_to_excel(uni_qual, filepath)
         else:
             raise ValueError(f"Unsupported format: {format}")
         
@@ -121,9 +122,9 @@ class SkillExportManager:
         if format == "json":
             filepath = self.combined_dir / f"combined_skills_{timestamp}.json"
             self._export_combined_to_json(vet_qual, uni_qual, filepath)
-        elif format == "csv":
-            filepath = self.combined_dir / f"combined_skills_{timestamp}.csv"
-            self._export_combined_to_csv(vet_qual, uni_qual, filepath)
+        elif format == "excel":
+            filepath = self.combined_dir / f"combined_skills_{timestamp}.xlsx"
+            self._export_combined_to_excel(vet_qual, uni_qual, filepath)
         else:
             raise ValueError(f"Unsupported format: {format}")
         
@@ -350,131 +351,163 @@ class SkillExportManager:
     
     # ========== CSV EXPORT METHODS ==========
     
-    def _export_vet_to_csv(self, vet_qual: VETQualification, filepath: Path):
-        """Export VET skills to CSV file with description"""
-        with open(filepath, 'w', newline='', encoding='utf-8') as f:
-            fieldnames = [
-                'qualification_code', 'qualification_name', 'unit_code', 'unit_name',
-                'unit_hours', 'skill_name', 'skill_description',  # NEW: Added skill_description
-                'category', 'level', 'level_value',
-                'context', 'confidence', 'keywords', 'source', 'evidence_type',
-                'evidence', 'translation_rationale'
-            ]
+    def _export_vet_to_excel(self, vet_qual: VETQualification, filepath: Path):
+        """Export VET skills to Excel file with multiple sheets"""
+        
+        # Create a Pandas Excel writer
+        with pd.ExcelWriter(filepath, engine='openpyxl') as writer:
+            # Sheet 1: Summary
+            summary_data = {
+                'Metric': ['Qualification Code', 'Qualification Name', 'Level', 'Total Units', 'Total Skills'],
+                'Value': [vet_qual.code, vet_qual.name, vet_qual.level, len(vet_qual.units), 
+                        sum(len(u.extracted_skills) for u in vet_qual.units)]
+            }
+            pd.DataFrame(summary_data).to_excel(writer, sheet_name='Summary', index=False)
             
-            writer = csv.DictWriter(f, fieldnames=fieldnames)
-            writer.writeheader()
-            
+            # Sheet 2: All Skills
+            all_skills_data = []
             for unit in vet_qual.units:
                 for skill in unit.extracted_skills:
-                    writer.writerow({
-                        'qualification_code': vet_qual.code,
-                        'qualification_name': vet_qual.name,
-                        'unit_code': unit.code,
-                        'unit_name': unit.name,
-                        'unit_hours': unit.nominal_hours,
-                        'skill_name': skill.name,
-                        'skill_description': skill.description,  # NEW: Include description
-                        'category': skill.category.value,
-                        'level': skill.level.name,
-                        'level_value': skill.level.value,
-                        'context': skill.context.value,
-                        'confidence': f"{skill.confidence:.2f}",
-                        'keywords': '; '.join(skill.keywords),
-                        'source': skill.source,
-                        'evidence_type': skill.evidence_type,
-                        'evidence': skill.evidence,
-                        'translation_rationale': skill.translation_rationale
+                    all_skills_data.append({
+                        'Unit Code': unit.code,
+                        'Unit Name': unit.name,
+                        'Nominal Hours': unit.nominal_hours,
+                        'Skill Name': skill.name,
+                        'Description': skill.description,
+                        'Category': skill.category.value,
+                        'Level': skill.level.name,
+                        'Level Value': skill.level.value,
+                        'Context': skill.context.value,
+                        'Confidence': skill.confidence,
+                        'Keywords': '; '.join(skill.keywords),
+                        'Evidence': skill.evidence,
+                        'Translation Rationale': skill.translation_rationale
                     })
+            
+            pd.DataFrame(all_skills_data).to_excel(writer, sheet_name='All Skills', index=False)
+            
+            # Sheet 3: Skills by Unit (pivot)
+            if all_skills_data:
+                skills_df = pd.DataFrame(all_skills_data)
+                pivot = skills_df.pivot_table(
+                    values='Skill Name', 
+                    index='Unit Code', 
+                    aggfunc='count'
+                ).rename(columns={'Skill Name': 'Skill Count'})
+                pivot.to_excel(writer, sheet_name='Skills by Unit')
 
-    def _export_uni_to_csv(self, uni_qual: UniQualification, filepath: Path):
-        """Export University skills to CSV file with description"""
-        with open(filepath, 'w', newline='', encoding='utf-8') as f:
-            fieldnames = [
-                'qualification_code', 'qualification_name', 'course_code', 'course_name',
-                'study_level', 'credit_points', 'skill_name', 'skill_description',  # NEW
-                'category', 'level', 'level_value', 'context', 'confidence', 
-                'keywords', 'source', 'evidence_type', 'evidence', 'translation_rationale'
-            ]
+    def _export_uni_to_excel(self, uni_qual: UniQualification, filepath: Path):
+        """Export University skills to Excel file with multiple sheets"""
+        
+        with pd.ExcelWriter(filepath, engine='openpyxl') as writer:
+            # Sheet 1: Summary
+            summary_data = {
+                'Metric': ['Qualification Code', 'Qualification Name', 'Total Courses', 
+                        'Total Credit Points', 'Duration Years', 'Total Skills'],
+                'Value': [uni_qual.code, uni_qual.name, len(uni_qual.courses),
+                        uni_qual.total_credit_points, uni_qual.duration_years,
+                        sum(len(c.extracted_skills) for c in uni_qual.courses)]
+            }
+            pd.DataFrame(summary_data).to_excel(writer, sheet_name='Summary', index=False)
             
-            writer = csv.DictWriter(f, fieldnames=fieldnames)
-            writer.writeheader()
-            
+            # Sheet 2: All Skills
+            all_skills_data = []
             for course in uni_qual.courses:
                 for skill in course.extracted_skills:
-                    writer.writerow({
-                        'qualification_code': uni_qual.code,
-                        'qualification_name': uni_qual.name,
-                        'course_code': course.code,
-                        'course_name': course.name,
-                        'study_level': course.study_level,
-                        'credit_points': course.credit_points,
-                        'skill_name': skill.name,
-                        'skill_description': skill.description,  # NEW
-                        'category': skill.category.value,
-                        'level': skill.level.name,
-                        'level_value': skill.level.value,
-                        'context': skill.context.value,
-                        'confidence': f"{skill.confidence:.2f}",
-                        'keywords': '; '.join(skill.keywords),
-                        'source': skill.source,
-                        'evidence_type': skill.evidence_type,
-                        'evidence': skill.evidence,
-                        'translation_rationale': skill.translation_rationale
+                    all_skills_data.append({
+                        'Course Code': course.code,
+                        'Course Name': course.name,
+                        'Study Level': course.study_level,
+                        'Credit Points': course.credit_points,
+                        'Skill Name': skill.name,
+                        'Description': skill.description,
+                        'Category': skill.category.value,
+                        'Level': skill.level.name,
+                        'Level Value': skill.level.value,
+                        'Context': skill.context.value,
+                        'Confidence': skill.confidence,
+                        'Keywords': '; '.join(skill.keywords),
+                        'Evidence': skill.evidence,
+                        'Translation Rationale': skill.translation_rationale
                     })
-    
-    def _export_combined_to_csv(self,
-                            vet_qual: VETQualification,
-                            uni_qual: UniQualification,
-                            filepath: Path):
-        """Export combined VET and University skills to CSV with evidence and rationale"""
-        with open(filepath, 'w', newline='', encoding='utf-8') as f:
-            fieldnames = [
-                'source_type', 'qualification_code', 'qualification_name',
-                'unit_course_code', 'unit_course_name', 'study_level_or_hours',
-                'skill_name', 'category', 'level', 'context', 'confidence',
-                'evidence', 'translation_rationale'  # Add new fields
-            ]
             
-            writer = csv.DictWriter(f, fieldnames=fieldnames)
-            writer.writeheader()
+            pd.DataFrame(all_skills_data).to_excel(writer, sheet_name='All Skills', index=False)
             
-            # Write VET skills
+            # Sheet 3: Skills by Course
+            if all_skills_data:
+                skills_df = pd.DataFrame(all_skills_data)
+                pivot = skills_df.pivot_table(
+                    values='Skill Name',
+                    index='Course Code',
+                    aggfunc='count'
+                ).rename(columns={'Skill Name': 'Skill Count'})
+                pivot.to_excel(writer, sheet_name='Skills by Course')
+            
+            # Sheet 4: Skills by Study Level
+            if all_skills_data:
+                level_pivot = skills_df.pivot_table(
+                    values='Skill Name',
+                    index='Study Level',
+                    aggfunc='count'
+                ).rename(columns={'Skill Name': 'Skill Count'})
+                level_pivot.to_excel(writer, sheet_name='Skills by Level')
+
+    def _export_combined_to_excel(self, vet_qual: VETQualification, uni_qual: UniQualification, filepath: Path):
+        """Export combined VET and University skills to Excel with comparison"""
+        
+        with pd.ExcelWriter(filepath, engine='openpyxl') as writer:
+            # Sheet 1: Comparison Summary
+            vet_skills = []
+            for unit in vet_qual.units:
+                vet_skills.extend(unit.extracted_skills)
+            
+            uni_skills = []
+            for course in uni_qual.courses:
+                uni_skills.extend(course.extracted_skills)
+            
+            common_skills = self._find_common_skills(vet_skills, uni_skills)
+            
+            summary_data = {
+                'Metric': ['VET Qualification', 'University Qualification', 
+                        'Total VET Skills', 'Total Uni Skills', 'Common Skills'],
+                'Value': [f"{vet_qual.code} - {vet_qual.name}",
+                        f"{uni_qual.code} - {uni_qual.name}",
+                        len(vet_skills), len(uni_skills), len(common_skills)]
+            }
+            pd.DataFrame(summary_data).to_excel(writer, sheet_name='Summary', index=False)
+            
+            # Sheet 2: VET Skills
+            vet_data = []
             for unit in vet_qual.units:
                 for skill in unit.extracted_skills:
-                    writer.writerow({
-                        'source_type': 'VET',
-                        'qualification_code': vet_qual.code,
-                        'qualification_name': vet_qual.name,
-                        'unit_course_code': unit.code,
-                        'unit_course_name': unit.name,
-                        'study_level_or_hours': f"{unit.nominal_hours}h",
-                        'skill_name': skill.name,
-                        'category': skill.category.value,
-                        'level': skill.level.name,
-                        'context': skill.context.value,
-                        'confidence': f"{skill.confidence:.2f}",
-                        'evidence': skill.evidence,  # Include evidence
-                        'translation_rationale': skill.translation_rationale  # Include rationale
+                    vet_data.append({
+                        'Unit Code': unit.code,
+                        'Unit Name': unit.name,
+                        'Skill Name': skill.name,
+                        'Category': skill.category.value,
+                        'Level': skill.level.value,
+                        'Context': skill.context.value,
+                        'Confidence': skill.confidence
                     })
+            pd.DataFrame(vet_data).to_excel(writer, sheet_name='VET Skills', index=False)
             
-            # Write University skills
+            # Sheet 3: University Skills
+            uni_data = []
             for course in uni_qual.courses:
                 for skill in course.extracted_skills:
-                    writer.writerow({
-                        'source_type': 'University',
-                        'qualification_code': uni_qual.code,
-                        'qualification_name': uni_qual.name,
-                        'unit_course_code': course.code,
-                        'unit_course_name': course.name,
-                        'study_level_or_hours': course.study_level,
-                        'skill_name': skill.name,
-                        'category': skill.category.value,
-                        'level': skill.level.name,
-                        'context': skill.context.value,
-                        'confidence': f"{skill.confidence:.2f}",
-                        'evidence': skill.evidence,  # Include evidence
-                        'translation_rationale': skill.translation_rationale  # Include rationale
+                    uni_data.append({
+                        'Course Code': course.code,
+                        'Course Name': course.name,
+                        'Skill Name': skill.name,
+                        'Category': skill.category.value,
+                        'Level': skill.level.value,
+                        'Context': skill.context.value,
+                        'Confidence': skill.confidence
                     })
+            pd.DataFrame(uni_data).to_excel(writer, sheet_name='University Skills', index=False)
+            
+            # Sheet 4: Common Skills
+            pd.DataFrame({'Common Skills': common_skills}).to_excel(writer, sheet_name='Common Skills', index=False)
     
     # ========== IMPORT METHODS ==========
     

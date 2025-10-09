@@ -61,7 +61,9 @@ class SimplifiedAnalyzer:
         logger.info(f"Using thresholds for combined score to outupt recommendation: {self.thresholds}")
         # Matching strategy configuration
         self.matching_strategy = self.config.get("matching_strategy".upper(), "clustering")
-        self.direct_threshold = self.config.get("direct_match_threshold".upper(), 0.85)
+        self.direct_threshold = self.config.get("direct_match_threshold".upper(), 0.9)
+        self.partial_threshold = self.config.get("partial_threshold".upper(), 0.8)
+        logger.info(f"Direct match threshold: {self.direct_threshold}, Partial match threshold: {self.partial_threshold}")
         
     def load_pre_extracted_skills(self, vet_qual: VETQualification, uni_qual: UniQualification) -> bool:
         """
@@ -277,92 +279,8 @@ class SimplifiedAnalyzer:
                 #
                 recommendations.append(rec)
         
+        recommendations = sorted(recommendations, key=lambda x: x.alignment_score, reverse=True)
         return recommendations
-  
-    def _calculate_skill_match(self, vet_skill, uni_skill) -> SkillMatchResult:
-        """Calculate match between two skills including semantic, level, and context compatibility"""
-        
-        # Calculate semantic similarity
-        if self.embeddings:
-            semantic_similarity = self.embeddings.similarity_score(
-                vet_skill.name, uni_skill.name
-            )
-        else:
-            semantic_similarity = 1.0 if vet_skill.name.lower() == uni_skill.name.lower() else 0.0
-        
-        # Calculate level compatibility using the unified scorer matrix
-        vet_idx = min(max(0, vet_skill.level.value - 1), 6)
-        uni_idx = min(max(0, uni_skill.level.value - 1), 6)
-        level_compatibility = self.unified_scorer.level_compatibility_matrix[vet_idx, uni_idx]
-        
-        # Calculate context similarity (NEW - using graduated scoring)
-        context_similarity_matrix = {
-            ('practical', 'practical'): 1.0,
-            ('practical', 'hybrid'): 0.7,
-            ('practical', 'theoretical'): 0.3,
-            ('theoretical', 'theoretical'): 1.0,
-            ('theoretical', 'hybrid'): 0.7,
-            ('theoretical', 'practical'): 0.3,
-            ('hybrid', 'practical'): 0.7,
-            ('hybrid', 'theoretical'): 0.7,
-            ('hybrid', 'hybrid'): 1.0,
-        }
-        
-        vet_context = vet_skill.context.value
-        uni_context = uni_skill.context.value
-        context_similarity = context_similarity_matrix.get(
-            (vet_context, uni_context), 0.5
-        )
-        
-        # Calculate combined score with context weighting
-        semantic_weight = self.config.get("SEMANTIC_WEIGHT", 0.6)
-        level_weight = self.config.get("LEVEL_WEIGHT", 0.25)
-        context_weight = self.config.get("CONTEXT_WEIGHT", 0.15)
-        
-        # Normalize weights
-        total_weight = semantic_weight + level_weight + context_weight
-        semantic_weight /= total_weight
-        level_weight /= total_weight
-        context_weight /= total_weight
-        
-        combined_score = (
-            semantic_similarity * semantic_weight + 
-            level_compatibility * level_weight +
-            context_similarity * context_weight
-        )
-        
-        # Determine match type with context consideration
-        from mapping.simple_mapping_types import SimpleMappingClassifier
-        classifier = SimpleMappingClassifier()
-        level_gap = abs(uni_skill.level.value - vet_skill.level.value)
-        
-        # Modified classification considering context similarity
-        if self.matching_strategy == "direct":
-            if combined_score >= self.direct_threshold and semantic_similarity >= 0.9:
-                match_type = "Direct"
-                reasoning = f"High match (sem: {semantic_similarity:.0%}, lvl: {level_compatibility:.0%}, ctx: {context_similarity:.0%}, cmb: {combined_score:.0%})"
-            elif combined_score >= 0.65 and semantic_similarity >= 0.8:
-                match_type = "Partial"
-                reasoning = f"Moderate match (sem: {semantic_similarity:.0%}, lvl: {level_compatibility:.0%}, ctx: {context_similarity:.0%}, cmb: {combined_score:.0%})"
-            else:
-                match_type = "Unmapped"
-                reasoning = f"Insufficient match (sem: {semantic_similarity:.0%}, lvl: {level_compatibility:.0%}, ctx: {context_similarity:.0%}, cmb: {combined_score:.0%})"
-        else:
-            match_type, base_reasoning = classifier.classify_mapping(
-                semantic_similarity, level_gap, context_similarity > 0.7
-            )
-            reasoning = f"{base_reasoning} (ctx similarity: {context_similarity:.0%})"
-        
-        return SkillMatchResult(
-            vet_skill=vet_skill,
-            uni_skill=uni_skill,
-            similarity_score=semantic_similarity,
-            level_compatibility=level_compatibility,
-            match_type=match_type,
-            reasoning=reasoning,
-            combined_score=combined_score,
-            metadata={'context_similarity': context_similarity}
-        )
     
     def _find_best_cluster_match(self, vet_skills: Dict, course_skills: List) -> Tuple:
         """Original clustering-based matching"""
@@ -383,7 +301,6 @@ class SimplifiedAnalyzer:
         """Direct skill matching with vectorized computation"""
         best_match = None
         best_score = 0
-        best_skill_matches_uni = {}
         
         for unit_code, unit_skills in vet_skills.items():
             if not unit_skills or not course_skills:
@@ -401,63 +318,70 @@ class SimplifiedAnalyzer:
             all_skill_matches = match_result['all_matches']
             uni_skill_coverage = match_result['uni_coverage']
             vet_skill_coverage = match_result['vet_coverage']
-            best_skill_matches_uni_local = match_result['best_uni_matches']
+            best_skill_matches_uni = match_result['best_uni_matches']
             
-            # Calculate bidirectional coverage
-            uni_coverage = len(uni_skill_coverage) / len(course_skills) if course_skills else 0
-            vet_coverage = len(vet_skill_coverage) / len(unit_skills) if unit_skills else 0
-            bidirectional_coverage = min(uni_coverage, vet_coverage)
+            vet_total_score = 0
+            for vet_skill in unit_skills:
+                if vet_skill.name in vet_skill_coverage:
+                    score = vet_skill_coverage[vet_skill.name]
+                    if score >= self.direct_threshold:
+                        vet_total_score += 1.0
+                    elif score >= self.partial_threshold:
+                        vet_total_score += 0.5
             
             # Calculate weighted coverage score
-            total_score = 0
+            uni_total_score = 0
             for uni_skill in course_skills:
                 if uni_skill.name in uni_skill_coverage:
                     score = uni_skill_coverage[uni_skill.name]
                     if score >= self.direct_threshold:
-                        total_score += 1.0
-                    elif score >= 0.5:
-                        total_score += 0.5
+                        uni_total_score += 1.0
+                    elif score >= self.partial_threshold:
+                        uni_total_score += 0.5
             
-            coverage_score = total_score / len(course_skills) if course_skills else 0
-            final_score = (coverage_score * 0.8 + bidirectional_coverage * 0.2)
+            uni_coverage = uni_total_score / len(course_skills) if course_skills else 0
+            vet_coverage = vet_total_score / len(unit_skills) if unit_skills else 0
+            bidirectional_coverage = min(uni_coverage, vet_coverage)
+            final_score = uni_coverage# * 0.8 + bidirectional_coverage * 0.2)
             
             if final_score > best_score:
                 best_score = final_score
-                best_skill_matches = list(best_skill_matches_uni_local.values())
+                best_skill_matches = list(best_skill_matches_uni.values())
                 
                 # Count match types
-                direct_matches = sum(1 for m in best_skill_matches if m.match_type == "Direct")
-                partial_matches = sum(1 for m in best_skill_matches if m.match_type == "Partial")
-                unmapped = len(course_skills) - len(uni_skill_coverage)
+                direct_matches = [m for m in best_skill_matches if m['match_type'] == "Direct"]
+                partial_matches = [m for m in best_skill_matches if m['match_type'] == "Partial"]
+                unmapped_matches = [m for m in best_skill_matches if m['match_type'] == "Unmapped"]
+                mapped_vet_skills = list(set([m['vet_skill'].name for m in best_skill_matches if m['match_type'] in ["Direct", "Partial"]]))
+                mapped_uni_skills = [m['uni_skill'].name for m in best_skill_matches if m['match_type'] in ["Direct", "Partial"]]
+                # unmapped = len(course_skills) - len(direct_matches) - len(partial_matches)
                 
                 # Create detailed match result (same structure as before)
                 match_result_final = {
-                    "matches": [{
+                    "best_match": {
                         "vet_skills": unit_skills,
                         "uni_skills": course_skills,
-                        "semantic_similarity": coverage_score,
-                        "level_alignment": np.mean([m.level_compatibility for m in best_skill_matches]) if best_skill_matches else 0,
-                        "combined_score": final_score,
-                        "match_type": "direct"
-                    }],
+                        "weighted_uni_coverage": uni_coverage,
+                        "best_uni_skill_matches": best_skill_matches,
+                    },
                     "statistics": {
                         "uni_coverage": uni_coverage,
                         "vet_coverage": vet_coverage,
                         "bidirectional_coverage": bidirectional_coverage,
                         "total_matches": len(best_skill_matches),
-                        "unique_uni_matched": len(uni_skill_coverage),
-                        "unique_vet_matched": len(vet_skill_coverage),
-                        "direct_matches": direct_matches,
-                        "partial_matches": partial_matches,
-                        "unmapped_count": unmapped,
+                        "unique_uni_matched": len(mapped_uni_skills),
+                        "unique_vet_matched": len(mapped_vet_skills),
+                        "direct_matches": len(direct_matches),
+                        "partial_matches": len(partial_matches),
+                        "unmapped_count": len(unmapped_matches),
                         "one_to_many_mappings": sum(1 for matches in [m for m in best_skill_matches] 
                                                 if len([m2 for m2 in best_skill_matches 
-                                                        if m2.vet_skill == m2.vet_skill]) > 1)
+                                                        if m2['vet_skill'] == m2['vet_skill']]) > 1)
                     },
                     "skill_match_details": {
-                        'mapped': all_skill_matches,
-                        "unmapped_vet": [s for s in unit_skills if s.name not in vet_skill_coverage],
-                        "unmapped_uni": [s for s in course_skills if s.name not in uni_skill_coverage]
+                        'mapped': direct_matches + partial_matches,
+                        "unmapped_vet": [s for s in unit_skills if s.name not in mapped_vet_skills],
+                        "unmapped_uni": [s for s in course_skills if s.name not in mapped_uni_skills],
                     }
                 }
                 best_match = (unit_code, final_score, match_result_final)
@@ -524,55 +448,45 @@ class SimplifiedAnalyzer:
         best_uni_matches = {}
         
         # Find best matches for each skill (vectorized approach)
-        threshold = self.config.get("PARTIAL_THRESHOLD", 0.5)
+        # threshold = self.config.get("PARTIAL_THRESHOLD", 0.5)
         
         # For each VET skill, find all matching UNI skills above threshold
         for i, vet_skill in enumerate(vet_skills):
-            matches_for_vet = []
+            # matches_for_vet = []
             for j, uni_skill in enumerate(uni_skills):
                 score = combined_scores[i, j]
-                if score >= threshold:
-                    match_type, reasoning = self._classify_match_vectorized(
-                        similarity_matrix[i, j],
-                        level_compat_matrix[i, j],
-                        context_compat_matrix[i, j],
-                        score
-                    )
+                # if score >= threshold:
+                match_type, reasoning = self._classify_match_vectorized(
+                    similarity_matrix[i, j],
+                    level_compat_matrix[i, j],
+                    context_compat_matrix[i, j],
+                    score
+                )
+                
+                match_result = {
+                    "vet_skill": vet_skill,
+                    "uni_skill": uni_skill,
+                    "match_type": match_type,
+                    "similarity": float(similarity_matrix[i, j]),
+                    "level_compatibility": float(level_compat_matrix[i, j]),
+                    "context_similarity": float(context_compat_matrix[i, j]),
+                    "combined_score": float(score),
+                    "reasoning": reasoning
+                }
+                
+                # matches_for_vet.append(match_result)
+                all_skill_matches.append(match_result)
+                
+                # Update coverage tracking
+                vet_skill_coverage[vet_skill.name] = max(
+                    vet_skill_coverage.get(vet_skill.name, 0), score
+                )
+                uni_skill_coverage[uni_skill.name] = max(
+                    uni_skill_coverage.get(uni_skill.name, 0), score
+                )
+                if score >= uni_skill_coverage.get(uni_skill.name, 0):
+                    best_uni_matches[uni_skill.name] = match_result
                     
-                    match_result = {
-                        "vet_skill": vet_skill,
-                        "uni_skill": uni_skill,
-                        "match_type": match_type,
-                        "similarity": float(similarity_matrix[i, j]),
-                        "level_compatibility": float(level_compat_matrix[i, j]),
-                        "context_similarity": float(context_compat_matrix[i, j]),
-                        "combined_score": float(score),
-                        "reasoning": reasoning
-                    }
-                    
-                    matches_for_vet.append(match_result)
-                    all_skill_matches.append(match_result)
-                    
-                    # Update coverage tracking
-                    vet_skill_coverage[vet_skill.name] = max(
-                        vet_skill_coverage.get(vet_skill.name, 0), score
-                    )
-                    
-                    if score >= uni_skill_coverage.get(uni_skill.name, 0):
-                        best_uni_matches[uni_skill.name] = SkillMatchResult(
-                            vet_skill=vet_skill,
-                            uni_skill=uni_skill,
-                            similarity_score=float(similarity_matrix[i, j]),
-                            level_compatibility=float(level_compat_matrix[i, j]),
-                            match_type=match_type,
-                            reasoning=reasoning,
-                            combined_score=float(score),
-                            metadata={'context_similarity': float(context_compat_matrix[i, j])}
-                        )
-                    uni_skill_coverage[uni_skill.name] = max(
-                        uni_skill_coverage.get(uni_skill.name, 0), score
-                    )
-        
         return {
                     'all_matches': all_skill_matches,
                     'vet_coverage': vet_skill_coverage,
@@ -637,9 +551,9 @@ class SimplifiedAnalyzer:
         Classify match type based on precomputed scores
         """
         if self.matching_strategy == "direct":
-            if combined_score >= self.direct_threshold and semantic_sim >= 0.9:
+            if combined_score >= self.direct_threshold: #and semantic_sim >= 0.9:
                 return ("Direct", f"High match (sem: {semantic_sim:.0%}, lvl: {level_compat:.0%}, ctx: {context_compat:.0%}, cmb: {combined_score:.0%})")
-            elif combined_score >= 0.65 and semantic_sim >= 0.8:
+            elif combined_score >= self.partial_threshold:# and semantic_sim >= 0.8:
                 return ("Partial", f"Moderate match (sem: {semantic_sim:.0%}, lvl: {level_compat:.0%}, ctx: {context_compat:.0%}, cmb: {combined_score:.0%})")
             else:
                 return ("Unmapped", f"Insufficient match (sem: {semantic_sim:.0%}, lvl: {level_compat:.0%}, ctx: {context_compat:.0%}, cmb: {combined_score:.0%})")
@@ -803,17 +717,9 @@ class SimplifiedAnalyzer:
                            edge_case_results: Dict = None) -> CreditTransferRecommendation:
         """Create a recommendation using unified scoring"""
         
-        # Collect all skills
-        vet_skills = []
-        for unit in vet_units:
-            vet_skills.extend(unit.extracted_skills)
-        
-        uni_skills = uni_course.extracted_skills
         
         # Calculate unified score
         score_result = self.unified_scorer.calculate_alignment_score(
-            vet_skills,
-            uni_skills,
             match_result,
             edge_case_results
         )

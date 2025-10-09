@@ -126,9 +126,9 @@ class ConfigProfiles:
             "seed": 42,  # Fixed seed
             "ensemble_similarity_threshold": 0.98,
             "matching_strategy": "direct",  # Options: "clustering", "direct", "hybrid"
-            "direct_match_threshold": 0.85,  # Threshold for direct skill name matching
+            "direct_match_threshold": 0.9,  # Threshold for direct skill name matching
             "context_weight": 0.10,  # Weight for context similarity
-            "partial_threshold": 0.5,  # Threshold for partial matches
+            "partial_threshold": 0.8,  # Threshold for partial matches
             "enable_bidirectional_coverage": True,  # Use bidirectional coverage
             "enable_one_to_many": True,  # Support one-to-many skill mappings
             "enable_clustering_validation": True,  # Validate direct matches with clustering

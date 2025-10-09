@@ -84,15 +84,15 @@ class ReportGenerator:
         files['vet_skills_json'] = str(skill_export_dir / f"{vet_qual.code}_skills.json")
         self._export_skills_json(vet_qual, None, files['vet_skills_json'])
         
-        files['vet_skills_csv'] = str(skill_export_dir / f"{vet_qual.code}_skills.csv")
-        self._export_skills_csv(vet_qual, None, files['vet_skills_csv'])
+        files['vet_skills_excel'] = str(skill_export_dir / f"{vet_qual.code}_skills.xlsx")
+        self._export_skills_excel(vet_qual, None, files['vet_skills_excel'])
         
         # Export University skills
         files['uni_skills_json'] = str(skill_export_dir / f"{uni_qual.code}_skills.json")
         self._export_skills_json(None, uni_qual, files['uni_skills_json'])
         
-        files['uni_skills_csv'] = str(skill_export_dir / f"{uni_qual.code}_skills.csv")
-        self._export_skills_csv(None, uni_qual, files['uni_skills_csv'])
+        files['uni_skills_excel'] = str(skill_export_dir / f"{uni_qual.code}_skills.xlsx")
+        self._export_skills_excel(None, uni_qual, files['uni_skills_excel'])
         
         # Export combined skills
         files['combined_skills_json'] = str(skill_export_dir / "combined_skills.json")
@@ -131,18 +131,18 @@ class ReportGenerator:
             # University only
             self.skill_export._export_uni_to_json(uni_qual, Path(filepath), include_metadata=True)
     
-    def _export_skills_csv(self,
-                          vet_qual: Optional[VETQualification],
-                          uni_qual: Optional[UniQualification],
-                          filepath: str):
-        """Export skills to CSV using skill export manager"""
+    def _export_skills_excel(self,
+                        vet_qual: Optional[VETQualification],
+                        uni_qual: Optional[UniQualification],
+                        filepath: str):
+        """Export skills to Excel using skill export manager"""
         if vet_qual and not uni_qual:
-            self.skill_export._export_vet_to_csv(vet_qual, Path(filepath))
+            self.skill_export._export_vet_to_excel(vet_qual, Path(filepath))
         elif uni_qual and not vet_qual:
-            self.skill_export._export_uni_to_csv(uni_qual, Path(filepath))
+            self.skill_export._export_uni_to_excel(uni_qual, Path(filepath))
         else:
-            self.skill_export._export_combined_to_csv(vet_qual, uni_qual, Path(filepath))
-    
+            self.skill_export._export_combined_to_excel(vet_qual, uni_qual, Path(filepath))
+        
     def _export_recommendations_json(self,
                                 recommendations: List[CreditTransferRecommendation],
                                 vet_qual: VETQualification,
@@ -770,76 +770,82 @@ class ReportGenerator:
         html.append("</tbody></table>")
 
         # Add Skill-Level Mapping Table
-        html.append("<h2>Skill Mapping Details</h2>")
-        html.append("<p>Detailed mapping between individual VET and University skills based on analysis.</p>")
+        # Individual Skill Mapping Tables for each recommendation
+        html.append("<h2>Detailed Skill Mappings by Recommendation</h2>")
+        html.append("<p>Individual skill mapping analysis for each credit transfer recommendation.</p>")
 
-        # Get skill mappings
-        skill_mappings = self._extract_skill_mappings(recommendations[:10])  # Limit to top 10 recommendations for readability
-
-        if skill_mappings:
-            html.append("<table class='detail-table'>")
-            html.append("<thead><tr>")
-            html.append("<th>VET Unit</th>")
-            html.append("<th>VET Skill</th>")
-            html.append("<th>Uni Course</th>")
-            html.append("<th>Uni Skill</th>")
-            html.append("<th>Mapping Type</th>")
-            html.append("<th>Similarity</th>")
-            html.append("<th>Reasoning</th>")
-            html.append("</tr></thead>")
-            html.append("<tbody>")
+        for idx, rec in enumerate(recommendations[:20], 1):  # Limit to top 20 for readability
+            # Get skill mappings for this specific recommendation
+            skill_mappings = self._extract_skill_mappings_for_single_rec(rec)
             
-            # Group mappings by type for better organization
-            direct_mappings = [m for m in skill_mappings if m['mapping_type'] == 'Direct']
-            partial_mappings = [m for m in skill_mappings if m['mapping_type'] == 'Partial']
-            unmapped_mappings = [m for m in skill_mappings if m['mapping_type'] == 'Unmapped']
-            
-            # Display direct mappings first
-            for mapping in direct_mappings[:30]:  # Limit to 30 for readability
-                html.append("<tr style='background-color: #d4edda;'>")  # Green background for direct
-                html.append(f"<td>{mapping['vet_unit']}</td>")
-                html.append(f"<td>{mapping['vet_skill']}<br><small>Level: {mapping['vet_level']}</small></td>")
-                html.append(f"<td>{mapping['uni_course']}</td>")
-                html.append(f"<td>{mapping['uni_skill']}<br><small>Level: {mapping['uni_level']}</small></td>")
-                html.append(f"<td><strong style='color: green;'>{mapping['mapping_type']}</strong></td>")
-                html.append(f"<td>{mapping['similarity']:.1%}</td>")
-                html.append(f"<td>{mapping['reasoning']}</td>")
-                html.append("</tr>")
-            
-            # Display partial mappings
-            for mapping in partial_mappings[:20]:  # Limit to 20
-                html.append("<tr style='background-color: #fff3cd;'>")  # Yellow background for partial
-                html.append(f"<td>{mapping['vet_unit']}</td>")
-                html.append(f"<td>{mapping['vet_skill']}<br><small>Level: {mapping['vet_level']}</small></td>")
-                html.append(f"<td>{mapping['uni_course']}</td>")
-                html.append(f"<td>{mapping['uni_skill']}<br><small>Level: {mapping['uni_level']}</small></td>")
-                html.append(f"<td><strong style='color: orange;'>{mapping['mapping_type']}</strong></td>")
-                html.append(f"<td>{mapping['similarity']:.1%}</td>")
-                html.append(f"<td>{mapping['reasoning']}</td>")
-                html.append("</tr>")
-            
-            # Display some unmapped skills
-            for mapping in unmapped_mappings[:20]:  # Limit to 20
-                html.append("<tr style='background-color: #f8d7da;'>")  # Red background for unmapped
-                html.append(f"<td>{mapping['vet_unit']}</td>")
-                html.append(f"<td>{mapping['vet_skill'] if mapping['vet_skill'] != '-' else '-'}<br><small>Level: {mapping['vet_level']}</small></td>")
-                html.append(f"<td>{mapping['uni_course']}</td>")
-                html.append(f"<td>{mapping['uni_skill'] if mapping['uni_skill'] != '-' else '-'}<br><small>Level: {mapping['uni_level']}</small></td>")
-                html.append(f"<td><strong style='color: red;'>{mapping['mapping_type']}</strong></td>")
-                html.append(f"<td>-</td>")
-                html.append(f"<td>{mapping['reasoning']}</td>")
-                html.append("</tr>")
-            
-            html.append("</tbody></table>")
-            
-            # Add summary statistics
-            html.append("<div class='summary-box' style='margin-top: 20px;'>")
-            html.append("<h3>Mapping Summary Statistics</h3>")
-            html.append(f"<p><strong>Total Mappings Analyzed:</strong> {len(skill_mappings)}</p>")
-            html.append(f"<p><strong>Direct Matches:</strong> {len(direct_mappings)} ({len(direct_mappings)*100/max(1,len(skill_mappings)):.1f}%)</p>")
-            html.append(f"<p><strong>Partial Matches:</strong> {len(partial_mappings)} ({len(partial_mappings)*100/max(1,len(skill_mappings)):.1f}%)</p>")
-            html.append(f"<p><strong>Unmapped Skills:</strong> {len(unmapped_mappings)} ({len(unmapped_mappings)*100/max(1,len(skill_mappings)):.1f}%)</p>")
-            html.append("</div>")
+            if skill_mappings:
+                # Create section header
+                html.append(f"<h3>Recommendation #{idx}: {', '.join(rec.get_vet_unit_codes())} → {rec.uni_course.code}</h3>")
+                html.append(f"<p><strong>Course:</strong> {rec.uni_course.name} | ")
+                html.append(f"<strong>Score:</strong> {rec.alignment_score:.1%} | ")
+                html.append(f"<strong>Type:</strong> {rec.recommendation.value.upper()}</p>")
+                
+                # Create skill mapping table for this recommendation
+                html.append("<table class='skill-mapping-table'>")
+                html.append("<thead><tr>")
+                html.append("<th>VET Unit</th>")
+                html.append("<th>VET Skill</th>")
+                html.append("<th>Uni Course</th>")
+                html.append("<th>Uni Skill</th>")
+                html.append("<th>Mapping Type</th>")
+                html.append("<th>Similarity</th>")
+                html.append("<th>Reasoning</th>")
+                html.append("</tr></thead>")
+                html.append("<tbody>")
+                
+                # Group mappings by type
+                direct_mappings = [m for m in skill_mappings if m['mapping_type'] == 'Direct']
+                partial_mappings = [m for m in skill_mappings if m['mapping_type'] == 'Partial']
+                unmapped_mappings = [m for m in skill_mappings if m['mapping_type'] == 'Unmapped']
+                
+                # Display mappings
+                for mapping in direct_mappings[:15]:  # Limit per recommendation
+                    html.append(f"<tr class='mapping-direct'>")
+                    html.append(f"<td>{mapping['vet_unit']}</td>")
+                    html.append(f"<td>{mapping['vet_skill']}<span class='skill-level-badge'>L{mapping['vet_level']}</span></td>")
+                    html.append(f"<td>{mapping['uni_course']}</td>")
+                    html.append(f"<td>{mapping['uni_skill']}<span class='skill-level-badge'>L{mapping['uni_level']}</span></td>")
+                    html.append(f"<td><strong>{mapping['mapping_type']}</strong></td>")
+                    html.append(f"<td>{mapping['similarity']:.1%}</td>")
+                    html.append(f"<td>{mapping['reasoning']}</td>")
+                    html.append("</tr>")
+                
+                for mapping in partial_mappings[:10]:
+                    html.append(f"<tr class='mapping-partial'>")
+                    html.append(f"<td>{mapping['vet_unit']}</td>")
+                    html.append(f"<td>{mapping['vet_skill']}<span class='skill-level-badge'>L{mapping['vet_level']}</span></td>")
+                    html.append(f"<td>{mapping['uni_course']}</td>")
+                    html.append(f"<td>{mapping['uni_skill']}<span class='skill-level-badge'>L{mapping['uni_level']}</span></td>")
+                    html.append(f"<td><strong>{mapping['mapping_type']}</strong></td>")
+                    html.append(f"<td>{mapping['similarity']:.1%}</td>")
+                    html.append(f"<td>{mapping['reasoning']}</td>")
+                    html.append("</tr>")
+                
+                for mapping in unmapped_mappings[:10]:
+                    html.append(f"<tr class='mapping-unmapped'>")
+                    html.append(f"<td>{mapping['vet_unit']}</td>")
+                    html.append(f"<td>{mapping.get('vet_skill', '-')}</td>")
+                    html.append(f"<td>{mapping['uni_course']}</td>")
+                    html.append(f"<td>{mapping.get('uni_skill', '-')}</td>")
+                    html.append(f"<td><strong>{mapping['mapping_type']}</strong></td>")
+                    html.append(f"<td>-</td>")
+                    html.append(f"<td>{mapping['reasoning']}</td>")
+                    html.append("</tr>")
+                
+                html.append("</tbody></table>")
+                
+                # Summary for this recommendation
+                html.append(f"<div class='summary-box' style='margin-bottom: 30px;'>")
+                html.append(f"<strong>Mapping Summary:</strong> ")
+                html.append(f"Direct: {len(direct_mappings)} | ")
+                html.append(f"Partial: {len(partial_mappings)} | ")
+                html.append(f"Unmapped: {len(unmapped_mappings)}")
+                html.append(f"</div>")
         else:
             html.append("<p><em>No skill mapping data available. Ensure semantic clustering is enabled in the analysis.</em></p>")
                 
@@ -1053,6 +1059,20 @@ class ReportGenerator:
             'level_analysis': self._analyze_level_alignment(rec),
             'matching_strategy': matching_strategy
         }
+        
+    def _extract_skill_mappings_for_single_rec(self, rec: CreditTransferRecommendation) -> List[Dict]:
+        """Extract skill mappings for a single recommendation"""
+        
+        from mapping.simple_mapping_types import SimpleMappingClassifier
+        classifier = SimpleMappingClassifier()
+        
+        # Get matching strategy from metadata
+        matching_strategy = rec.metadata.get('matching_strategy', 'clustering')
+        
+        if matching_strategy == 'direct' or matching_strategy == 'hybrid':
+            return self._extract_direct_skill_mappings(rec, classifier)
+        else:
+            return self._extract_cluster_skill_mappings(rec, classifier)
         
     def _extract_direct_match_info(self, rec: CreditTransferRecommendation) -> Dict:
         """Extract match info for direct/hybrid matching strategies"""
@@ -1293,20 +1313,19 @@ class ReportGenerator:
         if skill_match_details:
             # Use backend-calculated matches
             for detail in skill_match_details['mapped']:
-                if detail['vet_skill'] and detail['uni_skill']:
                     # Both skills present - normal match
-                    mapping = {
-                        'vet_unit': detail['vet_skill'].code,
-                        'vet_skill': detail['vet_skill'].name,
-                        'vet_level': detail['vet_skill'].level.value,
-                        'uni_course': detail['uni_skill'].code,
-                        'uni_skill': detail['uni_skill'].name,
-                        'uni_level': detail['uni_skill'].level.value,
-                        'mapping_type': detail['match_type'],
-                        'similarity': detail['similarity'],
-                        'reasoning': detail['reasoning']
-                    }
-                    mappings.append(mapping)
+                mapping = {
+                    'vet_unit': detail['vet_skill'].code,
+                    'vet_skill': detail['vet_skill'].name,
+                    'vet_level': detail['vet_skill'].level.value,
+                    'uni_course': detail['uni_skill'].code,
+                    'uni_skill': detail['uni_skill'].name,
+                    'uni_level': detail['uni_skill'].level.value,
+                    'mapping_type': detail['match_type'],
+                    'similarity': detail['similarity'],
+                    'reasoning': detail['reasoning']
+                }
+                mappings.append(mapping)
             for unmapped in skill_match_details['unmapped_uni']:
                     # Only Uni skill - unmapped Uni
                 mapping = {
