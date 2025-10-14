@@ -507,6 +507,92 @@ Apply the chain-of-thought process to each text to extract true HUMAN CAPABILITI
     Return ONLY ONE WORD (Introductory/Intermediate/Advanced):"""
         
         return system_prompt, user_prompt
+    
+    @staticmethod
+    def get_sfia_level_determination_prompt(
+        skills: List[Any],
+        context_text: str,
+        item_type: str,
+        study_level: Optional[str] = None,
+        backend_type: str = "standard"
+    ) -> Tuple[str, str]:
+        """
+        Separate prompt for determining SFIA levels for already extracted skills
+        """
+        system_prompt = """You are a SFIA (Skills Framework for the Information Age) level assessment expert. 
+    Your task is to accurately assign SFIA proficiency levels (1-7) to skills based on the context and complexity indicators.
+
+    You must be consistent and precise in your level assignments, considering:
+    1. The autonomy and supervision required
+    2. The influence and impact scope
+    3. The complexity of work
+    4. The business skills needed
+    5. The knowledge depth required"""
+
+        # Build the level calibration rules
+        if study_level:
+            study_enum = StudyLevel.from_string(study_level)
+            expected_min, expected_max = StudyLevel.get_expected_skill_level_range(study_enum)
+        else:
+            expected_min, expected_max = 2, 4
+        
+        user_prompt = f"""Analyze these skills and assign appropriate SFIA levels (1-7).
+
+    ## CONTEXT:
+    Item Type: {item_type}
+    Study Level: {study_level if study_level else 'Not specified'}
+    Expected SFIA Level Range: {expected_min}-{expected_max}
+
+    ## ORIGINAL TEXT (for context):
+    {context_text[:1500]}
+
+    ## SKILLS TO ASSESS:
+    """
+        
+        for idx, skill in enumerate(skills[:50], 1):
+            user_prompt += f"""
+    {idx}. Skill: {skill.name}
+    Category: {skill.category.value if hasattr(skill.category, 'value') else skill.category}
+    Context: {skill.context.value if hasattr(skill.context, 'value') else skill.context}
+    Evidence: {skill.evidence[:100] if hasattr(skill, 'evidence') else ''}
+    """
+        
+        user_prompt += f"""
+
+    ## SFIA LEVEL DEFINITIONS:
+    Level 1 (Follow): Close supervision, routine tasks, follows instructions
+    Level 2 (Assist): Routine supervision, limited discretion, provides assistance
+    Level 3 (Apply): General direction, exercises discretion, varied tasks
+    Level 4 (Enable): Autonomous work, guides others, complex activities
+    Level 5 (Ensure/Advise): Authoritative guidance, significant accountability
+    Level 6 (Initiate/Influence): Organizational influence, high-level decisions
+    Level 7 (Set Strategy): Highest level, vision and strategy determination
+
+    ## ASSESSMENT CRITERIA:
+    For each skill, consider:
+    1. Autonomy level required
+    2. Complexity of the skill application
+    3. Impact and influence scope
+    4. Required knowledge depth
+    5. Context from the original text
+
+    ## IMPORTANT CONSTRAINTS:
+    - Stay within expected range {expected_min}-{expected_max} unless strong evidence suggests otherwise
+    - Be consistent across similar skills
+    - Consider the {item_type} and {study_level} context
+    """+"""
+    ## OUTPUT FORMAT:
+    Return ONLY a JSON array with skill indices and their SFIA levels:
+    [
+    {
+        "skill_name": "skill name", 
+        "level": 3
+    }
+    ]
+
+    Return ONLY the JSON:"""
+        
+        return system_prompt, user_prompt
         
     @staticmethod
     def get_skill_description_prompt(

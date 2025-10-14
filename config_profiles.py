@@ -124,6 +124,7 @@ class ConfigProfiles:
             "temperature": 0.0,  # Deterministic
             "top_p": 1.0,  # No sampling
             "seed": 42,  # Fixed seed
+            "level_determination_runs": 3,  # Multiple runs for level assignment
             "ensemble_similarity_threshold": 0.98,
             "matching_strategy": "direct",  # Options: "clustering", "direct", "hybrid"
             "direct_match_threshold": 0.9,  # Threshold for direct skill name matching
@@ -317,10 +318,10 @@ class SimpleConfig:
             "confidence": 0.3
         }
         
-        # Simplified thresholds
+        # Simplified thresholds for recommnedations
         self.THRESHOLDS = {
             "full_transfer": 0.8,
-            "partial_transfer": 0.5,
+            "partial_transfer": 0.6,
             "minimum_viable": 0.0
         }
         

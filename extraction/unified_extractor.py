@@ -303,6 +303,14 @@ class UnifiedSkillExtractor:
                     except Exception as e:
                         logger.warning(f"Failed to generate skill descriptions: {e}")
 
+                # Add new ensemble level determination
+                if skills and self.genai:
+                    try:
+                        # New: Determine levels using ensemble approach
+                        skills = self._determine_skill_levels_ensemble(skills, text, item_type, study_level, self.config.get("level_determination_runs".upper(), 3)    )
+                    except Exception as e:
+                        logger.error(f"Failed to determine skill levels with ensemble: {e}")
+                        
                 # Generate keywords for extracted skills
                 if self.genai and skills:
                     try:
@@ -363,7 +371,110 @@ class UnifiedSkillExtractor:
                     loop_1 = True
         return []
         # return self._fallback_extraction(text, study_level)
+    def _determine_skill_levels_ensemble(self, skills: List[Skill], 
+                                    text: str, 
+                                    item_type: str, 
+                                    study_level: str = None,
+                                    num_runs: int = 3) -> List[Skill]:
+        """
+        Determine SFIA levels using ensemble/consensus approach
+        
+        Args:
+            skills: List of extracted skills
+            text: Original text for context
+            item_type: Type of item (VET/University)
+            study_level: Study level if known
+            num_runs: Number of runs for consensus
+        
+        Returns:
+            Skills with consensus-based levels
+        """
+        logger.info(f"Determining SFIA levels for {len(skills)} skills using {num_runs} runs")
+        
+        # Store level determinations for each skill across runs
+        skill_level_votes = {skill.name: [] for skill in skills}
+        
+        for run in range(num_runs):
+            # Get level determinations for this run
+            level_assignments = self._get_sfia_level_assignments(
+                skills, text, item_type, study_level, run_seed=run
+            )
             
+            # Store the votes
+            for skill_name, level in level_assignments.items():
+                if skill_name in skill_level_votes:
+                    skill_level_votes[skill_name].append(level)
+        
+        # Determine consensus level for each skill
+        for skill in skills:
+            if skill.name in skill_level_votes and skill_level_votes[skill.name]:
+                # Get consensus (majority vote or median)
+                votes = skill_level_votes[skill.name]
+                
+                # Method 1: Majority vote
+                from collections import Counter
+                level_counts = Counter(votes)
+                consensus_level = level_counts.most_common(1)[0][0]
+                
+                # Method 2: Median (alternative, more stable for ordinal data)
+                # consensus_level = int(np.median(votes))
+                
+                # Update skill level
+                skill.level = SkillLevel(consensus_level)
+                
+                # Add confidence based on agreement
+                agreement_score = level_counts[consensus_level] / len(votes)
+                skill.metadata['level_confidence'] = agreement_score
+                skill.metadata['level_votes'] = votes
+                
+                logger.debug(f"Skill '{skill.name}': consensus level {consensus_level} "
+                            f"(agreement: {agreement_score:.2f})")
+        
+        return skills
+    
+    def _get_sfia_level_assignments(self, skills: List[Skill], 
+                                text: str, 
+                                item_type: str,
+                                study_level: str = None,
+                                run_seed: int = 0) -> Dict[str, int]:
+        """
+        Get SFIA level assignments for a batch of skills
+        """
+        # Get the level determination prompt
+        system_prompt, user_prompt = self.prompt_manager.get_sfia_level_determination_prompt(
+            skills=skills,
+            context_text=text,
+            item_type=item_type,
+            study_level=study_level,
+            backend_type=self.backend_type
+        )
+        
+        # Add slight variation for ensemble (temperature or prompt variation)
+        if self.backend_type == "openai":
+            # Use slight temperature variation for ensemble
+            temperature = 0.0 # 0.0, 0.1, 0.2 for 3 runs
+            response = self._call_genai(
+                system_prompt, user_prompt, 
+                temperature=temperature, 
+                top_p=1.0
+            )
+        else:
+            user_prompts = []
+            for skill in skills:
+                system_prompt, user_prompt = self.prompt_manager.get_sfia_level_determination_prompt(
+                    skills=[skill],
+                    context_type=text,
+                    item_type=item_type,
+                    study_level=study_level,
+                    backend_type=self.backend_type
+                )
+                user_prompts.append(user_prompt)
+            response = self.genai._generate_batch(system_prompt, user_prompts)
+        
+        # Parse response
+        level_assignments = self._parse_level_assignment_response(response)
+        return level_assignments
+       
     def _extract_keywords_for_skills(self, skills: List[Skill], context_type: str = "VET") -> Dict[str, List[str]]:
         """
         Extract keywords for skills using GenAI
@@ -557,6 +668,100 @@ class UnifiedSkillExtractor:
             results.append([])
         
         return results[:expected_count]
+    
+    def _parse_level_assignment_response(self, response: Union[str, List]) -> Dict[str, int]:
+        """Parse SFIA level assignment response from AI"""
+        
+        # Handle different response formats
+        if isinstance(response, list):
+            # If it's already a list, process each item
+            all_levels = {}
+            for item in response:
+                parsed = self._parse_single_level_assignment_response(item)
+                all_levels.update(parsed)
+            return all_levels
+        
+        # Single response
+        return self._parse_single_level_assignment_response(response) or {}
+    
+    def _parse_single_level_assignment_response(self, response: str) -> Dict[str, int]:
+        """
+        Parse the SFIA level assignment response from AI
+        
+        Args:
+            response: JSON response containing skill level assignments
+            
+        Returns:
+            Dictionary mapping skill names to SFIA levels
+        """
+        import json
+        import re
+        
+        level_assignments = {}
+        
+        try:
+            # Try to parse as JSON first
+            if isinstance(response, str):
+                # Clean up response - remove markdown code blocks if present
+                clean_response = response.strip()
+                if clean_response.startswith('```json'):
+                    clean_response = clean_response[7:]
+                if clean_response.startswith('```'):
+                    clean_response = clean_response[3:]
+                if clean_response.endswith('```'):
+                    clean_response = clean_response[:-3]
+                
+                # Find JSON array pattern
+                json_match = re.search(r'(?:assistantfinal.*?)?(\[\s*\{[^}]*\}\s*(?:\s*,\s*\{[^}]*\}\s*)*\])', clean_response, re.DOTALL)
+                
+                if json_match:
+                    json_str = json_match.group(1)
+                    json_str = json_str.replace('\n', ' ').replace('\r', '')
+                    data = json.loads(json_str)
+                else:
+                    # Try parsing entire response as JSON
+                    logger.error(f"Failed parse entire response as JSON in _parse_single_level_assignment_response: {clean_response}")
+                    data = json.loads(clean_response)
+            else:
+                data = response
+            
+            # Process the parsed data
+            if isinstance(data, list):
+                for item in data:
+                    if isinstance(item, dict):
+                        # Extract skill name and level
+                        skill_name = item.get('skill_name', '')
+                        # skill_index = item.get('skill_index', -1)
+                        level = item.get('level', 3)  # Default to level 3 if missing
+                        # reasoning = item.get('reasoning', '')
+                        
+                        # Validate level is within SFIA range (1-7)
+                        if isinstance(level, str):
+                            try:
+                                level = int(level)
+                            except ValueError:
+                                logger.warning(f"Invalid level value '{level}' for skill '{skill_name}', defaulting to 3")
+                                level = 3
+                        
+                        level = max(1, min(7, level))  # Clamp to valid range
+                        
+                        if skill_name:
+                            level_assignments[skill_name] = level
+                            logger.debug(f"Assigned level {level} to skill '{skill_name}'")
+            
+            else:
+                logger.error(f"Unexpected response format in _parse_single_level_assignment_response: {type(data)}")
+                
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse level assignment JSON: {e}")
+            
+        
+        # If no assignments were parsed, return empty dict
+        if not level_assignments:
+            logger.warning("No level assignments could be parsed from response in _parse_single_level_assignment_response")
+            logger.error(f"Response was: {response}")
+        
+        return level_assignments
     
     def _parse_keyword_response(self, response: str) -> List[Dict]:
         """Parse keyword extraction response from AI"""
