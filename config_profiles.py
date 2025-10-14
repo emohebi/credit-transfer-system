@@ -124,7 +124,8 @@ class ConfigProfiles:
             "temperature": 0.0,  # Deterministic
             "top_p": 1.0,  # No sampling
             "seed": 42,  # Fixed seed
-            "level_determination_runs": 3,  # Multiple runs for level assignment
+            "level_determination_runs": 5,  # Multiple runs for level assignment
+            "study_level_ensemble_runs": 5,  # Multiple runs for study level
             "ensemble_similarity_threshold": 0.98,
             "matching_strategy": "direct",  # Options: "clustering", "direct", "hybrid"
             "direct_match_threshold": 0.9,  # Threshold for direct skill name matching

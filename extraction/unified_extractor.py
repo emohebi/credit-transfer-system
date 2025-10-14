@@ -177,7 +177,7 @@ class UnifiedSkillExtractor:
         
         # If we have AI available and need more precision, use it
         if self.genai:
-            ai_level = self._infer_study_level_with_ai(text, item_type)
+            ai_level = self._infer_study_level_with_ai(text, item_type, self.config.get("study_level_ensemble_runs".upper(), 3))
             if ai_level:
                 inferred_level = ai_level
         
@@ -463,7 +463,7 @@ class UnifiedSkillExtractor:
             for skill in skills:
                 system_prompt, user_prompt = self.prompt_manager.get_sfia_level_determination_prompt(
                     skills=[skill],
-                    context_type=text,
+                    context_text=text,
                     item_type=item_type,
                     study_level=study_level,
                     backend_type=self.backend_type
@@ -566,12 +566,13 @@ class UnifiedSkillExtractor:
         
         return final_skills
     
-    def _infer_study_level_with_ai(self, text: str, item_type: str) -> Optional[str]:
+    def _infer_study_level_with_ai(self, text: str, item_type: str, num_runs: int = 3) -> Optional[str]:
         """Use AI to infer study level from text"""
         
         if not self.genai:
             return None
         
+        logger.info(f"Inferring study level using {num_runs}-run ensemble approach")
         # Get standardized prompt from PromptManager
         system_prompt, user_prompt = self.prompt_manager.get_study_level_inference_prompt(
             text=text,
@@ -579,20 +580,93 @@ class UnifiedSkillExtractor:
             backend_type=self.backend_type
         )
         
+        level_votes = []
+        level_confidences = [0 for _ in range(num_runs)]  # Placeholder for confidence if needed
+    
         try:
-            response = self._call_genai(user_prompt, system_prompt)
-            response = response.strip().lower()
+            for run in range(num_runs):
+                response = self._call_genai(user_prompt, system_prompt)
+                response = response.strip().lower()
+                
+                if 'intro' in response:
+                    level_votes.append(StudyLevel.INTRODUCTORY.value)
+                elif 'adv' in response:
+                    level_votes.append(StudyLevel.ADVANCED.value)
+                else:
+                    level_votes.append(StudyLevel.INTERMEDIATE.value)
             
-            if 'intro' in response:
-                return StudyLevel.INTRODUCTORY.value
-            elif 'adv' in response:
-                return StudyLevel.ADVANCED.value
-            else:
-                return StudyLevel.INTERMEDIATE.value
+            consensus_level = self._calculate_study_level_consensus(
+                level_votes, 
+                level_confidences
+            )
+            
+            # Log consensus details
+            from collections import Counter
+            import numpy as np
+            vote_counts = Counter(level_votes)
+            logger.debug(f"Study level consensus: {consensus_level} "
+                    f"(votes: {dict(vote_counts)}, "
+                    f"avg confidence: {np.mean(level_confidences):.2f})")
+            
+            return consensus_level
                 
         except Exception as e:
             logger.warning(f"Failed to infer study level with AI: {e}")
             return None
+    
+    def _calculate_study_level_consensus(self,
+                                    votes: List[str],
+                                    confidences: List[float]) -> str:
+        """
+        Calculate consensus study level using weighted voting
+        
+        Args:
+            votes: List of voted levels
+            confidences: List of confidence scores for each vote
+            baseline: Baseline level from keyword analysis
+            
+        Returns:
+            Consensus study level
+        """
+        from collections import defaultdict
+        import numpy as np
+        
+        # Weighted voting
+        weighted_scores = defaultdict(float)
+        
+        for vote, confidence in zip(votes, confidences):
+            # Normalize vote string
+            vote_normalized = vote.lower().strip()
+            weighted_scores[vote_normalized] += confidence
+        
+        # Add small weight for baseline to break ties
+        # baseline_str = baseline.value if hasattr(baseline, 'value') else str(baseline)
+        # weighted_scores[baseline_str.lower()] += 0.1
+        
+        # Find highest weighted score
+        consensus = max(weighted_scores.items(), key=lambda x: x[1])[0]
+        
+        # Calculate confidence of consensus
+        total_weight = sum(weighted_scores.values())
+        consensus_confidence = weighted_scores[consensus] / total_weight if total_weight > 0 else 0
+        
+        # If consensus confidence is low, consider using majority vote instead
+        if consensus_confidence < 0.4:
+            from collections import Counter
+            simple_majority = Counter(votes).most_common(1)[0][0]
+            
+            # If majority vote differs significantly, log warning
+            if simple_majority != consensus:
+                logger.warning(f"Low consensus confidence ({consensus_confidence:.2f}). "
+                            f"Weighted: {consensus}, Majority: {simple_majority}")
+                
+                # Use majority vote if it has strong support
+                majority_count = Counter(votes)[simple_majority]
+                if majority_count / len(votes) > 0.5:
+                    consensus = simple_majority
+                    logger.info(f"Using majority vote: {consensus}")
+        
+        return consensus
     
     def _adjust_skill_level_for_study(self, skill_level: int, expected_min: int, expected_max: int) -> int:
         """Adjust SFIA skill level to fit within expected range"""
