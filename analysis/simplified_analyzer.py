@@ -65,13 +65,51 @@ class SimplifiedAnalyzer:
         self.partial_threshold = self.config.get("partial_threshold".upper(), 0.8)
         logger.info(f"Direct match threshold: {self.direct_threshold}, Partial match threshold: {self.partial_threshold}")
         
-    def load_pre_extracted_skills(self, vet_qual: VETQualification, uni_qual: UniQualification) -> bool:
+    def _log_skill_extraction_status(self, vet_qual: VETQualification, uni_qual: UniQualification):
         """
-        Try to load pre-extracted skills from disk
+        Log the final status of skill extraction for all units and courses
+        """
+        # Count VET units with skills
+        vet_with_skills = sum(1 for unit in vet_qual.units if unit.extracted_skills)
+        vet_total = len(vet_qual.units)
+        
+        # Count Uni courses with skills
+        uni_with_skills = sum(1 for course in uni_qual.courses if course.extracted_skills)
+        uni_total = len(uni_qual.courses)
+        
+        # Count total skills
+        total_vet_skills = sum(len(unit.extracted_skills) for unit in vet_qual.units)
+        total_uni_skills = sum(len(course.extracted_skills) for course in uni_qual.courses)
+        
+        logger.info("=" * 60)
+        logger.info("SKILL EXTRACTION STATUS")
+        logger.info("=" * 60)
+        logger.info(f"VET Units: {vet_with_skills}/{vet_total} have skills ({total_vet_skills} total skills)")
+        logger.info(f"Uni Courses: {uni_with_skills}/{uni_total} have skills ({total_uni_skills} total skills)")
+        
+        # Log any units/courses without skills
+        missing_vet = [unit.code for unit in vet_qual.units if not unit.extracted_skills]
+        missing_uni = [course.code for course in uni_qual.courses if not course.extracted_skills]
+        
+        if missing_vet:
+            logger.warning(f"VET units without skills: {', '.join(missing_vet)}")
+        if missing_uni:
+            logger.warning(f"Uni courses without skills: {', '.join(missing_uni)}")
+        
+        logger.info("=" * 60)
+        
+    def load_pre_extracted_skills_selective(self, 
+                                       vet_qual: VETQualification, 
+                                       uni_qual: UniQualification) -> Tuple[bool, Dict]:
+        """
+        Try to load pre-extracted skills from disk, tracking which units/courses have cached skills
         
         Returns:
-            True if skills were loaded successfully, False otherwise
+            Tuple of (all_skills_loaded, load_status_dict)
+            load_status_dict has 'vet' and 'uni' keys with unit/course codes as keys and bool as values
         """
+        load_status = {'vet': {}, 'uni': {}}
+        
         try:
             from reporting.skill_export import SkillExportManager
             skill_export = SkillExportManager(output_dir="output/skills")
@@ -80,56 +118,166 @@ class SimplifiedAnalyzer:
             vet_dir = Path("output/skills/vet")
             uni_dir = Path("output/skills/uni")
             
-            # Find matching VET skills file
-            vet_files = list(vet_dir.glob(f"{vet_qual.code}_skills_*.json"))
-            if vet_files:
-                # Get most recent file
-                latest_vet = max(vet_files, key=lambda p: p.stat().st_mtime)
-                logger.info(f"Loading pre-extracted VET skills from {latest_vet}")
-                
-                # Load the skills
-                loaded_vet_qual = skill_export.import_vet_skills(str(latest_vet))
-                
-                # Map loaded skills back to original qualification units
-                for unit in vet_qual.units:
-                    for loaded_unit in loaded_vet_qual.units:
-                        if unit.code == loaded_unit.code:
-                            unit.extracted_skills = loaded_unit.extracted_skills
-                            logger.info(f"Loaded {len(unit.extracted_skills)} skills for VET unit {unit.code}")
-                            break
+            # Track overall success
+            all_vet_loaded = False
+            all_uni_loaded = False
             
-            # Find matching University skills file
-            uni_files = list(uni_dir.glob(f"{uni_qual.code}_skills_*.json"))
-            if uni_files:
-                # Get most recent file
-                latest_uni = max(uni_files, key=lambda p: p.stat().st_mtime)
-                logger.info(f"Loading pre-extracted University skills from {latest_uni}")
-                
-                # Load the skills
-                loaded_uni_qual = skill_export.import_uni_skills(str(latest_uni))
-                
-                # Map loaded skills back to original qualification courses
-                for course in uni_qual.courses:
-                    for loaded_course in loaded_uni_qual.courses:
-                        if course.code == loaded_course.code:
-                            course.extracted_skills = loaded_course.extracted_skills
-                            logger.info(f"Loaded {len(course.extracted_skills)} skills for Uni course {course.code}")
-                            break
-            
-            # Check if we have skills for all units/courses
-            vet_has_skills = all(len(unit.extracted_skills) > 0 for unit in vet_qual.units)
-            uni_has_skills = all(len(course.extracted_skills) > 0 for course in uni_qual.courses)
-            
-            if vet_has_skills and uni_has_skills:
-                logger.info("Successfully loaded all pre-extracted skills")
-                return True
+            # Load VET skills
+            if vet_dir.exists():
+                # Find matching VET skills file
+                vet_files = list(vet_dir.glob(f"{vet_qual.code}_skills_*.json"))
+                if vet_files:
+                    # Get most recent file
+                    latest_vet = max(vet_files, key=lambda p: p.stat().st_mtime)
+                    logger.info(f"Loading pre-extracted VET skills from {latest_vet}")
+                    
+                    try:
+                        # Load the skills
+                        loaded_vet_qual = skill_export.import_vet_skills(str(latest_vet))
+                        
+                        # Map loaded skills back to original qualification units
+                        loaded_units_map = {unit.code: unit for unit in loaded_vet_qual.units}
+                        
+                        for unit in vet_qual.units:
+                            if unit.code in loaded_units_map:
+                                loaded_unit = loaded_units_map[unit.code]
+                                if loaded_unit.extracted_skills:
+                                    unit.extracted_skills = loaded_unit.extracted_skills
+                                    load_status['vet'][unit.code] = True
+                                    logger.info(f"Loaded {len(unit.extracted_skills)} skills for VET unit {unit.code}")
+                                else:
+                                    load_status['vet'][unit.code] = False
+                                    logger.warning(f"No skills found in cache for VET unit {unit.code}")
+                            else:
+                                load_status['vet'][unit.code] = False
+                                logger.warning(f"VET unit {unit.code} not found in cached file")
+                        
+                        # Check if all VET units have skills
+                        all_vet_loaded = all(load_status['vet'].get(unit.code, False) 
+                                            for unit in vet_qual.units)
+                        
+                    except Exception as e:
+                        logger.error(f"Error loading VET skills from cache: {e}")
+                        # Mark all as not loaded
+                        for unit in vet_qual.units:
+                            load_status['vet'][unit.code] = False
+                else:
+                    logger.info(f"No cached VET skills file found for {vet_qual.code}")
+                    for unit in vet_qual.units:
+                        load_status['vet'][unit.code] = False
             else:
-                logger.warning("Some units/courses missing extracted skills")
-                return False
-                
+                for unit in vet_qual.units:
+                    load_status['vet'][unit.code] = False
+            
+            # Load University skills
+            if uni_dir.exists():
+                # Find matching University skills file
+                uni_files = list(uni_dir.glob(f"{uni_qual.code}_skills_*.json"))
+                if uni_files:
+                    # Get most recent file
+                    latest_uni = max(uni_files, key=lambda p: p.stat().st_mtime)
+                    logger.info(f"Loading pre-extracted University skills from {latest_uni}")
+                    
+                    try:
+                        # Load the skills
+                        loaded_uni_qual = skill_export.import_uni_skills(str(latest_uni))
+                        
+                        # Map loaded skills back to original qualification courses
+                        loaded_courses_map = {course.code: course for course in loaded_uni_qual.courses}
+                        
+                        for course in uni_qual.courses:
+                            if course.code in loaded_courses_map:
+                                loaded_course = loaded_courses_map[course.code]
+                                if loaded_course.extracted_skills:
+                                    course.extracted_skills = loaded_course.extracted_skills
+                                    load_status['uni'][course.code] = True
+                                    logger.info(f"Loaded {len(course.extracted_skills)} skills for Uni course {course.code}")
+                                else:
+                                    load_status['uni'][course.code] = False
+                                    logger.warning(f"No skills found in cache for Uni course {course.code}")
+                            else:
+                                load_status['uni'][course.code] = False
+                                logger.warning(f"Uni course {course.code} not found in cached file")
+                        
+                        # Check if all Uni courses have skills
+                        all_uni_loaded = all(load_status['uni'].get(course.code, False) 
+                                        for course in uni_qual.courses)
+                        
+                    except Exception as e:
+                        logger.error(f"Error loading University skills from cache: {e}")
+                        # Mark all as not loaded
+                        for course in uni_qual.courses:
+                            load_status['uni'][course.code] = False
+                else:
+                    logger.info(f"No cached University skills file found for {uni_qual.code}")
+                    for course in uni_qual.courses:
+                        load_status['uni'][course.code] = False
+            else:
+                for course in uni_qual.courses:
+                    load_status['uni'][course.code] = False
+            
+            # Log summary
+            vet_cached = sum(1 for v in load_status['vet'].values() if v)
+            uni_cached = sum(1 for v in load_status['uni'].values() if v)
+            
+            logger.info(f"Cache load summary: "
+                    f"VET: {vet_cached}/{len(vet_qual.units)} units have cached skills, "
+                    f"Uni: {uni_cached}/{len(uni_qual.courses)} courses have cached skills")
+            
+            # Return true only if ALL units/courses have skills loaded
+            return (all_vet_loaded and all_uni_loaded), load_status
+            
         except Exception as e:
             logger.warning(f"Could not load pre-extracted skills: {e}")
-            return False
+            # Mark all as not loaded
+            for unit in vet_qual.units:
+                load_status['vet'][unit.code] = False
+            for course in uni_qual.courses:
+                load_status['uni'][course.code] = False
+            return False, load_status
+        
+    def _save_newly_extracted_skills(self,
+                                vet_qual: Optional[VETQualification],
+                                uni_qual: Optional[UniQualification],
+                                partial_load_status: Dict):
+        """
+        Save newly extracted skills to cache, merging with existing cached skills
+        
+        Args:
+            vet_qual: VET qualification with some newly extracted skills
+            uni_qual: University qualification with some newly extracted skills
+            partial_load_status: Dict indicating which units/courses already had cached skills
+        """
+        try:
+            from reporting.skill_export import SkillExportManager
+            skill_export = SkillExportManager(output_dir="output/skills")
+            
+            # Save VET skills if any were newly extracted
+            if vet_qual:
+                newly_extracted_vet = [
+                    unit.code for unit in vet_qual.units 
+                    if unit.extracted_skills and not partial_load_status['vet'].get(unit.code, False)
+                ]
+                
+                if newly_extracted_vet:
+                    logger.info(f"Saving newly extracted skills for {len(newly_extracted_vet)} VET units")
+                    filepath = skill_export.export_vet_skills(vet_qual, format="json")
+                    logger.info(f"Saved VET skills to {filepath}")
+            
+            # Save University skills if any were newly extracted
+            if uni_qual:
+                newly_extracted_uni = [
+                    course.code for course in uni_qual.courses 
+                    if course.extracted_skills and not partial_load_status['uni'].get(course.code, False)
+                ]
+                
+                if newly_extracted_uni:
+                    logger.info(f"Saving newly extracted skills for {len(newly_extracted_uni)} Uni courses")
+                    filepath = skill_export.export_uni_skills(uni_qual, format="json")
+                    logger.info(f"Saved University skills to {filepath}")
+                    
+        except Exception as e:
+            logger.warning(f"Failed to save newly extracted skills: {e}")
             
     def _validate_qualification_data(self, vet_qual: VETQualification, uni_qual: UniQualification):
         """Validate and fix qualification data before analysis"""
@@ -146,10 +294,10 @@ class SimplifiedAnalyzer:
                 course.credit_points = 0
     
     def analyze(self, 
-            vet_qual: VETQualification,
-            uni_qual: UniQualification,
-            depth: str = "auto",
-            use_cached_skills: bool = True) -> List[CreditTransferRecommendation]:
+        vet_qual: VETQualification,
+        uni_qual: UniQualification,
+        depth: str = "auto",
+        use_cached_skills: bool = True) -> List[CreditTransferRecommendation]:
         """
         Analyze credit transfer with progressive depth
         
@@ -168,23 +316,64 @@ class SimplifiedAnalyzer:
         
         # Try to load pre-extracted skills if requested
         skills_loaded = False
-        if use_cached_skills:
-            skills_loaded = self.load_pre_extracted_skills(vet_qual, uni_qual)
+        partial_load_status = {'vet': {}, 'uni': {}}
         
+        if use_cached_skills:
+            skills_loaded, partial_load_status = self.load_pre_extracted_skills_selective(
+                vet_qual, uni_qual
+            )
+        
+        # Extract skills only for units/courses that don't have them
         if not skills_loaded:
-            logger.info("Extracting skills (not found in cache)...")
-            # Extract skills using the extractor
-            vet_skills = self.extractor.extract_skills(vet_qual.units)
-            uni_skills = self.extractor.extract_skills(uni_qual.courses)
+            logger.info("Extracting skills for units/courses without cached skills...")
             
-            # Assign extracted skills back to objects
-            for unit in vet_qual.units:
-                if unit.code in vet_skills:
-                    unit.extracted_skills = vet_skills[unit.code]
+            # Identify which units need skill extraction
+            vet_units_needing_extraction = [
+                unit for unit in vet_qual.units 
+                if not partial_load_status['vet'].get(unit.code, False)
+            ]
             
-            for course in uni_qual.courses:
-                if course.code in uni_skills:
-                    course.extracted_skills = uni_skills[course.code]
+            uni_courses_needing_extraction = [
+                course for course in uni_qual.courses 
+                if not partial_load_status['uni'].get(course.code, False)
+            ]
+            
+            if vet_units_needing_extraction:
+                logger.info(f"Extracting skills for {len(vet_units_needing_extraction)} VET units "
+                        f"(skipping {len(vet_qual.units) - len(vet_units_needing_extraction)} with cached skills)")
+                
+                # Extract skills only for units without cached skills
+                vet_skills = self.extractor.extract_skills(vet_units_needing_extraction)
+                
+                # Assign extracted skills back to objects
+                for unit in vet_units_needing_extraction:
+                    if unit.code in vet_skills:
+                        unit.extracted_skills = vet_skills[unit.code]
+                        logger.info(f"Extracted {len(unit.extracted_skills)} skills for VET unit {unit.code}")
+            
+            if uni_courses_needing_extraction:
+                logger.info(f"Extracting skills for {len(uni_courses_needing_extraction)} Uni courses "
+                        f"(skipping {len(uni_qual.courses) - len(uni_courses_needing_extraction)} with cached skills)")
+                
+                # Extract skills only for courses without cached skills
+                uni_skills = self.extractor.extract_skills(uni_courses_needing_extraction)
+                
+                # Assign extracted skills back to objects
+                for course in uni_courses_needing_extraction:
+                    if course.code in uni_skills:
+                        course.extracted_skills = uni_skills[course.code]
+                        logger.info(f"Extracted {len(course.extracted_skills)} skills for Uni course {course.code}")
+            
+            # Optionally save newly extracted skills to cache
+            if vet_units_needing_extraction or uni_courses_needing_extraction:
+                self._save_newly_extracted_skills(
+                    vet_qual if vet_units_needing_extraction else None,
+                    uni_qual if uni_courses_needing_extraction else None,
+                    partial_load_status
+                )
+        
+        # Log final skill status
+        self._log_skill_extraction_status(vet_qual, uni_qual)
         
         # Determine depth automatically if needed
         if depth == "auto":
