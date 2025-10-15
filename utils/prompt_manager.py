@@ -86,33 +86,82 @@ Examples of PROPER skill naming (2-4 words):
 
         # Skill categories with human capability focus
         skill_categories = """
-## Skill Categories (Human Capabilities):
+        ## Skill Categories (MUTUALLY EXCLUSIVE - Choose Most Dominant Aspect):
 
-### COGNITIVE/ANALYTICAL CAPABILITIES:
-Pattern: [Analytical Process] + [Domain] (2-4 words optimal)
-- "quantitative data analysis"
-- "pattern recognition"
+        ### COGNITIVE (Thinking & Analysis Skills):
+        Skills focused on mental processes, analysis, and problem-solving WITHOUT specific tool focus
+        Examples:
+        - "critical thinking"
+        - "statistical analysis"
+        - "pattern recognition"
+        - "problem solving"
+        - "research methodology"
+        - "quantitative reasoning"
+        INDICATORS: Words like analyze, evaluate, assess, investigate, research, solve, think
 
-### TECHNICAL CAPABILITIES:
-Pattern: [Technical Action] + [Technology Context] (2-4 words optimal)
-- "AI algorithm development"
-- "API design integration"
+        ### TECHNICAL (Tool/Technology/System Skills):
+        Skills requiring specific technical tools, programming, or systems
+        Examples:
+        - "Python programming"
+        - "database administration"
+        - "network configuration"
+        - "CAD design"
+        - "cloud infrastructure"
+        - "software development"
+        INDICATORS: Specific technologies, programming languages, software tools, technical systems
 
-### COMMUNICATION CAPABILITIES:
-Pattern: [Communication Type] + [Purpose] (2-4 words optimal)
-- "cross-cultural business communication"
-- "scientific report writing"
+        ### PRACTICAL (Hands-on/Operational Skills):
+        Skills involving physical or operational tasks and procedures
+        Examples:
+        - "equipment maintenance"
+        - "laboratory procedures"
+        - "inventory management"
+        - "quality control"
+        - "manufacturing processes"
+        - "safety compliance"
+        INDICATORS: Words like operate, maintain, implement, execute, perform, handle
 
-### MANAGEMENT CAPABILITIES:
-Pattern: [Management Function] + [Domain] (2-4 words optimal)
-- "project management"
-- "vendor relationship management"
+        ### FOUNDATIONAL (Core Knowledge & Principles):
+        Basic knowledge and theoretical understanding
+        Examples:
+        - "accounting principles"
+        - "legal compliance"
+        - "mathematical concepts"
+        - "scientific theory"
+        - "business fundamentals"
+        - "regulatory knowledge"
+        INDICATORS: Words like principles, concepts, theory, fundamentals, standards, regulations
 
-### CREATIVE/DESIGN CAPABILITIES:
-Pattern: [Creative Process] + [Output] (2-4 words optimal)
-- "user experience design"
-- "innovative solution design"
-"""
+        ### PROFESSIONAL (Interpersonal & Business Skills):
+        Skills related to communication, leadership, and professional conduct
+        Examples:
+        - "stakeholder management"
+        - "team leadership"
+        - "client consultation"
+        - "presentation delivery"
+        - "negotiation skills"
+        - "project coordination"
+        INDICATORS: Words like manage, lead, communicate, coordinate, negotiate, present, collaborate
+
+        ## CATEGORY SELECTION RULES:
+        1. Choose based on the PRIMARY nature of the skill
+        2. If a skill involves tools BUT the focus is analysis → COGNITIVE
+        3. If a skill involves communication BUT it's about technical documentation → TECHNICAL
+        4. If a skill involves management BUT it's about technical systems → TECHNICAL
+        5. When in doubt, ask: "What is the CORE competency being tested?"
+
+        Examples of correct categorization:
+        - "financial data analysis" → COGNITIVE (focus is on analysis, not the tools)
+        - "Excel spreadsheet automation" → TECHNICAL (focus is on the tool/automation)
+        - "team performance evaluation" → PROFESSIONAL (focus is on management/leadership)
+        - "statistical modeling" → COGNITIVE (focus is on the analytical method)
+        - "Python data processing" → TECHNICAL (focus is on programming)
+        - "workshop safety procedures" → PRACTICAL (focus is on operational procedures)
+        - "business process optimization" → COGNITIVE (focus is on analysis/optimization)
+        - "customer relationship management" → PROFESSIONAL (focus is on relationships)
+        - "ERP system configuration" → TECHNICAL (focus is on system/tool)
+        """
+
 
         # Translation examples
         translation_examples = """
@@ -224,7 +273,7 @@ Strict below JSON FORMAT for direct parsing:
 [
   {
     "name": "financial data analysis",  // Human capability with context (2-4 WORDS OPTIMAL)
-    "category": "analytical",  // cognitive/technical/communication/management/creative
+    "category": "cognitive",  // MUST be one of: cognitive/technical/practical/foundational/professional
     "level": """+f"""{int((expected_min + expected_max) / 2) if study_level else 3}"""+""",  // SFIA level (1-7)
     "context": "practical",  // theoretical/practical/hybrid
     "confidence": 0.7,  // Extraction confidence
@@ -551,7 +600,7 @@ Apply the chain-of-thought process to each text to extract true HUMAN CAPABILITI
         
         for idx, skill in enumerate(skills[:50], 1):
             user_prompt += f"""
-    {idx}. Skill: {skill.name}
+    Skill: {skill.name}
     Category: {skill.category.value if hasattr(skill.category, 'value') else skill.category}
     Context: {skill.context.value if hasattr(skill.context, 'value') else skill.context}
     Evidence: {skill.evidence[:100] if hasattr(skill, 'evidence') else ''}
@@ -585,7 +634,7 @@ Apply the chain-of-thought process to each text to extract true HUMAN CAPABILITI
     Return ONLY a JSON array with skill indices and their SFIA levels:
     [
     {
-        "skill_name": "skill name", 
+        "skill_name": "skill name (the exact skill name in the input)", 
         "level": 3
     }
     ]

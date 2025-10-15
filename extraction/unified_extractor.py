@@ -304,10 +304,10 @@ class UnifiedSkillExtractor:
                         logger.warning(f"Failed to generate skill descriptions: {e}")
 
                 # Add new ensemble level determination
-                if skills and self.genai:
+                if skills and self.genai and self.config.get("level_determination_runs".upper(), 1) > 1:
                     try:
                         # New: Determine levels using ensemble approach
-                        skills = self._determine_skill_levels_ensemble(skills, text, item_type, study_level, self.config.get("level_determination_runs".upper(), 3)    )
+                        skills = self._determine_skill_levels_ensemble(skills, text, item_type, study_level, self.config.get("level_determination_runs".upper(), 3))
                     except Exception as e:
                         logger.error(f"Failed to determine skill levels with ensemble: {e}")
                         
@@ -1041,15 +1041,52 @@ class UnifiedSkillExtractor:
         return "unknown"
     
     def _map_category(self, category_str: str) -> SkillCategory:
-        """Map to SkillCategory"""
+        """Map to SkillCategory with better handling of variations"""
+        # Normalize the input
+        category_lower = category_str.lower().strip()
+        
+        # Handle both full and shortened versions
         mapping = {
             "technical": SkillCategory.TECHNICAL,
+            "tech": SkillCategory.TECHNICAL,
+            
             "cognitive": SkillCategory.COGNITIVE,
+            "analytical": SkillCategory.COGNITIVE,  # Map analytical to cognitive
+            "analysis": SkillCategory.COGNITIVE,
+            
             "practical": SkillCategory.PRACTICAL,
+            "operational": SkillCategory.PRACTICAL,
+            "hands-on": SkillCategory.PRACTICAL,
+            
             "foundational": SkillCategory.FOUNDATIONAL,
-            "professional": SkillCategory.PROFESSIONAL
+            "fundamental": SkillCategory.FOUNDATIONAL,
+            "core": SkillCategory.FOUNDATIONAL,
+            
+            "professional": SkillCategory.PROFESSIONAL,
+            "interpersonal": SkillCategory.PROFESSIONAL,
+            "communication": SkillCategory.PROFESSIONAL,
+            "management": SkillCategory.PROFESSIONAL,
+            "business": SkillCategory.PROFESSIONAL,
+            
+            "creative": SkillCategory.PROFESSIONAL,  # Map creative to professional
+            "design": SkillCategory.TECHNICAL,  # Map design to technical (usually technical design)
         }
-        return mapping.get(category_str.lower(), SkillCategory.TECHNICAL)
+        
+        # Try exact match first
+        result = mapping.get(category_lower)
+        if result:
+            return result
+        
+        # Try partial matches
+        for key, value in mapping.items():
+            if key in category_lower or category_lower in key:
+                return value
+        
+        # Default to COGNITIVE instead of TECHNICAL
+        # This prevents everything from becoming technical
+        logger.warning(f"Unknown category '{category_str}', defaulting to COGNITIVE")
+        return SkillCategory.COGNITIVE
+
     
     def _map_level(self, level_val: Union[int, str]) -> SkillLevel:
         """Map to SFIA SkillLevel"""
