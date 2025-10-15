@@ -710,3 +710,134 @@ Apply the chain-of-thought process to each text to extract true HUMAN CAPABILITI
         Return ONLY the JSON array:"""
 
         return system_prompt, user_prompt
+    
+    
+    @staticmethod
+    def get_skill_recategorization_prompt(
+        skills: List[Any],
+        context_text: str,
+        item_type: str,
+        backend_type: str = "standard"
+    ) -> Tuple[str, str]:
+        """
+        Prompt for recategorizing existing skills with updated category definitions
+        """
+        
+        system_prompt = """You are a skill categorization expert. Your task is to correctly categorize existing skills based on their primary nature and the context in which they were extracted.
+
+    You must use the category definitions to ensure accurate classification."""
+
+        # Include the improved category definitions from earlier
+        user_prompt = f"""Categorize these existing skills using the category definitions.
+
+    ## CONTEXT:
+    Item Type: {item_type}
+    Original Text (for context):
+    {context_text[:1000]}
+
+    ## SKILLS TO RECATEGORIZE:
+    """
+        
+        for idx, skill in enumerate(skills, 1):
+            user_prompt += f"""
+    Skill: {skill.name}
+    Evidence: {skill.evidence[:100] if hasattr(skill, 'evidence') else ''}
+    
+    """
+        
+        user_prompt += """
+
+    ## Skill Categories (MUTUALLY EXCLUSIVE - Choose Most Dominant Aspect):
+
+        ### COGNITIVE (Thinking & Analysis Skills):
+        Skills focused on mental processes, analysis, and problem-solving WITHOUT specific tool focus
+        Examples:
+        - "critical thinking"
+        - "statistical analysis"
+        - "pattern recognition"
+        - "problem solving"
+        - "research methodology"
+        - "quantitative reasoning"
+        INDICATORS: Words like analyze, evaluate, assess, investigate, research, solve, think
+
+        ### TECHNICAL (Tool/Technology/System Skills):
+        Skills requiring specific technical tools, programming, or systems
+        Examples:
+        - "Python programming"
+        - "database administration"
+        - "network configuration"
+        - "CAD design"
+        - "cloud infrastructure"
+        - "software development"
+        INDICATORS: Specific technologies, programming languages, software tools, technical systems
+
+        ### PRACTICAL (Hands-on/Operational Skills):
+        Skills involving physical or operational tasks and procedures
+        Examples:
+        - "equipment maintenance"
+        - "laboratory procedures"
+        - "inventory management"
+        - "quality control"
+        - "manufacturing processes"
+        - "safety compliance"
+        INDICATORS: Words like operate, maintain, implement, execute, perform, handle
+
+        ### FOUNDATIONAL (Core Knowledge & Principles):
+        Basic knowledge and theoretical understanding
+        Examples:
+        - "accounting principles"
+        - "legal compliance"
+        - "mathematical concepts"
+        - "scientific theory"
+        - "business fundamentals"
+        - "regulatory knowledge"
+        INDICATORS: Words like principles, concepts, theory, fundamentals, standards, regulations
+
+        ### PROFESSIONAL (Interpersonal & Business Skills):
+        Skills related to communication, leadership, and professional conduct
+        Examples:
+        - "stakeholder management"
+        - "team leadership"
+        - "client consultation"
+        - "presentation delivery"
+        - "negotiation skills"
+        - "project coordination"
+        INDICATORS: Words like manage, lead, communicate, coordinate, negotiate, present, collaborate
+
+        ## CATEGORY SELECTION RULES:
+        1. Choose based on the PRIMARY nature of the skill
+        2. If a skill involves tools BUT the focus is analysis → COGNITIVE
+        3. If a skill involves communication BUT it's about technical documentation → TECHNICAL
+        4. If a skill involves management BUT it's about technical systems → TECHNICAL
+        5. When in doubt, ask: "What is the CORE competency being tested?"
+
+        Examples of correct categorization:
+        - "financial data analysis" → COGNITIVE (focus is on analysis, not the tools)
+        - "Excel spreadsheet automation" → TECHNICAL (focus is on the tool/automation)
+        - "team performance evaluation" → PROFESSIONAL (focus is on management/leadership)
+        - "statistical modeling" → COGNITIVE (focus is on the analytical method)
+        - "Python data processing" → TECHNICAL (focus is on programming)
+        - "workshop safety procedures" → PRACTICAL (focus is on operational procedures)
+        - "business process optimization" → COGNITIVE (focus is on analysis/optimization)
+        - "customer relationship management" → PROFESSIONAL (focus is on relationships)
+        - "ERP system configuration" → TECHNICAL (focus is on system/tool)
+        
+
+    ## SELECTION RULES:
+    1. Choose based on PRIMARY nature of the skill
+    2. If involves tools BUT focus is analysis → COGNITIVE
+    3. If involves management BUT it's technical systems → TECHNICAL
+    4. When in doubt, identify the CORE competency
+
+    ## OUTPUT FORMAT:
+    Return ONLY a JSON array for direct parsing:
+    [
+    {
+        "skill_name": "exact skill name as input", 
+        "category": "cognitive|technical|practical|foundational|professional"
+    }
+    ]
+
+    Return ONLY the JSON:"""
+        
+        return system_prompt, user_prompt
