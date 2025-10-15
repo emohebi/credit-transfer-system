@@ -822,3 +822,89 @@ Apply the chain-of-thought process to each text to extract true HUMAN CAPABILITI
     Return ONLY the JSON:"""
         
         return system_prompt, user_prompt
+    
+    @staticmethod
+    def get_skill_context_recalibration_prompt(
+        skills: List[Any],
+        context_text: str,
+        item_type: str,
+        study_level: Optional[str] = None,
+        backend_type: str = "standard"
+    ) -> Tuple[str, str]:
+        """
+        Prompt for recalibrating skill contexts (theoretical/practical/hybrid)
+        """
+        
+        system_prompt = """You are a skill context assessment expert. Your task is to correctly determine whether each skill is applied in a theoretical, practical, or hybrid context based on the evidence provided.
+
+You must carefully analyze the evidence to determine if the skill involves understanding concepts (theoretical), hands-on application (practical), or both (hybrid)."""
+
+        user_prompt = f"""Determine the context for these existing skills.
+
+## CONTEXT:
+Item Type: {item_type}
+Study Level: {study_level if study_level else 'Not specified'}
+Original Text (for context):
+{context_text[:1000]}
+
+## SKILLS TO ASSESS CONTEXT:
+"""
+        
+        for idx, skill in enumerate(skills, 1):
+            user_prompt += f"""
+Skill {idx}: {skill.name}
+Evidence: {skill.evidence[:150] if hasattr(skill, 'evidence') else ''}
+
+"""
+        
+        user_prompt += """
+
+## Context Classification Guidelines:
+
+### THEORETICAL Context:
+Skills focused on understanding concepts, principles, and knowledge without direct application
+INDICATORS:
+- Words: understand, comprehend, analyze, evaluate, interpret, assess, study, know
+- Evidence of: classroom learning, reading, research, analysis without implementation
+- Assessment: exams, essays, theoretical analysis, case study evaluation
+- NO evidence of hands-on work or creating deliverables
+
+### PRACTICAL Context:
+Skills focused on hands-on application, implementation, and doing
+INDICATORS:
+- Words: apply, implement, create, build, perform, execute, operate, produce, deliver
+- Evidence of: actual doing, creating deliverables, operating tools, producing outputs
+- Assessment: practical projects, demonstrations, portfolio work, real implementations
+- NO evidence of theoretical understanding or conceptual work
+
+### HYBRID Context:
+Skills requiring BOTH theoretical understanding AND practical application
+INDICATORS:
+- Evidence of both understanding concepts AND applying them
+- Mixed words: "apply principles", "implement theories", "analyze and create"
+- Assessment through both exams AND practical projects
+- Evidence shows learning theory AND doing practical work
+
+## DETERMINATION RULES:
+1. Look at the EVIDENCE text - what is actually being done?
+2. If evidence shows ONLY understanding/knowing → THEORETICAL
+3. If evidence shows ONLY doing/implementing → PRACTICAL
+4. If evidence shows BOTH understanding AND doing → HYBRID
+5. When unclear or insufficient evidence → HYBRID (default)
+6. Consider the assessment type if mentioned:
+   - Theory-only assessment → THEORETICAL
+   - Practice-only assessment → PRACTICAL
+   - Mixed assessment → HYBRID
+
+## OUTPUT FORMAT:
+Return ONLY a JSON array for direct parsing:
+[
+{
+    "skill_name": "exact skill name as input",
+    "context": "theoretical|practical|hybrid"
+}
+]
+
+Return ONLY the JSON:"""
+        
+        return system_prompt, user_prompt

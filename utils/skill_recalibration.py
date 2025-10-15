@@ -45,6 +45,7 @@ class SkillRecalibrationTool:
         self.config = config or {}
         self.prompt_manager = PromptManager()
         self.skill_export = SkillExportManager(output_dir="output/skills")
+        self.extractor = UnifiedSkillExtractor(genai, config)
         
         # Detect backend type
         self.backend_type = self._detect_backend_type()
@@ -53,6 +54,7 @@ class SkillRecalibrationTool:
         self.changes_made = {
             'category_changes': 0,
             'level_changes': 0,
+            'context_changes': 0,
             'total_skills_processed': 0,
             'units_processed': 0,
             'courses_processed': 0
@@ -76,8 +78,9 @@ class SkillRecalibrationTool:
     
     def recalibrate_vet_skills(self, 
                               input_vet_qual: VETQualification,
-                              recalibrate_categories: bool = True,
-                              recalibrate_levels: bool = True,
+                              recalibrate_categories: bool = False,
+                              recalibrate_levels: bool = False,
+                              recalibrate_contexts: bool = False,
                               backup: bool = False) -> str:
         """
         Recalibrate VET qualification skills from cached file
@@ -118,7 +121,8 @@ class SkillRecalibrationTool:
                     item_code=unit.code,
                     study_level=None,  # VET doesn't have explicit study levels
                     recalibrate_categories=recalibrate_categories,
-                    recalibrate_levels=recalibrate_levels
+                    recalibrate_levels=recalibrate_levels,
+                    recalibrate_contexts=recalibrate_contexts
                 )
                 
                 # Update the skills
@@ -140,9 +144,10 @@ class SkillRecalibrationTool:
     
     def recalibrate_uni_skills(self, 
                               input_uni_qual: UniQualification,
-                              recalibrate_categories: bool = True,
-                              recalibrate_levels: bool = True,
-                              backup: bool = True) -> str:
+                              recalibrate_categories: bool = False,
+                              recalibrate_levels: bool = False,
+                              recalibrate_contexts: bool = False,
+                              backup: bool = False) -> str:
         """
         Recalibrate University qualification skills from cached file
         
@@ -182,7 +187,8 @@ class SkillRecalibrationTool:
                     item_code=course.code,
                     study_level=course.study_level,
                     recalibrate_categories=recalibrate_categories,
-                    recalibrate_levels=recalibrate_levels
+                    recalibrate_levels=recalibrate_levels,
+                    recalibrate_contexts=recalibrate_contexts
                 )
                 
                 # Update the skills
@@ -210,7 +216,7 @@ class SkillRecalibrationTool:
                            study_level: Optional[str],
                            recalibrate_categories: bool,
                            recalibrate_levels: bool,
-                           batch_size: int = 0) -> List[Skill]:
+                           recalibrate_contexts: bool) -> List[Skill]:
         """
         Recalibrate a list of skills
         
@@ -237,7 +243,8 @@ class SkillRecalibrationTool:
         original_values = {
             skill.name: {
                 'category': skill.category,
-                'level': skill.level
+                'level': skill.level,
+                'context': skill.context
             }
             for skill in skills
         }
@@ -251,6 +258,11 @@ class SkillRecalibrationTool:
         if recalibrate_levels:
             logger.debug(f"Recalibrating levels for batch {len(skills)}")
             self._recalibrate_levels_batch(skills, context_text, item_type, study_level)
+            
+        # Recalibrate contexts if requested
+        if recalibrate_contexts:
+            logger.debug(f"Recalibrating contexts for batch {len(skills)}")
+            self._recalibrate_contexts_batch(skills, context_text, item_type, study_level)
         
         # Count changes
         for skill in skills:
@@ -264,6 +276,11 @@ class SkillRecalibrationTool:
                 self.changes_made['level_changes'] += 1
                 logger.debug(f"Level changed for '{skill.name}': "
                            f"{original['level'].value} → {skill.level.value}")
+                
+            if skill.context != original['context']:
+                self.changes_made['context_changes'] += 1
+                logger.debug(f"Context changed for '{skill.name}': "
+                           f"{original['context'].value} → {skill.context.value}")
         
         return skills
     
@@ -288,8 +305,8 @@ class SkillRecalibrationTool:
         else:
             user_prompts = []
             for skill in skills:
-                system_prompt, user_prompt = self.prompt_manager.get_skill_keywords_prompt(
-                    skills_with_evidence=[skill],
+                system_prompt, user_prompt = self.prompt_manager.get_skill_recategorization_prompt(
+                    skills=[skill],
                     context_text=context_text,
                     item_type=item_type,
                     backend_type=self.backend_type
@@ -390,6 +407,114 @@ class SkillRecalibrationTool:
                     'votes': votes,
                         'consensus_confidence': level_counts[consensus_level] / len(votes)
                     })
+                
+    def _recalibrate_contexts_batch(self, 
+                                   skills: List[Skill],
+                                   context_text: str,
+                                   item_type: str,
+                                   study_level: Optional[str]):
+        """Recalibrate contexts for a batch of skills"""
+        
+        # Get context determination prompt
+        system_prompt, user_prompt = self.prompt_manager.get_skill_context_recalibration_prompt(
+            skills=skills,
+            context_text=context_text,
+            item_type=item_type,
+            study_level=study_level,
+            backend_type=self.backend_type
+        )
+        
+        # Get AI response
+        if self.backend_type == "openai":
+            response = self.genai.generate_response(system_prompt, user_prompt, temperature=0.0)
+        else:
+            user_prompts = []
+            for skill in skills:
+                system_prompt, user_prompt = self.prompt_manager.get_skill_context_recalibration_prompt(
+                    skills=[skill],
+                    context_text=context_text,
+                    item_type=item_type,
+                    study_level=study_level,
+                    backend_type=self.backend_type
+                )
+                user_prompts.append(user_prompt)
+            response = self.genai._generate_batch(system_prompt, user_prompts)
+        
+        # Parse response
+        context_assignments = self._parse_context_response(response)
+        
+        # Update skills
+        for skill in skills:
+            if skill.name in context_assignments:
+                new_context = context_assignments[skill.name]
+                
+                # Add metadata about recalibration
+                if 'recalibration_history' not in skill.metadata:
+                    skill.metadata['recalibration_history'] = []
+                
+                skill.metadata['recalibration_history'].append({
+                    'timestamp': datetime.now().isoformat(),
+                    'type': 'context',
+                    'old_value': skill.context.value,
+                    'new_value': new_context
+                })
+                
+                skill.context = self._map_context(new_context)
+                
+    def _parse_context_response(self, response: Any) -> Dict[str, str]:
+        """Parse context recalibration response"""
+        if isinstance(response, list):
+            # Batch responses
+            context_assignments = {}
+            for resp in response:
+                parsed = self._parse_single_context_response(resp)
+                context_assignments.update(parsed)
+            return context_assignments
+        elif isinstance(response, str):
+            # Single response
+            return self._parse_single_context_response(response)
+        else:
+            logger.error("Unexpected response format for context recalibration")
+            return {}
+    
+    def _parse_single_context_response(self, response: str) -> Dict[str, str]:
+        """Parse context recalibration response"""
+        import re
+        
+        context_assignments = {}
+        
+        try:
+            # Try JSON parsing
+            if isinstance(response, str):
+                clean_response = response.strip()
+                if clean_response.startswith('```json'):
+                    clean_response = clean_response[7:]
+                if clean_response.startswith('```'):
+                    clean_response = clean_response[3:]
+                if clean_response.endswith('```'):
+                    clean_response = clean_response[:-3]
+                
+                # Find JSON array
+                json_match = re.search(r'(?:assistantfinal.*?)?(\[\s*\{[^}]*\}\s*(?:\s*,\s*\{[^}]*\}\s*)*\])', 
+                                     clean_response, re.DOTALL)
+                
+                if json_match:
+                    data = json.loads(json_match.group(1))
+                    
+                    for item in data:
+                        skill_name = item.get('skill_name', '')
+                        context = item.get('context', '')
+                        if skill_name and context:
+                            context_assignments[skill_name] = context
+        
+        except Exception as e:
+            logger.error(f"Failed to parse context response: {e}")
+        
+        return context_assignments
+    
+    def _map_context(self, context_str: str) -> SkillContext:
+        """Map string to SkillContext enum"""
+        return self.extractor._map_context(context_str)
     
     def _parse_category_response(self, response: Any) -> Dict[str, str]:
         """Parse category recalibration response"""
@@ -445,13 +570,11 @@ class SkillRecalibrationTool:
     def _parse_level_response(self, response: str) -> Dict[str, int]:
         """Parse level recalibration response"""
         # Reuse the parsing logic from unified_extractor
-        extractor = UnifiedSkillExtractor(self.genai, self.config)
-        return extractor._parse_level_assignment_response(response)
+        return self.extractor._parse_level_assignment_response(response)
     
     def _map_category(self, category_str: str) -> SkillCategory:
         """Map string to SkillCategory enum"""
-        extractor = UnifiedSkillExtractor(self.genai, self.config)
-        return extractor._map_category(category_str)
+        return self.extractor._map_category(category_str)
     
     def _create_backup(self, filepath: str) -> str:
         """Create backup of the file before modification"""
@@ -481,12 +604,16 @@ class SkillRecalibrationTool:
         print(f"Courses processed: {self.changes_made['courses_processed']}")
         print(f"Category changes: {self.changes_made['category_changes']}")
         print(f"Level changes: {self.changes_made['level_changes']}")
+        print(f"Context changes: {self.changes_made['context_changes']}")
         
         if self.changes_made['total_skills_processed'] > 0:
             category_change_rate = (self.changes_made['category_changes'] / 
                                    self.changes_made['total_skills_processed'] * 100)
             level_change_rate = (self.changes_made['level_changes'] / 
                                self.changes_made['total_skills_processed'] * 100)
+            context_change_rate = (self.changes_made['context_changes'] / 
+                                  self.changes_made['total_skills_processed'] * 100)
+            print(f"Context change rate: {context_change_rate:.1f}%")
             print(f"Category change rate: {category_change_rate:.1f}%")
             print(f"Level change rate: {level_change_rate:.1f}%")
         print("=" * 60)
