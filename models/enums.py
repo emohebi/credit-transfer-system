@@ -113,9 +113,8 @@ class SkillCategory(Enum):
     """Categories of skills"""
     TECHNICAL = "technical"
     COGNITIVE = "cognitive"
-    PRACTICAL = "practical"
-    FOUNDATIONAL = "foundational"
-    PROFESSIONAL = "professional"
+    INTERPERSONAL = "interpersonal"
+    DOMAIN_KNOWLEDGE = "domain_knowledge"
 
 
 class StudyLevel(Enum):

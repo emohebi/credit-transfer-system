@@ -88,78 +88,72 @@ Examples of PROPER skill naming (2-4 words):
         skill_categories = """
         ## Skill Categories (MUTUALLY EXCLUSIVE - Choose Most Dominant Aspect):
 
+        ### TECHNICAL (Tool/Technology/System Skills):
+        Skills requiring specific technical tools, programming, systems, or hands-on implementation
+        Examples:
+        - "Python programming"
+        - "database administration"
+        - "network configuration"
+        - "CAD design"
+        - "spreadsheet automation"
+        - "equipment maintenance"
+        - "quality control procedures"
+        INDICATORS: Specific technologies, programming languages, software tools, technical systems, implementation, operation
+
         ### COGNITIVE (Thinking & Analysis Skills):
-        Skills focused on mental processes, analysis, and problem-solving WITHOUT specific tool focus
+        Skills focused on mental processes, analysis, problem-solving, and decision-making
         Examples:
         - "critical thinking"
         - "statistical analysis"
         - "pattern recognition"
         - "problem solving"
         - "research methodology"
-        - "quantitative reasoning"
-        INDICATORS: Words like analyze, evaluate, assess, investigate, research, solve, think
+        - "strategic planning"
+        - "process optimization"
+        INDICATORS: Words like analyze, evaluate, assess, investigate, research, solve, think, plan, design
 
-        ### TECHNICAL (Tool/Technology/System Skills):
-        Skills requiring specific technical tools, programming, or systems
-        Examples:
-        - "Python programming"
-        - "database administration"
-        - "network configuration"
-        - "CAD design"
-        - "cloud infrastructure"
-        - "software development"
-        INDICATORS: Specific technologies, programming languages, software tools, technical systems
-
-        ### PRACTICAL (Hands-on/Operational Skills):
-        Skills involving physical or operational tasks and procedures
-        Examples:
-        - "equipment maintenance"
-        - "laboratory procedures"
-        - "inventory management"
-        - "quality control"
-        - "manufacturing processes"
-        - "safety compliance"
-        INDICATORS: Words like operate, maintain, implement, execute, perform, handle
-
-        ### FOUNDATIONAL (Core Knowledge & Principles):
-        Basic knowledge and theoretical understanding
-        Examples:
-        - "accounting principles"
-        - "legal compliance"
-        - "mathematical concepts"
-        - "scientific theory"
-        - "business fundamentals"
-        - "regulatory knowledge"
-        INDICATORS: Words like principles, concepts, theory, fundamentals, standards, regulations
-
-        ### PROFESSIONAL (Interpersonal & Business Skills):
-        Skills related to communication, leadership, and professional conduct
+        ### INTERPERSONAL (Communication & Relationship Skills):
+        Skills related to communication, collaboration, leadership, and working with others
         Examples:
         - "stakeholder management"
         - "team leadership"
         - "client consultation"
         - "presentation delivery"
         - "negotiation skills"
-        - "project coordination"
-        INDICATORS: Words like manage, lead, communicate, coordinate, negotiate, present, collaborate
+        - "conflict resolution"
+        - "cross-functional collaboration"
+        INDICATORS: Words like communicate, collaborate, lead, negotiate, present, coordinate, manage people, mentor
+
+        ### DOMAIN_KNOWLEDGE (Subject Matter Expertise):
+        Core knowledge, principles, regulations, and theoretical understanding specific to a field
+        Examples:
+        - "accounting principles"
+        - "legal compliance"
+        - "financial regulations"
+        - "medical terminology"
+        - "engineering standards"
+        - "business fundamentals"
+        - "industry best practices"
+        INDICATORS: Words like principles, concepts, theory, fundamentals, standards, regulations, compliance, knowledge
 
         ## CATEGORY SELECTION RULES:
         1. Choose based on the PRIMARY nature of the skill
         2. If a skill involves tools BUT the focus is analysis → COGNITIVE
-        3. If a skill involves communication BUT it's about technical documentation → TECHNICAL
-        4. If a skill involves management BUT it's about technical systems → TECHNICAL
-        5. When in doubt, ask: "What is the CORE competency being tested?"
+        3. If a skill involves knowledge BUT the focus is application → TECHNICAL
+        4. If a skill involves management of systems/processes → TECHNICAL
+        5. If a skill involves management of people/relationships → INTERPERSONAL
+        6. When in doubt, ask: "What is the CORE competency being tested?"
 
         Examples of correct categorization:
-        - "financial data analysis" → COGNITIVE (focus is on analysis, not the tools)
-        - "Excel spreadsheet automation" → TECHNICAL (focus is on the tool/automation)
-        - "team performance evaluation" → PROFESSIONAL (focus is on management/leadership)
-        - "statistical modeling" → COGNITIVE (focus is on the analytical method)
+        - "financial data analysis" → COGNITIVE (focus is on analysis)
+        - "Excel spreadsheet automation" → TECHNICAL (focus is on tool/automation)
+        - "team performance evaluation" → INTERPERSONAL (focus is on people management)
+        - "statistical modeling" → COGNITIVE (focus is on analytical method)
         - "Python data processing" → TECHNICAL (focus is on programming)
-        - "workshop safety procedures" → PRACTICAL (focus is on operational procedures)
+        - "regulatory compliance knowledge" → DOMAIN_KNOWLEDGE (focus is on domain-specific knowledge)
+        - "customer relationship management" → INTERPERSONAL (focus is on relationships)
         - "business process optimization" → COGNITIVE (focus is on analysis/optimization)
-        - "customer relationship management" → PROFESSIONAL (focus is on relationships)
-        - "ERP system configuration" → TECHNICAL (focus is on system/tool)
+        - "accounting principles" → DOMAIN_KNOWLEDGE (focus is on field-specific knowledge)
         """
 
 
@@ -273,7 +267,7 @@ Strict below JSON FORMAT for direct parsing:
 [
   {
     "name": "financial data analysis",  // Human capability with context (2-4 WORDS OPTIMAL)
-    "category": "cognitive",  // MUST be one of: cognitive/technical/practical/foundational/professional
+    "category": "cognitive",  // MUST be one of: technical/cognitive/interpersonal/domain_knowledge
     "level": """+f"""{int((expected_min + expected_max) / 2) if study_level else 3}"""+""",  // SFIA level (1-7)
     "context": "practical",  // theoretical/practical/hybrid
     "confidence": 0.7,  // Extraction confidence
@@ -747,94 +741,81 @@ Apply the chain-of-thought process to each text to extract true HUMAN CAPABILITI
         
         user_prompt += """
 
-    ## Skill Categories (MUTUALLY EXCLUSIVE - Choose Most Dominant Aspect):
+        ## Skill Categories (MUTUALLY EXCLUSIVE - Choose Most Dominant Aspect):
+
+        ### TECHNICAL (Tool/Technology/System Skills):
+        Skills requiring specific technical tools, programming, systems, or hands-on implementation
+        Examples:
+        - "Python programming"
+        - "database administration"
+        - "network configuration"
+        - "CAD design"
+        - "spreadsheet automation"
+        - "equipment maintenance"
+        - "quality control procedures"
+        INDICATORS: Specific technologies, programming languages, software tools, technical systems, implementation, operation
 
         ### COGNITIVE (Thinking & Analysis Skills):
-        Skills focused on mental processes, analysis, and problem-solving WITHOUT specific tool focus
+        Skills focused on mental processes, analysis, problem-solving, and decision-making
         Examples:
         - "critical thinking"
         - "statistical analysis"
         - "pattern recognition"
         - "problem solving"
         - "research methodology"
-        - "quantitative reasoning"
-        INDICATORS: Words like analyze, evaluate, assess, investigate, research, solve, think
+        - "strategic planning"
+        - "process optimization"
+        INDICATORS: Words like analyze, evaluate, assess, investigate, research, solve, think, plan, design
 
-        ### TECHNICAL (Tool/Technology/System Skills):
-        Skills requiring specific technical tools, programming, or systems
-        Examples:
-        - "Python programming"
-        - "database administration"
-        - "network configuration"
-        - "CAD design"
-        - "cloud infrastructure"
-        - "software development"
-        INDICATORS: Specific technologies, programming languages, software tools, technical systems
-
-        ### PRACTICAL (Hands-on/Operational Skills):
-        Skills involving physical or operational tasks and procedures
-        Examples:
-        - "equipment maintenance"
-        - "laboratory procedures"
-        - "inventory management"
-        - "quality control"
-        - "manufacturing processes"
-        - "safety compliance"
-        INDICATORS: Words like operate, maintain, implement, execute, perform, handle
-
-        ### FOUNDATIONAL (Core Knowledge & Principles):
-        Basic knowledge and theoretical understanding
-        Examples:
-        - "accounting principles"
-        - "legal compliance"
-        - "mathematical concepts"
-        - "scientific theory"
-        - "business fundamentals"
-        - "regulatory knowledge"
-        INDICATORS: Words like principles, concepts, theory, fundamentals, standards, regulations
-
-        ### PROFESSIONAL (Interpersonal & Business Skills):
-        Skills related to communication, leadership, and professional conduct
+        ### INTERPERSONAL (Communication & Relationship Skills):
+        Skills related to communication, collaboration, leadership, and working with others
         Examples:
         - "stakeholder management"
         - "team leadership"
         - "client consultation"
         - "presentation delivery"
         - "negotiation skills"
-        - "project coordination"
-        INDICATORS: Words like manage, lead, communicate, coordinate, negotiate, present, collaborate
+        - "conflict resolution"
+        - "cross-functional collaboration"
+        INDICATORS: Words like communicate, collaborate, lead, negotiate, present, coordinate, manage people, mentor
+
+        ### DOMAIN_KNOWLEDGE (Subject Matter Expertise):
+        Core knowledge, principles, regulations, and theoretical understanding specific to a field
+        Examples:
+        - "accounting principles"
+        - "legal compliance"
+        - "financial regulations"
+        - "medical terminology"
+        - "engineering standards"
+        - "business fundamentals"
+        - "industry best practices"
+        INDICATORS: Words like principles, concepts, theory, fundamentals, standards, regulations, compliance, knowledge
 
         ## CATEGORY SELECTION RULES:
         1. Choose based on the PRIMARY nature of the skill
         2. If a skill involves tools BUT the focus is analysis → COGNITIVE
-        3. If a skill involves communication BUT it's about technical documentation → TECHNICAL
-        4. If a skill involves management BUT it's about technical systems → TECHNICAL
-        5. When in doubt, ask: "What is the CORE competency being tested?"
+        3. If a skill involves knowledge BUT the focus is application → TECHNICAL
+        4. If a skill involves management of systems/processes → TECHNICAL
+        5. If a skill involves management of people/relationships → INTERPERSONAL
+        6. When in doubt, ask: "What is the CORE competency being tested?"
 
         Examples of correct categorization:
-        - "financial data analysis" → COGNITIVE (focus is on analysis, not the tools)
-        - "Excel spreadsheet automation" → TECHNICAL (focus is on the tool/automation)
-        - "team performance evaluation" → PROFESSIONAL (focus is on management/leadership)
-        - "statistical modeling" → COGNITIVE (focus is on the analytical method)
+        - "financial data analysis" → COGNITIVE (focus is on analysis)
+        - "Excel spreadsheet automation" → TECHNICAL (focus is on tool/automation)
+        - "team performance evaluation" → INTERPERSONAL (focus is on people management)
+        - "statistical modeling" → COGNITIVE (focus is on analytical method)
         - "Python data processing" → TECHNICAL (focus is on programming)
-        - "workshop safety procedures" → PRACTICAL (focus is on operational procedures)
+        - "regulatory compliance knowledge" → DOMAIN_KNOWLEDGE (focus is on domain-specific knowledge)
+        - "customer relationship management" → INTERPERSONAL (focus is on relationships)
         - "business process optimization" → COGNITIVE (focus is on analysis/optimization)
-        - "customer relationship management" → PROFESSIONAL (focus is on relationships)
-        - "ERP system configuration" → TECHNICAL (focus is on system/tool)
-        
-
-    ## SELECTION RULES:
-    1. Choose based on PRIMARY nature of the skill
-    2. If involves tools BUT focus is analysis → COGNITIVE
-    3. If involves management BUT it's technical systems → TECHNICAL
-    4. When in doubt, identify the CORE competency
+        - "accounting principles" → DOMAIN_KNOWLEDGE (focus is on field-specific knowledge)
 
     ## OUTPUT FORMAT:
     Return ONLY a JSON array for direct parsing:
     [
     {
         "skill_name": "exact skill name as input", 
-        "category": "cognitive|technical|practical|foundational|professional"
+        "category": "cognitive|technical|interpersonal|domain_knowledge"
     }
     ]
 

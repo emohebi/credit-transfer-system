@@ -1047,29 +1047,47 @@ class UnifiedSkillExtractor:
         
         # Handle both full and shortened versions
         mapping = {
+            # Technical mappings
             "technical": SkillCategory.TECHNICAL,
             "tech": SkillCategory.TECHNICAL,
+            "practical": SkillCategory.TECHNICAL,  # Map old practical to technical
+            "operational": SkillCategory.TECHNICAL,
+            "hands-on": SkillCategory.TECHNICAL,
+            "implementation": SkillCategory.TECHNICAL,
             
+            # Cognitive mappings
             "cognitive": SkillCategory.COGNITIVE,
-            "analytical": SkillCategory.COGNITIVE,  # Map analytical to cognitive
+            "analytical": SkillCategory.COGNITIVE,
             "analysis": SkillCategory.COGNITIVE,
+            "thinking": SkillCategory.COGNITIVE,
+            "problem-solving": SkillCategory.COGNITIVE,
+            "strategic": SkillCategory.COGNITIVE,
+            "creative": SkillCategory.COGNITIVE,
+            "design": SkillCategory.COGNITIVE,  # Design thinking is cognitive
             
-            "practical": SkillCategory.PRACTICAL,
-            "operational": SkillCategory.PRACTICAL,
-            "hands-on": SkillCategory.PRACTICAL,
+            # Interpersonal mappings
+            "interpersonal": SkillCategory.INTERPERSONAL,
+            "professional": SkillCategory.INTERPERSONAL,  # Map old professional to interpersonal
+            "communication": SkillCategory.INTERPERSONAL,
+            "leadership": SkillCategory.INTERPERSONAL,
+            "management": SkillCategory.INTERPERSONAL,
+            "collaboration": SkillCategory.INTERPERSONAL,
+            "teamwork": SkillCategory.INTERPERSONAL,
+            "negotiation": SkillCategory.INTERPERSONAL,
+            "business": SkillCategory.INTERPERSONAL,  # Business skills often interpersonal
             
-            "foundational": SkillCategory.FOUNDATIONAL,
-            "fundamental": SkillCategory.FOUNDATIONAL,
-            "core": SkillCategory.FOUNDATIONAL,
-            
-            "professional": SkillCategory.PROFESSIONAL,
-            "interpersonal": SkillCategory.PROFESSIONAL,
-            "communication": SkillCategory.PROFESSIONAL,
-            "management": SkillCategory.PROFESSIONAL,
-            "business": SkillCategory.PROFESSIONAL,
-            
-            "creative": SkillCategory.PROFESSIONAL,  # Map creative to professional
-            "design": SkillCategory.TECHNICAL,  # Map design to technical (usually technical design)
+            # Domain Knowledge mappings
+            "domain_knowledge": SkillCategory.DOMAIN_KNOWLEDGE,
+            "domain knowledge": SkillCategory.DOMAIN_KNOWLEDGE,
+            "foundational": SkillCategory.DOMAIN_KNOWLEDGE,  # Map old foundational to domain_knowledge
+            "fundamental": SkillCategory.DOMAIN_KNOWLEDGE,
+            "core": SkillCategory.DOMAIN_KNOWLEDGE,
+            "knowledge": SkillCategory.DOMAIN_KNOWLEDGE,
+            "principles": SkillCategory.DOMAIN_KNOWLEDGE,
+            "theory": SkillCategory.DOMAIN_KNOWLEDGE,
+            "concepts": SkillCategory.DOMAIN_KNOWLEDGE,
+            "regulatory": SkillCategory.DOMAIN_KNOWLEDGE,
+            "compliance": SkillCategory.DOMAIN_KNOWLEDGE,
         }
         
         # Try exact match first
