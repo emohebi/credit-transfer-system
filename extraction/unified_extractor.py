@@ -669,18 +669,28 @@ class UnifiedSkillExtractor:
         return consensus
     
     def _adjust_skill_level_for_study(self, skill_level: int, expected_min: int, expected_max: int) -> int:
-        """Adjust SFIA skill level to fit within expected range"""
+        """Adjust SFIA skill level to fit within expected range - conservative approach"""
         
         # Ensure we stay within SFIA bounds (1-7)
         skill_level = max(1, min(7, skill_level))
         expected_min = max(1, min(7, expected_min))
         expected_max = max(1, min(7, expected_max))
         
-        # Allow some flexibility (1 level outside range) but respect SFIA bounds
-        if skill_level < expected_min - 1:
-            return max(1, expected_min)
-        elif skill_level > expected_max + 1:
-            return min(7, expected_max)
+        # Be more conservative - bias toward lower levels
+        if skill_level >= 5:
+            # Only keep level 5+ if it's within expected range
+            if expected_max < 5:
+                # Downgrade to expected max
+                return expected_max
+            elif skill_level > expected_max:
+                # Cap at expected max
+                return expected_max
+        
+        # For lower levels, allow within range
+        if skill_level < expected_min:
+            return expected_min
+        elif skill_level > expected_max:
+            return expected_max
         else:
             return skill_level
     

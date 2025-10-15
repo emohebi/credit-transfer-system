@@ -195,38 +195,65 @@ WHEN TEXT SAYS → EXTRACT AS (2-4 words):
             expected_min, expected_max = StudyLevel.get_expected_skill_level_range(study_enum)
             
             level_rules = f"""
-        ## SFIA Level Assignment:
-            For each skill, assign a SFIA level (1-7) based on the following attributes, make sure to think twice before assigning a level:
-        ### SFIA Level Definitions:
-        - **Level 1 (Follow)**: Works under close supervision, follows instructions, performs routine tasks
-        - **Level 2 (Assist)**: Provides assistance, works under routine supervision, uses limited discretion  
-        - **Level 3 (Apply)**: Performs varied tasks, works under general direction, exercises discretion
-        - **Level 4 (Enable)**: Performs diverse complex activities, guides others, works autonomously
-        - **Level 5 (Ensure/Advise)**: Provides authoritative guidance, accountable for significant outcomes
-        - **Level 6 (Initiate/Influence)**: Has significant organizational influence, makes high-level decisions
-        - **Level 7 (Set Strategy)**: Operates at highest level, determines vision and strategy
+            ## SFIA Level Assignment:
+            For each skill, assign a SFIA level (1-7) based on the following attributes. BE CONSERVATIVE - most skills should be at levels 2-4, with level 5+ being exceptional.
+            
+            ### SFIA Level Definitions:
+            - **Level 1 (Follow)**: Entry level, works under close supervision, follows instructions, performs routine tasks
+            - **Level 2 (Assist)**: Junior level, provides assistance, works under routine supervision, uses limited discretion  
+            - **Level 3 (Apply)**: Mid-level, performs varied tasks, works under general direction, exercises discretion
+            - **Level 4 (Enable)**: Senior level, performs diverse complex activities, guides others, works autonomously
+            - **Level 5 (Ensure/Advise)**: Expert level, provides authoritative guidance, accountable for significant outcomes
+            - **Level 6 (Initiate/Influence)**: Leadership level, has significant organizational influence, makes high-level decisions
+            - **Level 7 (Set Strategy)**: Executive level, operates at highest level, determines vision and strategy
 
-        ### Level Assessment Examples (with 2-4 word skill names):
+            ### IMPORTANT DISTRIBUTION GUIDELINES:
+            - Levels 1-3: Should be ~60-70% of skills (most common)
+            - Level 4: Should be ~20-25% of skills (experienced professional)
+            - Level 5: Should be ~5-10% of skills (true expertise required)
+            - Levels 6-7: Should be <5% of skills (rare, strategic roles only)
 
-        **"strategic business planning"**:
-        - Autonomy: Level 6 (works under broad direction)
-        - Influence: Level 6 (influences senior management)
-        - Complexity: Level 6 (highly complex strategic work)
-        - Business Skills: Level 6 (leadership and strategic communication)
-        - Knowledge: Level 6 (broad business and strategic knowledge)
-        → **Result: Level 6**
+            ### Level Assignment Rules by Evidence:
+            
+            **Assign Level 1-2 when evidence shows:**
+            - Basic tasks, routine work, following procedures
+            - Words like "assist", "support", "help", "basic", "simple"
+            - Entry-level or foundational skills
+            - No mention of independence or leadership
+            
+            **Assign Level 3 (MOST COMMON) when evidence shows:**
+            - Standard professional work
+            - Words like "perform", "complete", "conduct", "manage own work"
+            - Typical day-to-day activities
+            - Some independence but not leading others
+            
+            **Assign Level 4 when evidence shows:**
+            - Complex work, mentoring others
+            - Words like "lead", "coordinate", "design", "develop solutions"
+            - Clear evidence of autonomy and guiding others
+            - Senior-level responsibilities
+            
+            **Assign Level 5 ONLY when evidence shows:**
+            - Expert-level work with organizational impact
+            - Words like "strategic", "authoritative", "accountable for outcomes"
+            - Evidence of setting standards or policies
+            - Consulting or advisory roles
+            
+            **RARELY assign Level 6-7 unless evidence explicitly shows:**
+            - C-suite or executive responsibilities
+            - Organizational strategy setting
+            - Industry-wide influence
 
-        **"routine data entry"**:
-        - Autonomy: Level 1 (works under close supervision)
-        - Influence: Level 1 (minimal influence)
-        - Complexity: Level 1 (routine tasks)
-        - Business Skills: Level 1 (basic communication)
-        - Knowledge: Level 1 (basic role-specific knowledge)
-        → **Result: Level 1**
-
-        ### For {study_level} study level:
-        - Expected Target SFIA levels: {expected_min}-{expected_max}
-        """
+            ### For {study_level} study level:
+            - Expected TYPICAL levels: {max(1, expected_min-1)}-{min(4, expected_max-1)}
+            - Most skills should be at level {min(3, int((expected_min + expected_max) / 2))}
+            - Only assign level 5+ if there's explicit evidence of expert/strategic work
+            
+            ### DEFAULT ASSIGNMENT:
+            - If unclear from evidence → Level 3 (Apply)
+            - If some complexity shown → Level 4 (Enable)
+            - ONLY use Level 5+ with strong evidence
+            """
 
         # Final prompt construction
         user_prompt = f"""Analyze this {item_type} description and extract human capabilities using the chain-of-thought process.
@@ -250,6 +277,10 @@ WHEN TEXT SAYS → EXTRACT AS (2-4 words):
 5. **CRITICAL: Keep skill names to 2-4 words for optimal context but make sure the skill names are aligned with other existing taxonomies**
 6. Ensure each skill follows the naming convention: [Action/Process] + [Domain/Context] + [Object/Outcome]
 7. Validate that each skill represents a transferable human capability
+8. Assess context: Does the evidence show understanding (theoretical), doing (practical), or both (hybrid)?
+9. When context is unclear from evidence, default to hybrid as most professional skills involve both theory and practice
+10. **CRITICAL for Levels**: Be conservative! Default to level 3. Only use level 5+ when evidence explicitly shows expert/strategic work.
+11. **Level Distribution Check**: Aim for ~70% at levels 2-3, ~20% at level 4, <10% at level 5+
 
 ## OUTPUT REQUIREMENTS:
 Output maximum 15 high quality distinct skills or human capabilities in JSON format.
@@ -268,7 +299,7 @@ Strict below JSON FORMAT for direct parsing:
   {
     "name": "financial data analysis",  // Human capability with context (2-4 WORDS OPTIMAL)
     "category": "cognitive",  // MUST be one of: technical/cognitive/interpersonal/domain_knowledge
-    "level": """+f"""{int((expected_min + expected_max) / 2) if study_level else 3}"""+""",  // SFIA level (1-7)
+    "level": 3,  // SFIA level (1-7) - default to 3, only use 5+ with strong evidence
     "context": "practical",  // theoretical/practical/hybrid
     "confidence": 0.7,  // Extraction confidence
     "evidence": "...",  // The exact unmodified text in the input showing this capability (max 200 chars)
@@ -563,14 +594,7 @@ Apply the chain-of-thought process to each text to extract true HUMAN CAPABILITI
         Separate prompt for determining SFIA levels for already extracted skills
         """
         system_prompt = """You are a SFIA (Skills Framework for the Information Age) level assessment expert. 
-    Your task is to accurately assign SFIA proficiency levels (1-7) to skills based on the context and complexity indicators.
-
-    You must be consistent and precise in your level assignments, considering:
-    1. The autonomy and supervision required
-    2. The influence and impact scope
-    3. The complexity of work
-    4. The business skills needed
-    5. The knowledge depth required"""
+    Your task is to accurately assign SFIA proficiency levels (1-7) to skills based on the context and complexity indicators."""
 
         # Build the level calibration rules
         if study_level:
@@ -584,7 +608,6 @@ Apply the chain-of-thought process to each text to extract true HUMAN CAPABILITI
     ## CONTEXT:
     Item Type: {item_type}
     Study Level: {study_level if study_level else 'Not specified'}
-    Expected SFIA Level Range: {expected_min}-{expected_max}
 
     ## ORIGINAL TEXT (for context):
     {context_text[:1500]}
@@ -598,31 +621,69 @@ Apply the chain-of-thought process to each text to extract true HUMAN CAPABILITI
     Category: {skill.category.value if hasattr(skill.category, 'value') else skill.category}
     Context: {skill.context.value if hasattr(skill.context, 'value') else skill.context}
     Evidence: {skill.evidence[:100] if hasattr(skill, 'evidence') else ''}
+    
     """
         
         user_prompt += f"""
 
-    ## SFIA LEVEL DEFINITIONS:
-    Level 1 (Follow): Close supervision, routine tasks, follows instructions
-    Level 2 (Assist): Routine supervision, limited discretion, provides assistance
-    Level 3 (Apply): General direction, exercises discretion, varied tasks
-    Level 4 (Enable): Autonomous work, guides others, complex activities
-    Level 5 (Ensure/Advise): Authoritative guidance, significant accountability
-    Level 6 (Initiate/Influence): Organizational influence, high-level decisions
-    Level 7 (Set Strategy): Highest level, vision and strategy determination
+            ## SFIA Level Assignment:
+            For each skill, assign a SFIA level (1-7) based on the following attributes. BE CONSERVATIVE - most skills should be at levels 2-4, with level 5+ being exceptional.
+            
+            ### SFIA Level Definitions:
+            - **Level 1 (Follow)**: Entry level, works under close supervision, follows instructions, performs routine tasks
+            - **Level 2 (Assist)**: Junior level, provides assistance, works under routine supervision, uses limited discretion  
+            - **Level 3 (Apply)**: Mid-level, performs varied tasks, works under general direction, exercises discretion
+            - **Level 4 (Enable)**: Senior level, performs diverse complex activities, guides others, works autonomously
+            - **Level 5 (Ensure/Advise)**: Expert level, provides authoritative guidance, accountable for significant outcomes
+            - **Level 6 (Initiate/Influence)**: Leadership level, has significant organizational influence, makes high-level decisions
+            - **Level 7 (Set Strategy)**: Executive level, operates at highest level, determines vision and strategy
 
-    ## ASSESSMENT CRITERIA:
-    For each skill, consider:
-    1. Autonomy level required
-    2. Complexity of the skill application
-    3. Impact and influence scope
-    4. Required knowledge depth
-    5. Context from the original text
+            ### IMPORTANT DISTRIBUTION GUIDELINES:
+            - Levels 1-3: Should be ~60-70% of skills (most common)
+            - Level 4: Should be ~20-25% of skills (experienced professional)
+            - Level 5: Should be ~5-10% of skills (true expertise required)
+            - Levels 6-7: Should be <5% of skills (rare, strategic roles only)
 
-    ## IMPORTANT CONSTRAINTS:
-    - Stay within expected range {expected_min}-{expected_max} unless strong evidence suggests otherwise
-    - Be consistent across similar skills
-    - Consider the {item_type} and {study_level} context
+            ### Level Assignment Rules by Evidence:
+            
+            **Assign Level 1-2 when evidence shows:**
+            - Basic tasks, routine work, following procedures
+            - Words like "assist", "support", "help", "basic", "simple"
+            - Entry-level or foundational skills
+            - No mention of independence or leadership
+            
+            **Assign Level 3 (MOST COMMON) when evidence shows:**
+            - Standard professional work
+            - Words like "perform", "complete", "conduct", "manage own work"
+            - Typical day-to-day activities
+            - Some independence but not leading others
+            
+            **Assign Level 4 when evidence shows:**
+            - Complex work, mentoring others
+            - Words like "lead", "coordinate", "design", "develop solutions"
+            - Clear evidence of autonomy and guiding others
+            - Senior-level responsibilities
+            
+            **Assign Level 5 ONLY when evidence shows:**
+            - Expert-level work with organizational impact
+            - Words like "strategic", "authoritative", "accountable for outcomes"
+            - Evidence of setting standards or policies
+            - Consulting or advisory roles
+            
+            **RARELY assign Level 6-7 unless evidence explicitly shows:**
+            - C-suite or executive responsibilities
+            - Organizational strategy setting
+            - Industry-wide influence
+
+            ### For {study_level} study level:
+            - Expected TYPICAL levels: {max(1, expected_min-1)}-{min(4, expected_max-1)}
+            - Most skills should be at level {min(3, int((expected_min + expected_max) / 2))}
+            - Only assign level 5+ if there's explicit evidence of expert/strategic work
+            
+            ### DEFAULT ASSIGNMENT:
+            - If unclear from evidence → Level 3 (Apply)
+            - If some complexity shown → Level 4 (Enable)
+            - ONLY use Level 5+ with strong evidence
     """+"""
     ## OUTPUT FORMAT:
     Return ONLY a JSON array with skill indices and their SFIA levels:

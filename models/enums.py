@@ -180,9 +180,9 @@ class StudyLevel(Enum):
     def get_expected_skill_level_range(cls, study_level):
         """Get the expected SFIA skill level range for a study level"""
         mappings = {
-            cls.INTRODUCTORY: (1, 3),  # Follow to Apply
-            cls.INTERMEDIATE: (2, 4),  # Assist to Enable  
-            cls.ADVANCED: (5, 7),      # Apply to Initiate/Influence
+            cls.INTRODUCTORY: (1, 3),  # Follow to Apply (mostly 2-3)
+            cls.INTERMEDIATE: (2, 4),  # Assist to Enable (mostly 3)
+            cls.ADVANCED: (3, 5),      # Apply to Ensure (mostly 3-4, rarely 5)
         }
         
         # Handle both enum and string inputs
