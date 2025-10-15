@@ -75,11 +75,10 @@ class SkillRecalibrationTool:
             return "unknown"
     
     def recalibrate_vet_skills(self, 
-                              filepath: str,
+                              input_vet_qual: VETQualification,
                               recalibrate_categories: bool = True,
                               recalibrate_levels: bool = True,
-                              batch_size: int = 50,
-                              backup: bool = True) -> str:
+                              backup: bool = False) -> str:
         """
         Recalibrate VET qualification skills from cached file
         
@@ -93,7 +92,10 @@ class SkillRecalibrationTool:
         Returns:
             Path to updated file
         """
-        logger.info(f"Loading VET skills from {filepath}")
+        vet_dir = Path("output/skills/vet")
+        vet_files = list(vet_dir.glob(f"{input_vet_qual.code}_skills_*.json"))
+        filepath = max(vet_files, key=lambda p: p.stat().st_mtime)
+        logger.info(f"Loading pre-extracted VET skills from {filepath}")
         
         # Create backup if requested
         if backup:
@@ -102,7 +104,7 @@ class SkillRecalibrationTool:
         
         # Load the qualification
         vet_qual = self.skill_export.import_vet_skills(filepath)
-        
+        loaded_units_map_desc = {unit.code: unit.get_full_text() for unit in input_vet_qual.units}
         # Process each unit
         for unit in tqdm(vet_qual.units, desc="Processing VET units"):
             if unit.extracted_skills:
@@ -111,13 +113,12 @@ class SkillRecalibrationTool:
                 # Recalibrate skills
                 recalibrated_skills = self._recalibrate_skills(
                     skills=unit.extracted_skills,
-                    context_text=unit.get_full_text(),
+                    context_text=loaded_units_map_desc.get(unit.code, ""),
                     item_type="VET Unit",
                     item_code=unit.code,
                     study_level=None,  # VET doesn't have explicit study levels
                     recalibrate_categories=recalibrate_categories,
-                    recalibrate_levels=recalibrate_levels,
-                    batch_size=batch_size
+                    recalibrate_levels=recalibrate_levels
                 )
                 
                 # Update the skills
@@ -138,10 +139,9 @@ class SkillRecalibrationTool:
         return str(output_path)
     
     def recalibrate_uni_skills(self, 
-                              filepath: str,
+                              input_uni_qual: UniQualification,
                               recalibrate_categories: bool = True,
                               recalibrate_levels: bool = True,
-                              batch_size: int = 50,
                               backup: bool = True) -> str:
         """
         Recalibrate University qualification skills from cached file
@@ -156,6 +156,9 @@ class SkillRecalibrationTool:
         Returns:
             Path to updated file
         """
+        uni_dir = Path("output/skills/uni")
+        uni_files = list(uni_dir.glob(f"{input_uni_qual.code}_skills_*.json"))
+        filepath = max(uni_files, key=lambda p: p.stat().st_mtime)
         logger.info(f"Loading University skills from {filepath}")
         
         # Create backup if requested
@@ -165,7 +168,7 @@ class SkillRecalibrationTool:
         
         # Load the qualification
         uni_qual = self.skill_export.import_uni_skills(filepath)
-        
+        loaded_course_map_desc = {course.code: course.get_full_text() for course in input_uni_qual.courses}
         # Process each course
         for course in tqdm(uni_qual.courses, desc="Processing University courses"):
             if course.extracted_skills:
@@ -174,13 +177,12 @@ class SkillRecalibrationTool:
                 # Recalibrate skills
                 recalibrated_skills = self._recalibrate_skills(
                     skills=course.extracted_skills,
-                    context_text=course.get_full_text(),
+                    context_text=loaded_course_map_desc.get(course.code, ""),
                     item_type="University Course",
                     item_code=course.code,
                     study_level=course.study_level,
                     recalibrate_categories=recalibrate_categories,
-                    recalibrate_levels=recalibrate_levels,
-                    batch_size=batch_size
+                    recalibrate_levels=recalibrate_levels
                 )
                 
                 # Update the skills
@@ -208,7 +210,7 @@ class SkillRecalibrationTool:
                            study_level: Optional[str],
                            recalibrate_categories: bool,
                            recalibrate_levels: bool,
-                           batch_size: int) -> List[Skill]:
+                           batch_size: int = 0) -> List[Skill]:
         """
         Recalibrate a list of skills
         
@@ -239,20 +241,16 @@ class SkillRecalibrationTool:
             }
             for skill in skills
         }
+            
+        # Recalibrate categories if requested
+        if recalibrate_categories:
+            logger.debug(f"Recalibrating categories for batch {len(skills)}")
+            self._recalibrate_categories_batch(skills, context_text, item_type)
         
-        # Process in batches
-        for i in range(0, len(skills), batch_size):
-            batch = skills[i:i + batch_size]
-            
-            # Recalibrate categories if requested
-            if recalibrate_categories:
-                logger.debug(f"Recalibrating categories for batch {i//batch_size + 1}")
-                self._recalibrate_categories_batch(batch, context_text, item_type)
-            
-            # Recalibrate levels if requested
-            if recalibrate_levels:
-                logger.debug(f"Recalibrating levels for batch {i//batch_size + 1}")
-                self._recalibrate_levels_batch(batch, context_text, item_type, study_level)
+        # Recalibrate levels if requested
+        if recalibrate_levels:
+            logger.debug(f"Recalibrating levels for batch {len(skills)}")
+            self._recalibrate_levels_batch(skills, context_text, item_type, study_level)
         
         # Count changes
         for skill in skills:
@@ -392,35 +390,6 @@ class SkillRecalibrationTool:
                     'votes': votes,
                         'consensus_confidence': level_counts[consensus_level] / len(votes)
                     })
-        # else:
-        #     # Single run approach
-        #     system_prompt, user_prompt = self.prompt_manager.get_sfia_level_determination_prompt(
-        #         skills=skills,
-        #         context_text=context_text,
-        #         item_type=item_type,
-        #         study_level=study_level,
-        #         backend_type=self.backend_type
-        #     )
-            
-        #     response = self.genai.generate_response(system_prompt, user_prompt)
-        #     level_assignments = self._parse_level_response(response)
-            
-        #     # Update skills
-        #     for skill in skills:
-        #         if skill.name in level_assignments:
-        #             old_level = skill.level
-        #             skill.level = SkillLevel(level_assignments[skill.name])
-                    
-        #             # Add metadata
-        #             if 'recalibration_history' not in skill.metadata:
-        #                 skill.metadata['recalibration_history'] = []
-                    
-        #             skill.metadata['recalibration_history'].append({
-        #                 'timestamp': datetime.now().isoformat(),
-        #                 'type': 'level',
-        #                 'old_value': old_level.value,
-        #                 'new_value': level_assignments[skill.name]
-        #             })
     
     def _parse_category_response(self, response: Any) -> Dict[str, str]:
         """Parse category recalibration response"""
@@ -627,18 +596,16 @@ def main():
     try:
         if args.type == "vet":
             output_path = tool.recalibrate_vet_skills(
-                filepath=args.filepath,
+                input_vet_qual=None,
                 recalibrate_categories=recalibrate_categories,
                 recalibrate_levels=recalibrate_levels,
-                batch_size=args.batch_size,
                 backup=not args.no_backup
             )
         else:
             output_path = tool.recalibrate_uni_skills(
-                filepath=args.filepath,
+                input_uni_qual=None,
                 recalibrate_categories=recalibrate_categories,
                 recalibrate_levels=recalibrate_levels,
-                batch_size=args.batch_size,
                 backup=not args.no_backup
             )
         
