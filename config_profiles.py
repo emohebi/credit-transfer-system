@@ -116,8 +116,6 @@ class ConfigProfiles:
             "progressive_depth": "balanced",
             "backend_type": "vllm",
             "default_embedding": "jina",
-            "semantic_weight": 0.65,
-            "level_weight": 0.25,
             "study_level_importance": 0.8,
             "embedding_device": "cuda",
             "ensemble_runs": 1,  # Use ensemble extraction
@@ -129,8 +127,10 @@ class ConfigProfiles:
             "ensemble_similarity_threshold": 0.98,
             "matching_strategy": "direct",  # Options: "clustering", "direct", "hybrid"
             "direct_match_threshold": 0.9,  # Threshold for direct skill name matching
-            "context_weight": 0.10,  # Weight for context similarity
             "partial_threshold": 0.8,  # Threshold for partial matches
+            "semantic_weight": 0.60,
+            "level_weight": 0.25,
+            "context_weight": 0.15,  # Weight for context similarity
             "enable_bidirectional_coverage": True,  # Use bidirectional coverage
             "enable_one_to_many": True,  # Support one-to-many skill mappings
             "enable_clustering_validation": True,  # Validate direct matches with clustering

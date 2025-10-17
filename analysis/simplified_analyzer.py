@@ -427,6 +427,7 @@ class SimplifiedAnalyzer:
         # Simple matching for each course
         for course in tqdm(uni_qual.courses):
             if course.code not in uni_skills:
+                logger.warning(f"Course {course.code} not available in {list(uni_skills.keys())}")
                 continue
             
             course_skills = uni_skills[course.code]
@@ -444,7 +445,7 @@ class SimplifiedAnalyzer:
                 best_match = self._find_best_cluster_match(
                     vet_skills, course_skills
                 )
-            
+                
             if best_match and best_match[1] >= self.thresholds["minimum"]:
                 # Create recommendation (existing code from lines 156-169)
                 unit = next(u for u in vet_qual.units if u.code == best_match[0])
@@ -499,7 +500,6 @@ class SimplifiedAnalyzer:
             match_result = self._calculate_vectorized_skill_matches(
                 unit_skills, course_skills
             )
-            
             if match_result is None:
                 continue
                 
