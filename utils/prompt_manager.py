@@ -189,44 +189,44 @@ WHEN TEXT SAYS → EXTRACT AS (2-4 words):
 - "budget compliance monitoring" (3 words) ✓
 """
 
-    context_rules = """
-    ## Context Classification Guidelines:
+        context_rules = """
+        ## Context Classification Guidelines:
 
-    ### THEORETICAL Context:
-    Skills focused on understanding concepts, principles, and knowledge without direct application
-    INDICATORS:
-    - Words: understand, comprehend, analyze, evaluate, interpret, assess, study, know
-    - Evidence of: classroom learning, reading, research, analysis without implementation
-    - Assessment: exams, essays, theoretical analysis, case study evaluation
-    - NO evidence of hands-on work or creating deliverables
+        ### THEORETICAL Context:
+        Skills focused on understanding concepts, principles, and knowledge without direct application
+        INDICATORS:
+        - Words: understand, comprehend, analyze, evaluate, interpret, assess, study, know
+        - Evidence of: classroom learning, reading, research, analysis without implementation
+        - Assessment: exams, essays, theoretical analysis, case study evaluation
+        - NO evidence of hands-on work or creating deliverables
 
-    ### PRACTICAL Context:
-    Skills focused on hands-on application, implementation, and doing
-    INDICATORS:
-    - Words: apply, implement, create, build, perform, execute, operate, produce, deliver
-    - Evidence of: actual doing, creating deliverables, operating tools, producing outputs
-    - Assessment: practical projects, demonstrations, portfolio work, real implementations
-    - NO evidence of theoretical understanding or conceptual work
+        ### PRACTICAL Context:
+        Skills focused on hands-on application, implementation, and doing
+        INDICATORS:
+        - Words: apply, implement, create, build, perform, execute, operate, produce, deliver
+        - Evidence of: actual doing, creating deliverables, operating tools, producing outputs
+        - Assessment: practical projects, demonstrations, portfolio work, real implementations
+        - NO evidence of theoretical understanding or conceptual work
 
-    ### HYBRID Context:
-    Skills requiring BOTH theoretical understanding AND practical application
-    INDICATORS:
-    - Evidence of both understanding concepts AND applying them
-    - Mixed words: "apply principles", "implement theories", "analyze and create"
-    - Assessment through both exams AND practical projects
-    - Evidence shows learning theory AND doing practical work
+        ### HYBRID Context:
+        Skills requiring BOTH theoretical understanding AND practical application
+        INDICATORS:
+        - Evidence of both understanding concepts AND applying them
+        - Mixed words: "apply principles", "implement theories", "analyze and create"
+        - Assessment through both exams AND practical projects
+        - Evidence shows learning theory AND doing practical work
 
-    ## DETERMINATION RULES:
-    1. Look at the EVIDENCE text - what is actually being done?
-    2. If evidence shows ONLY understanding/knowing → THEORETICAL
-    3. If evidence shows ONLY doing/implementing → PRACTICAL
-    4. If evidence shows BOTH understanding AND doing → HYBRID
-    5. When unclear or insufficient evidence → HYBRID (default)
-    6. Consider the assessment type if mentioned:
-    - Theory-only assessment → THEORETICAL
-    - Practice-only assessment → PRACTICAL
-    - Mixed assessment → HYBRID
-        """
+        ## DETERMINATION RULES:
+        1. Look at the EVIDENCE text - what is actually being done?
+        2. If evidence shows ONLY understanding/knowing → THEORETICAL
+        3. If evidence shows ONLY doing/implementing → PRACTICAL
+        4. If evidence shows BOTH understanding AND doing → HYBRID
+        5. When unclear or insufficient evidence → HYBRID (default)
+        6. Consider the assessment type if mentioned:
+        - Theory-only assessment → THEORETICAL
+        - Practice-only assessment → PRACTICAL
+        - Mixed assessment → HYBRID
+            """
 
         # Level calibration based on Bloom's taxonomy
         if study_level:
