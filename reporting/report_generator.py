@@ -510,30 +510,27 @@ class ReportGenerator:
                 table { border-collapse: collapse; width: 100%; margin: 20px 0; }
                 th { background-color: #3498db; color: white; padding: 10px; text-align: left; }
                 td { padding: 8px; border-bottom: 1px solid #ddd; }
-                .full { background-color: #d4edda; }
-                .conditional { background-color: #fff3cd; }
-                .partial { background-color: #f8d7da; }
                 
-                /* Group styling for recommendations */
-                .rec-group-even {
-                    background-color: #f9f9f9;
-                }
-                .rec-group-odd {
-                    background-color: #ffffff;
-                }
-                .rec-group-even:hover, .rec-group-odd:hover {
-                    background-color: #e8f4f8 !important;
-                }
+                /* Recommendation type colors with group styling */
+                .full.rec-group-even { background-color: #d4edda; }
+                .full.rec-group-odd { background-color: #e8f5e8; }
+                .conditional.rec-group-even { background-color: #fff3cd; }
+                .conditional.rec-group-odd { background-color: #fff8e1; }
+                .partial.rec-group-even { background-color: #f8d7da; }
+                .partial.rec-group-odd { background-color: #fae5e7; }
+                
+                /* Hover states for recommendation types */
+                .full.rec-group-even:hover, .full.rec-group-odd:hover,
+                .full.hover-highlight { background-color: #c3e6cb !important; }
+                .conditional.rec-group-even:hover, .conditional.rec-group-odd:hover,
+                .conditional.hover-highlight { background-color: #ffeaa7 !important; }
+                .partial.rec-group-even:hover, .partial.rec-group-odd:hover,
+                .partial.hover-highlight { background-color: #f5c6cb !important; }
                 
                 /* Border between different recommendations */
                 .rec-group-last {
                     border-bottom: 3px solid #3498db !important;
                 }
-                /* Group hover effect */
-                .hover-highlight {
-                    background-color: #e8f4f8 !important;
-                }
-                
                 .summary-box { background-color: #f0f0f0; padding: 15px; border-radius: 5px; margin: 20px 0; }
                 .progress-bar { width: 100%; height: 20px; background-color: #e0e0e0; border-radius: 10px; }
                 .progress-fill { height: 100%; background-color: #3498db; border-radius: 10px; }
