@@ -832,7 +832,7 @@ class SimplifiedAnalyzer:
         """
         Classify match type based on precomputed scores
         """
-        if self.matching_strategy == "direct":
+        if self.matching_strategy in "direct" or self.matching_strategy == "direct_one_vs_all":
             if combined_score >= self.direct_threshold: #and semantic_sim >= 0.9:
                 return ("Direct", f"High match (sem: {semantic_sim:.0%}, lvl: {level_compat:.0%}, ctx: {context_compat:.0%}, cmb: {combined_score:.0%})")
             elif combined_score >= self.partial_threshold:# and semantic_sim >= 0.8:
@@ -1021,7 +1021,7 @@ class SimplifiedAnalyzer:
         evidence.append(f"Match quality: {score_result.skill_quality:.1%}")
         evidence.append(f"Level alignment: {score_result.level_alignment:.1%}")
         evidence.append(f"Context alignment: {score_result.context_alignment:.1%}")
-        if self.matching_strategy == "direct":
+        if self.matching_strategy in ["direct", "direct_one_vs_all"]:
             evidence.append(f"Direct matching: {match_result.get('statistics', {}).get('direct_matches', 0)} exact matches")
         elif self.matching_strategy == "hybrid":
             if match_result.get("statistics", {}).get("hybrid_mode"):

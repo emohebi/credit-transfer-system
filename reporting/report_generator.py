@@ -1069,7 +1069,7 @@ class ReportGenerator:
         # Get matching strategy from metadata
         matching_strategy = rec.metadata.get('matching_strategy', 'clustering')
         
-        if matching_strategy == 'direct' or matching_strategy == 'hybrid':
+        if matching_strategy in ['direct', 'direct_one_vs_all', 'hybrid']:
             return self._extract_direct_skill_mappings(rec, classifier)
         else:
             return self._extract_cluster_skill_mappings(rec, classifier)
@@ -1294,7 +1294,7 @@ class ReportGenerator:
             # Get matching strategy from metadata
             matching_strategy = rec.metadata.get('matching_strategy', 'clustering')
             
-            if matching_strategy == 'direct' or matching_strategy == 'hybrid':
+            if matching_strategy in ['direct', 'direct_one_vs_all', 'hybrid']:
                 # Handle direct and hybrid matching
                 all_mappings.extend(self._extract_direct_skill_mappings(rec, classifier))
             else:
@@ -1306,7 +1306,7 @@ class ReportGenerator:
     def _extract_direct_skill_mappings(self, rec: CreditTransferRecommendation, classifier) -> List[Dict]:
         """Extract skill mappings from backend-calculated matches"""
         mappings = []
-        
+        matching_strategy = rec.metadata.get('matching_strategy', 'clustering')
         # Get pre-calculated skill matches from metadata
         skill_match_details = rec.metadata.get('skill_match_details', [])
         
@@ -1340,20 +1340,21 @@ class ReportGenerator:
                     'reasoning': '-'
                 }               
                 mappings.append(mapping)
-            for unmapped in skill_match_details['unmapped_vet']:
-                    # Only VET skill - unmapped VET
-                mapping = {
-                    'vet_unit': unmapped.code,
-                    'vet_skill': unmapped.name,
-                    'vet_level': unmapped.level.value,
-                    'uni_course': '-',
-                    'uni_skill': '-',
-                    'uni_level': '-',
-                    'mapping_type': 'Unmapped',
-                    'similarity': 0,
-                    'reasoning': '-'
-                }
-                mappings.append(mapping)
+            if matching_strategy != 'direct_one_vs_all':
+                for unmapped in skill_match_details['unmapped_vet']:
+                        # Only VET skill - unmapped VET
+                    mapping = {
+                        'vet_unit': unmapped.code,
+                        'vet_skill': unmapped.name,
+                        'vet_level': unmapped.level.value,
+                        'uni_course': '-',
+                        'uni_skill': '-',
+                        'uni_level': '-',
+                        'mapping_type': 'Unmapped',
+                        'similarity': 0,
+                        'reasoning': '-'
+                    }
+                    mappings.append(mapping)
             
         else:
             # Fallback if no pre-calculated matches (shouldn't happen)
