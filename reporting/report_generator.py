@@ -510,10 +510,30 @@ class ReportGenerator:
                 table { border-collapse: collapse; width: 100%; margin: 20px 0; }
                 th { background-color: #3498db; color: white; padding: 10px; text-align: left; }
                 td { padding: 8px; border-bottom: 1px solid #ddd; }
-                tr:hover { background-color: #f5f5f5; }
                 .full { background-color: #d4edda; }
                 .conditional { background-color: #fff3cd; }
                 .partial { background-color: #f8d7da; }
+                
+                /* Group styling for recommendations */
+                .rec-group-even {
+                    background-color: #f9f9f9;
+                }
+                .rec-group-odd {
+                    background-color: #ffffff;
+                }
+                .rec-group-even:hover, .rec-group-odd:hover {
+                    background-color: #e8f4f8 !important;
+                }
+                
+                /* Border between different recommendations */
+                .rec-group-last {
+                    border-bottom: 3px solid #3498db !important;
+                }
+                /* Group hover effect */
+                .hover-highlight {
+                    background-color: #e8f4f8 !important;
+                }
+                
                 .summary-box { background-color: #f0f0f0; padding: 15px; border-radius: 5px; margin: 20px 0; }
                 .progress-bar { width: 100%; height: 20px; background-color: #e0e0e0; border-radius: 10px; }
                 .progress-fill { height: 100%; background-color: #3498db; border-radius: 10px; }
@@ -640,6 +660,27 @@ class ReportGenerator:
                         btn.classList.add('expanded');
                     }
                 }
+                
+                // Add hover effect for grouped rows
+                document.addEventListener('DOMContentLoaded', function() {
+                    var rows = document.querySelectorAll('tr[data-rec-group]');
+                    rows.forEach(function(row) {
+                        row.addEventListener('mouseenter', function() {
+                            var groupId = this.getAttribute('data-rec-group');
+                            var groupRows = document.querySelectorAll('tr[data-rec-group="' + groupId + '"]');
+                            groupRows.forEach(function(r) {
+                                r.classList.add('hover-highlight');
+                            });
+                        });
+                        row.addEventListener('mouseleave', function() {
+                            var groupId = this.getAttribute('data-rec-group');
+                            var groupRows = document.querySelectorAll('tr[data-rec-group="' + groupId + '"]');
+                            groupRows.forEach(function(r) {
+                                r.classList.remove('hover-highlight');
+                            });
+                        });
+                    });
+                });
             </script>
         </head>
         <body>
@@ -728,10 +769,19 @@ class ReportGenerator:
             vet_skill_count = sum(len(unit.extracted_skills) for unit in rec.vet_units)
             uni_skill_count = len(rec.uni_course.extracted_skills)
             
+            # Determine group class for alternating background
+            group_class = 'rec-group-even' if idx % 2 == 0 else 'rec-group-odd'
+            
             # Create rows for each VET unit
             vet_units = rec.vet_units
             for unit_idx, vet_unit in enumerate(vet_units):
-                html.append(f"<tr class='{rec_class}'>")
+                # Determine if this is the last row of this recommendation group
+                is_last_row = (unit_idx == len(vet_units) - 1)
+                row_classes = f"{rec_class} {group_class}"
+                if is_last_row:
+                    row_classes += " rec-group-last"
+                
+                html.append(f"<tr class='{row_classes}' data-rec-group='rec-{idx}'>")
                 
                 # First column: Show button only on first row
                 if unit_idx == 0:
@@ -753,7 +803,7 @@ class ReportGenerator:
                 html.append("</tr>")
             
             # Expandable row with skill mappings
-            html.append(f"<tr>")
+            html.append(f"<tr class='{group_class}' data-rec-group='rec-{idx}'>")
             html.append(f"<td colspan='9' class='expandable-content' id='expand-{idx}'>")
             
             # Get skill mappings for this specific recommendation
@@ -933,7 +983,7 @@ class ReportGenerator:
         """)
         
         return "\n".join(html)
-    
+        
     def _generate_summary_stats(self, recommendations: List[CreditTransferRecommendation]) -> Dict:
         """Generate summary statistics"""
         total = len(recommendations)
