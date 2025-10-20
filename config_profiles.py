@@ -125,7 +125,7 @@ class ConfigProfiles:
             "level_determination_runs": 1,  # Multiple runs for level assignment
             "study_level_ensemble_runs": 1,  # Multiple runs for study level
             "ensemble_similarity_threshold": 0.98,
-            "matching_strategy": "direct",  # Options: "clustering", "direct", "hybrid"
+            "matching_strategy": "direct_one_vs_all",  # Options: "clustering", "direct", "hybrid", "direct_one_vs_all"
             "direct_match_threshold": 0.9,  # Threshold for direct skill name matching
             "partial_threshold": 0.8,  # Threshold for partial matches
             "semantic_weight": 0.60,

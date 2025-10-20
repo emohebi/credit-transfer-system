@@ -437,6 +437,10 @@ class SimplifiedAnalyzer:
                 best_match = self._find_best_direct_match(
                     vet_skills, course_skills, course.code
                 )
+            if self.matching_strategy == "direct_one_vs_all":
+                best_match = self._find_best_direct_match_one_vs_all_vet(
+                    vet_skills, course_skills, course.code
+                )
             elif self.matching_strategy == "hybrid":
                 best_match = self._find_best_hybrid_match(
                     vet_skills, course_skills, course.code
@@ -447,8 +451,7 @@ class SimplifiedAnalyzer:
                 )
                 
             if best_match and best_match[1] >= self.thresholds["minimum"]:
-                # Create recommendation (existing code from lines 156-169)
-                unit = next(u for u in vet_qual.units if u.code == best_match[0])
+                units = [u for unit_code in best_match[0] for u in vet_qual.units if u.code == unit_code]
                 
                 # Run edge case analysis if enabled
                 edge_case_results = {}
@@ -456,11 +459,11 @@ class SimplifiedAnalyzer:
                     from mapping.edge_cases import EdgeCaseHandler
                     edge_handler = EdgeCaseHandler(self.genai)
                     edge_case_results = edge_handler.process_edge_cases(
-                        [unit], course, None
+                        units, course, None
                     )
                 
                 rec = self._create_recommendation(
-                    [unit], course, best_match[2], edge_case_results  # Note: best_match[2] is the match_result
+                    units, course, best_match[2], edge_case_results  # Note: best_match[2] is the match_result
                 )
                 if hasattr(self.matcher, 'last_semantic_clusters'):
                     rec.metadata['semantic_clusters'] = self.matcher.last_semantic_clusters
@@ -573,7 +576,97 @@ class SimplifiedAnalyzer:
                         "unmapped_uni": [s for s in course_skills if s.name not in mapped_uni_skills],
                     }
                 }
-                best_match = (unit_code, final_score, match_result_final)
+                best_match = ([unit_code], final_score, match_result_final)
+        
+        return best_match
+    
+    def _find_best_direct_match_one_vs_all_vet(self, vet_skills: Dict, course_skills: List, course_code: str) -> Tuple:
+        """Direct skill matching with vectorized computation"""
+        best_match = None
+
+        unit_skills = [s for skills in vet_skills.values() for s in skills]
+        if not unit_skills or not course_skills:
+            logger.warning(f"No skills available for direct matching for course {course_code}")
+            return None
+        # Vectorized skill matching using embeddings
+        match_result = self._calculate_vectorized_skill_matches(
+            unit_skills, course_skills
+        )
+        if match_result is None:
+            logger.warning(f"Vectorized skill matching failed for course {course_code}")
+            return None
+            
+        # Extract results from vectorized computation
+        all_skill_matches = match_result['all_matches']
+        uni_skill_coverage = match_result['uni_coverage']
+        vet_skill_coverage = match_result['vet_coverage']
+        best_skill_matches_uni = match_result['best_uni_matches']
+        
+        vet_total_score = 0
+        for vet_skill in unit_skills:
+            if vet_skill.name in vet_skill_coverage:
+                score = vet_skill_coverage[vet_skill.name]
+                if score >= self.direct_threshold:
+                    vet_total_score += 1.0
+                elif score >= self.partial_threshold:
+                    vet_total_score += 0.5
+        
+        # Calculate weighted coverage score
+        uni_total_score = 0
+        for uni_skill in course_skills:
+            if uni_skill.name in uni_skill_coverage:
+                score = uni_skill_coverage[uni_skill.name]
+                if score >= self.direct_threshold:
+                    uni_total_score += 1.0
+                elif score >= self.partial_threshold:
+                    uni_total_score += 0.5
+        
+        uni_coverage = uni_total_score / len(course_skills) if course_skills else 0
+        vet_coverage = vet_total_score / len(unit_skills) if unit_skills else 0
+        bidirectional_coverage = min(uni_coverage, vet_coverage)
+        final_score = uni_coverage# * 0.8 + bidirectional_coverage * 0.2)
+        
+
+        best_skill_matches = list(best_skill_matches_uni.values())
+        
+        # Count match types
+        direct_matches = [m for m in best_skill_matches if m['match_type'] == "Direct"]
+        partial_matches = [m for m in best_skill_matches if m['match_type'] == "Partial"]
+        unmapped_matches = [m for m in best_skill_matches if m['match_type'] == "Unmapped"]
+        mapped_vet_skills = list(set([m['vet_skill'].name for m in best_skill_matches if m['match_type'] in ["Direct", "Partial"]]))
+        mapped_vet_units = list(set([m['vet_skill'].code for m in best_skill_matches if m['match_type'] in ["Direct", "Partial"]]))
+        mapped_uni_skills = [m['uni_skill'].name for m in best_skill_matches if m['match_type'] in ["Direct", "Partial"]]
+        # unmapped = len(course_skills) - len(direct_matches) - len(partial_matches)
+        
+        # Create detailed match result (same structure as before)
+        match_result_final = {
+            "best_match": {
+                "vet_skills": unit_skills,
+                "uni_skills": course_skills,
+                "weighted_uni_coverage": uni_coverage,
+                "best_uni_skill_matches": best_skill_matches,
+            },
+            "statistics": {
+                "uni_coverage": uni_coverage,
+                "vet_coverage": vet_coverage,
+                "bidirectional_coverage": bidirectional_coverage,
+                "total_matches": len(best_skill_matches),
+                "unique_uni_matched": len(mapped_uni_skills),
+                "unique_vet_matched": len(mapped_vet_skills),
+                "direct_matches": len(direct_matches),
+                "partial_matches": len(partial_matches),
+                "unmapped_count": len(unmapped_matches),
+                "one_to_many_mappings": sum(1 for matches in [m for m in best_skill_matches] 
+                                        if len([m2 for m2 in best_skill_matches 
+                                                if m2['vet_skill'] == m2['vet_skill']]) > 1)
+            },
+            "skill_match_details": {
+                'mapped': direct_matches + partial_matches,
+                "unmapped_vet": [s for s in unit_skills if s.name not in mapped_vet_skills],
+                "unmapped_uni": [s for s in course_skills if s.name not in mapped_uni_skills],
+            }
+        }
+        best_match = (mapped_vet_units, final_score, match_result_final)
         
         return best_match
     
