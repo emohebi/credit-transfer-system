@@ -437,7 +437,7 @@ class SimplifiedAnalyzer:
                 best_match = self._find_best_direct_match(
                     vet_skills, course_skills, course.code
                 )
-            if self.matching_strategy == "direct_one_vs_all":
+            elif self.matching_strategy == "direct_one_vs_all":
                 best_match = self._find_best_direct_match_one_vs_all_vet(
                     vet_skills, course_skills, course.code
                 )

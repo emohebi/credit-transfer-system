@@ -490,13 +490,13 @@ class ReportGenerator:
         return output.getvalue()
     
     def generate_html_report(self,
-                             recommendations: List[CreditTransferRecommendation],
-                             vet_qual: VETQualification,
-                             uni_qual: UniQualification) -> str:
+                         recommendations: List[CreditTransferRecommendation],
+                         vet_qual: VETQualification,
+                         uni_qual: UniQualification) -> str:
         """Generate HTML report with skill information"""
         html = []
         
-        # HTML header with enhanced styles
+        # HTML header with enhanced styles including expandable row styles
         html.append("""
         <!DOCTYPE html>
         <html>
@@ -522,7 +522,84 @@ class ReportGenerator:
                 .stat-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
                 .stat-value { font-size: 24px; font-weight: bold; color: #3498db; }
                 .stat-label { color: #7f8c8d; font-size: 14px; }
-                /* New styles for detailed analysis */
+                
+                /* Expandable row styles */
+                .expand-btn {
+                    background: #3498db;
+                    color: white;
+                    border: none;
+                    padding: 5px 10px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 12px;
+                    margin-right: 5px;
+                }
+                .expand-btn:hover {
+                    background: #2980b9;
+                }
+                .expand-btn.expanded {
+                    background: #e74c3c;
+                }
+                .expandable-content {
+                    display: none;
+                    background: #f9f9f9;
+                    padding: 15px;
+                }
+                .expandable-content.show {
+                    display: table-cell;
+                }
+                .skill-mapping-inner-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 10px 0;
+                    font-size: 12px;
+                    background: white;
+                }
+                .skill-mapping-inner-table th {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 8px;
+                    text-align: left;
+                    font-size: 11px;
+                }
+                .skill-mapping-inner-table td {
+                    padding: 6px;
+                    border: 1px solid #e0e0e0;
+                    vertical-align: top;
+                    font-size: 11px;
+                }
+                .mapping-direct {
+                    background-color: #d4edda;
+                    color: #155724;
+                    font-weight: bold;
+                }
+                .mapping-partial {
+                    background-color: #fff3cd;
+                    color: #856404;
+                    font-weight: bold;
+                }
+                .mapping-unmapped {
+                    background-color: #f8d7da;
+                    color: #721c24;
+                }
+                .skill-level-badge {
+                    display: inline-block;
+                    padding: 2px 6px;
+                    margin-left: 5px;
+                    background: #6c757d;
+                    color: white;
+                    border-radius: 3px;
+                    font-size: 10px;
+                }
+                .mapping-summary {
+                    margin: 10px 0;
+                    padding: 8px;
+                    background: #e8f4f8;
+                    border-radius: 4px;
+                    font-size: 12px;
+                }
+                
+                /* Additional styles for detailed analysis */
                 .detail-table { font-size: 14px; }
                 .score-component { 
                     display: inline-block; 
@@ -549,52 +626,21 @@ class ReportGenerator:
                     font-size: 11px;
                     margin: 2px 0;
                 }
-                /* Add these styles to the existing <style> section */
-                .skill-mapping-table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin: 20px 0;
-                    font-size: 13px;
-                }
-                .skill-mapping-table th {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white;
-                    padding: 10px;
-                    text-align: left;
-                    position: sticky;
-                    top: 0;
-                    z-index: 10;
-                }
-                .skill-mapping-table td {
-                    padding: 8px;
-                    border: 1px solid #e0e0e0;
-                    vertical-align: top;
-                }
-                .mapping-direct {
-                    background-color: #d4edda;
-                    color: #155724;
-                    font-weight: bold;
-                }
-                .mapping-partial {
-                    background-color: #fff3cd;
-                    color: #856404;
-                    font-weight: bold;
-                }
-                .mapping-unmapped {
-                    background-color: #f8d7da;
-                    color: #721c24;
-                    font-weight: bold;
-                }
-                .skill-level-badge {
-                    display: inline-block;
-                    padding: 2px 6px;
-                    margin-left: 5px;
-                    background: #6c757d;
-                    color: white;
-                    border-radius: 3px;
-                    font-size: 10px;
-                }
             </style>
+            <script>
+                function toggleExpand(btn, rowId) {
+                    var content = document.getElementById('expand-' + rowId);
+                    if (content.classList.contains('show')) {
+                        content.classList.remove('show');
+                        btn.textContent = 'Show Skills';
+                        btn.classList.remove('expanded');
+                    } else {
+                        content.classList.add('show');
+                        btn.textContent = 'Hide Skills';
+                        btn.classList.add('expanded');
+                    }
+                }
+            </script>
         </head>
         <body>
         """)
@@ -658,10 +704,12 @@ class ReportGenerator:
         
         html.append("</div>")
         
-        # Recommendations table with skills
+        # Recommendations table with expandable skill mappings
         html.append("<h2>Credit Transfer Recommendations</h2>")
+        html.append("<p>Click 'Show Skills' to view detailed skill mappings for each recommendation.</p>")
         html.append("<table>")
         html.append("<thead><tr>")
+        html.append("<th>Action</th>")
         html.append("<th>VET Units</th>")
         html.append("<th>Uni Course</th>")
         html.append("<th>Uni Study Level</th>")
@@ -673,28 +721,122 @@ class ReportGenerator:
         html.append("</tr></thead>")
         html.append("<tbody>")
         
-        for rec in recommendations[:50]:  # Limit to top 50
+        for idx, rec in enumerate(recommendations[:50], 1):  # Limit to top 50
             rec_class = rec.recommendation.value
             
             # Count skill matches
             vet_skill_count = sum(len(unit.extracted_skills) for unit in rec.vet_units)
             uni_skill_count = len(rec.uni_course.extracted_skills)
             
-            html.append(f"<tr class='{rec_class}'>")
-            html.append(f"<td>{', '.join(rec.get_vet_unit_codes())}</td>")
-            html.append(f"<td>{rec.uni_course.code}: {rec.uni_course.name}</td>")
-            html.append(f"<td>{rec.uni_course.study_level.title()}</td>")
-            html.append(f"<td>{vet_skill_count} → {uni_skill_count}</td>")
-            html.append(f"<td>{rec.alignment_score:.1%}</td>")
-            html.append(f"<td>{rec.confidence:.1%}</td>")
-            html.append(f"<td>{rec.recommendation.value.upper()}</td>")
-            html.append(f"<td>{'; '.join(rec.conditions[:2]) if rec.conditions else 'None'}</td>")
+            # Create rows for each VET unit
+            vet_units = rec.vet_units
+            for unit_idx, vet_unit in enumerate(vet_units):
+                html.append(f"<tr class='{rec_class}'>")
+                
+                # First column: Show button only on first row
+                if unit_idx == 0:
+                    html.append(f"<td rowspan='{len(vet_units)}'><button class='expand-btn' onclick='toggleExpand(this, {idx})'>Show Skills</button></td>")
+                
+                # Second column: VET unit code and name (one per row)
+                html.append(f"<td>{vet_unit.code}: {vet_unit.name}</td>")
+                
+                # Remaining columns: span across all VET unit rows (only on first row)
+                if unit_idx == 0:
+                    html.append(f"<td rowspan='{len(vet_units)}'>{rec.uni_course.code}: {rec.uni_course.name}</td>")
+                    html.append(f"<td rowspan='{len(vet_units)}'>{rec.uni_course.study_level.title()}</td>")
+                    html.append(f"<td rowspan='{len(vet_units)}'>{vet_skill_count} → {uni_skill_count}</td>")
+                    html.append(f"<td rowspan='{len(vet_units)}'>{rec.alignment_score:.1%}</td>")
+                    html.append(f"<td rowspan='{len(vet_units)}'>{rec.confidence:.1%}</td>")
+                    html.append(f"<td rowspan='{len(vet_units)}'>{rec.recommendation.value.upper()}</td>")
+                    html.append(f"<td rowspan='{len(vet_units)}'>{'; '.join(rec.conditions[:2]) if rec.conditions else 'None'}</td>")
+                
+                html.append("</tr>")
+            
+            # Expandable row with skill mappings
+            html.append(f"<tr>")
+            html.append(f"<td colspan='9' class='expandable-content' id='expand-{idx}'>")
+            
+            # Get skill mappings for this specific recommendation
+            skill_mappings = self._extract_skill_mappings_for_single_rec(rec)
+            
+            if skill_mappings:
+                # Group mappings by type
+                direct_mappings = [m for m in skill_mappings if m['mapping_type'] == 'Direct']
+                partial_mappings = [m for m in skill_mappings if m['mapping_type'] == 'Partial']
+                unmapped_mappings = [m for m in skill_mappings if m['mapping_type'] == 'Unmapped']
+                
+                # Summary
+                html.append(f"<div class='mapping-summary'>")
+                html.append(f"<strong>Mapping Summary:</strong> ")
+                html.append(f"Direct: {len(direct_mappings)} | ")
+                html.append(f"Partial: {len(partial_mappings)} | ")
+                html.append(f"Unmapped: {len(unmapped_mappings)}")
+                html.append(f"</div>")
+                
+                # Create skill mapping table
+                html.append("<table class='skill-mapping-inner-table'>")
+                html.append("<thead><tr>")
+                html.append("<th>VET Unit</th>")
+                html.append("<th>VET Skill</th>")
+                html.append("<th>Uni Course</th>")
+                html.append("<th>Uni Skill</th>")
+                html.append("<th>Mapping Type</th>")
+                html.append("<th>Similarity</th>")
+                html.append("<th>Reasoning</th>")
+                html.append("</tr></thead>")
+                html.append("<tbody>")
+                
+                # Display mappings (limit for readability)
+                for mapping in direct_mappings[:10]:
+                    html.append(f"<tr class='mapping-direct'>")
+                    html.append(f"<td>{mapping['vet_unit']}</td>")
+                    html.append(f"<td>{mapping['vet_skill']}<span class='skill-level-badge'>L{mapping['vet_level']}</span></td>")
+                    html.append(f"<td>{mapping['uni_course']}</td>")
+                    html.append(f"<td>{mapping['uni_skill']}<span class='skill-level-badge'>L{mapping['uni_level']}</span></td>")
+                    html.append(f"<td><strong>{mapping['mapping_type']}</strong></td>")
+                    html.append(f"<td>{mapping['similarity']:.1%}</td>")
+                    html.append(f"<td>{mapping['reasoning']}</td>")
+                    html.append("</tr>")
+                
+                for mapping in partial_mappings[:8]:
+                    html.append(f"<tr class='mapping-partial'>")
+                    html.append(f"<td>{mapping['vet_unit']}</td>")
+                    html.append(f"<td>{mapping['vet_skill']}<span class='skill-level-badge'>L{mapping['vet_level']}</span></td>")
+                    html.append(f"<td>{mapping['uni_course']}</td>")
+                    html.append(f"<td>{mapping['uni_skill']}<span class='skill-level-badge'>L{mapping['uni_level']}</span></td>")
+                    html.append(f"<td><strong>{mapping['mapping_type']}</strong></td>")
+                    html.append(f"<td>{mapping['similarity']:.1%}</td>")
+                    html.append(f"<td>{mapping['reasoning']}</td>")
+                    html.append("</tr>")
+                
+                for mapping in unmapped_mappings[:7]:
+                    html.append(f"<tr class='mapping-unmapped'>")
+                    html.append(f"<td>{mapping['vet_unit']}</td>")
+                    html.append(f"<td>{mapping.get('vet_skill', '-')}</td>")
+                    html.append(f"<td>{mapping['uni_course']}</td>")
+                    html.append(f"<td>{mapping.get('uni_skill', '-')}</td>")
+                    html.append(f"<td><strong>{mapping['mapping_type']}</strong></td>")
+                    html.append(f"<td>-</td>")
+                    html.append(f"<td>{mapping['reasoning']}</td>")
+                    html.append("</tr>")
+                
+                # Add note if more mappings exist
+                total_mappings = len(skill_mappings)
+                shown_mappings = min(25, len(direct_mappings) + len(partial_mappings) + len(unmapped_mappings))
+                if total_mappings > shown_mappings:
+                    html.append(f"<tr><td colspan='7' style='text-align:center; font-style:italic;'>")
+                    html.append(f"... and {total_mappings - shown_mappings} more mappings")
+                    html.append(f"</td></tr>")
+                
+                html.append("</tbody></table>")
+            else:
+                html.append("<p><em>No skill mapping data available.</em></p>")
+            
+            html.append("</td>")
             html.append("</tr>")
         
         html.append("</tbody></table>")
         
-        # Add this after the main recommendations table (around line 700)
-
         # Detailed Match Analysis Table
         html.append("<h2>Detailed Match Analysis</h2>")
         html.append("<table>")
@@ -702,7 +844,6 @@ class ReportGenerator:
         html.append("<th>VET → Uni</th>")
         html.append("<th>Match Type</th>")
         html.append("<th>Level Alignment</th>")
-        # html.append("<th>Score Breakdown</th>")
         html.append("<th>Quality Factors</th>")
         html.append("<th>Edge Cases</th>")
         html.append("<th>Reasoning</th>")
@@ -733,16 +874,6 @@ class ReportGenerator:
             html.append(f"<small>{level_analysis.get('message', '')}</small>")
             html.append(f"</div>")
             html.append(f"</td>")
-                        
-            # Score components
-            # html.append(f"<td>")
-            # for comp, value in match_info['score_components'].items():
-            #     if comp != 'edge_penalty':
-            #         html.append(f"<small>{comp.title()}: {value:.2f}</small><br>")
-            #     else:
-            #         html.append(f"<small style='color: red;'>Penalty: -{value:.2f}</small><br>")
-            # html.append(f"<strong>Total: {rec.alignment_score:.1%}</strong>")
-            # html.append(f"</td>")
             
             # Quality factors
             html.append(f"<td>")
@@ -768,87 +899,7 @@ class ReportGenerator:
             html.append("</tr>")
 
         html.append("</tbody></table>")
-
-        # Add Skill-Level Mapping Table
-        # Individual Skill Mapping Tables for each recommendation
-        html.append("<h2>Detailed Skill Mappings by Recommendation</h2>")
-        html.append("<p>Individual skill mapping analysis for each credit transfer recommendation.</p>")
-
-        for idx, rec in enumerate(recommendations[:20], 1):  # Limit to top 20 for readability
-            # Get skill mappings for this specific recommendation
-            skill_mappings = self._extract_skill_mappings_for_single_rec(rec)
-            
-            if skill_mappings:
-                # Create section header
-                html.append(f"<h3>Recommendation #{idx}: {', '.join(rec.get_vet_unit_codes())} → {rec.uni_course.code}</h3>")
-                html.append(f"<p><strong>Course:</strong> {rec.uni_course.name} | ")
-                html.append(f"<strong>Score:</strong> {rec.alignment_score:.1%} | ")
-                html.append(f"<strong>Type:</strong> {rec.recommendation.value.upper()}</p>")
-                
-                # Create skill mapping table for this recommendation
-                html.append("<table class='skill-mapping-table'>")
-                html.append("<thead><tr>")
-                html.append("<th>VET Unit</th>")
-                html.append("<th>VET Skill</th>")
-                html.append("<th>Uni Course</th>")
-                html.append("<th>Uni Skill</th>")
-                html.append("<th>Mapping Type</th>")
-                html.append("<th>Similarity</th>")
-                html.append("<th>Reasoning</th>")
-                html.append("</tr></thead>")
-                html.append("<tbody>")
-                
-                # Group mappings by type
-                direct_mappings = [m for m in skill_mappings if m['mapping_type'] == 'Direct']
-                partial_mappings = [m for m in skill_mappings if m['mapping_type'] == 'Partial']
-                unmapped_mappings = [m for m in skill_mappings if m['mapping_type'] == 'Unmapped']
-                
-                # Display mappings
-                for mapping in direct_mappings[:15]:  # Limit per recommendation
-                    html.append(f"<tr class='mapping-direct'>")
-                    html.append(f"<td>{mapping['vet_unit']}</td>")
-                    html.append(f"<td>{mapping['vet_skill']}<span class='skill-level-badge'>L{mapping['vet_level']}</span></td>")
-                    html.append(f"<td>{mapping['uni_course']}</td>")
-                    html.append(f"<td>{mapping['uni_skill']}<span class='skill-level-badge'>L{mapping['uni_level']}</span></td>")
-                    html.append(f"<td><strong>{mapping['mapping_type']}</strong></td>")
-                    html.append(f"<td>{mapping['similarity']:.1%}</td>")
-                    html.append(f"<td>{mapping['reasoning']}</td>")
-                    html.append("</tr>")
-                
-                for mapping in partial_mappings[:10]:
-                    html.append(f"<tr class='mapping-partial'>")
-                    html.append(f"<td>{mapping['vet_unit']}</td>")
-                    html.append(f"<td>{mapping['vet_skill']}<span class='skill-level-badge'>L{mapping['vet_level']}</span></td>")
-                    html.append(f"<td>{mapping['uni_course']}</td>")
-                    html.append(f"<td>{mapping['uni_skill']}<span class='skill-level-badge'>L{mapping['uni_level']}</span></td>")
-                    html.append(f"<td><strong>{mapping['mapping_type']}</strong></td>")
-                    html.append(f"<td>{mapping['similarity']:.1%}</td>")
-                    html.append(f"<td>{mapping['reasoning']}</td>")
-                    html.append("</tr>")
-                
-                for mapping in unmapped_mappings[:10]:
-                    html.append(f"<tr class='mapping-unmapped'>")
-                    html.append(f"<td>{mapping['vet_unit']}</td>")
-                    html.append(f"<td>{mapping.get('vet_skill', '-')}</td>")
-                    html.append(f"<td>{mapping['uni_course']}</td>")
-                    html.append(f"<td>{mapping.get('uni_skill', '-')}</td>")
-                    html.append(f"<td><strong>{mapping['mapping_type']}</strong></td>")
-                    html.append(f"<td>-</td>")
-                    html.append(f"<td>{mapping['reasoning']}</td>")
-                    html.append("</tr>")
-                
-                html.append("</tbody></table>")
-                
-                # Summary for this recommendation
-                html.append(f"<div class='summary-box' style='margin-bottom: 30px;'>")
-                html.append(f"<strong>Mapping Summary:</strong> ")
-                html.append(f"Direct: {len(direct_mappings)} | ")
-                html.append(f"Partial: {len(partial_mappings)} | ")
-                html.append(f"Unmapped: {len(unmapped_mappings)}")
-                html.append(f"</div>")
-        else:
-            html.append("<p><em>No skill mapping data available. Ensure semantic clustering is enabled in the analysis.</em></p>")
-                
+        
         # Top Skills Section
         html.append("<h2>Top Extracted Skills</h2>")
         
