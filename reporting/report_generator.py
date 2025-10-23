@@ -617,7 +617,7 @@ class ReportGenerator:
                 th { 
                     background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
                     color: white;
-                    padding: 14px;
+                    padding: 10px 12px;
                     text-align: left;
                     font-weight: 600;
                     font-size: 0.9rem;
@@ -626,7 +626,7 @@ class ReportGenerator:
                 }
                 
                 td { 
-                    padding: 12px 14px;
+                    padding: 8px 12px;
                     border-bottom: 1px solid #e2e8f0;
                     font-size: 0.95rem;
                     transition: all 0.3s ease;
@@ -886,7 +886,7 @@ class ReportGenerator:
                 .skill-mapping-inner-table th {
                     background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
                     color: white;
-                    padding: 10px;
+                    padding: 8px 10px;
                     text-align: left;
                     font-size: 0.8rem;
                     font-weight: 600;
@@ -895,7 +895,7 @@ class ReportGenerator:
                 }
                 
                 .skill-mapping-inner-table td {
-                    padding: 10px;
+                    padding: 7px 10px;
                     border-bottom: 1px solid #e2e8f0;
                     font-size: 0.85rem;
                 }
