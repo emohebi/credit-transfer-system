@@ -1095,7 +1095,7 @@ class ReportGenerator:
                     var icon = btn.querySelector('i');
                     if (content.classList.contains('show')) {
                         content.classList.remove('show');
-                        btn.innerHTML = '<i class="fas fa-chevron-down"></i> Show Skills';
+                        btn.innerHTML = '<i class="fas fa-chevron-down"></i> Mapped Skills';
                         btn.classList.remove('expanded');
                     } else {
                         content.classList.add('show');
