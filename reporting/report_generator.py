@@ -493,173 +493,608 @@ class ReportGenerator:
                          recommendations: List[CreditTransferRecommendation],
                          vet_qual: VETQualification,
                          uni_qual: UniQualification) -> str:
-        """Generate HTML report with skill information"""
+        """Generate HTML report with enhanced interactivity and modern design"""
         html = []
         
-        # HTML header with enhanced styles including expandable row styles
+        # Enhanced HTML header with modern styles and libraries
         html.append("""
         <!DOCTYPE html>
         <html>
         <head>
             <title>Credit Transfer Analysis Report</title>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+            <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
             <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                h1 { color: #2c3e50; border-bottom: 2px solid #3498db; }
-                h2 { color: #34495e; margin-top: 30px; }
-                h3 { color: #7f8c8d; }
-                table { border-collapse: collapse; width: 100%; margin: 20px 0; }
-                th { background-color: #3498db; color: white; padding: 10px; text-align: left; }
-                td { padding: 8px; border-bottom: 1px solid #ddd; }
-                
-                /* Recommendation type colors with group styling */
-                .full.rec-group-even { background-color: #d4edda; }
-                .full.rec-group-odd { background-color: #e8f5e8; }
-                .conditional.rec-group-even { background-color: #fff3cd; }
-                .conditional.rec-group-odd { background-color: #fff8e1; }
-                .partial.rec-group-even { background-color: #f8d7da; }
-                .partial.rec-group-odd { background-color: #fae5e7; }
-                
-                /* Hover states for recommendation types */
-                .full.rec-group-even:hover, .full.rec-group-odd:hover,
-                .full.hover-highlight { background-color: #c3e6cb !important; }
-                .conditional.rec-group-even:hover, .conditional.rec-group-odd:hover,
-                .conditional.hover-highlight { background-color: #ffeaa7 !important; }
-                .partial.rec-group-even:hover, .partial.rec-group-odd:hover,
-                .partial.hover-highlight { background-color: #f5c6cb !important; }
-                
-                /* Border between different recommendations */
-                .rec-group-last {
-                    border-bottom: 3px solid #3498db !important;
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
                 }
-                .summary-box { background-color: #f0f0f0; padding: 15px; border-radius: 5px; margin: 20px 0; }
-                .progress-bar { width: 100%; height: 20px; background-color: #e0e0e0; border-radius: 10px; }
-                .progress-fill { height: 100%; background-color: #3498db; border-radius: 10px; }
-                .skill-badge { display: inline-block; padding: 3px 8px; margin: 2px; background-color: #e3f2fd; border-radius: 12px; font-size: 12px; }
-                .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
-                .stat-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-                .stat-value { font-size: 24px; font-weight: bold; color: #3498db; }
-                .stat-label { color: #7f8c8d; font-size: 14px; }
                 
-                /* Expandable row styles */
+                body { 
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    min-height: 100vh;
+                    padding: 20px;
+                }
+                
+                .container {
+                    max-width: 1400px;
+                    margin: 0 auto;
+                    background: white;
+                    border-radius: 20px;
+                    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                    overflow: hidden;
+                }
+                
+                .header {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 40px;
+                    position: relative;
+                    overflow: hidden;
+                }
+                
+                .header::before {
+                    content: '';
+                    position: absolute;
+                    top: -50%;
+                    right: -50%;
+                    bottom: -50%;
+                    left: -50%;
+                    background: repeating-linear-gradient(
+                        45deg,
+                        transparent,
+                        transparent 10px,
+                        rgba(255, 255, 255, 0.05) 10px,
+                        rgba(255, 255, 255, 0.05) 20px
+                    );
+                    animation: slide 20s linear infinite;
+                }
+                
+                @keyframes slide {
+                    0% { transform: translate(0, 0); }
+                    100% { transform: translate(50px, 50px); }
+                }
+                
+                .header-content {
+                    position: relative;
+                    z-index: 1;
+                }
+                
+                h1 { 
+                    font-size: 2.5rem;
+                    font-weight: 700;
+                    margin-bottom: 10px;
+                    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+                }
+                
+                .header-info {
+                    font-size: 0.95rem;
+                    opacity: 0.95;
+                    line-height: 1.6;
+                }
+                
+                .content {
+                    padding: 40px;
+                }
+                
+                h2 { 
+                    color: #2d3748;
+                    font-size: 1.8rem;
+                    font-weight: 600;
+                    margin: 40px 0 20px 0;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+                
+                h2 i {
+                    color: #667eea;
+                    font-size: 1.5rem;
+                }
+                
+                h3 { 
+                    color: #4a5568;
+                    font-size: 1.2rem;
+                    font-weight: 500;
+                    margin: 20px 0 15px 0;
+                }
+                
+                /* Enhanced table styles */
+                table { 
+                    border-collapse: separate;
+                    border-spacing: 0;
+                    width: 100%;
+                    margin: 25px 0;
+                    border-radius: 12px;
+                    overflow: hidden;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                }
+                
+                th { 
+                    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+                    color: white;
+                    padding: 14px;
+                    text-align: left;
+                    font-weight: 600;
+                    font-size: 0.9rem;
+                    letter-spacing: 0.5px;
+                    text-transform: uppercase;
+                }
+                
+                td { 
+                    padding: 12px 14px;
+                    border-bottom: 1px solid #e2e8f0;
+                    font-size: 0.95rem;
+                    transition: all 0.3s ease;
+                }
+                
+                /* Recommendation type colors with gradients */
+                .full.rec-group-even { 
+                    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+                }
+                .full.rec-group-odd { 
+                    background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+                }
+                .conditional.rec-group-even { 
+                    background: linear-gradient(135deg, #fff3cd 0%, #ffe8a1 100%);
+                }
+                .conditional.rec-group-odd { 
+                    background: linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%);
+                }
+                .partial.rec-group-even { 
+                    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+                }
+                .partial.rec-group-odd { 
+                    background: linear-gradient(135deg, #fae5e7 0%, #f8d7da 100%);
+                }
+                
+                /* Enhanced hover effects */
+                .full.hover-highlight { 
+                    background: linear-gradient(135deg, #b8e0c1 0%, #a8d5b1 100%) !important;
+                    transform: scale(1.01);
+                }
+                .conditional.hover-highlight { 
+                    background: linear-gradient(135deg, #ffde7d 0%, #ffd966 100%) !important;
+                    transform: scale(1.01);
+                }
+                .partial.hover-highlight { 
+                    background: linear-gradient(135deg, #f0a6ad 0%, #eba0a7 100%) !important;
+                    transform: scale(1.01);
+                }
+                
+                /* Animated expand button */
                 .expand-btn {
-                    background: #3498db;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                     color: white;
                     border: none;
-                    padding: 5px 10px;
-                    border-radius: 4px;
+                    padding: 8px 16px;
+                    border-radius: 20px;
                     cursor: pointer;
-                    font-size: 12px;
-                    margin-right: 5px;
+                    font-size: 0.85rem;
+                    font-weight: 500;
+                    transition: all 0.3s ease;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
                 }
+                
                 .expand-btn:hover {
-                    background: #2980b9;
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
                 }
+                
+                .expand-btn i {
+                    transition: transform 0.3s ease;
+                }
+                
                 .expand-btn.expanded {
-                    background: #e74c3c;
+                    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
                 }
+                
+                .expand-btn.expanded i {
+                    transform: rotate(180deg);
+                }
+                
+                /* Enhanced expandable content */
                 .expandable-content {
                     display: none;
-                    background: #f9f9f9;
-                    padding: 15px;
+                    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+                    padding: 20px;
+                    animation: slideDown 0.3s ease;
                 }
+                
                 .expandable-content.show {
                     display: table-cell;
                 }
-                .skill-mapping-inner-table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin: 10px 0;
-                    font-size: 12px;
-                    background: white;
-                }
-                .skill-mapping-inner-table th {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white;
-                    padding: 8px;
-                    text-align: left;
-                    font-size: 11px;
-                }
-                .skill-mapping-inner-table td {
-                    padding: 6px;
-                    border: 1px solid #e0e0e0;
-                    vertical-align: top;
-                    font-size: 11px;
-                }
-                .mapping-direct {
-                    background-color: #d4edda;
-                    color: #155724;
-                    font-weight: bold;
-                }
-                .mapping-partial {
-                    background-color: #fff3cd;
-                    color: #856404;
-                    font-weight: bold;
-                }
-                .mapping-unmapped {
-                    background-color: #f8d7da;
-                    color: #721c24;
-                }
-                .skill-level-badge {
-                    display: inline-block;
-                    padding: 2px 6px;
-                    margin-left: 5px;
-                    background: #6c757d;
-                    color: white;
-                    border-radius: 3px;
-                    font-size: 10px;
-                }
-                .mapping-summary {
-                    margin: 10px 0;
-                    padding: 8px;
-                    background: #e8f4f8;
-                    border-radius: 4px;
-                    font-size: 12px;
+                
+                @keyframes slideDown {
+                    from {
+                        opacity: 0;
+                        transform: translateY(-10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
                 }
                 
-                /* Additional styles for detailed analysis */
-                .detail-table { font-size: 14px; }
-                .score-component { 
-                    display: inline-block; 
-                    padding: 2px 6px; 
-                    margin: 2px;
-                    background: #f0f0f0;
-                    border-radius: 4px;
-                    font-size: 12px;
+                /* Enhanced summary boxes */
+                .summary-box { 
+                    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+                    padding: 25px;
+                    border-radius: 15px;
+                    margin: 30px 0;
+                    border-left: 4px solid #667eea;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
                 }
-                .match-quality-high { color: #27ae60; font-weight: bold; }
-                .match-quality-medium { color: #f39c12; }
-                .match-quality-low { color: #e74c3c; }
-                .reasoning-box {
-                    background: #fafafa;
-                    padding: 8px;
-                    border-left: 3px solid #3498db;
-                    margin: 5px 0;
-                    font-size: 13px;
+                
+                /* Enhanced stats grid */
+                .stats-grid { 
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                    gap: 20px;
+                    margin: 30px 0;
                 }
-                .edge-case-warning {
-                    background: #fff3cd;
-                    padding: 4px 8px;
-                    border-radius: 4px;
-                    font-size: 11px;
-                    margin: 2px 0;
+                
+                .stat-card { 
+                    background: white;
+                    padding: 25px;
+                    border-radius: 15px;
+                    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+                    transition: all 0.3s ease;
+                    border-top: 3px solid #667eea;
+                    text-align: center;
+                }
+                
+                .stat-card:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+                }
+                
+                .stat-value { 
+                    font-size: 2.5rem;
+                    font-weight: 700;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    margin-bottom: 8px;
+                }
+                
+                .stat-label { 
+                    color: #718096;
+                    font-size: 0.95rem;
+                    font-weight: 500;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                }
+                
+                /* Enhanced progress bars */
+                .progress-container {
+                    margin: 20px 0;
+                }
+                
+                .progress-label {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 8px;
+                    font-size: 0.9rem;
+                    color: #4a5568;
+                }
+                
+                .progress-bar { 
+                    width: 100%;
+                    height: 24px;
+                    background: #e2e8f0;
+                    border-radius: 12px;
+                    overflow: hidden;
+                    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+                }
+                
+                .progress-fill { 
+                    height: 100%;
+                    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+                    border-radius: 12px;
+                    transition: width 0.8s ease;
+                    position: relative;
+                    overflow: hidden;
+                }
+                
+                .progress-fill::after {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: linear-gradient(
+                        90deg,
+                        transparent,
+                        rgba(255, 255, 255, 0.3),
+                        transparent
+                    );
+                    animation: shimmer 2s infinite;
+                }
+                
+                @keyframes shimmer {
+                    0% { transform: translateX(-100%); }
+                    100% { transform: translateX(100%); }
+                }
+                
+                /* Enhanced skill badges */
+                .skill-badge { 
+                    display: inline-block;
+                    padding: 6px 12px;
+                    margin: 4px;
+                    background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
+                    border-radius: 20px;
+                    font-size: 0.85rem;
+                    font-weight: 500;
+                    transition: all 0.3s ease;
+                    border: 1px solid #cbd5e0;
+                    cursor: default;
+                }
+                
+                .skill-badge:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    border-color: transparent;
+                }
+                
+                .skill-level-badge {
+                    display: inline-block;
+                    padding: 3px 8px;
+                    margin-left: 6px;
+                    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+                    color: white;
+                    border-radius: 10px;
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                }
+                
+                /* Enhanced inner skill mapping table */
+                .skill-mapping-inner-table {
+                    width: 100%;
+                    border-collapse: separate;
+                    border-spacing: 0;
+                    margin: 15px 0;
+                    font-size: 0.85rem;
+                    background: white;
+                    border-radius: 10px;
+                    overflow: hidden;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+                }
+                
+                .skill-mapping-inner-table th {
+                    background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
+                    color: white;
+                    padding: 10px;
+                    text-align: left;
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+                
+                .skill-mapping-inner-table td {
+                    padding: 10px;
+                    border-bottom: 1px solid #e2e8f0;
+                    font-size: 0.85rem;
+                }
+                
+                .mapping-direct td {
+                    background: linear-gradient(90deg, #d4edda 0%, #c3e6cb 100%);
+                    color: #155724;
+                    font-weight: 500;
+                }
+                
+                .mapping-partial td {
+                    background: linear-gradient(90deg, #fff3cd 0%, #ffeaa7 100%);
+                    color: #856404;
+                    font-weight: 500;
+                }
+                
+                .mapping-unmapped td {
+                    background: linear-gradient(90deg, #f8d7da 0%, #f5c6cb 100%);
+                    color: #721c24;
+                }
+                
+                .mapping-summary {
+                    margin: 15px 0;
+                    padding: 15px;
+                    background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
+                    border-radius: 10px;
+                    font-size: 0.9rem;
+                    display: flex;
+                    justify-content: space-around;
+                    align-items: center;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                }
+                
+                .mapping-stat {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                }
+                
+                .mapping-stat-value {
+                    font-size: 1.5rem;
+                    font-weight: 700;
+                    color: #667eea;
+                }
+                
+                .mapping-stat-label {
+                    font-size: 0.8rem;
+                    color: #718096;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+                
+                /* Separator between recommendations */
+                .rec-group-last {
+                    border-bottom: 3px solid #667eea !important;
+                }
+                
+                /* Search/Filter Bar */
+                .search-container {
+                    margin: 30px 0;
+                    display: flex;
+                    gap: 15px;
+                    align-items: center;
+                    flex-wrap: wrap;
+                }
+                
+                .search-box {
+                    flex: 1;
+                    min-width: 300px;
+                    position: relative;
+                }
+                
+                .search-box input {
+                    width: 100%;
+                    padding: 12px 40px 12px 15px;
+                    border: 2px solid #e2e8f0;
+                    border-radius: 10px;
+                    font-size: 0.95rem;
+                    transition: all 0.3s ease;
+                }
+                
+                .search-box input:focus {
+                    outline: none;
+                    border-color: #667eea;
+                    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+                }
+                
+                .search-box i {
+                    position: absolute;
+                    right: 15px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    color: #718096;
+                }
+                
+                .filter-btn {
+                    padding: 12px 20px;
+                    background: white;
+                    border: 2px solid #e2e8f0;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    font-size: 0.95rem;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+                
+                .filter-btn:hover {
+                    border-color: #667eea;
+                    color: #667eea;
+                }
+                
+                .filter-btn.active {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    border-color: transparent;
+                }
+                
+                /* Tooltip */
+                .tooltip {
+                    position: relative;
+                    cursor: help;
+                }
+                
+                .tooltip .tooltiptext {
+                    visibility: hidden;
+                    width: 250px;
+                    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+                    color: white;
+                    text-align: center;
+                    border-radius: 8px;
+                    padding: 10px;
+                    position: absolute;
+                    z-index: 1;
+                    bottom: 125%;
+                    left: 50%;
+                    margin-left: -125px;
+                    opacity: 0;
+                    transition: opacity 0.3s;
+                    font-size: 0.85rem;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+                }
+                
+                .tooltip:hover .tooltiptext {
+                    visibility: visible;
+                    opacity: 1;
+                }
+                
+                /* Back to top button */
+                .back-to-top {
+                    position: fixed;
+                    bottom: 30px;
+                    right: 30px;
+                    width: 50px;
+                    height: 50px;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    border: none;
+                    border-radius: 50%;
+                    cursor: pointer;
+                    display: none;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1.2rem;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+                    transition: all 0.3s ease;
+                    z-index: 1000;
+                }
+                
+                .back-to-top:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+                }
+                
+                .back-to-top.show {
+                    display: flex;
+                }
+                
+                /* Print styles */
+                @media print {
+                    .header {
+                        background: none;
+                        color: black;
+                    }
+                    .expand-btn, .back-to-top, .search-container {
+                        display: none !important;
+                    }
+                    .expandable-content {
+                        display: table-cell !important;
+                    }
                 }
             </style>
             <script>
                 function toggleExpand(btn, rowId) {
                     var content = document.getElementById('expand-' + rowId);
+                    var icon = btn.querySelector('i');
                     if (content.classList.contains('show')) {
                         content.classList.remove('show');
-                        btn.textContent = 'Show Skills';
+                        btn.innerHTML = '<i class="fas fa-chevron-down"></i> Show Skills';
                         btn.classList.remove('expanded');
                     } else {
                         content.classList.add('show');
-                        btn.textContent = 'Hide Skills';
+                        btn.innerHTML = '<i class="fas fa-chevron-up"></i> Hide Skills';
                         btn.classList.add('expanded');
                     }
                 }
                 
-                // Add hover effect for grouped rows
+                // Enhanced hover effect for grouped rows
                 document.addEventListener('DOMContentLoaded', function() {
+                    // Hover effect
                     var rows = document.querySelectorAll('tr[data-rec-group]');
                     rows.forEach(function(row) {
                         row.addEventListener('mouseenter', function() {
@@ -677,19 +1112,115 @@ class ReportGenerator:
                             });
                         });
                     });
+                    
+                    // Search functionality
+                    var searchInput = document.getElementById('searchInput');
+                    if (searchInput) {
+                        searchInput.addEventListener('keyup', function() {
+                            var filter = this.value.toLowerCase();
+                            var rows = document.querySelectorAll('tbody tr[data-rec-group]');
+                            var currentGroup = '';
+                            rows.forEach(function(row) {
+                                var group = row.getAttribute('data-rec-group');
+                                if (group !== currentGroup) {
+                                    currentGroup = group;
+                                    var text = row.textContent.toLowerCase();
+                                    var groupRows = document.querySelectorAll('tr[data-rec-group="' + group + '"]');
+                                    if (text.indexOf(filter) > -1) {
+                                        groupRows.forEach(function(r) {
+                                            r.style.display = '';
+                                        });
+                                    } else {
+                                        groupRows.forEach(function(r) {
+                                            r.style.display = 'none';
+                                        });
+                                    }
+                                }
+                            });
+                        });
+                    }
+                    
+                    // Filter buttons
+                    var filterBtns = document.querySelectorAll('.filter-btn');
+                    filterBtns.forEach(function(btn) {
+                        btn.addEventListener('click', function() {
+                            var filterType = this.getAttribute('data-filter');
+                            
+                            // Toggle active state
+                            if (this.classList.contains('active')) {
+                                this.classList.remove('active');
+                                // Show all rows
+                                document.querySelectorAll('tbody tr').forEach(function(row) {
+                                    row.style.display = '';
+                                });
+                            } else {
+                                // Remove active from all buttons
+                                filterBtns.forEach(function(b) {
+                                    b.classList.remove('active');
+                                });
+                                this.classList.add('active');
+                                
+                                // Filter rows
+                                var rows = document.querySelectorAll('tbody tr[data-rec-group]');
+                                rows.forEach(function(row) {
+                                    if (row.classList.contains(filterType) || !row.classList.contains('full') && !row.classList.contains('conditional') && !row.classList.contains('partial')) {
+                                        row.style.display = '';
+                                    } else {
+                                        row.style.display = 'none';
+                                    }
+                                });
+                            }
+                        });
+                    });
+                    
+                    // Back to top button
+                    window.onscroll = function() {
+                        var backToTop = document.getElementById('backToTop');
+                        if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) {
+                            backToTop.classList.add('show');
+                        } else {
+                            backToTop.classList.remove('show');
+                        }
+                    };
+                    
+                    // Animate progress bars on load
+                    setTimeout(function() {
+                        var progressFills = document.querySelectorAll('.progress-fill');
+                        progressFills.forEach(function(fill) {
+                            var width = fill.getAttribute('data-width');
+                            if (width) {
+                                fill.style.width = width;
+                            }
+                        });
+                    }, 100);
                 });
+                
+                function scrollToTop() {
+                    window.scrollTo({top: 0, behavior: 'smooth'});
+                }
             </script>
         </head>
         <body>
+        <div class="container">
         """)
         
-        # Title and header information
-        html.append(f"<h1>Credit Transfer Analysis Report</h1>")
-        html.append(f"<p><strong>Generated:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>")
-        html.append(f"<p><strong>VET Qualification:</strong> {vet_qual.code} - {vet_qual.name}</p>")
-        html.append(f"<p><strong>University Program:</strong> {uni_qual.code} - {uni_qual.name}</p>")
+        # Enhanced header
+        html.append(f"""
+        <div class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-graduation-cap"></i> Credit Transfer Analysis Report</h1>
+                <div class="header-info">
+                    <p><i class="fas fa-calendar"></i> Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+                    <p><i class="fas fa-certificate"></i> VET Qualification: {vet_qual.code} - {vet_qual.name}</p>
+                    <p><i class="fas fa-university"></i> University Program: {uni_qual.code} - {uni_qual.name}</p>
+                </div>
+            </div>
+        </div>
+        """)
         
-        # Skill extraction summary
+        html.append('<div class="content">')
+        
+        # Skill extraction summary with icons
         vet_skills = []
         for unit in vet_qual.units:
             vet_skills.extend(unit.extracted_skills)
@@ -698,60 +1229,75 @@ class ReportGenerator:
         for course in uni_qual.courses:
             uni_skills.extend(course.extracted_skills)
         
-        html.append("<div class='summary-box'>")
-        html.append("<h2>Skill Extraction Summary</h2>")
+        html.append("<h2><i class='fas fa-chart-bar'></i> Skill Extraction Summary</h2>")
         html.append("<div class='stats-grid'>")
         
         html.append("<div class='stat-card'>")
+        html.append("<i class='fas fa-tools' style='font-size: 2rem; color: #667eea; margin-bottom: 15px;'></i>")
         html.append(f"<div class='stat-value'>{len(vet_skills)}</div>")
-        html.append("<div class='stat-label'>VET Skills Extracted</div>")
+        html.append("<div class='stat-label'>VET Skills</div>")
         html.append("</div>")
         
         html.append("<div class='stat-card'>")
+        html.append("<i class='fas fa-book' style='font-size: 2rem; color: #764ba2; margin-bottom: 15px;'></i>")
         html.append(f"<div class='stat-value'>{len(uni_skills)}</div>")
-        html.append("<div class='stat-label'>University Skills Extracted</div>")
+        html.append("<div class='stat-label'>University Skills</div>")
         html.append("</div>")
         
         common_count = len(set(s.name.lower() for s in vet_skills).intersection(
             set(s.name.lower() for s in uni_skills)))
         
         html.append("<div class='stat-card'>")
+        html.append("<i class='fas fa-link' style='font-size: 2rem; color: #48bb78; margin-bottom: 15px;'></i>")
         html.append(f"<div class='stat-value'>{common_count}</div>")
         html.append("<div class='stat-label'>Common Skills</div>")
         html.append("</div>")
         
         html.append("</div>")
-        html.append("</div>")
         
-        # Executive Summary
+        # Executive Summary with enhanced progress bars
         summary = self._generate_summary_stats(recommendations)
         html.append("<div class='summary-box'>")
-        html.append("<h2>Executive Summary</h2>")
-        html.append(f"<p><strong>Total Recommendations:</strong> {summary['total']}</p>")
-        html.append(f"<p><strong>Average Alignment Score:</strong> {summary['avg_alignment']:.1%}</p>")
+        html.append("<h2><i class='fas fa-clipboard-list'></i> Executive Summary</h2>")
+        html.append(f"<p style='font-size: 1.1rem; margin-bottom: 20px;'><strong>Total Recommendations:</strong> {summary['total']}</p>")
+        html.append(f"<p style='font-size: 1.1rem; margin-bottom: 30px;'><strong>Average Alignment Score:</strong> {summary['avg_alignment']:.1%}</p>")
         
-        # Progress bars for recommendation types
         html.append("<h3>Recommendation Distribution</h3>")
-        for rec_type, count, percent in [
-            ('Full Credit', summary['full_count'], summary['full_percent']),
-            ('Conditional', summary['conditional_count'], summary['conditional_percent']),
-            ('Partial', summary['partial_count'], summary['partial_percent'])
+        for rec_type, count, percent, icon, color in [
+            ('Full Credit', summary['full_count'], summary['full_percent'], 'fa-check-circle', '#48bb78'),
+            ('Conditional', summary['conditional_count'], summary['conditional_percent'], 'fa-exclamation-circle', '#ed8936'),
+            ('Partial', summary['partial_count'], summary['partial_percent'], 'fa-times-circle', '#f56565')
         ]:
-            html.append(f"<p>{rec_type}: {count} ({percent:.1%})</p>")
-            html.append(f"<div class='progress-bar'><div class='progress-fill' style='width: {percent*100}%;'></div></div>")
+            html.append(f"<div class='progress-container'>")
+            html.append(f"<div class='progress-label'>")
+            html.append(f"<span><i class='fas {icon}' style='color: {color};'></i> {rec_type}</span>")
+            html.append(f"<span><strong>{count}</strong> ({percent:.1%})</span>")
+            html.append(f"</div>")
+            html.append(f"<div class='progress-bar'><div class='progress-fill' data-width='{percent*100}%' style='width: 0;'></div></div>")
+            html.append(f"</div>")
         
         html.append("</div>")
         
-        # Recommendations table with expandable skill mappings
-        html.append("<h2>Credit Transfer Recommendations</h2>")
-        html.append("<p>Click 'Show Skills' to view detailed skill mappings for each recommendation.</p>")
+        # Search and Filter Bar
+        html.append("<h2><i class='fas fa-search'></i> Credit Transfer Recommendations</h2>")
+        html.append("<div class='search-container'>")
+        html.append("<div class='search-box'>")
+        html.append("<input type='text' id='searchInput' placeholder='Search recommendations...' />")
+        html.append("<i class='fas fa-search'></i>")
+        html.append("</div>")
+        html.append("<button class='filter-btn' data-filter='full'><i class='fas fa-check-circle'></i> Full Only</button>")
+        html.append("<button class='filter-btn' data-filter='conditional'><i class='fas fa-exclamation-circle'></i> Conditional Only</button>")
+        html.append("<button class='filter-btn' data-filter='partial'><i class='fas fa-times-circle'></i> Partial Only</button>")
+        html.append("</div>")
+        
+        # Enhanced recommendations table
         html.append("<table>")
         html.append("<thead><tr>")
         html.append("<th>Action</th>")
         html.append("<th>VET Units</th>")
         html.append("<th>Uni Course</th>")
-        html.append("<th>Uni Study Level</th>")
-        html.append("<th>Skills Count</th>")
+        html.append("<th>Study Level</th>")
+        html.append("<th>Skills</th>")
         html.append("<th>Alignment</th>")
         html.append("<th>Confidence</th>")
         html.append("<th>Type</th>")
@@ -782,7 +1328,7 @@ class ReportGenerator:
                 
                 # First column: Show button only on first row
                 if unit_idx == 0:
-                    html.append(f"<td rowspan='{len(vet_units)}'><button class='expand-btn' onclick='toggleExpand(this, {idx})'>Show Skills</button></td>")
+                    html.append(f"<td rowspan='{len(vet_units)}'><button class='expand-btn' onclick='toggleExpand(this, {idx})'><i class='fas fa-chevron-down'></i> Show Skills</button></td>")
                 
                 # Second column: VET unit code and name (one per row)
                 html.append(f"<td>{vet_unit.code}: {vet_unit.name}</td>")
@@ -790,16 +1336,30 @@ class ReportGenerator:
                 # Remaining columns: span across all VET unit rows (only on first row)
                 if unit_idx == 0:
                     html.append(f"<td rowspan='{len(vet_units)}'>{rec.uni_course.code}: {rec.uni_course.name}</td>")
-                    html.append(f"<td rowspan='{len(vet_units)}'>{rec.uni_course.study_level.title()}</td>")
+                    html.append(f"<td rowspan='{len(vet_units)}'><span class='skill-level-badge'>{rec.uni_course.study_level.title()}</span></td>")
                     html.append(f"<td rowspan='{len(vet_units)}'>{vet_skill_count} → {uni_skill_count}</td>")
-                    html.append(f"<td rowspan='{len(vet_units)}'>{rec.alignment_score:.1%}</td>")
+                    
+                    # Alignment with tooltip
+                    html.append(f"<td rowspan='{len(vet_units)}'>")
+                    html.append(f"<div class='tooltip'>{rec.alignment_score:.1%}")
+                    html.append(f"<span class='tooltiptext'>Based on skill coverage, quality, and level alignment</span>")
+                    html.append(f"</div>")
+                    html.append(f"</td>")
+                    
                     html.append(f"<td rowspan='{len(vet_units)}'>{rec.confidence:.1%}</td>")
-                    html.append(f"<td rowspan='{len(vet_units)}'>{rec.recommendation.value.upper()}</td>")
+                    
+                    # Type with icon
+                    type_icons = {'full': 'fa-check-circle', 'conditional': 'fa-exclamation-circle', 'partial': 'fa-times-circle', 'none': 'fa-ban'}
+                    type_colors = {'full': '#48bb78', 'conditional': '#ed8936', 'partial': '#f56565', 'none': '#718096'}
+                    icon = type_icons.get(rec.recommendation.value, 'fa-question')
+                    color = type_colors.get(rec.recommendation.value, '#718096')
+                    html.append(f"<td rowspan='{len(vet_units)}'><i class='fas {icon}' style='color: {color}; margin-right: 5px;'></i>{rec.recommendation.value.upper()}</td>")
+                    
                     html.append(f"<td rowspan='{len(vet_units)}'>{'; '.join(rec.conditions[:2]) if rec.conditions else 'None'}</td>")
                 
                 html.append("</tr>")
             
-            # Expandable row with skill mappings
+            # Expandable row with enhanced skill mappings
             html.append(f"<tr class='{group_class}' data-rec-group='rec-{idx}'>")
             html.append(f"<td colspan='9' class='expandable-content' id='expand-{idx}'>")
             
@@ -812,12 +1372,20 @@ class ReportGenerator:
                 partial_mappings = [m for m in skill_mappings if m['mapping_type'] == 'Partial']
                 unmapped_mappings = [m for m in skill_mappings if m['mapping_type'] == 'Unmapped']
                 
-                # Summary
+                # Enhanced summary with stats
                 html.append(f"<div class='mapping-summary'>")
-                html.append(f"<strong>Mapping Summary:</strong> ")
-                html.append(f"Direct: {len(direct_mappings)} | ")
-                html.append(f"Partial: {len(partial_mappings)} | ")
-                html.append(f"Unmapped: {len(unmapped_mappings)}")
+                html.append(f"<div class='mapping-stat'>")
+                html.append(f"<div class='mapping-stat-value'>{len(direct_mappings)}</div>")
+                html.append(f"<div class='mapping-stat-label'>Direct Matches</div>")
+                html.append(f"</div>")
+                html.append(f"<div class='mapping-stat'>")
+                html.append(f"<div class='mapping-stat-value'>{len(partial_mappings)}</div>")
+                html.append(f"<div class='mapping-stat-label'>Partial Matches</div>")
+                html.append(f"</div>")
+                html.append(f"<div class='mapping-stat'>")
+                html.append(f"<div class='mapping-stat-value'>{len(unmapped_mappings)}</div>")
+                html.append(f"<div class='mapping-stat-label'>Unmapped Skills</div>")
+                html.append(f"</div>")
                 html.append(f"</div>")
                 
                 # Create skill mapping table
@@ -827,21 +1395,21 @@ class ReportGenerator:
                 html.append("<th>VET Skill</th>")
                 html.append("<th>Uni Course</th>")
                 html.append("<th>Uni Skill</th>")
-                html.append("<th>Mapping Type</th>")
-                html.append("<th>Similarity</th>")
-                html.append("<th>Reasoning</th>")
+                html.append("<th>Type</th>")
+                html.append("<th>Match %</th>")
+                html.append("<th>Analysis</th>")
                 html.append("</tr></thead>")
                 html.append("<tbody>")
                 
-                # Display mappings (limit for readability)
+                # Display mappings
                 for mapping in direct_mappings[:10]:
                     html.append(f"<tr class='mapping-direct'>")
                     html.append(f"<td>{mapping['vet_unit']}</td>")
                     html.append(f"<td>{mapping['vet_skill']}<span class='skill-level-badge'>L{mapping['vet_level']}</span></td>")
                     html.append(f"<td>{mapping['uni_course']}</td>")
                     html.append(f"<td>{mapping['uni_skill']}<span class='skill-level-badge'>L{mapping['uni_level']}</span></td>")
-                    html.append(f"<td><strong>{mapping['mapping_type']}</strong></td>")
-                    html.append(f"<td>{mapping['similarity']:.1%}</td>")
+                    html.append(f"<td><i class='fas fa-check-circle'></i> {mapping['mapping_type']}</td>")
+                    html.append(f"<td>{mapping['similarity']:.0%}</td>")
                     html.append(f"<td>{mapping['reasoning']}</td>")
                     html.append("</tr>")
                 
@@ -851,8 +1419,8 @@ class ReportGenerator:
                     html.append(f"<td>{mapping['vet_skill']}<span class='skill-level-badge'>L{mapping['vet_level']}</span></td>")
                     html.append(f"<td>{mapping['uni_course']}</td>")
                     html.append(f"<td>{mapping['uni_skill']}<span class='skill-level-badge'>L{mapping['uni_level']}</span></td>")
-                    html.append(f"<td><strong>{mapping['mapping_type']}</strong></td>")
-                    html.append(f"<td>{mapping['similarity']:.1%}</td>")
+                    html.append(f"<td><i class='fas fa-exclamation-circle'></i> {mapping['mapping_type']}</td>")
+                    html.append(f"<td>{mapping['similarity']:.0%}</td>")
                     html.append(f"<td>{mapping['reasoning']}</td>")
                     html.append("</tr>")
                 
@@ -862,7 +1430,7 @@ class ReportGenerator:
                     html.append(f"<td>{mapping.get('vet_skill', '-')}</td>")
                     html.append(f"<td>{mapping['uni_course']}</td>")
                     html.append(f"<td>{mapping.get('uni_skill', '-')}</td>")
-                    html.append(f"<td><strong>{mapping['mapping_type']}</strong></td>")
+                    html.append(f"<td><i class='fas fa-times-circle'></i> {mapping['mapping_type']}</td>")
                     html.append(f"<td>-</td>")
                     html.append(f"<td>{mapping['reasoning']}</td>")
                     html.append("</tr>")
@@ -871,107 +1439,56 @@ class ReportGenerator:
                 total_mappings = len(skill_mappings)
                 shown_mappings = min(25, len(direct_mappings) + len(partial_mappings) + len(unmapped_mappings))
                 if total_mappings > shown_mappings:
-                    html.append(f"<tr><td colspan='7' style='text-align:center; font-style:italic;'>")
-                    html.append(f"... and {total_mappings - shown_mappings} more mappings")
+                    html.append(f"<tr><td colspan='7' style='text-align:center; font-style:italic; color: #718096;'>")
+                    html.append(f"<i class='fas fa-ellipsis-h'></i> {total_mappings - shown_mappings} more mappings not shown")
                     html.append(f"</td></tr>")
                 
                 html.append("</tbody></table>")
             else:
-                html.append("<p><em>No skill mapping data available.</em></p>")
+                html.append("<p style='text-align:center; color: #718096;'><i class='fas fa-info-circle'></i> No skill mapping data available.</p>")
             
             html.append("</td>")
             html.append("</tr>")
         
         html.append("</tbody></table>")
         
-        # Detailed Match Analysis Table
-        html.append("<h2>Detailed Match Analysis</h2>")
-        html.append("<table>")
-        html.append("<thead><tr>")
-        html.append("<th>VET → Uni</th>")
-        html.append("<th>Match Type</th>")
-        html.append("<th>Level Alignment</th>")
-        html.append("<th>Quality Factors</th>")
-        html.append("<th>Edge Cases</th>")
-        html.append("<th>Reasoning</th>")
-        html.append("</tr></thead>")
-        html.append("<tbody>")
-
-        for rec in recommendations[:20]:  # Top 20 detailed
-            match_info = self._extract_detailed_match_info(rec)
-            
-            html.append(f"<tr class='{rec.recommendation.value}'>")
-            
-            # VET to Uni mapping
-            html.append(f"<td>{', '.join(rec.get_vet_unit_codes())}<br>→<br>{rec.uni_course.code}</td>")
-            
-            # Match breakdown
-            html.append(f"<td>")
-            html.append(f"<strong>Direct:</strong> {match_info['direct_matches']}/{match_info['total_uni_skills']}<br>")
-            html.append(f"<strong>Partial:</strong> {match_info['partial_matches']}/{match_info['total_uni_skills']}<br>")
-            html.append(f"<strong>Unmapped:</strong> {match_info['unmapped_critical']}")
-            html.append(f"</td>")
-            
-            level_analysis = match_info.get('level_analysis', {})
-            html.append(f"<td>")
-            html.append(f"<div style='color: {level_analysis.get('color', 'black')}'>")
-            html.append(f"<strong>{level_analysis.get('status', 'unknown').title()}</strong><br>")
-            html.append(f"VET Avg: {level_analysis.get('avg_vet_level', 0):.1f}<br>")
-            html.append(f"Uni Req: {level_analysis.get('avg_uni_level', 0):.1f}<br>")
-            html.append(f"<small>{level_analysis.get('message', '')}</small>")
-            html.append(f"</div>")
-            html.append(f"</td>")
-            
-            # Quality factors
-            html.append(f"<td>")
-            for category, coverage in rec.skill_coverage.items():
-                html.append(f"<small>{category}: {coverage:.0%}</small><br>")
-            html.append(f"<strong>Confidence: {rec.confidence:.1%}</strong>")
-            html.append(f"</td>")
-            
-            # Edge cases
-            html.append(f"<td style='font-size: 12px;'>")
-            if match_info['edge_cases']:
-                for case_type, case_data in list(match_info['edge_cases'].items())[:2]:
-                    html.append(f"<small>• {case_type.replace('_', ' ').title()}</small><br>")
-            else:
-                html.append("None detected")
-            html.append(f"</td>")
-            
-            # Reasoning
-            html.append(f"<td style='font-size: 12px;'>")
-            html.append(self._generate_transfer_reasoning(rec, match_info))
-            html.append(f"</td>")
-            
-            html.append("</tr>")
-
-        html.append("</tbody></table>")
-        
-        # Top Skills Section
-        html.append("<h2>Top Extracted Skills</h2>")
+        # Top Skills Section with enhanced badges
+        html.append("<h2><i class='fas fa-star'></i> Top Extracted Skills</h2>")
         
         html.append("<h3>VET Skills (Top 20)</h3>")
-        html.append("<div>")
+        html.append("<div style='padding: 20px;'>")
         vet_skill_names = [s.name for s in sorted(vet_skills, key=lambda x: x.confidence, reverse=True)]
         for skill_name in vet_skill_names[:20]:
-            html.append(f"<span class='skill-badge'>{skill_name}</span>")
+            html.append(f"<span class='skill-badge'><i class='fas fa-tools' style='font-size: 0.8rem; margin-right: 4px;'></i>{skill_name}</span>")
         html.append("</div>")
         
         html.append("<h3>University Skills (Top 20)</h3>")
-        html.append("<div>")
+        html.append("<div style='padding: 20px;'>")
         uni_skill_names = [s.name for s in sorted(uni_skills, key=lambda x: x.confidence, reverse=True)]
         for skill_name in uni_skill_names[:20]:
-            html.append(f"<span class='skill-badge'>{skill_name}</span>")
+            html.append(f"<span class='skill-badge'><i class='fas fa-book' style='font-size: 0.8rem; margin-right: 4px;'></i>{skill_name}</span>")
         html.append("</div>")
         
         # Gap Analysis
         gaps = self._analyze_gaps(recommendations)
         if gaps['common_gaps']:
-            html.append("<h2>Common Skill Gaps</h2>")
-            html.append("<ul>")
+            html.append("<h2><i class='fas fa-exclamation-triangle'></i> Common Skill Gaps</h2>")
+            html.append("<div class='summary-box'>")
+            html.append("<ul style='columns: 2; column-gap: 40px;'>")
             for skill, count in gaps['common_gaps'][:10]:
-                html.append(f"<li>{skill} ({count} occurrences)</li>")
+                html.append(f"<li style='margin: 10px 0;'><strong>{skill}</strong> <span style='color: #718096;'>({count} occurrences)</span></li>")
             html.append("</ul>")
+            html.append("</div>")
+        
+        html.append("</div>") # Close content div
+        html.append("</div>") # Close container div
+        
+        # Back to top button
+        html.append("""
+        <button id="backToTop" class="back-to-top" onclick="scrollToTop()">
+            <i class="fas fa-arrow-up"></i>
+        </button>
+        """)
         
         # Footer
         html.append("""
