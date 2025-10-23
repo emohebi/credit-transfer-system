@@ -1524,52 +1524,6 @@ class ReportGenerator:
         
         return "\n".join(html)
         
-        # Top Skills Section with enhanced badges
-        html.append("<h2><i class='fas fa-star'></i> Top Extracted Skills</h2>")
-        
-        html.append("<h3>VET Skills (Top 20)</h3>")
-        html.append("<div style='padding: 20px;'>")
-        vet_skill_names = [s.name for s in sorted(vet_skills, key=lambda x: x.confidence, reverse=True)]
-        for skill_name in vet_skill_names[:20]:
-            html.append(f"<span class='skill-badge'><i class='fas fa-tools' style='font-size: 0.8rem; margin-right: 4px;'></i>{skill_name}</span>")
-        html.append("</div>")
-        
-        html.append("<h3>University Skills (Top 20)</h3>")
-        html.append("<div style='padding: 20px;'>")
-        uni_skill_names = [s.name for s in sorted(uni_skills, key=lambda x: x.confidence, reverse=True)]
-        for skill_name in uni_skill_names[:20]:
-            html.append(f"<span class='skill-badge'><i class='fas fa-book' style='font-size: 0.8rem; margin-right: 4px;'></i>{skill_name}</span>")
-        html.append("</div>")
-        
-        # Gap Analysis
-        gaps = self._analyze_gaps(recommendations)
-        if gaps['common_gaps']:
-            html.append("<h2><i class='fas fa-exclamation-triangle'></i> Common Skill Gaps</h2>")
-            html.append("<div class='summary-box'>")
-            html.append("<ul style='columns: 2; column-gap: 40px;'>")
-            for skill, count in gaps['common_gaps'][:10]:
-                html.append(f"<li style='margin: 10px 0;'><strong>{skill}</strong> <span style='color: #718096;'>({count} occurrences)</span></li>")
-            html.append("</ul>")
-            html.append("</div>")
-        
-        html.append("</div>") # Close content div
-        html.append("</div>") # Close container div
-        
-        # Back to top button
-        html.append("""
-        <button id="backToTop" class="back-to-top" onclick="scrollToTop()">
-            <i class="fas fa-arrow-up"></i>
-        </button>
-        """)
-        
-        # Footer
-        html.append("""
-        </body>
-        </html>
-        """)
-        
-        return "\n".join(html)
-        
     def _generate_summary_stats(self, recommendations: List[CreditTransferRecommendation]) -> Dict:
         """Generate summary statistics"""
         total = len(recommendations)
