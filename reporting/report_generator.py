@@ -639,17 +639,11 @@ class ReportGenerator:
                 .full.rec-group-odd { 
                     background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
                 }
-                .conditional.rec-group-even { 
+                .partial.rec-group-even { 
                     background: linear-gradient(135deg, #fff3cd 0%, #ffe8a1 100%);
                 }
-                .conditional.rec-group-odd { 
-                    background: linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%);
-                }
-                .partial.rec-group-even { 
-                    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-                }
                 .partial.rec-group-odd { 
-                    background: linear-gradient(135deg, #fae5e7 0%, #f8d7da 100%);
+                    background: linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%);
                 }
                 
                 /* Enhanced hover effects */
@@ -657,12 +651,8 @@ class ReportGenerator:
                     background: linear-gradient(135deg, #b8e0c1 0%, #a8d5b1 100%) !important;
                     transform: scale(1.01);
                 }
-                .conditional.hover-highlight { 
-                    background: linear-gradient(135deg, #ffde7d 0%, #ffd966 100%) !important;
-                    transform: scale(1.01);
-                }
                 .partial.hover-highlight { 
-                    background: linear-gradient(135deg, #f0a6ad 0%, #eba0a7 100%) !important;
+                    background: linear-gradient(135deg, #ffde7d 0%, #ffd966 100%) !important;
                     transform: scale(1.01);
                 }
                 
@@ -1287,7 +1277,7 @@ class ReportGenerator:
         html.append("<h3>Recommendation Distribution</h3>")
         for rec_type, count, percent, icon, color in [
             ('Full Credit', summary['full_count'], summary['full_percent'], 'fa-check-circle', '#48bb78'),
-            ('Partial', summary['partial_count'], summary['partial_percent'], 'fa-times-circle', '#f56565')
+            ('Partial', summary['partial_count'], summary['partial_percent'], 'fa-exclamation-circle', '#ed8936')
         ]:
             html.append(f"<div class='progress-container'>")
             html.append(f"<div class='progress-label'>")
@@ -1348,7 +1338,7 @@ class ReportGenerator:
                 
                 # First column: Show button only on first row
                 if unit_idx == 0:
-                    html.append(f"<td rowspan='{len(vet_units)}'><button class='expand-btn' onclick='toggleExpand(this, {idx})'><i class='fas fa-chevron-down'></i> Show Skills</button></td>")
+                    html.append(f"<td rowspan='{len(vet_units)}'><button class='expand-btn' onclick='toggleExpand(this, {idx})'><i class='fas fa-chevron-down'></i> Mapped Skills</button></td>")
                 
                 # Second column: VET unit code and name (one per row)
                 html.append(f"<td>{vet_unit.code}: {vet_unit.name}</td>")
