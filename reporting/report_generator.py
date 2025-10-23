@@ -1287,7 +1287,6 @@ class ReportGenerator:
         html.append("<h3>Recommendation Distribution</h3>")
         for rec_type, count, percent, icon, color in [
             ('Full Credit', summary['full_count'], summary['full_percent'], 'fa-check-circle', '#48bb78'),
-            ('Conditional', summary['conditional_count'], summary['conditional_percent'], 'fa-exclamation-circle', '#ed8936'),
             ('Partial', summary['partial_count'], summary['partial_percent'], 'fa-times-circle', '#f56565')
         ]:
             html.append(f"<div class='progress-container'>")
@@ -1308,8 +1307,7 @@ class ReportGenerator:
         html.append("<i class='fas fa-search'></i>")
         html.append("</div>")
         html.append("<button class='filter-btn' data-filter='full'><i class='fas fa-check-circle'></i> Full Only</button>")
-        html.append("<button class='filter-btn' data-filter='conditional'><i class='fas fa-exclamation-circle'></i> Conditional Only</button>")
-        html.append("<button class='filter-btn' data-filter='partial'><i class='fas fa-times-circle'></i> Partial Only</button>")
+        html.append("<button class='filter-btn' data-filter='partial'><i class='fas fa-exclamation-circle'></i> Partial Only</button>")
         html.append("</div>")
         
         # Enhanced recommendations table
@@ -1371,8 +1369,8 @@ class ReportGenerator:
                     html.append(f"<td rowspan='{len(vet_units)}'>{rec.confidence:.1%}</td>")
                     
                     # Type with icon
-                    type_icons = {'full': 'fa-check-circle', 'conditional': 'fa-exclamation-circle', 'partial': 'fa-times-circle', 'none': 'fa-ban'}
-                    type_colors = {'full': '#48bb78', 'conditional': '#ed8936', 'partial': '#f56565', 'none': '#718096'}
+                    type_icons = {'full': 'fa-check-circle', 'partial': 'fa-exclamation-circle', 'none': 'fa-ban'}
+                    type_colors = {'full': '#48bb78', 'partial': '#ed8936', 'none': '#718096'}
                     icon = type_icons.get(rec.recommendation.value, 'fa-question')
                     color = type_colors.get(rec.recommendation.value, '#718096')
                     html.append(f"<td rowspan='{len(vet_units)}'><i class='fas {icon}' style='color: {color}; margin-right: 5px;'></i>{rec.recommendation.value.upper()}</td>")
