@@ -858,6 +858,28 @@ class ReportGenerator:
                     font-weight: 600;
                 }
                 
+                .skill-context-badge {
+                    display: inline-block;
+                    padding: 3px 8px;
+                    margin-left: 4px;
+                    border-radius: 10px;
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                    color: white;
+                }
+                
+                .skill-context-badge.theoretical {
+                    background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
+                }
+                
+                .skill-context-badge.practical {
+                    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+                }
+                
+                .skill-context-badge.hybrid {
+                    background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+                }
+                
                 /* Enhanced inner skill mapping table */
                 .skill-mapping-inner-table {
                     width: 100%;
@@ -1405,9 +1427,17 @@ class ReportGenerator:
                 for mapping in direct_mappings[:10]:
                     html.append(f"<tr class='mapping-direct'>")
                     html.append(f"<td>{mapping['vet_unit']}</td>")
-                    html.append(f"<td>{mapping['vet_skill']}<span class='skill-level-badge'>L{mapping['vet_level']}</span></td>")
+                    html.append(f"<td>{mapping['vet_skill']}")
+                    html.append(f"<span class='skill-level-badge'>L{mapping['vet_level']}</span>")
+                    if 'vet_context' in mapping:
+                        html.append(f"<span class='skill-context-badge {mapping['vet_context']}'>{mapping['vet_context'].title()}</span>")
+                    html.append(f"</td>")
                     html.append(f"<td>{mapping['uni_course']}</td>")
-                    html.append(f"<td>{mapping['uni_skill']}<span class='skill-level-badge'>L{mapping['uni_level']}</span></td>")
+                    html.append(f"<td>{mapping['uni_skill']}")
+                    html.append(f"<span class='skill-level-badge'>L{mapping['uni_level']}</span>")
+                    if 'uni_context' in mapping:
+                        html.append(f"<span class='skill-context-badge {mapping['uni_context']}'>{mapping['uni_context'].title()}</span>")
+                    html.append(f"</td>")
                     html.append(f"<td><i class='fas fa-check-circle'></i> {mapping['mapping_type']}</td>")
                     html.append(f"<td>{mapping['similarity']:.0%}</td>")
                     html.append(f"<td>{mapping['reasoning']}</td>")
@@ -1416,9 +1446,17 @@ class ReportGenerator:
                 for mapping in partial_mappings[:8]:
                     html.append(f"<tr class='mapping-partial'>")
                     html.append(f"<td>{mapping['vet_unit']}</td>")
-                    html.append(f"<td>{mapping['vet_skill']}<span class='skill-level-badge'>L{mapping['vet_level']}</span></td>")
+                    html.append(f"<td>{mapping['vet_skill']}")
+                    html.append(f"<span class='skill-level-badge'>L{mapping['vet_level']}</span>")
+                    if 'vet_context' in mapping:
+                        html.append(f"<span class='skill-context-badge {mapping['vet_context']}'>{mapping['vet_context'].title()}</span>")
+                    html.append(f"</td>")
                     html.append(f"<td>{mapping['uni_course']}</td>")
-                    html.append(f"<td>{mapping['uni_skill']}<span class='skill-level-badge'>L{mapping['uni_level']}</span></td>")
+                    html.append(f"<td>{mapping['uni_skill']}")
+                    html.append(f"<span class='skill-level-badge'>L{mapping['uni_level']}</span>")
+                    if 'uni_context' in mapping:
+                        html.append(f"<span class='skill-context-badge {mapping['uni_context']}'>{mapping['uni_context'].title()}</span>")
+                    html.append(f"</td>")
                     html.append(f"<td><i class='fas fa-exclamation-circle'></i> {mapping['mapping_type']}</td>")
                     html.append(f"<td>{mapping['similarity']:.0%}</td>")
                     html.append(f"<td>{mapping['reasoning']}</td>")
@@ -1451,6 +1489,52 @@ class ReportGenerator:
             html.append("</tr>")
         
         html.append("</tbody></table>")
+        
+        # Top Skills Section with enhanced badges
+        html.append("<h2><i class='fas fa-star'></i> Top Extracted Skills</h2>")
+        
+        html.append("<h3>VET Skills (Top 20)</h3>")
+        html.append("<div style='padding: 20px;'>")
+        vet_skill_names = [s.name for s in sorted(vet_skills, key=lambda x: x.confidence, reverse=True)]
+        for skill_name in vet_skill_names[:20]:
+            html.append(f"<span class='skill-badge'><i class='fas fa-tools' style='font-size: 0.8rem; margin-right: 4px;'></i>{skill_name}</span>")
+        html.append("</div>")
+        
+        html.append("<h3>University Skills (Top 20)</h3>")
+        html.append("<div style='padding: 20px;'>")
+        uni_skill_names = [s.name for s in sorted(uni_skills, key=lambda x: x.confidence, reverse=True)]
+        for skill_name in uni_skill_names[:20]:
+            html.append(f"<span class='skill-badge'><i class='fas fa-book' style='font-size: 0.8rem; margin-right: 4px;'></i>{skill_name}</span>")
+        html.append("</div>")
+        
+        # Gap Analysis
+        gaps = self._analyze_gaps(recommendations)
+        if gaps['common_gaps']:
+            html.append("<h2><i class='fas fa-exclamation-triangle'></i> Common Skill Gaps</h2>")
+            html.append("<div class='summary-box'>")
+            html.append("<ul style='columns: 2; column-gap: 40px;'>")
+            for skill, count in gaps['common_gaps'][:10]:
+                html.append(f"<li style='margin: 10px 0;'><strong>{skill}</strong> <span style='color: #718096;'>({count} occurrences)</span></li>")
+            html.append("</ul>")
+            html.append("</div>")
+        
+        html.append("</div>") # Close content div
+        html.append("</div>") # Close container div
+        
+        # Back to top button
+        html.append("""
+        <button id="backToTop" class="back-to-top" onclick="scrollToTop()">
+            <i class="fas fa-arrow-up"></i>
+        </button>
+        """)
+        
+        # Footer
+        html.append("""
+        </body>
+        </html>
+        """)
+        
+        return "\n".join(html)
         
         # Top Skills Section with enhanced badges
         html.append("<h2><i class='fas fa-star'></i> Top Extracted Skills</h2>")
@@ -1928,53 +2012,59 @@ class ReportGenerator:
         if skill_match_details:
             # Use backend-calculated matches
             for detail in skill_match_details['mapped']:
-                    # Both skills present - normal match
+                # Both skills present - normal match
                 mapping = {
                     'vet_unit': detail['vet_skill'].code,
                     'vet_skill': detail['vet_skill'].name,
                     'vet_level': detail['vet_skill'].level.value,
+                    'vet_context': detail['vet_skill'].context.value,  # Add context
                     'uni_course': detail['uni_skill'].code,
                     'uni_skill': detail['uni_skill'].name,
                     'uni_level': detail['uni_skill'].level.value,
+                    'uni_context': detail['uni_skill'].context.value,  # Add context
                     'mapping_type': detail['match_type'],
                     'similarity': detail['similarity'],
                     'reasoning': detail['reasoning']
                 }
                 mappings.append(mapping)
+                
             for unmapped in skill_match_details['unmapped_uni']:
-                    # Only Uni skill - unmapped Uni
+                # Only Uni skill - unmapped Uni
                 mapping = {
                     'vet_unit': '-',
                     'vet_skill': '-',
                     'vet_level': '-',
+                    'vet_context': '-',
                     'uni_course': unmapped.code,
                     'uni_skill': unmapped.name,
                     'uni_level': unmapped.level.value,
+                    'uni_context': unmapped.context.value,  # Add context
                     'mapping_type': 'Unmapped',
                     'similarity': 0,
                     'reasoning': '-'
                 }               
                 mappings.append(mapping)
+                
             if matching_strategy != 'direct_one_vs_all':
                 for unmapped in skill_match_details['unmapped_vet']:
-                        # Only VET skill - unmapped VET
+                    # Only VET skill - unmapped VET
                     mapping = {
                         'vet_unit': unmapped.code,
                         'vet_skill': unmapped.name,
                         'vet_level': unmapped.level.value,
+                        'vet_context': unmapped.context.value,  # Add context
                         'uni_course': '-',
                         'uni_skill': '-',
                         'uni_level': '-',
+                        'uni_context': '-',
                         'mapping_type': 'Unmapped',
                         'similarity': 0,
                         'reasoning': '-'
                     }
                     mappings.append(mapping)
-            
         else:
             # Fallback if no pre-calculated matches (shouldn't happen)
             logger.warning(f"No skill match details found for recommendation {rec.id}")
-            
         
         return mappings
 
@@ -2035,9 +2125,11 @@ class ReportGenerator:
                         'vet_unit': rec.get_vet_unit_codes()[0] if rec.vet_units else 'Unknown',
                         'vet_skill': vet_skill.name,
                         'vet_level': vet_skill.level.value,
+                        'vet_context': vet_skill.context.value,  # Add context
                         'uni_course': rec.uni_course.code,
                         'uni_skill': uni_skill.name,
                         'uni_level': uni_skill.level.value,
+                        'uni_context': uni_skill.context.value,  # Add context
                         'mapping_type': mapping_type,
                         'similarity': avg_similarity,
                         'reasoning': reason + " [Cluster match]"
@@ -2055,8 +2147,10 @@ class ReportGenerator:
                         'uni_course': rec.uni_course.code,
                         'vet_skill': skill.name,
                         'vet_level': skill.level.value,
+                        'vet_context': skill.context.value,  # Add context
                         'uni_skill': '-',
                         'uni_level': '-',
+                        'uni_context': '-',
                         'mapping_type': 'Unmapped',
                         'similarity': 0,
                         'reasoning': 'No matching university skill found [Cluster mode]'
@@ -2070,8 +2164,10 @@ class ReportGenerator:
                     'uni_course': rec.uni_course.code,
                     'vet_skill': '-',
                     'vet_level': '-',
+                    'vet_context': '-',
                     'uni_skill': skill.name,
                     'uni_level': skill.level.value,
+                    'uni_context': skill.context.value,  # Add context
                     'mapping_type': 'Unmapped',
                     'similarity': 0,
                     'reasoning': 'No matching VET skill found [Cluster mode]'
