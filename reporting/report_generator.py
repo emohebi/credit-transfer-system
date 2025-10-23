@@ -617,18 +617,19 @@ class ReportGenerator:
                 th { 
                     background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
                     color: white;
-                    padding: 10px 12px;
+                    padding: 6px 10px;
                     text-align: left;
                     font-weight: 600;
-                    font-size: 0.9rem;
+                    font-size: 0.8rem;
                     letter-spacing: 0.5px;
                     text-transform: uppercase;
                 }
                 
                 td { 
-                    padding: 8px 12px;
+                    padding: 5px 10px;
                     border-bottom: 1px solid #e2e8f0;
-                    font-size: 0.95rem;
+                    font-size: 0.85rem;
+                    line-height: 1.3;
                     transition: all 0.3s ease;
                 }
                 
@@ -661,10 +662,10 @@ class ReportGenerator:
                     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                     color: white;
                     border: none;
-                    padding: 8px 16px;
-                    border-radius: 20px;
+                    padding: 5px 12px;
+                    border-radius: 15px;
                     cursor: pointer;
-                    font-size: 0.85rem;
+                    font-size: 0.75rem;
                     font-weight: 500;
                     transition: all 0.3s ease;
                     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -839,21 +840,21 @@ class ReportGenerator:
                 
                 .skill-level-badge {
                     display: inline-block;
-                    padding: 3px 8px;
-                    margin-left: 6px;
+                    padding: 2px 6px;
+                    margin-left: 4px;
                     background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
                     color: white;
-                    border-radius: 10px;
-                    font-size: 0.75rem;
+                    border-radius: 8px;
+                    font-size: 0.65rem;
                     font-weight: 600;
                 }
                 
                 .skill-context-badge {
                     display: inline-block;
-                    padding: 3px 8px;
-                    margin-left: 4px;
-                    border-radius: 10px;
-                    font-size: 0.75rem;
+                    padding: 2px 6px;
+                    margin-left: 3px;
+                    border-radius: 8px;
+                    font-size: 0.65rem;
                     font-weight: 600;
                     color: white;
                 }
@@ -886,18 +887,19 @@ class ReportGenerator:
                 .skill-mapping-inner-table th {
                     background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
                     color: white;
-                    padding: 8px 10px;
+                    padding: 6px 8px;
                     text-align: left;
-                    font-size: 0.8rem;
+                    font-size: 0.75rem;
                     font-weight: 600;
                     text-transform: uppercase;
                     letter-spacing: 0.5px;
                 }
                 
                 .skill-mapping-inner-table td {
-                    padding: 7px 10px;
+                    padding: 5px 8px;
                     border-bottom: 1px solid #e2e8f0;
-                    font-size: 0.85rem;
+                    font-size: 0.75rem;
+                    line-height: 1.3;
                 }
                 
                 .mapping-direct td {
