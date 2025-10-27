@@ -1,6 +1,7 @@
 """
 Report generator for credit transfer analysis
 Integrated with skill export functionality
+MODIFIED VERSION: Includes tooltip + expandable row for skill descriptions
 """
 import logging
 import json
@@ -603,7 +604,7 @@ class ReportGenerator:
                     margin: 20px 0 15px 0;
                 }
                 
-                /* Enhanced table styles */
+                /* Enhanced table styles with CONDENSED rows */
                 table { 
                     border-collapse: separate;
                     border-spacing: 0;
@@ -617,7 +618,7 @@ class ReportGenerator:
                 th { 
                     background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
                     color: white;
-                    padding: 12px;
+                    padding: 6px 10px;
                     text-align: left;
                     font-weight: 600;
                     font-size: 0.8rem;
@@ -657,7 +658,7 @@ class ReportGenerator:
                     transform: scale(1.01);
                 }
                 
-                /* Animated expand button */
+                /* Animated expand button - SMALLER */
                 .expand-btn {
                     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                     color: white;
@@ -816,7 +817,7 @@ class ReportGenerator:
                     100% { transform: translateX(100%); }
                 }
                 
-                /* Enhanced skill badges */
+                /* Enhanced skill badges - SMALLER */
                 .skill-badge { 
                     display: inline-block;
                     padding: 6px 12px;
@@ -871,7 +872,121 @@ class ReportGenerator:
                     background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
                 }
                 
-                /* Enhanced inner skill mapping table */
+                /* NEW: Tooltip styles for skill descriptions */
+                .skill-name {
+                    position: relative;
+                    cursor: help;
+                    border-bottom: 1px dotted #667eea;
+                    display: inline-block;
+                }
+                
+                .skill-description-tooltip {
+                    visibility: hidden;
+                    width: 320px;
+                    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+                    color: white;
+                    text-align: left;
+                    border-radius: 8px;
+                    padding: 12px;
+                    position: absolute;
+                    z-index: 1000;
+                    bottom: 125%;
+                    left: 50%;
+                    margin-left: -160px;
+                    opacity: 0;
+                    transition: opacity 0.3s;
+                    font-size: 0.8rem;
+                    line-height: 1.4;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                    pointer-events: none;
+                }
+                
+                .skill-description-tooltip::after {
+                    content: "";
+                    position: absolute;
+                    top: 100%;
+                    left: 50%;
+                    margin-left: -5px;
+                    border-width: 5px;
+                    border-style: solid;
+                    border-color: #2d3748 transparent transparent transparent;
+                }
+                
+                .skill-name:hover .skill-description-tooltip {
+                    visibility: visible;
+                    opacity: 1;
+                }
+                
+                .skill-description-label {
+                    font-weight: 600;
+                    color: #667eea;
+                    margin-bottom: 4px;
+                    display: block;
+                }
+                
+                /* NEW: Expandable row toggle for skill details */
+                .skill-detail-toggle {
+                    cursor: pointer;
+                    color: #667eea;
+                    font-size: 0.7rem;
+                    margin-left: 6px;
+                    transition: transform 0.3s ease;
+                    display: inline-block;
+                }
+                
+                .skill-detail-toggle:hover {
+                    color: #764ba2;
+                }
+                
+                .skill-detail-toggle.expanded {
+                    transform: rotate(180deg);
+                }
+                
+                .skill-detail-row {
+                    display: none;
+                    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+                }
+                
+                .skill-detail-row.show {
+                    display: table-row;
+                }
+                
+                .skill-detail-content {
+                    padding: 15px;
+                    animation: slideDown 0.3s ease;
+                }
+                
+                .skill-description-box {
+                    background: white;
+                    padding: 12px;
+                    border-radius: 8px;
+                    margin: 8px 0;
+                    border-left: 3px solid #667eea;
+                    font-size: 0.8rem;
+                    line-height: 1.5;
+                }
+                
+                .skill-description-box h4 {
+                    font-size: 0.85rem;
+                    color: #2d3748;
+                    margin-bottom: 6px;
+                    font-weight: 600;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                }
+                
+                .skill-description-box p {
+                    color: #4a5568;
+                    margin: 0;
+                }
+                
+                .skill-description-empty {
+                    color: #a0aec0;
+                    font-style: italic;
+                }
+                
+                /* Enhanced inner skill mapping table - SMALLER */
                 .skill-mapping-inner-table {
                     width: 100%;
                     border-collapse: separate;
@@ -1103,6 +1218,18 @@ class ReportGenerator:
                         content.classList.add('show');
                         btn.innerHTML = '<i class="fas fa-chevron-up"></i> Hide Skills';
                         btn.classList.add('expanded');
+                    }
+                }
+                
+                // NEW: Toggle skill detail row
+                function toggleSkillDetail(icon, rowId) {
+                    var row = document.getElementById(rowId);
+                    if (row.classList.contains('show')) {
+                        row.classList.remove('show');
+                        icon.classList.remove('expanded');
+                    } else {
+                        row.classList.add('show');
+                        icon.classList.add('expanded');
                     }
                 }
                 
@@ -1413,46 +1540,136 @@ class ReportGenerator:
                 html.append("</tr></thead>")
                 html.append("<tbody>")
                 
-                # Display mappings
-                for mapping in direct_mappings:
+                # Display direct mappings with tooltips and expandable descriptions
+                for mapping_idx, mapping in enumerate(direct_mappings[:10]):
+                    mapping_id = f"rec{idx}-direct-{mapping_idx}"
                     html.append(f"<tr class='mapping-direct'>")
                     html.append(f"<td>{mapping['vet_unit']}</td>")
-                    html.append(f"<td>{mapping['vet_skill']}")
+                    
+                    # VET skill with tooltip and toggle
+                    html.append(f"<td>")
+                    html.append(f"<span class='skill-name'>")
+                    html.append(f"{mapping['vet_skill']}")
+                    # Tooltip for quick preview
+                    vet_desc = mapping.get('vet_description', 'No description available')
+                    preview = vet_desc[:150] + '...' if len(vet_desc) > 150 else vet_desc
+                    html.append(f"<span class='skill-description-tooltip'>")
+                    html.append(f"<span class='skill-description-label'>VET Skill Description:</span>")
+                    html.append(f"{preview}")
+                    html.append(f"</span>")
+                    html.append(f"</span>")
+                    # Toggle for full description
+                    html.append(f"<i class='fas fa-chevron-down skill-detail-toggle' onclick='toggleSkillDetail(this, \"{mapping_id}\")' title='Show full description'></i>")
                     html.append(f"<span class='skill-level-badge'>L{mapping['vet_level']}</span>")
-                    if 'vet_context' in mapping:
+                    if 'vet_context' in mapping and mapping['vet_context'] != '-':
                         html.append(f"<span class='skill-context-badge {mapping['vet_context']}'>{mapping['vet_context'].title()}</span>")
                     html.append(f"</td>")
+                    
                     html.append(f"<td>{mapping['uni_course']}</td>")
-                    html.append(f"<td>{mapping['uni_skill']}")
+                    
+                    # Uni skill with tooltip and toggle
+                    html.append(f"<td>")
+                    html.append(f"<span class='skill-name'>")
+                    html.append(f"{mapping['uni_skill']}")
+                    # Tooltip for quick preview
+                    uni_desc = mapping.get('uni_description', 'No description available')
+                    preview = uni_desc[:150] + '...' if len(uni_desc) > 150 else uni_desc
+                    html.append(f"<span class='skill-description-tooltip'>")
+                    html.append(f"<span class='skill-description-label'>Uni Skill Description:</span>")
+                    html.append(f"{preview}")
+                    html.append(f"</span>")
+                    html.append(f"</span>")
+                    # Same toggle as VET (will expand same row)
                     html.append(f"<span class='skill-level-badge'>L{mapping['uni_level']}</span>")
-                    if 'uni_context' in mapping:
+                    if 'uni_context' in mapping and mapping['uni_context'] != '-':
                         html.append(f"<span class='skill-context-badge {mapping['uni_context']}'>{mapping['uni_context'].title()}</span>")
                     html.append(f"</td>")
+                    
                     html.append(f"<td><i class='fas fa-check-circle'></i> {mapping['mapping_type']}</td>")
                     html.append(f"<td>{mapping['similarity']:.0%}</td>")
                     html.append(f"<td>{mapping['reasoning']}</td>")
                     html.append("</tr>")
+                    
+                    # Expandable description row
+                    html.append(f"<tr id='{mapping_id}' class='skill-detail-row'>")
+                    html.append(f"<td colspan='7'>")
+                    html.append(f"<div class='skill-detail-content'>")
+                    html.append(f"<div class='skill-description-box'>")
+                    html.append(f"<h4><i class='fas fa-tools'></i> VET Skill: {mapping['vet_skill']}</h4>")
+                    html.append(f"<p class='{'skill-description-empty' if vet_desc == 'No description available' else ''}'>{vet_desc}</p>")
+                    html.append(f"</div>")
+                    html.append(f"<div class='skill-description-box'>")
+                    html.append(f"<h4><i class='fas fa-book'></i> University Skill: {mapping['uni_skill']}</h4>")
+                    html.append(f"<p class='{'skill-description-empty' if uni_desc == 'No description available' else ''}'>{uni_desc}</p>")
+                    html.append(f"</div>")
+                    html.append(f"</div>")
+                    html.append(f"</td>")
+                    html.append(f"</tr>")
                 
-                for mapping in partial_mappings:
+                # Display partial mappings
+                for mapping_idx, mapping in enumerate(partial_mappings[:8]):
+                    mapping_id = f"rec{idx}-partial-{mapping_idx}"
                     html.append(f"<tr class='mapping-partial'>")
                     html.append(f"<td>{mapping['vet_unit']}</td>")
-                    html.append(f"<td>{mapping['vet_skill']}")
+                    
+                    # VET skill with tooltip and toggle
+                    html.append(f"<td>")
+                    html.append(f"<span class='skill-name'>")
+                    html.append(f"{mapping['vet_skill']}")
+                    vet_desc = mapping.get('vet_description', 'No description available')
+                    preview = vet_desc[:150] + '...' if len(vet_desc) > 150 else vet_desc
+                    html.append(f"<span class='skill-description-tooltip'>")
+                    html.append(f"<span class='skill-description-label'>VET Skill Description:</span>")
+                    html.append(f"{preview}")
+                    html.append(f"</span>")
+                    html.append(f"</span>")
+                    html.append(f"<i class='fas fa-chevron-down skill-detail-toggle' onclick='toggleSkillDetail(this, \"{mapping_id}\")' title='Show full description'></i>")
                     html.append(f"<span class='skill-level-badge'>L{mapping['vet_level']}</span>")
-                    if 'vet_context' in mapping:
+                    if 'vet_context' in mapping and mapping['vet_context'] != '-':
                         html.append(f"<span class='skill-context-badge {mapping['vet_context']}'>{mapping['vet_context'].title()}</span>")
                     html.append(f"</td>")
+                    
                     html.append(f"<td>{mapping['uni_course']}</td>")
-                    html.append(f"<td>{mapping['uni_skill']}")
+                    
+                    # Uni skill with tooltip and toggle
+                    html.append(f"<td>")
+                    html.append(f"<span class='skill-name'>")
+                    html.append(f"{mapping['uni_skill']}")
+                    uni_desc = mapping.get('uni_description', 'No description available')
+                    preview = uni_desc[:150] + '...' if len(uni_desc) > 150 else uni_desc
+                    html.append(f"<span class='skill-description-tooltip'>")
+                    html.append(f"<span class='skill-description-label'>Uni Skill Description:</span>")
+                    html.append(f"{preview}")
+                    html.append(f"</span>")
+                    html.append(f"</span>")
                     html.append(f"<span class='skill-level-badge'>L{mapping['uni_level']}</span>")
-                    if 'uni_context' in mapping:
+                    if 'uni_context' in mapping and mapping['uni_context'] != '-':
                         html.append(f"<span class='skill-context-badge {mapping['uni_context']}'>{mapping['uni_context'].title()}</span>")
                     html.append(f"</td>")
+                    
                     html.append(f"<td><i class='fas fa-exclamation-circle'></i> {mapping['mapping_type']}</td>")
                     html.append(f"<td>{mapping['similarity']:.0%}</td>")
                     html.append(f"<td>{mapping['reasoning']}</td>")
                     html.append("</tr>")
+                    
+                    # Expandable description row
+                    html.append(f"<tr id='{mapping_id}' class='skill-detail-row'>")
+                    html.append(f"<td colspan='7'>")
+                    html.append(f"<div class='skill-detail-content'>")
+                    html.append(f"<div class='skill-description-box'>")
+                    html.append(f"<h4><i class='fas fa-tools'></i> VET Skill: {mapping['vet_skill']}</h4>")
+                    html.append(f"<p class='{'skill-description-empty' if vet_desc == 'No description available' else ''}'>{vet_desc}</p>")
+                    html.append(f"</div>")
+                    html.append(f"<div class='skill-description-box'>")
+                    html.append(f"<h4><i class='fas fa-book'></i> University Skill: {mapping['uni_skill']}</h4>")
+                    html.append(f"<p class='{'skill-description-empty' if uni_desc == 'No description available' else ''}'>{uni_desc}</p>")
+                    html.append(f"</div>")
+                    html.append(f"</div>")
+                    html.append(f"</td>")
+                    html.append(f"</tr>")
                 
-                for mapping in unmapped_mappings:
+                # Display unmapped mappings (no descriptions needed)
+                for mapping in unmapped_mappings[:7]:
                     html.append(f"<tr class='mapping-unmapped'>")
                     html.append(f"<td>{mapping['vet_unit']}</td>")
                     html.append(f"<td>{mapping.get('vet_skill', '-')}</td>")
@@ -1464,12 +1681,12 @@ class ReportGenerator:
                     html.append("</tr>")
                 
                 # Add note if more mappings exist
-                # total_mappings = len(skill_mappings)
-                # shown_mappings = min(25, len(direct_mappings) + len(partial_mappings) + len(unmapped_mappings))
-                # if total_mappings > shown_mappings:
-                #     html.append(f"<tr><td colspan='7' style='text-align:center; font-style:italic; color: #718096;'>")
-                #     html.append(f"<i class='fas fa-ellipsis-h'></i> {total_mappings - shown_mappings} more mappings not shown")
-                #     html.append(f"</td></tr>")
+                total_mappings = len(skill_mappings)
+                shown_mappings = min(25, len(direct_mappings) + len(partial_mappings) + len(unmapped_mappings))
+                if total_mappings > shown_mappings:
+                    html.append(f"<tr><td colspan='7' style='text-align:center; font-style:italic; color: #718096;'>")
+                    html.append(f"<i class='fas fa-ellipsis-h'></i> {total_mappings - shown_mappings} more mappings not shown")
+                    html.append(f"</td></tr>")
                 
                 html.append("</tbody></table>")
             else:
@@ -1704,7 +1921,7 @@ class ReportGenerator:
         }
         
     def _extract_skill_mappings_for_single_rec(self, rec: CreditTransferRecommendation) -> List[Dict]:
-        """Extract skill mappings for a single recommendation"""
+        """Extract skill mappings for a single recommendation WITH DESCRIPTIONS"""
         
         from mapping.simple_mapping_types import SimpleMappingClassifier
         classifier = SimpleMappingClassifier()
@@ -1713,95 +1930,189 @@ class ReportGenerator:
         matching_strategy = rec.metadata.get('matching_strategy', 'clustering')
         
         if matching_strategy in ['direct', 'direct_one_vs_all', 'hybrid']:
-            return self._extract_direct_skill_mappings(rec, classifier)
+            return self._extract_direct_skill_mappings_with_descriptions(rec, classifier)
         else:
-            return self._extract_cluster_skill_mappings(rec, classifier)
+            return self._extract_cluster_skill_mappings_with_descriptions(rec, classifier)
+    
+    def _extract_direct_skill_mappings_with_descriptions(self, rec: CreditTransferRecommendation, classifier) -> List[Dict]:
+        """Extract skill mappings from backend-calculated matches WITH descriptions"""
+        mappings = []
+        matching_strategy = rec.metadata.get('matching_strategy', 'clustering')
         
-    def _extract_direct_match_info(self, rec: CreditTransferRecommendation) -> Dict:
-        """Extract match info for direct/hybrid matching strategies"""
+        # Get pre-calculated skill matches from metadata
+        skill_match_details = rec.metadata.get('skill_match_details', [])
         
-        # Get match statistics from metadata
-        match_stats = rec.metadata.get('match_statistics', {})
-        score_breakdown = rec.metadata.get('score_breakdown', {})
-        penalties = rec.metadata.get('penalties', {})
-        
-        # Direct match counts
-        direct_matches = match_stats.get('direct_matches', 0)
-        partial_matches = match_stats.get('partial_matches', 0)
-        total_uni_skills = len(rec.uni_course.extracted_skills) if hasattr(rec.uni_course, 'extracted_skills') else 0
-        unmapped_critical = total_uni_skills - direct_matches - partial_matches
-        
-        # Handle hybrid mode
-        is_hybrid = match_stats.get('hybrid_mode', False)
-        if is_hybrid and 'cluster_supplement' in match_stats:
-            cluster_stats = match_stats['cluster_supplement']
-            # Add cluster matches to counts
-            partial_matches += cluster_stats.get('total_matches', 0)
-            unmapped_critical = max(0, unmapped_critical - cluster_stats.get('total_matches', 0))
-        
-        # Get level alignment analysis
-        level_analysis = self._analyze_level_alignment(rec)
-        
-        # Get score components
-        if score_breakdown:
-            score_components = {
-                'coverage': score_breakdown.get('coverage_weighted', 0),
-                'quality': score_breakdown.get('quality_weighted', 0),
-                'level': score_breakdown.get('level_weighted', 0),
-                'context': score_breakdown.get('context_weighted', 0),
-                'confidence': score_breakdown.get('confidence_weighted', 0),
-                'edge_penalty': score_breakdown.get('total_penalty', 0)
-            }
-        else:
-            # Calculate based on match statistics
-            coverage = (direct_matches + partial_matches * 0.5) / max(total_uni_skills, 1)
-            score_components = {
-                'coverage': coverage * 0.4,
-                'quality': rec.skill_coverage.get('quality', 0) * 0.25,
-                'level': rec.skill_coverage.get('level', 0) * 0.2,
-                'context': rec.skill_coverage.get('context', 0) * 0.1,
-                'confidence': rec.confidence * 0.05,
-                'edge_penalty': sum(penalties.values()) if penalties else 0
-            }
-        
-        # Build edge case summary
-        edge_case_summary = {}
-        if rec.edge_case_results:
-            for case_type, case_data in rec.edge_case_results.items():
-                if isinstance(case_data, dict) and case_data.get('applicable'):
-                    edge_case_summary[case_type] = {
-                        'impact': penalties.get(case_type, 0),
-                        'recommendation': case_data.get('recommendation', ''),
-                        'requirements': case_data.get('bridging_requirements', [])
+        if skill_match_details:
+            # Use backend-calculated matches
+            for detail in skill_match_details['mapped']:
+                # Extract descriptions from skill objects
+                vet_skill_obj = detail['vet_skill']
+                uni_skill_obj = detail['uni_skill']
+                
+                # Get descriptions (assuming skills have a 'description' or 'source' attribute)
+                vet_desc = getattr(vet_skill_obj, 'description', getattr(vet_skill_obj, 'source', 'No description available'))
+                uni_desc = getattr(uni_skill_obj, 'description', getattr(uni_skill_obj, 'source', 'No description available'))
+                
+                mapping = {
+                    'vet_unit': vet_skill_obj.code,
+                    'vet_skill': vet_skill_obj.name,
+                    'vet_level': vet_skill_obj.level.value,
+                    'vet_context': vet_skill_obj.context.value,
+                    'vet_description': vet_desc,  # NEW
+                    'uni_course': uni_skill_obj.code,
+                    'uni_skill': uni_skill_obj.name,
+                    'uni_level': uni_skill_obj.level.value,
+                    'uni_context': uni_skill_obj.context.value,
+                    'uni_description': uni_desc,  # NEW
+                    'mapping_type': detail['match_type'],
+                    'similarity': detail['similarity'],
+                    'reasoning': detail['reasoning']
+                }
+                mappings.append(mapping)
+                
+            for unmapped in skill_match_details['unmapped_uni']:
+                uni_desc = getattr(unmapped, 'description', getattr(unmapped, 'source', 'No description available'))
+                mapping = {
+                    'vet_unit': '-',
+                    'vet_skill': '-',
+                    'vet_level': '-',
+                    'vet_context': '-',
+                    'vet_description': '-',
+                    'uni_course': unmapped.code,
+                    'uni_skill': unmapped.name,
+                    'uni_level': unmapped.level.value,
+                    'uni_context': unmapped.context.value,
+                    'uni_description': uni_desc,  # NEW
+                    'mapping_type': 'Unmapped',
+                    'similarity': 0,
+                    'reasoning': '-'
+                }               
+                mappings.append(mapping)
+                
+            if matching_strategy != 'direct_one_vs_all':
+                for unmapped in skill_match_details['unmapped_vet']:
+                    vet_desc = getattr(unmapped, 'description', getattr(unmapped, 'source', 'No description available'))
+                    mapping = {
+                        'vet_unit': unmapped.code,
+                        'vet_skill': unmapped.name,
+                        'vet_level': unmapped.level.value,
+                        'vet_context': unmapped.context.value,
+                        'vet_description': vet_desc,  # NEW
+                        'uni_course': '-',
+                        'uni_skill': '-',
+                        'uni_level': '-',
+                        'uni_context': '-',
+                        'uni_description': '-',
+                        'mapping_type': 'Unmapped',
+                        'similarity': 0,
+                        'reasoning': '-'
                     }
+                    mappings.append(mapping)
+        else:
+            logger.warning(f"No skill match details found for recommendation {rec.id}")
         
-        # Calculate alignment formula string
-        base_score = sum(score_components.values()) - score_components['edge_penalty']
-        alignment_calculation = (
-            f"({score_components['coverage']:.2f} + {score_components['quality']:.2f} + "
-            f"{score_components['level']:.2f} + {score_components['context']:.2f} + "
-            f"{score_components['confidence']:.2f}) * (1 - {score_components['edge_penalty']:.2f}) = "
-            f"{rec.alignment_score:.2%}"
-        )
+        return mappings
+    
+    def _extract_cluster_skill_mappings_with_descriptions(self, rec: CreditTransferRecommendation, classifier) -> List[Dict]:
+        """Extract skill mappings for clustering strategy WITH descriptions"""
+        mappings = []
         
-        # Add strategy-specific info
-        strategy_info = f" [{rec.metadata.get('matching_strategy', 'unknown').title()} Matching]"
-        if is_hybrid:
-            strategy_info += " with clustering supplement"
+        # Create mapping tracking sets
+        vet_skill_mapping = {}
+        uni_skill_mapping = {}
         
-        return {
-            'direct_matches': direct_matches,
-            'partial_matches': partial_matches,
-            'unmapped_critical': unmapped_critical,
-            'total_uni_skills': total_uni_skills,
-            'quality_breakdown': rec.skill_coverage,
-            'score_components': score_components,
-            'edge_cases': edge_case_summary,
-            'alignment_calculation': alignment_calculation + strategy_info,
-            'level_analysis': level_analysis,
-            'matching_strategy': rec.metadata.get('matching_strategy', 'clustering')
-        }
+        semantic_clusters = rec.metadata.get('semantic_clusters', [])
         
+        for cluster in semantic_clusters:
+            avg_similarity = cluster.get('avg_semantic_similarity', 0)
+            
+            vet_skills = [item['skill'] for item in cluster.get('vet_skills', [])]
+            uni_skills = [item['skill'] for item in cluster.get('uni_skills', [])]
+            
+            if not vet_skills or not uni_skills:
+                continue
+            
+            avg_vet_level = np.mean([s.level.value for s in vet_skills])
+            avg_uni_level = np.mean([s.level.value for s in uni_skills])
+            level_gap = abs(int(avg_uni_level - avg_vet_level))
+            
+            vet_contexts = [s.context.value for s in vet_skills]
+            uni_contexts = [s.context.value for s in uni_skills]
+            context_match = (vet_contexts[0] == uni_contexts[0]) if vet_contexts and uni_contexts else False
+            
+            mapping_type, reason = classifier.classify_mapping(
+                avg_similarity, level_gap, context_match
+            )
+            
+            # Create mapping entries WITH descriptions
+            for vet_skill in vet_skills:
+                for uni_skill in uni_skills:
+                    vet_desc = getattr(vet_skill, 'description', getattr(vet_skill, 'source', 'No description available'))
+                    uni_desc = getattr(uni_skill, 'description', getattr(uni_skill, 'source', 'No description available'))
+                    
+                    mapping = {
+                        'vet_unit': rec.get_vet_unit_codes()[0] if rec.vet_units else 'Unknown',
+                        'vet_skill': vet_skill.name,
+                        'vet_level': vet_skill.level.value,
+                        'vet_context': vet_skill.context.value,
+                        'vet_description': vet_desc,  # NEW
+                        'uni_course': rec.uni_course.code,
+                        'uni_skill': uni_skill.name,
+                        'uni_level': uni_skill.level.value,
+                        'uni_context': uni_skill.context.value,
+                        'uni_description': uni_desc,  # NEW
+                        'mapping_type': mapping_type,
+                        'similarity': avg_similarity,
+                        'reasoning': reason + " [Cluster match]"
+                    }
+                    mappings.append(mapping)
+                    vet_skill_mapping[vet_skill.name] = mapping_type
+                    uni_skill_mapping[uni_skill.name] = mapping_type
+        
+        # Add unmapped skills
+        for unit in rec.vet_units:
+            for skill in unit.extracted_skills:
+                if skill.name not in vet_skill_mapping:
+                    vet_desc = getattr(skill, 'description', getattr(skill, 'source', 'No description available'))
+                    mapping = {
+                        'vet_unit': unit.code,
+                        'uni_course': rec.uni_course.code,
+                        'vet_skill': skill.name,
+                        'vet_level': skill.level.value,
+                        'vet_context': skill.context.value,
+                        'vet_description': vet_desc,  # NEW
+                        'uni_skill': '-',
+                        'uni_level': '-',
+                        'uni_context': '-',
+                        'uni_description': '-',
+                        'mapping_type': 'Unmapped',
+                        'similarity': 0,
+                        'reasoning': 'No matching university skill found [Cluster mode]'
+                    }
+                    mappings.append(mapping)
+        
+        for skill in rec.uni_course.extracted_skills:
+            if skill.name not in uni_skill_mapping:
+                uni_desc = getattr(skill, 'description', getattr(skill, 'source', 'No description available'))
+                mapping = {
+                    'vet_unit': '-',
+                    'uni_course': rec.uni_course.code,
+                    'vet_skill': '-',
+                    'vet_level': '-',
+                    'vet_context': '-',
+                    'vet_description': '-',
+                    'uni_skill': skill.name,
+                    'uni_level': skill.level.value,
+                    'uni_context': skill.context.value,
+                    'uni_description': uni_desc,  # NEW
+                    'mapping_type': 'Unmapped',
+                    'similarity': 0,
+                    'reasoning': 'No matching VET skill found [Cluster mode]'
+                }
+                mappings.append(mapping)
+        
+        return mappings
+    
     def _analyze_level_alignment(self, rec: CreditTransferRecommendation) -> Dict:
         """Analyze skill level alignment between VET and University"""
         
@@ -1939,186 +2250,12 @@ class ReportGenerator:
             
             if matching_strategy in ['direct', 'direct_one_vs_all', 'hybrid']:
                 # Handle direct and hybrid matching
-                all_mappings.extend(self._extract_direct_skill_mappings(rec, classifier))
+                all_mappings.extend(self._extract_direct_skill_mappings_with_descriptions(rec, classifier))
             else:
                 # Original clustering logic
-                all_mappings.extend(self._extract_cluster_skill_mappings(rec, classifier))
+                all_mappings.extend(self._extract_cluster_skill_mappings_with_descriptions(rec, classifier))
         
         return all_mappings
-
-    def _extract_direct_skill_mappings(self, rec: CreditTransferRecommendation, classifier) -> List[Dict]:
-        """Extract skill mappings from backend-calculated matches"""
-        mappings = []
-        matching_strategy = rec.metadata.get('matching_strategy', 'clustering')
-        # Get pre-calculated skill matches from metadata
-        skill_match_details = rec.metadata.get('skill_match_details', [])
-        
-        if skill_match_details:
-            # Use backend-calculated matches
-            for detail in skill_match_details['mapped']:
-                # Both skills present - normal match
-                mapping = {
-                    'vet_unit': detail['vet_skill'].code,
-                    'vet_skill': detail['vet_skill'].name,
-                    'vet_level': detail['vet_skill'].level.value,
-                    'vet_context': detail['vet_skill'].context.value,  # Add context
-                    'uni_course': detail['uni_skill'].code,
-                    'uni_skill': detail['uni_skill'].name,
-                    'uni_level': detail['uni_skill'].level.value,
-                    'uni_context': detail['uni_skill'].context.value,  # Add context
-                    'mapping_type': detail['match_type'],
-                    'similarity': detail['similarity'],
-                    'reasoning': detail['reasoning']
-                }
-                mappings.append(mapping)
-                
-            for unmapped in skill_match_details['unmapped_uni']:
-                # Only Uni skill - unmapped Uni
-                mapping = {
-                    'vet_unit': '-',
-                    'vet_skill': '-',
-                    'vet_level': '-',
-                    'vet_context': '-',
-                    'uni_course': unmapped.code,
-                    'uni_skill': unmapped.name,
-                    'uni_level': unmapped.level.value,
-                    'uni_context': unmapped.context.value,  # Add context
-                    'mapping_type': 'Unmapped',
-                    'similarity': 0,
-                    'reasoning': '-'
-                }               
-                mappings.append(mapping)
-                
-            if matching_strategy != 'direct_one_vs_all':
-                for unmapped in skill_match_details['unmapped_vet']:
-                    # Only VET skill - unmapped VET
-                    mapping = {
-                        'vet_unit': unmapped.code,
-                        'vet_skill': unmapped.name,
-                        'vet_level': unmapped.level.value,
-                        'vet_context': unmapped.context.value,  # Add context
-                        'uni_course': '-',
-                        'uni_skill': '-',
-                        'uni_level': '-',
-                        'uni_context': '-',
-                        'mapping_type': 'Unmapped',
-                        'similarity': 0,
-                        'reasoning': '-'
-                    }
-                    mappings.append(mapping)
-        else:
-            # Fallback if no pre-calculated matches (shouldn't happen)
-            logger.warning(f"No skill match details found for recommendation {rec.id}")
-        
-        return mappings
-
-    def _get_skill_level(self, rec: CreditTransferRecommendation, skill_name: str, source: str) -> int:
-        """Helper to get skill level by name"""
-        if source == 'vet':
-            for unit in rec.vet_units:
-                for skill in unit.extracted_skills:
-                    if skill.name == skill_name:
-                        return skill.level.value
-        else:  # uni
-            for skill in rec.uni_course.extracted_skills:
-                if skill.name == skill_name:
-                    return skill.level.value
-        return 0
-
-    def _extract_cluster_skill_mappings(self, rec: CreditTransferRecommendation, classifier) -> List[Dict]:
-        """Extract skill mappings for clustering strategy (original logic)"""
-        mappings = []
-        
-        # Create mapping tracking sets
-        vet_skill_mapping = {}
-        uni_skill_mapping = {}
-        
-        # Original clustering logic from your existing code
-        semantic_clusters = rec.metadata.get('semantic_clusters', [])
-        
-        for cluster in semantic_clusters:
-            # Get average similarity
-            avg_similarity = cluster.get('avg_semantic_similarity', 0)
-            
-            # Get skills
-            vet_skills = [item['skill'] for item in cluster.get('vet_skills', [])]
-            uni_skills = [item['skill'] for item in cluster.get('uni_skills', [])]
-            
-            if not vet_skills or not uni_skills:
-                continue
-            
-            # Calculate simple metrics
-            avg_vet_level = np.mean([s.level.value for s in vet_skills])
-            avg_uni_level = np.mean([s.level.value for s in uni_skills])
-            level_gap = abs(int(avg_uni_level - avg_vet_level))
-            
-            # Simple context check
-            vet_contexts = [s.context.value for s in vet_skills]
-            uni_contexts = [s.context.value for s in uni_skills]
-            context_match = (vet_contexts[0] == uni_contexts[0]) if vet_contexts and uni_contexts else False
-            
-            # Classify
-            mapping_type, reason = classifier.classify_mapping(
-                avg_similarity, level_gap, context_match
-            )
-            
-            # Create mapping entries
-            for vet_skill in vet_skills:
-                for uni_skill in uni_skills:
-                    mapping = {
-                        'vet_unit': rec.get_vet_unit_codes()[0] if rec.vet_units else 'Unknown',
-                        'vet_skill': vet_skill.name,
-                        'vet_level': vet_skill.level.value,
-                        'vet_context': vet_skill.context.value,  # Add context
-                        'uni_course': rec.uni_course.code,
-                        'uni_skill': uni_skill.name,
-                        'uni_level': uni_skill.level.value,
-                        'uni_context': uni_skill.context.value,  # Add context
-                        'mapping_type': mapping_type,
-                        'similarity': avg_similarity,
-                        'reasoning': reason + " [Cluster match]"
-                    }
-                    mappings.append(mapping)
-                    vet_skill_mapping[vet_skill.name] = mapping_type
-                    uni_skill_mapping[uni_skill.name] = mapping_type
-        
-        # Add unmapped skills (original logic)
-        for unit in rec.vet_units:
-            for skill in unit.extracted_skills:
-                if skill.name not in vet_skill_mapping:
-                    mapping = {
-                        'vet_unit': unit.code,
-                        'uni_course': rec.uni_course.code,
-                        'vet_skill': skill.name,
-                        'vet_level': skill.level.value,
-                        'vet_context': skill.context.value,  # Add context
-                        'uni_skill': '-',
-                        'uni_level': '-',
-                        'uni_context': '-',
-                        'mapping_type': 'Unmapped',
-                        'similarity': 0,
-                        'reasoning': 'No matching university skill found [Cluster mode]'
-                    }
-                    mappings.append(mapping)
-        
-        for skill in rec.uni_course.extracted_skills:
-            if skill.name not in uni_skill_mapping:
-                mapping = {
-                    'vet_unit': '-',
-                    'uni_course': rec.uni_course.code,
-                    'vet_skill': '-',
-                    'vet_level': '-',
-                    'vet_context': '-',
-                    'uni_skill': skill.name,
-                    'uni_level': skill.level.value,
-                    'uni_context': skill.context.value,  # Add context
-                    'mapping_type': 'Unmapped',
-                    'similarity': 0,
-                    'reasoning': 'No matching VET skill found [Cluster mode]'
-                }
-                mappings.append(mapping)
-        
-        return mappings
         
     def export_skill_mappings_to_csv(self, 
                                  recommendations: List[CreditTransferRecommendation],
