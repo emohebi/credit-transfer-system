@@ -277,20 +277,20 @@ def main():
     Main function to run the extraction.
     """
     qual = {
-    "code": "BSB50120",
-    "name": "Diploma of Business",
+    "code": "HLT54121",
+    "name": "Diploma of Nursing",
     "level": "Diploma",
     "units": []
     }
     # Input file path
     parent_dir = "/Volumes/jsa_external_prod/external_vols/scratch/Scratch/Ehsan/NST/MiniProjOct25/data"
-    dir_ = Path(parent_dir) / "raw/BSB50120 Diploma_filtered/"
-    files = [str(f) for f in dir_.glob("*.docx")]
+    input_folder = Path(parent_dir) / "raw/HLT54121 Diploma of Nursing/"
+    files = [str(file) for file in input_folder.glob('**/*.docx') if 'Complete_R' in str(file)]#[str(f) for f in dir_.glob("*.docx")]
     # docx_file = "/home/ehsan/Downloads/BSBOPS501_Complete_R1.docx"  # Update with your actual file path
-    
+    from tqdm import tqdm
     try:
         # Extract course information
-        for docx_file in files:
+        for docx_file in tqdm(files):
             course_info = extract_vet_course_info(docx_file)
             qual["units"].append(course_info)
         # Print the result

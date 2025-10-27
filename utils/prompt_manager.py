@@ -69,7 +69,7 @@ Your expertise includes understanding educational taxonomies (Bloom's, Australia
 
 ### CRITICAL Skill Naming Convention:
 - **Use NATURAL, PROFESSIONAL terminology with sufficient context**
-- **MUST BE 2-4 WORDS MAXIMUM**
+- **MUST BE 2-4 WORDS MAXIMUM, providing CONTEXT is a MUST**
 - **Match existing taxonomies**: ESCO, O*NET, SFIA, job postings
 - **Remove unnecessary qualifiers and redundant descriptors**
 - Follow the pattern: [Action/Process] + [Domain/Context] + [Object/Outcome]
@@ -321,7 +321,6 @@ WHEN TEXT SAYS → EXTRACT AS (2-4 words):
 8. Assess context: Does the evidence show understanding (theoretical), doing (practical), or both (hybrid)?
 9. When context is unclear from evidence, default to hybrid as most professional skills involve both theory and practice
 10. **CRITICAL for Levels**: Be conservative! Default to level 3. Only use level 5+ when evidence explicitly shows expert/strategic work.
-11. **Level Distribution Check**: Aim for ~70% at levels 2-3, ~20% at level 4, <10% at level 5+
 
 ## OUTPUT REQUIREMENTS:
 Output maximum 15 high quality distinct skills or human capabilities in JSON format.

@@ -165,9 +165,9 @@ class UnifiedSkillExtractor:
         """Get study level from item or infer it"""
         
         # For University courses, use existing study level or infer
-        # if item_type == "University Course" and hasattr(item, 'study_level'):
-        #     if item.study_level and item.study_level.lower() != "unknown":
-        #         return item.study_level
+        if item_type == "University Course" and hasattr(item, 'study_level'):
+            if item.study_level and item.study_level.lower() != "unknown":
+                return item.study_level
         
         # For VET or missing study levels, infer from text
         text = self._get_item_text(item)

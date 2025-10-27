@@ -171,15 +171,16 @@ def main():
     # Replace with your actual file path
     html_file_path = "/home/ehsan/Downloads/Business Decision Making (11009) - University of Canberra.html"
     qual = {
-        "code": "933AA",
-        "name": "Diploma of Business",
+        "code": "364JA",
+        "name": "Bachelor of Nursing",
         "courses": []
         }
     parent_dir = "/Volumes/jsa_external_prod/external_vols/scratch/Scratch/Ehsan/NST/MiniProjOct25/data"
-    dir_ = Path(parent_dir) / "raw/MGB106 Bachelor of Business (Marketing)/"
+    dir_ = Path(parent_dir) / "raw/364JA Bachelor of Nursing/"
     files = [str(f) for f in dir_.glob("*.html")]
+    from tqdm import tqdm
     try:
-        for html_file_path in files:
+        for html_file_path in tqdm(files):
             course_info = extract_course_info(html_file_path)
             qual["courses"].append(course_info)
         # Output as formatted JSON
