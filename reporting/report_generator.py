@@ -1541,7 +1541,7 @@ class ReportGenerator:
                 html.append("<tbody>")
                 
                 # Display direct mappings with tooltips and expandable descriptions
-                for mapping_idx, mapping in enumerate(direct_mappings[:10]):
+                for mapping_idx, mapping in enumerate(direct_mappings):
                     mapping_id = f"rec{idx}-direct-{mapping_idx}"
                     html.append(f"<tr class='mapping-direct'>")
                     html.append(f"<td>{mapping['vet_unit']}</td>")
@@ -1607,7 +1607,7 @@ class ReportGenerator:
                     html.append(f"</tr>")
                 
                 # Display partial mappings
-                for mapping_idx, mapping in enumerate(partial_mappings[:8]):
+                for mapping_idx, mapping in enumerate(partial_mappings):
                     mapping_id = f"rec{idx}-partial-{mapping_idx}"
                     html.append(f"<tr class='mapping-partial'>")
                     html.append(f"<td>{mapping['vet_unit']}</td>")
@@ -1669,7 +1669,7 @@ class ReportGenerator:
                     html.append(f"</tr>")
                 
                 # Display unmapped mappings (no descriptions needed)
-                for mapping in unmapped_mappings[:7]:
+                for mapping in unmapped_mappings:
                     html.append(f"<tr class='mapping-unmapped'>")
                     html.append(f"<td>{mapping['vet_unit']}</td>")
                     html.append(f"<td>{mapping.get('vet_skill', '-')}</td>")
@@ -1681,12 +1681,12 @@ class ReportGenerator:
                     html.append("</tr>")
                 
                 # Add note if more mappings exist
-                total_mappings = len(skill_mappings)
-                shown_mappings = min(25, len(direct_mappings) + len(partial_mappings) + len(unmapped_mappings))
-                if total_mappings > shown_mappings:
-                    html.append(f"<tr><td colspan='7' style='text-align:center; font-style:italic; color: #718096;'>")
-                    html.append(f"<i class='fas fa-ellipsis-h'></i> {total_mappings - shown_mappings} more mappings not shown")
-                    html.append(f"</td></tr>")
+                # total_mappings = len(skill_mappings)
+                # shown_mappings = min(25, len(direct_mappings) + len(partial_mappings) + len(unmapped_mappings))
+                # if total_mappings > shown_mappings:
+                #     html.append(f"<tr><td colspan='7' style='text-align:center; font-style:italic; color: #718096;'>")
+                #     html.append(f"<i class='fas fa-ellipsis-h'></i> {total_mappings - shown_mappings} more mappings not shown")
+                #     html.append(f"</td></tr>")
                 
                 html.append("</tbody></table>")
             else:
