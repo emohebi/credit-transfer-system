@@ -79,6 +79,7 @@ class UnitOfCompetency:
     code: str
     name: str
     description: str
+    study_level: str  # e.g., "Certificate III", "Diploma" etc
     learning_outcomes: List[str] = field(default_factory=list)
     assessment_requirements: str = ""
     nominal_hours: int = 0
@@ -102,6 +103,7 @@ class UnitOfCompetency:
             "code": self.code,
             "name": self.name,
             "description": self.description,
+            "study_level": self.study_level,
             "learning_outcomes": self.learning_outcomes,
             "assessment_requirements": self.assessment_requirements,
             "nominal_hours": self.nominal_hours,
