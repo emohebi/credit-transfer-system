@@ -18,7 +18,7 @@ from analysis.simplified_analyzer import SimplifiedAnalyzer
 logger = logging.getLogger(__name__)
 
 
-def extract_and_save_skills(genai, embeddings, config, vet_file_path: str, uni_file_path: str) -> Tuple[str, str]:
+def extract_and_save_skills(genai, embeddings, config, vet_qual: VETQualification, uni_qual: UniQualification) -> Tuple[str, str]:
     """
     Extract skills from VET and University qualifications with cross-qualification differentiation
     
@@ -37,9 +37,9 @@ def extract_and_save_skills(genai, embeddings, config, vet_file_path: str, uni_f
     logger.info("SKILL EXTRACTION WITH CROSS-QUALIFICATION DIFFERENTIATION")
     logger.info("="*60)
     
-    # Load qualifications
-    vet_qual = load_vet_qualification(vet_file_path)
-    uni_qual = load_uni_qualification(uni_file_path)
+    # # Load qualifications
+    # vet_qual = load_vet_qualification(vet_file_path)
+    # uni_qual = load_uni_qualification(uni_file_path)
     
     logger.info(f"Loaded VET: {vet_qual.name} ({len(vet_qual.units)} units)")
     logger.info(f"Loaded Uni: {uni_qual.name} ({len(uni_qual.courses)} courses)")
@@ -141,113 +141,113 @@ def log_extraction_statistics(vet_qual: VETQualification, uni_qual: UniQualifica
         logger.info(f"\nAverage level difference (Uni - VET): {level_diff:.2f}")
 
 
-def load_vet_qualification(filepath: str) -> VETQualification:
-    """Load VET qualification from JSON file"""
-    with open(filepath, 'r') as f:
-        data = json.load(f)
+# def load_vet_qualification(filepath: str) -> VETQualification:
+#     """Load VET qualification from JSON file"""
+#     with open(filepath, 'r') as f:
+#         data = json.load(f)
     
-    vet_qual = VETQualification(
-        code=data["code"],
-        name=data["name"],
-        level=data["level"]
-    )
+#     vet_qual = VETQualification(
+#         code=data["code"],
+#         name=data["name"],
+#         level=data["level"]
+#     )
     
-    for unit_data in data.get("units", []):
-        unit = UnitOfCompetency(
-            code=unit_data["code"],
-            name=unit_data["name"],
-            description=unit_data.get("description", ""),
-            study_level=unit_data.get("study_level", ""),
-            learning_outcomes=unit_data.get("learning_outcomes", []),
-            assessment_requirements=unit_data.get("assessment_requirements", ""),
-            nominal_hours=unit_data.get("nominal_hours", 0) or 0,
-            prerequisites=unit_data.get("prerequisites", [])
-        )
-        vet_qual.units.append(unit)
+#     for unit_data in data.get("units", []):
+#         unit = UnitOfCompetency(
+#             code=unit_data["code"],
+#             name=unit_data["name"],
+#             description=unit_data.get("description", ""),
+#             study_level=unit_data.get("study_level", ""),
+#             learning_outcomes=unit_data.get("learning_outcomes", []),
+#             assessment_requirements=unit_data.get("assessment_requirements", ""),
+#             nominal_hours=unit_data.get("nominal_hours", 0) or 0,
+#             prerequisites=unit_data.get("prerequisites", [])
+#         )
+#         vet_qual.units.append(unit)
     
-    return vet_qual
+#     return vet_qual
 
 
-def load_uni_qualification(filepath: str) -> UniQualification:
-    """Load university qualification from JSON file"""
-    with open(filepath, 'r') as f:
-        data = json.load(f)
+# def load_uni_qualification(filepath: str) -> UniQualification:
+#     """Load university qualification from JSON file"""
+#     with open(filepath, 'r') as f:
+#         data = json.load(f)
     
-    uni_qual = UniQualification(
-        code=data["code"],
-        name=data["name"]
-    )
+#     uni_qual = UniQualification(
+#         code=data["code"],
+#         name=data["name"]
+#     )
     
-    for course_data in data.get("courses", []):
-        course = UniCourse(
-            code=course_data["code"],
-            name=course_data["name"],
-            description=course_data.get("description", ""),
-            study_level=course_data.get("study_level", "intermediate"),
-            learning_outcomes=course_data.get("learning_outcomes", []),
-            prerequisites=course_data.get("prerequisites", []),
-            credit_points=course_data.get("credit_points", 0),
-            topics=course_data.get("topics", []),
-            assessment=course_data.get("assessment", "")
-        )
-        uni_qual.courses.append(course)
+#     for course_data in data.get("courses", []):
+#         course = UniCourse(
+#             code=course_data["code"],
+#             name=course_data["name"],
+#             description=course_data.get("description", ""),
+#             study_level=course_data.get("study_level", "intermediate"),
+#             learning_outcomes=course_data.get("learning_outcomes", []),
+#             prerequisites=course_data.get("prerequisites", []),
+#             credit_points=course_data.get("credit_points", 0),
+#             topics=course_data.get("topics", []),
+#             assessment=course_data.get("assessment", "")
+#         )
+#         uni_qual.courses.append(course)
     
-    return uni_qual
+#     return uni_qual
 
 
-if __name__ == "__main__":
-    # Example usage
-    import sys
-    import argparse
+# if __name__ == "__main__":
+#     # Example usage
+#     import sys
+#     import argparse
     
-    parser = argparse.ArgumentParser(description="Extract and save skills with differentiation")
-    parser.add_argument("vet_file", help="Path to VET qualification JSON")
-    parser.add_argument("uni_file", help="Path to University qualification JSON")
-    parser.add_argument("--backend", choices=["openai", "vllm", "auto"], default="auto",
-                       help="AI backend to use")
-    parser.add_argument("--similarity-threshold", type=float, default=0.9,
-                       help="Similarity threshold for skill matching (0.0-1.0)")
-    parser.add_argument("--min-level-diff", type=int, default=1,
-                       help="Minimum level difference between similar VET/Uni skills")
+#     parser = argparse.ArgumentParser(description="Extract and save skills with differentiation")
+#     parser.add_argument("vet_file", help="Path to VET qualification JSON")
+#     parser.add_argument("uni_file", help="Path to University qualification JSON")
+#     parser.add_argument("--backend", choices=["openai", "vllm", "auto"], default="auto",
+#                        help="AI backend to use")
+#     parser.add_argument("--similarity-threshold", type=float, default=0.9,
+#                        help="Similarity threshold for skill matching (0.0-1.0)")
+#     parser.add_argument("--min-level-diff", type=int, default=1,
+#                        help="Minimum level difference between similar VET/Uni skills")
     
-    args = parser.parse_args()
+#     args = parser.parse_args()
     
-    # Set up logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
+#     # Set up logging
+#     logging.basicConfig(
+#         level=logging.INFO,
+#         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+#     )
     
-    # Load configuration
-    from config_profiles import ConfigProfiles
-    from interfaces.model_factory import ModelFactory
+#     # Load configuration
+#     from config_profiles import ConfigProfiles
+#     from interfaces.model_factory import ModelFactory
     
-    config = ConfigProfiles.create_config(
-        profile_name="balanced",
-        backend=args.backend
-    )
+#     config = ConfigProfiles.create_config(
+#         profile_name="balanced",
+#         backend=args.backend
+#     )
     
-    # Add custom settings
-    config.SKILL_SIMILARITY_THRESHOLD = args.similarity_threshold
-    config.MIN_UNI_VET_LEVEL_DIFF = args.min_level_diff
+#     # Add custom settings
+#     config.SKILL_SIMILARITY_THRESHOLD = args.similarity_threshold
+#     config.MIN_UNI_VET_LEVEL_DIFF = args.min_level_diff
     
-    # Create interfaces
-    genai = ModelFactory.create_genai_interface(config)
-    embeddings = ModelFactory.create_embedding_interface(config)
+#     # Create interfaces
+#     genai = ModelFactory.create_genai_interface(config)
+#     embeddings = ModelFactory.create_embedding_interface(config)
     
-    if not embeddings:
-        logger.error("Embedding interface is required for skill differentiation")
-        sys.exit(1)
+#     if not embeddings:
+#         logger.error("Embedding interface is required for skill differentiation")
+#         sys.exit(1)
     
-    # Extract and save skills
-    vet_output, uni_output = extract_and_save_skills(
-        genai,
-        embeddings,
-        config,
-        args.vet_file,
-        args.uni_file
-    )
+#     # Extract and save skills
+#     vet_output, uni_output = extract_and_save_skills(
+#         genai,
+#         embeddings,
+#         config,
+#         args.vet_file,
+#         args.uni_file
+#     )
     
-    print(f"\n✓ Skills extracted and saved:")
-    print(f"  VET: {vet_output}")
-    print(f"  Uni: {uni_output}")
+#     print(f"\n✓ Skills extracted and saved:")
+#     print(f"  VET: {vet_output}")
+#     print(f"  Uni: {uni_output}")

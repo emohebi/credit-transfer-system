@@ -253,9 +253,29 @@ Your expertise includes understanding educational taxonomies (Bloom's, Australia
                 This is an ADVANCED university course requiring HIGHER-ORDER THINKING and COMPLEX APPLICATION.
 
                 ### Expected SFIA Levels for Year {university_year}:
+                - Minimum: Level 4 (Enable) - for core competencies  
+                - Typical: Level 5 (Ensure/Advise) - for specialized competencies
+
+                **Level 4 (Enable) - MINIMUM for year {university_year}:**
+                - Complex problem-solving, research skills
+                - "investigate", "optimize", "architect", "lead analysis"
+                - Skills requiring deep understanding and creativity
+
+                **Level 5 (Ensure/Advise) - for specialized skills:**
+                - Expert-level analysis, original research
+                - "critical evaluation", "innovative solutions", "strategic planning"
+                - Skills demonstrating mastery and thought leadership
+
+                IMPORTANT: Year {university_year} students have {university_year - 1} years of prior learning.
+                Skills should reflect this progression. DO NOT assign levels 1-3 unless explicitly basic."""
+            if university_year >= 2 and university_year < 3:
+                level_rules += f"""
+                ## UNIVERSITY YEAR {university_year} SKILL LEVEL RULES:
+                This is an INTERMEDIATE university course.
+
+                ### Expected SFIA Levels for Year {university_year}:
                 - Minimum: Level 3 (Apply) - for basic competencies
                 - Typical: Level 4 (Enable) - for core competencies  
-                - Advanced: Level 5 (Ensure/Advise) - for specialized competencies
 
                 ### Year {university_year} Level Indicators:
                 **Level 3 (Apply) - MINIMUM for year {university_year}:**
@@ -268,10 +288,6 @@ Your expertise includes understanding educational taxonomies (Bloom's, Australia
                 - "investigate", "optimize", "architect", "lead analysis"
                 - Skills requiring deep understanding and creativity
 
-                **Level 5 (Ensure/Advise) - for specialized skills:**
-                - Expert-level analysis, original research
-                - "critical evaluation", "innovative solutions", "strategic planning"
-                - Skills demonstrating mastery and thought leadership
 
                 IMPORTANT: Year {university_year} students have {university_year - 1} years of prior learning.
                 Skills should reflect this progression. DO NOT assign levels 1-2 unless explicitly basic."""
@@ -282,7 +298,7 @@ Your expertise includes understanding educational taxonomies (Bloom's, Australia
 
                 ### Level Assignment Rules by Evidence:
         
-                **Assign Level 1-2 when evidence shows:**
+                **Assign Level 2 when evidence shows:**
                 - Basic tasks, routine work, following procedures
                 - Words like "assist", "support", "help", "basic", "simple"
                 - Entry-level or foundational skills
@@ -296,7 +312,6 @@ Your expertise includes understanding educational taxonomies (Bloom's, Australia
                 
                 ### Expected SFIA Levels:
                 - Year 1: Levels 2-3 (Assist to Apply)
-                - Year 2: Levels 3-4 (Apply to Enable)
 
                 Skills should show theoretical understanding with emerging application abilities.
                 """
@@ -305,7 +320,8 @@ Your expertise includes understanding educational taxonomies (Bloom's, Australia
             level_rules += f"""
             ## VET SKILL LEVEL RULES:
             VET courses focus on PRACTICAL APPLICATION and OPERATIONAL COMPETENCE.
-
+            VET Qualification: {study_level}
+            
             ### Expected SFIA Levels for VET:
             - Certificate III: Levels 1-2 (Follow to Assist)
             - Certificate IV: Levels 2-3 (Assist to Apply)
@@ -374,7 +390,7 @@ Your expertise includes understanding educational taxonomies (Bloom's, Australia
         {
             "name": "financial data analysis",  // Human capability with context (2-4 WORDS OPTIMAL)
             "category": "cognitive",  // MUST be one of: technical/cognitive/interpersonal/domain_knowledge
-            "level": 3,  // SFIA level (1-7) 
+            "level": 1,  // SFIA level (1-7) 
             "context": "hybrid",  // theoretical (understanding) / practical (doing) / hybrid (both) - default to hybrid if unclear
             "confidence": 0.7,  // Extraction confidence
             "evidence": "...",  // The exact unmodified text in the input showing this capability (max 200 chars)

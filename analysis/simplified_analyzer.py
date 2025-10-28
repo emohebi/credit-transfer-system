@@ -428,7 +428,7 @@ class SimplifiedAnalyzer:
                                 if loaded_course.extracted_skills:
                                     course.extracted_skills = loaded_course.extracted_skills
                                     load_status['uni'][course.code] = True
-                                    logger.info(f"Loaded {len(course.extracted_skills)} skills for Uni course {course.code}")
+                                    logger.info(f"Loaded {len(course.extracted_skills)} skills for Uni course {course.code} (y:{getattr(course, 'year', 'N/A')})")
                                 else:
                                     load_status['uni'][course.code] = False
                                     logger.warning(f"No skills found in cache for Uni course {course.code}")

@@ -86,7 +86,8 @@ def load_uni_data(filepath: str) -> UniQualification:
             prerequisites=course_data.get("prerequisites", []),
             credit_points=course_data.get("credit_points", 0),
             topics=course_data.get("topics", []),
-            assessment=course_data.get("assessment", "")
+            assessment=course_data.get("assessment", ""),
+            year=int(course_data.get("year"))
         )
         uni_qual.courses.append(course)
     

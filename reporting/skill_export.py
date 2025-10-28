@@ -236,6 +236,7 @@ class SkillExportManager:
                 "prerequisites": course.prerequisites,
                 "topics": course.topics,
                 "total_skills": len(course.extracted_skills),
+                "year": course.year,
                 "skills": []
             }
             
@@ -603,7 +604,8 @@ class SkillExportManager:
                 # assessment_requirements=course_data.get("assessment_requirements", ""),
                 credit_points=course_data.get("credit_points", 0),
                 prerequisites=course_data.get("prerequisites", []),
-                topics=course_data.get("topics", [])
+                topics=course_data.get("topics", []),
+                year=int(course_data.get("year", 1))
             )
             
             # Load skills with ALL metadata
