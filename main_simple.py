@@ -55,6 +55,7 @@ def load_vet_data(filepath: str) -> VETQualification:
             code=unit_data["code"],
             name=unit_data["name"],
             description=unit_data.get("description", ""),
+            study_level=unit_data.get("study_level", ""),
             learning_outcomes=unit_data.get("learning_outcomes", []),
             assessment_requirements=unit_data.get("assessment_requirements", ""),
             nominal_hours=unit_data.get("nominal_hours", 0) if unit_data.get("nominal_hours") is not None else 0,  # Default to 0 instead of None

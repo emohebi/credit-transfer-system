@@ -158,6 +158,7 @@ class SkillExportManager:
             unit_data = {
                 "code": unit.code,
                 "name": unit.name,
+                "study_level": unit.study_level,
                 "nominal_hours": unit.nominal_hours,
                 "prerequisites": unit.prerequisites,
                 "total_skills": len(unit.extracted_skills),
@@ -538,6 +539,9 @@ class SkillExportManager:
                 code=unit_data["code"],
                 name=unit_data["name"],
                 description="",
+                study_level=unit_data.get("study_leve"),
+                learning_outcomes=unit_data.get("learning_outcomes", []),
+                assessment_requirements=unit_data.get("assessment_requirements", ""),
                 nominal_hours=unit_data.get("nominal_hours", 0),
                 prerequisites=unit_data.get("prerequisites", [])
             )
@@ -595,6 +599,8 @@ class SkillExportManager:
                 name=course_data["name"],
                 description="",
                 study_level=course_data.get("study_level", "intermediate"),
+                learning_outcomes=course_data.get("learning_outcomes", []),
+                assessment_requirements=course_data.get("assessment_requirements", ""),
                 credit_points=course_data.get("credit_points", 0),
                 prerequisites=course_data.get("prerequisites", []),
                 topics=course_data.get("topics", [])
