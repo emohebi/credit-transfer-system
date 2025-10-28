@@ -600,7 +600,7 @@ class SkillExportManager:
                 description="",
                 study_level=course_data.get("study_level", "intermediate"),
                 learning_outcomes=course_data.get("learning_outcomes", []),
-                assessment_requirements=course_data.get("assessment_requirements", ""),
+                # assessment_requirements=course_data.get("assessment_requirements", ""),
                 credit_points=course_data.get("credit_points", 0),
                 prerequisites=course_data.get("prerequisites", []),
                 topics=course_data.get("topics", [])
