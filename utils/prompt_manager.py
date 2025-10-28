@@ -31,6 +31,7 @@ class PromptManager:
 
 Your expertise includes understanding educational taxonomies (Bloom's, Australian Qualifications Framework, European Qualifications Framework) and translating competency statements into standardized human capabilities."""
 
+        is_uni = 'uni' in item_type.lower()
         # Chain of thought process
         chain_of_thought = """
             ## Chain of Thought Process:
@@ -190,7 +191,7 @@ Your expertise includes understanding educational taxonomies (Bloom's, Australia
             - "budget compliance monitoring" (3 words) ✓
             """
 
-        context_rules = """
+        context_rules = f"""
         ## Context Classification Guidelines:
 
         ### THEORETICAL Context:
@@ -218,6 +219,7 @@ Your expertise includes understanding educational taxonomies (Bloom's, Australia
         - Evidence shows learning theory AND doing practical work
 
         ## DETERMINATION RULES:
+        Course Type: "{item_type}", Study Level: "{study_level if study_level else 'N/A'}"
         1. Look at the EVIDENCE text - what is actually being done?
         2. If evidence shows ONLY understanding/knowing → THEORETICAL
         3. If evidence shows ONLY doing/implementing → PRACTICAL
@@ -227,8 +229,10 @@ Your expertise includes understanding educational taxonomies (Bloom's, Australia
         - Theory-only assessment → THEORETICAL
         - Practice-only assessment → PRACTICAL
         - Mixed assessment → HYBRID
+        7. University courses often lean towards THEORETICAL or HYBRID due to combined theory and practice
+        8. VET courses often lean towards PRACTICAL or HYBRID due to hands-on focus
             """
-        is_uni = 'uni' in item_type.lower()
+        
         # Level calibration based on Bloom's taxonomy
         study_enum = StudyLevel.from_string(study_level)
         expected_min, expected_max = StudyLevel.get_expected_skill_level_range(study_enum)
