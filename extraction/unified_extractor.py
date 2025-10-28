@@ -133,15 +133,15 @@ class UnifiedSkillExtractor:
             items_to_process.append(item)
             
             # Get or infer study level
-            study_level = self._get_or_infer_study_level(item, item_type)
-            study_levels_to_process.append(study_level)
+            # study_level = self._get_or_infer_study_level(item, item_type)
+            study_levels_to_process.append(item.study_level)
         
         # Process items
         if texts_to_process:
             # Individual processing with study levels
             extracted_skills = []
             for text, study_level, it in zip(texts_to_process, study_levels_to_process, items_to_process):
-                skills = self._single_extract(text, item_type, study_level, item=it)
+                skills = self._single_extract(text, item_type, study_level, item=it, university_year=it.year if hasattr(it, 'year') else None)
                 extracted_skills.append(skills)
             
             # Store results
@@ -173,7 +173,7 @@ class UnifiedSkillExtractor:
         text = self._get_item_text(item)
         
         # First try simple keyword-based inference
-        inferred_level = StudyLevel.infer_from_text(text)
+        # inferred_level = StudyLevel.infer_from_text(text)
         
         # If we have AI available and need more precision, use it
         if self.genai:
@@ -190,7 +190,7 @@ class UnifiedSkillExtractor:
         return inferred_level
     
 
-    def _single_extract(self, text: str, item_type: str, study_level: str = None, item = None) -> List[Skill]:
+    def _single_extract(self, text: str, item_type: str, study_level: str = None, item = None, university_year: int = None) -> List[Skill]:
         """Extract skills from single text with deterministic ordering"""
         
         if not self.genai:
@@ -202,7 +202,8 @@ class UnifiedSkillExtractor:
             text=text,
             item_type=item_type,
             study_level=study_level,
-            backend_type=self.backend_type
+            backend_type=self.backend_type,
+            university_year=university_year
         )
         counter_1 = 0
         loop_1 = True
@@ -693,39 +694,6 @@ class UnifiedSkillExtractor:
             return expected_max
         else:
             return skill_level
-    
-    def _fallback_extraction(self, text: str, study_level: str = None) -> List[Skill]:
-        """Fallback extraction without AI, considering SFIA study level"""
-        skills = []
-        
-        # Determine expected SFIA skill level based on study level
-        if study_level:
-            study_enum = StudyLevel.from_string(study_level)
-            expected_min, expected_max = StudyLevel.get_expected_skill_level_range(study_enum)
-            default_level = int((expected_min + expected_max) / 2)
-        else:
-            default_level = 3  # SFIA Level 3 (Apply) as default
-        
-        # Ensure default level is within SFIA bounds
-        default_level = max(1, min(7, default_level))
-        
-        lines = text.split('\n')
-        for line in lines[:20]:
-            line = line.strip()
-            if len(line) > 10 and len(line) < 200:
-                if any(keyword in line.lower() for keyword in 
-                    ['ability', 'understand', 'develop', 'apply', 'analyze']):
-                    skill = Skill(
-                        name=line[:100],
-                        category=SkillCategory.TECHNICAL,
-                        level=SkillLevel(default_level),
-                        context=SkillContext.HYBRID,
-                        confidence=0.5,
-                        source=f"fallback_{study_level or 'unknown'}"
-                    )
-                    skills.append(skill)
-        
-        return skills[:10]
     
     def _parse_batch_response(self, response: str, expected_count: int) -> List[List[Dict]]:
         """Parse batch extraction response"""

@@ -119,77 +119,87 @@ class SkillCategory(Enum):
 
 class StudyLevel(Enum):
     """Study levels with expected skill level mappings"""
-    INTRODUCTORY = 'Introductory'
-    INTERMEDIATE = 'Intermediate'
-    ADVANCED = 'Advanced'
+    VET_CERT_III = 'VET_Certificate_III'
+    VET_CERT_IV = 'VET_Certificate_IV' 
+    VET_DIPLOMA = 'VET_Diploma'
+    VET_ADV_DIPLOMA = 'VET_Advanced_Diploma'
+    UNI_YEAR_1 = 'University_Year_1'
+    UNI_YEAR_2 = 'University_Year_2'
+    UNI_YEAR_3 = 'University_Year_3'
+    UNI_YEAR_4 = 'University_Year_4'
+    UNI_POSTGRAD = 'University_Postgraduate'
+    # INTRODUCTORY = 'Introductory'
+    # INTERMEDIATE = 'Intermediate'
+    # ADVANCED = 'Advanced'
     
     @classmethod
-    def from_string(cls, level_str: str):
+    def get_study_level(cls, item_type: str, course_name: str, course_year: int = None) -> 'StudyLevel':
         """Convert string to StudyLevel enum"""
-        if not level_str:
-            return cls.INTERMEDIATE
+        name_lower = course_name.lower()
         
-        level_str = level_str.lower().strip()
-        
-        # Map various representations to standard levels
-        mappings = {
-            'introductory': cls.INTRODUCTORY,
-            'intro': cls.INTRODUCTORY,
-            'beginner': cls.INTRODUCTORY,
-            'basic': cls.INTRODUCTORY,
-            'foundation': cls.INTRODUCTORY,
-            'elementary': cls.INTRODUCTORY,
-            '100': cls.INTRODUCTORY,
-            '1000': cls.INTRODUCTORY,
+        # Check if VET
+        if item_type.lower() == "vet" or "vet" in item_type.lower():
+            if "diploma" in name_lower:
+                if "advanced" in name_lower:
+                    return cls.VET_ADV_DIPLOMA
+                return cls.VET_DIPLOMA
+            elif "iv" in name_lower or "4" in name_lower:
+                return cls.VET_CERT_IV
+            else:
+                return cls.VET_CERT_III
             
-            'intermediate': cls.INTERMEDIATE,
-            'inter': cls.INTERMEDIATE,
-            'medium': cls.INTERMEDIATE,
-            'moderate': cls.INTERMEDIATE,
-            '200': cls.INTERMEDIATE,
-            '2000': cls.INTERMEDIATE,
-            '300': cls.INTERMEDIATE,
-            '3000': cls.INTERMEDIATE,
-            
-            'advanced': cls.ADVANCED,
-            'adv': cls.ADVANCED,
-            'high': cls.ADVANCED,
-            'senior': cls.ADVANCED,
-            'specialized': cls.ADVANCED,
-            'postgraduate': cls.ADVANCED,
-            'graduate': cls.ADVANCED,
-            '400': cls.ADVANCED,
-            '4000': cls.ADVANCED,
-            '500': cls.ADVANCED,
-            '5000': cls.ADVANCED,
-            '600': cls.ADVANCED,
-            '700': cls.ADVANCED,
-            '800': cls.ADVANCED,
-            '900': cls.ADVANCED
+        year_map ={
+            1: cls.UNI_YEAR_1,
+            2: cls.UNI_YEAR_2,
+            3: cls.UNI_YEAR_3,
+            4: cls.UNI_YEAR_4,
         }
         
-        # Check for exact match
-        for key, value in mappings.items():
-            if key in level_str:
-                return value
-        
-        # Default to intermediate
-        return cls.INTERMEDIATE
+        if course_year >= 5:
+            return cls.UNI_POSTGRAD
+        else:
+            return year_map.get(course_year, cls.UNI_YEAR_1)   
     
     @classmethod
-    def get_expected_skill_level_range(cls, study_level):
-        """Get the expected SFIA skill level range for a study level"""
-        mappings = {
-            cls.INTRODUCTORY: (1, 3),  # Follow to Apply (mostly 2-3)
-            cls.INTERMEDIATE: (2, 4),  # Assist to Enable (mostly 3)
-            cls.ADVANCED: (3, 5),      # Apply to Ensure (mostly 3-4, rarely 5)
+    def from_string(cls, study_level: str) -> 'StudyLevel':
+        """Convert string to StudyLevel enum"""
+        if isinstance(study_level, str):
+            # Try to parse the string to enum
+            for level in cls:
+                if level.value.lower() == study_level.lower():
+                    return level
+        raise ValueError(f"Unknown study level: {study_level}")     
+    
+    @classmethod
+    def get_expected_skill_level_range(cls, study_level: str) -> tuple:
+        """
+        Get expected SFIA skill level ranges with proper differentiation
+        VET typically maps to SFIA 1-3
+        University progression maps to SFIA 2-5
+        """
+        ranges = {
+            # VET levels (typically operational/practical focus)
+            cls.VET_CERT_III: (1, 2),      # Follow to Assist
+            cls.VET_CERT_IV: (2, 3),       # Assist to Apply
+            cls.VET_DIPLOMA: (2, 3),        # Assist to Apply
+            cls.VET_ADV_DIPLOMA: (3, 4),   # Apply to Enable
+            
+            # University levels (progressive complexity)
+            cls.UNI_YEAR_1: (2, 3),        # Assist to Apply (foundational)
+            cls.UNI_YEAR_2: (3, 4),        # Apply to Enable (developing)
+            cls.UNI_YEAR_3: (3, 5),        # Apply to Ensure (advanced)
+            cls.UNI_YEAR_4: (4, 5),        # Enable to Ensure (specialized)
+            cls.UNI_POSTGRAD: (4, 6),      # Enable to Initiate (expert)
         }
         
-        # Handle both enum and string inputs
         if isinstance(study_level, str):
-            study_level = cls.from_string(study_level)
+            # Try to parse the string to enum
+            for level in cls:
+                if level.value.lower() == study_level.lower():
+                    study_level = level
+                    break
         
-        return mappings.get(study_level, (2, 4))
+        return ranges.get(study_level, (2, 4))
     
     @classmethod
     def infer_from_text(cls, text: str) -> 'StudyLevel':

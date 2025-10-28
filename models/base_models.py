@@ -155,6 +155,7 @@ class UniCourse:
     topics: List[str] = field(default_factory=list)
     assessment: str = ""
     extracted_skills: List[Skill] = field(default_factory=list)
+    year: int = 1
     metadata: Dict[str, Any] = field(default_factory=dict)
     
     def get_full_text(self) -> str:
@@ -181,6 +182,7 @@ class UniCourse:
             "topics": self.topics,
             "assessment": self.assessment,
             "extracted_skills": [s.to_dict() for s in self.extracted_skills],
+            "year": self.year,
             "metadata": self.metadata
         }
 

@@ -18,6 +18,7 @@ from extraction.unified_extractor import UnifiedSkillExtractor
 from mapping.cluster_matcher import ClusterSkillMatcher
 from utils.prompt_manager import PromptManager
 from mapping.unified_scorer import UnifiedScorer, MatchScore
+from models.enums import SkillLevel
 
 
 logger = logging.getLogger(__name__)
@@ -64,6 +65,242 @@ class SimplifiedAnalyzer:
         self.direct_threshold = self.config.get("direct_match_threshold".upper(), 0.9)
         self.partial_threshold = self.config.get("partial_threshold".upper(), 0.8)
         logger.info(f"Direct match threshold: {self.direct_threshold}, Partial match threshold: {self.partial_threshold}")
+        
+    def _ensure_cross_qualification_differentiation(self,
+        vet_qual: VETQualification,
+        uni_qual: UniQualification,
+        similarity_threshold: float = 0.85,
+        min_level_difference: int = 1
+    ) -> Tuple[VETQualification, UniQualification]:
+        """
+        Ensure proper skill level differentiation between VET and University using embeddings
+        
+        This function uses a vectorized approach with cosine similarity to find similar skills
+        and ensures university skills are appropriately higher level than equivalent VET skills.
+        
+        Args:
+            vet_qual: VET qualification with extracted skills
+            uni_qual: University qualification with extracted skills
+            embeddings: Embedding interface for similarity calculation
+            similarity_threshold: Minimum cosine similarity to consider skills as similar (default 0.9)
+            min_level_difference: Minimum level difference required between similar skills
+        
+        Returns:
+            Tuple of (adjusted_vet_qual, adjusted_uni_qual)
+        """
+        
+        # Collect all skills from both qualifications
+        all_vet_skills = []
+        vet_skill_to_unit = {}  # Map skill to its unit for updates
+        
+        for unit in vet_qual.units:
+            for skill in unit.extracted_skills:
+                all_vet_skills.append(skill)
+                vet_skill_to_unit[id(skill)] = unit
+        
+        all_uni_skills = []
+        uni_skill_to_course = {}  # Map skill to its course for updates
+        
+        for course in uni_qual.courses:
+            for skill in course.extracted_skills:
+                all_uni_skills.append(skill)
+                uni_skill_to_course[id(skill)] = course
+        
+        if not all_vet_skills or not all_uni_skills:
+            logger.warning("No skills to differentiate")
+            return vet_qual, uni_qual
+        
+        logger.info(f"Comparing {len(all_vet_skills)} VET skills with {len(all_uni_skills)} University skills")
+        
+        # Detect university year levels for better differentiation
+        uni_year_levels = {course.code: course.year for course in uni_qual.courses if hasattr(course, 'year') }
+        
+        # Prepare skill descriptions for embedding
+        # Use skill name + description for better similarity matching
+        vet_texts = [
+            f"{skill.name}. {skill.description if skill.description else ''}"
+            for skill in all_vet_skills
+        ]
+        
+        uni_texts = [
+            f"{skill.name}. {skill.description if skill.description else ''}"
+            for skill in all_uni_skills
+        ]
+        
+        # Get embeddings in batches (vectorized)
+        logger.info("Generating embeddings for all skills...")
+        vet_embeddings = self.embeddings.encode(vet_texts, batch_size=32, show_progress=False)
+        uni_embeddings = self.embeddings.encode(uni_texts, batch_size=32, show_progress=False)
+        
+        # Ensure embeddings are 2D arrays
+        if vet_embeddings.ndim == 1:
+            vet_embeddings = vet_embeddings.reshape(1, -1)
+        if uni_embeddings.ndim == 1:
+            uni_embeddings = uni_embeddings.reshape(1, -1)
+        
+        # Calculate cosine similarity matrix (vectorized approach)
+        logger.info("Calculating similarity matrix...")
+        similarity_matrix = self.embeddings.similarity(vet_embeddings, uni_embeddings)
+        
+        # Find similar skill pairs above threshold
+        similar_pairs = []
+        high_similarity_indices = np.where(similarity_matrix >= similarity_threshold)
+        
+        for vet_idx, uni_idx in zip(high_similarity_indices[0], high_similarity_indices[1]):
+            similarity_score = similarity_matrix[vet_idx, uni_idx]
+            similar_pairs.append({
+                'vet_skill': all_vet_skills[vet_idx],
+                'uni_skill': all_uni_skills[uni_idx],
+                'vet_idx': vet_idx,
+                'uni_idx': uni_idx,
+                'similarity': similarity_score,
+                'uni_course': uni_skill_to_course[id(all_uni_skills[uni_idx])]
+            })
+        
+        logger.info(f"Found {len(similar_pairs)} similar skill pairs (similarity >= {similarity_threshold})")
+        
+        # Sort by similarity to process most similar pairs first
+        similar_pairs.sort(key=lambda x: x['similarity'], reverse=True)
+        
+        # Track adjustments
+        adjustments_made = []
+        
+        # Process similar pairs and adjust levels
+        for pair in similar_pairs:
+            vet_skill = pair['vet_skill']
+            uni_skill = pair['uni_skill']
+            uni_course = pair['uni_course']
+            similarity = pair['similarity']
+            
+            # Get current levels
+            vet_level = vet_skill.level.value if hasattr(vet_skill.level, 'value') else vet_skill.level
+            uni_level = uni_skill.level.value if hasattr(uni_skill.level, 'value') else uni_skill.level
+            
+            # Determine expected minimum level for university based on year
+            uni_year = uni_year_levels.get(uni_course.code, 2)  # Default to year 2
+            expected_uni_min = max(3, uni_year)  # Year 3 should be at least level 3, Year 4 at least level 4
+            
+            # Check if differentiation is needed
+            level_difference = uni_level - vet_level
+            
+            if level_difference < min_level_difference:
+                # Adjustment needed
+                logger.debug(f"Adjusting levels for similar skills (similarity={similarity:.3f}):")
+                logger.debug(f"  VET: '{vet_skill.name}' (Level {vet_level})")
+                logger.debug(f"  Uni: '{uni_skill.name}' (Level {uni_level}, Year {uni_year})")
+                
+                # Strategy: Boost university skill or cap VET skill
+                if uni_year >= 3:
+                    # For advanced university courses, boost the university skill
+                    new_uni_level = max(expected_uni_min, vet_level + min_level_difference)
+                    new_uni_level = min(5, new_uni_level)  # Cap at level 5 for university
+                    
+                    if new_uni_level != uni_level:
+                        uni_skill.level = SkillLevel(new_uni_level)
+                        
+                        # Add metadata about adjustment
+                        if not hasattr(uni_skill, 'metadata'):
+                            uni_skill.metadata = {}
+                        uni_skill.metadata['level_adjusted'] = True
+                        uni_skill.metadata['adjustment_reason'] = f"Differentiation from VET skill (similarity={similarity:.3f})"
+                        uni_skill.metadata['original_level'] = uni_level
+                        
+                        adjustments_made.append({
+                            'type': 'uni_boost',
+                            'skill': uni_skill.name,
+                            'course': uni_course.code,
+                            'from_level': uni_level,
+                            'to_level': new_uni_level,
+                            'reason': f'Year {uni_year} differentiation from VET'
+                        })
+                        
+                        logger.info(f"  → Adjusted Uni '{uni_skill.name}' from level {uni_level} to {new_uni_level}")
+                
+                else:
+                    # For lower-level university courses, cap the VET skill
+                    new_vet_level = min(3, uni_level - min_level_difference)
+                    new_vet_level = max(1, new_vet_level)  # Ensure at least level 1
+                    
+                    if new_vet_level != vet_level and new_vet_level > 0:
+                        vet_skill.level = SkillLevel(new_vet_level)
+                        
+                        # Add metadata about adjustment
+                        if not hasattr(vet_skill, 'metadata'):
+                            vet_skill.metadata = {}
+                        vet_skill.metadata['level_adjusted'] = True
+                        vet_skill.metadata['adjustment_reason'] = f"Differentiation from Uni skill (similarity={similarity:.3f})"
+                        vet_skill.metadata['original_level'] = vet_level
+                        
+                        adjustments_made.append({
+                            'type': 'vet_cap',
+                            'skill': vet_skill.name,
+                            'from_level': vet_level,
+                            'to_level': new_vet_level,
+                            'reason': 'Differentiation from University'
+                        })
+                        
+                        logger.info(f"  → Adjusted VET '{vet_skill.name}' from level {vet_level} to {new_vet_level}")
+        
+        # Log summary of adjustments
+        logger.info("\n" + "="*60)
+        logger.info("DIFFERENTIATION SUMMARY")
+        logger.info("="*60)
+        logger.info(f"Similar skill pairs found: {len(similar_pairs)}")
+        logger.info(f"Adjustments made: {len(adjustments_made)}")
+        
+        if adjustments_made:
+            uni_boosts = [a for a in adjustments_made if a['type'] == 'uni_boost']
+            vet_caps = [a for a in adjustments_made if a['type'] == 'vet_cap']
+            
+            logger.info(f"  University skill boosts: {len(uni_boosts)}")
+            logger.info(f"  VET skill caps: {len(vet_caps)}")
+            
+            # Show example adjustments
+            logger.info("\nExample adjustments:")
+            for adj in adjustments_made[:5]:
+                logger.info(f"  {adj['type']}: '{adj['skill']}' from level {adj['from_level']} to {adj['to_level']}")
+                logger.info(f"    Reason: {adj['reason']}")
+        
+        # Calculate and log final statistics
+        self.log_level_statistics(vet_qual, uni_qual)
+        
+        return vet_qual, uni_qual
+    
+    def log_level_statistics(self, vet_qual: VETQualification, uni_qual: UniQualification):
+        """Log skill level distribution statistics"""
+        
+        logger.info("\n" + "="*60)
+        logger.info("SKILL LEVEL DISTRIBUTION")
+        logger.info("="*60)
+        
+        # Collect all skills
+        vet_skills = []
+        for unit in vet_qual.units:
+            vet_skills.extend(unit.extracted_skills)
+        
+        uni_skills = []
+        for course in uni_qual.courses:
+            uni_skills.extend(course.extracted_skills)
+        
+        # VET distribution
+        if vet_skills:
+            logger.info(f"\nVET Skills ({len(vet_skills)} total):")
+            for level in range(1, 8):
+                count = sum(1 for s in vet_skills if (s.level.value if hasattr(s.level, 'value') else s.level) == level)
+                if count > 0:
+                    percentage = (count / len(vet_skills)) * 100
+                    bar = '█' * int(percentage / 2)
+                    logger.info(f"  Level {level}: {count:3d} ({percentage:5.1f}%) {bar}")
+        
+        # University distribution
+        if uni_skills:
+            logger.info(f"\nUniversity Skills ({len(uni_skills)} total):")
+            for level in range(1, 8):
+                count = sum(1 for s in uni_skills if (s.level.value if hasattr(s.level, 'value') else s.level) == level)
+                if count > 0:
+                    percentage = (count / len(uni_skills)) * 100
+                    bar = '█' * int(percentage / 2)
+                logger.info(f"  Level {level}: {count:3d} ({percentage:5.1f}%) {bar}")
         
     def _log_skill_extraction_status(self, vet_qual: VETQualification, uni_qual: UniQualification):
         """

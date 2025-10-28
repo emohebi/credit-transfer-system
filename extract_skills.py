@@ -1,26 +1,148 @@
 """
-Standalone skill extraction script
-Extracts skills from VET and University qualifications and saves them to disk
+Extract and save skills with cross-qualification differentiation using embeddings
 """
 
-import argparse
-import logging
 import json
+import logging
+import numpy as np
 from pathlib import Path
-from config_profiles import ConfigProfiles
-from interfaces.model_factory import ModelFactory
-from models.base_models import VETQualification, UniQualification, UnitOfCompetency, UniCourse
-from reporting.skill_export import SkillExportManager
+from typing import List, Dict, Tuple, Any
+from datetime import datetime
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+from models.base_models import VETQualification, UniQualification, UnitOfCompetency, UniCourse, Skill
+from models.enums import SkillLevel
+from extraction.unified_extractor import UnifiedSkillExtractor
+from reporting.skill_export import SkillExportManager
+from analysis.simplified_analyzer import SimplifiedAnalyzer
+
 logger = logging.getLogger(__name__)
 
 
-def load_vet_data(filepath: str) -> VETQualification:
-    """Load VET qualification data"""
+def extract_and_save_skills(genai, embeddings, config, vet_file_path: str, uni_file_path: str) -> Tuple[str, str]:
+    """
+    Extract skills from VET and University qualifications with cross-qualification differentiation
+    
+    Args:
+        genai: GenAI interface
+        embeddings: Embedding interface for similarity calculation
+        config: Configuration object
+        vet_file_path: Path to VET qualification JSON
+        uni_file_path: Path to University qualification JSON
+    
+    Returns:
+        Tuple of (vet_output_path, uni_output_path)
+    """
+    
+    logger.info("="*60)
+    logger.info("SKILL EXTRACTION WITH CROSS-QUALIFICATION DIFFERENTIATION")
+    logger.info("="*60)
+    
+    # Load qualifications
+    vet_qual = load_vet_qualification(vet_file_path)
+    uni_qual = load_uni_qualification(uni_file_path)
+    
+    logger.info(f"Loaded VET: {vet_qual.name} ({len(vet_qual.units)} units)")
+    logger.info(f"Loaded Uni: {uni_qual.name} ({len(uni_qual.courses)} courses)")
+    
+    # Initialize extractor
+    extractor = UnifiedSkillExtractor(genai, config)
+    
+    # Extract VET skills
+    logger.info("\nExtracting VET skills...")
+    vet_skills = extractor.extract_skills(vet_qual.units, item_type="VET")
+    
+    # Assign skills to units
+    for unit in vet_qual.units:
+        if unit.code in vet_skills:
+            unit.extracted_skills = vet_skills[unit.code]
+            logger.info(f"Extracted {len(unit.extracted_skills)} skills for VET unit {unit.code}")
+    
+    # Extract University skills
+    logger.info("\nExtracting University skills...")
+    uni_skills = extractor.extract_skills(uni_qual.courses, item_type="University")
+    
+    # Assign skills to courses
+    for course in uni_qual.courses:
+        if course.code in uni_skills:
+            course.extracted_skills = uni_skills[course.code]
+            logger.info(f"Extracted {len(course.extracted_skills)} skills for Uni course {course.code}")
+    
+    # Apply cross-qualification differentiation if embeddings are available
+    if embeddings:
+        analyzer = SimplifiedAnalyzer(genai, embeddings, config)
+        logger.info("\n" + "="*60)
+        logger.info("APPLYING CROSS-QUALIFICATION DIFFERENTIATION")
+        logger.info("="*60)
+        
+        vet_qual, uni_qual = analyzer._ensure_cross_qualification_differentiation(
+            vet_qual, 
+            uni_qual, 
+            similarity_threshold=config.get("SKILL_SIMILARITY_THRESHOLD", 0.85),
+            min_level_difference=config.get("MIN_UNI_VET_LEVEL_DIFF", 1)
+        )
+    else:
+        logger.warning("No embedding interface available - skipping cross-qualification differentiation")
+    
+    # Log final statistics
+    log_extraction_statistics(vet_qual, uni_qual)
+    
+    # Save skills
+    skill_export = SkillExportManager(output_dir="output/skills")
+    
+    # Save VET skills
+    vet_output_path = skill_export.export_vet_skills(vet_qual, format="json")
+    logger.info(f"Saved VET skills to: {vet_output_path}")
+    
+    # Save University skills
+    uni_output_path = skill_export.export_uni_skills(uni_qual, format="json")
+    logger.info(f"Saved University skills to: {uni_output_path}")
+    
+    return vet_output_path, uni_output_path
+
+
+def log_extraction_statistics(vet_qual: VETQualification, uni_qual: UniQualification):
+    """Log detailed extraction statistics"""
+    
+    logger.info("\n" + "="*60)
+    logger.info("EXTRACTION STATISTICS")
+    logger.info("="*60)
+    
+    # VET statistics
+    vet_skills = []
+    for unit in vet_qual.units:
+        vet_skills.extend(unit.extracted_skills)
+    
+    if vet_skills:
+        vet_levels = [s.level.value if hasattr(s.level, 'value') else s.level for s in vet_skills]
+        logger.info(f"\nVET Qualification: {vet_qual.name}")
+        logger.info(f"  Total units: {len(vet_qual.units)}")
+        logger.info(f"  Total skills: {len(vet_skills)}")
+        logger.info(f"  Average skills per unit: {len(vet_skills)/len(vet_qual.units):.1f}")
+        logger.info(f"  Average skill level: {np.mean(vet_levels):.2f}")
+        logger.info(f"  Level range: {min(vet_levels)} - {max(vet_levels)}")
+    
+    # University statistics
+    uni_skills = []
+    for course in uni_qual.courses:
+        uni_skills.extend(course.extracted_skills)
+    
+    if uni_skills:
+        uni_levels = [s.level.value if hasattr(s.level, 'value') else s.level for s in uni_skills]
+        logger.info(f"\nUniversity Qualification: {uni_qual.name}")
+        logger.info(f"  Total courses: {len(uni_qual.courses)}")
+        logger.info(f"  Total skills: {len(uni_skills)}")
+        logger.info(f"  Average skills per course: {len(uni_skills)/len(uni_qual.courses):.1f}")
+        logger.info(f"  Average skill level: {np.mean(uni_levels):.2f}")
+        logger.info(f"  Level range: {min(uni_levels)} - {max(uni_levels)}")
+    
+    # Level difference
+    if vet_skills and uni_skills:
+        level_diff = np.mean(uni_levels) - np.mean(vet_levels)
+        logger.info(f"\nAverage level difference (Uni - VET): {level_diff:.2f}")
+
+
+def load_vet_qualification(filepath: str) -> VETQualification:
+    """Load VET qualification from JSON file"""
     with open(filepath, 'r') as f:
         data = json.load(f)
     
@@ -37,7 +159,7 @@ def load_vet_data(filepath: str) -> VETQualification:
             description=unit_data.get("description", ""),
             learning_outcomes=unit_data.get("learning_outcomes", []),
             assessment_requirements=unit_data.get("assessment_requirements", ""),
-            nominal_hours=unit_data.get("nominal_hours", 0) if unit_data.get("nominal_hours") is not None else 0,
+            nominal_hours=unit_data.get("nominal_hours", 0) or 0,
             prerequisites=unit_data.get("prerequisites", [])
         )
         vet_qual.units.append(unit)
@@ -45,8 +167,8 @@ def load_vet_data(filepath: str) -> VETQualification:
     return vet_qual
 
 
-def load_uni_data(filepath: str) -> UniQualification:
-    """Load university qualification data"""
+def load_uni_qualification(filepath: str) -> UniQualification:
+    """Load university qualification from JSON file"""
     with open(filepath, 'r') as f:
         data = json.load(f)
     
@@ -72,114 +194,59 @@ def load_uni_data(filepath: str) -> UniQualification:
     return uni_qual
 
 
-def extract_and_save_skills(genai, embeddings, config, vet_file: str, uni_file: str):
-    """
-    Extract skills from VET and University qualifications and save them
-    """
-    logger.info("Starting skill extraction process...")
+if __name__ == "__main__":
+    # Example usage
+    import sys
+    import argparse
     
-    # Create configuration
-    # config = ConfigProfiles.create_config(
-    #     profile_name=profile,
-    #     backend=backend
-    # )
-    
-    # Create interfaces
-    # genai = ModelFactory.create_genai_interface(config)
-    # embeddings = ModelFactory.create_embedding_interface(config)
-    
-    if genai is None:
-        logger.warning("No GenAI interface available - using fallback extraction")
-    
-    # Create skill extractor
-    from extraction.unified_extractor import UnifiedSkillExtractor
-    
-    # Check if robust mode is enabled
-    if config.get("ENSEMBLE_RUNS", 0) > 1:
-        from extraction.ensemble_extractor import EnsembleSkillExtractor
-        base_extractor = UnifiedSkillExtractor(genai, config.to_dict())
-        extractor = EnsembleSkillExtractor(
-            base_extractor, 
-            num_runs=config.get("ENSEMBLE_RUNS", 3),
-            embeddings=embeddings,
-            similarity_threshold=config.get("ENSEMBLE_SIMILARITY_THRESHOLD", 0.9)
-        )
-    else:
-        extractor = UnifiedSkillExtractor(genai, config.to_dict())
-    
-    # Load data
-    logger.info(f"Loading VET qualification from {vet_file}")
-    vet_qual = load_vet_data(vet_file)
-    logger.info(f"Loaded VET: {vet_qual.name} ({len(vet_qual.units)} units)")
-    
-    logger.info(f"Loading University qualification from {uni_file}")
-    uni_qual = load_uni_data(uni_file)
-    logger.info(f"Loaded Uni: {uni_qual.name} ({len(uni_qual.courses)} courses)")
-    
-    # Extract skills for VET
-    logger.info("Extracting VET skills...")
-    vet_skills = extractor.extract_skills(vet_qual.units)
-    
-    # Assign extracted skills back to units
-    for unit in vet_qual.units:
-        if unit.code in vet_skills:
-            unit.extracted_skills = vet_skills[unit.code]
-            logger.info(f"Extracted {len(unit.extracted_skills)} skills for VET unit {unit.code}")
-    
-    # Extract skills for University
-    logger.info("Extracting University skills...")
-    uni_skills = extractor.extract_skills(uni_qual.courses)
-    
-    # Assign extracted skills back to courses
-    for course in uni_qual.courses:
-        if course.code in uni_skills:
-            course.extracted_skills = uni_skills[course.code]
-            logger.info(f"Extracted {len(course.extracted_skills)} skills for Uni course {course.code}")
-    
-    # Save skills using SkillExportManager
-    skill_export = SkillExportManager(output_dir="output/skills")
-    
-    # Save VET skills
-    vet_filepath = skill_export.export_vet_skills(vet_qual, format="json", include_metadata=True)
-    logger.info(f"Saved VET skills to {vet_filepath}")
-    
-    # Save University skills
-    uni_filepath = skill_export.export_uni_skills(uni_qual, format="json", include_metadata=True)
-    logger.info(f"Saved University skills to {uni_filepath}")
-    
-    # Also save combined for reference
-    combined_filepath = skill_export.export_combined_skills(vet_qual, uni_qual, format="json")
-    logger.info(f"Saved combined skills to {combined_filepath}")
-    
-    # Print summary
-    vet_total = sum(len(unit.extracted_skills) for unit in vet_qual.units)
-    uni_total = sum(len(course.extracted_skills) for course in uni_qual.courses)
-    
-    print("\n" + "="*60)
-    print("SKILL EXTRACTION COMPLETE")
-    print("="*60)
-    print(f"VET Skills Extracted: {vet_total}")
-    print(f"University Skills Extracted: {uni_total}")
-    print(f"\nSkills saved to:")
-    print(f"  VET: {vet_filepath}")
-    print(f"  Uni: {uni_filepath}")
-    print(f"  Combined: {combined_filepath}")
-    
-    return vet_filepath, uni_filepath
-
-
-def main():
-    parser = argparse.ArgumentParser(description="Extract and save skills from VET and University qualifications")
-    
-    parser.add_argument("--vet", default="./data/diploma_of_business.json", help="Path to VET qualification JSON")
-    parser.add_argument("--uni", default="./data/933AA_Diploma_of_Business.json", help="Path to university qualification JSON")
-    parser.add_argument("--profile", choices=["fast", "balanced", "thorough", "robust"], default="balanced", help="Extraction profile")
-    parser.add_argument("--backend", choices=["openai", "vllm", "auto"], default="auto", help="AI backend")
+    parser = argparse.ArgumentParser(description="Extract and save skills with differentiation")
+    parser.add_argument("vet_file", help="Path to VET qualification JSON")
+    parser.add_argument("uni_file", help="Path to University qualification JSON")
+    parser.add_argument("--backend", choices=["openai", "vllm", "auto"], default="auto",
+                       help="AI backend to use")
+    parser.add_argument("--similarity-threshold", type=float, default=0.9,
+                       help="Similarity threshold for skill matching (0.0-1.0)")
+    parser.add_argument("--min-level-diff", type=int, default=1,
+                       help="Minimum level difference between similar VET/Uni skills")
     
     args = parser.parse_args()
     
-    extract_and_save_skills(args.vet, args.uni, args.profile, args.backend)
-
-
-if __name__ == "__main__":
-    main()
+    # Set up logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    
+    # Load configuration
+    from config_profiles import ConfigProfiles
+    from interfaces.model_factory import ModelFactory
+    
+    config = ConfigProfiles.create_config(
+        profile_name="balanced",
+        backend=args.backend
+    )
+    
+    # Add custom settings
+    config.SKILL_SIMILARITY_THRESHOLD = args.similarity_threshold
+    config.MIN_UNI_VET_LEVEL_DIFF = args.min_level_diff
+    
+    # Create interfaces
+    genai = ModelFactory.create_genai_interface(config)
+    embeddings = ModelFactory.create_embedding_interface(config)
+    
+    if not embeddings:
+        logger.error("Embedding interface is required for skill differentiation")
+        sys.exit(1)
+    
+    # Extract and save skills
+    vet_output, uni_output = extract_and_save_skills(
+        genai,
+        embeddings,
+        config,
+        args.vet_file,
+        args.uni_file
+    )
+    
+    print(f"\n✓ Skills extracted and saved:")
+    print(f"  VET: {vet_output}")
+    print(f"  Uni: {uni_output}")

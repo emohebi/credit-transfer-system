@@ -16,7 +16,8 @@ class PromptManager:
         item_type: str,
         study_level: Optional[str] = None,
         backend_type: str = "standard",
-        max_text_length: Optional[int] = None
+        max_text_length: Optional[int] = None,
+        university_year: Optional[int] = None
     ) -> Tuple[str, str]:
         """
         Get chain-of-thought skill extraction prompt for human capabilities
@@ -32,57 +33,57 @@ Your expertise includes understanding educational taxonomies (Bloom's, Australia
 
         # Chain of thought process
         chain_of_thought = """
-## Chain of Thought Process:
+            ## Chain of Thought Process:
 
-1. **Read and Analyze**: Carefully read the entire UOC/course description
-2. **Identify Context**: Look for tasks, responsibilities, and requirements that imply human abilities
-3. **Tool-to-Skill Translation**: Convert tool/technology mentions into the underlying human skills required
-4. **Contextualize Generic Terms**: Add specific context to broad terms
-5. **Standardize Language**: Ensure skills align with established VET and Higher Education taxonomies
-6. **Create Variations**: Consider both specific and broader versions for comprehensive coverage
+            1. **Read and Analyze**: Carefully read the entire UOC/course description
+            2. **Identify Context**: Look for tasks, responsibilities, and requirements that imply human abilities
+            3. **Tool-to-Skill Translation**: Convert tool/technology mentions into the underlying human skills required
+            4. **Contextualize Generic Terms**: Add specific context to broad terms
+            5. **Standardize Language**: Ensure skills align with established VET and Higher Education taxonomies
+            6. **Create Variations**: Consider both specific and broader versions for comprehensive coverage
 
-## Extraction Guidelines:
+            ## Extraction Guidelines:
 
-### DO Extract:
-- Skills that represent **human abilities** and **cognitive processes**
-- Convert tools/technologies to underlying skills:
-  * "Excel" → "spreadsheet analysis"
-  * "Python" → "Python programming"
-  * "AutoCAD" → "technical drawing"
-  * "SAP" → "ERP implementation"
-- Add specific context to generic skills:
-  * "communication" → "technical writing" or "client consultation"
-  * "teamwork" → "cross-functional collaboration" or "agile coordination"
-  * "problem-solving" → "root cause analysis" or "systems troubleshooting"
-- Use standardized terminology from educational frameworks:
-  * Bloom's cognitive domains: analyzing, evaluating, creating
-  * AQF descriptors: application, analysis, synthesis
-- Focus on transferable skills applicable across roles
-- Include both technical and soft skills with proper context
+            ### DO Extract:
+            - Skills that represent **human abilities** and **cognitive processes**
+            - Convert tools/technologies to underlying skills:
+            * "Excel" → "spreadsheet analysis"
+            * "Python" → "Python programming"
+            * "AutoCAD" → "technical drawing"
+            * "SAP" → "ERP implementation"
+            - Add specific context to generic skills:
+            * "communication" → "technical writing" or "client consultation"
+            * "teamwork" → "cross-functional collaboration" or "agile coordination"
+            * "problem-solving" → "root cause analysis" or "systems troubleshooting"
+            - Use standardized terminology from educational frameworks:
+            * Bloom's cognitive domains: analyzing, evaluating, creating
+            * AQF descriptors: application, analysis, synthesis
+            - Focus on transferable skills applicable across roles
+            - Include both technical and soft skills with proper context
 
-### DON'T Extract:
-- Bare tool names without skill context (just "Excel" or "Python")
-- Vague, uncontextualized skills ("communication," "teamwork")
-- Company-specific processes that aren't transferable
-- Personality traits or attitudes ("motivated," "enthusiastic")
-- Task descriptions ("complete reports," "attend meetings")
+            ### DON'T Extract:
+            - Bare tool names without skill context (just "Excel" or "Python")
+            - Vague, uncontextualized skills ("communication," "teamwork")
+            - Company-specific processes that aren't transferable
+            - Personality traits or attitudes ("motivated," "enthusiastic")
+            - Task descriptions ("complete reports," "attend meetings")
 
-### CRITICAL Skill Naming Convention:
-- **Use NATURAL, PROFESSIONAL terminology with sufficient context**
-- **MUST BE 2-4 WORDS MAXIMUM, providing CONTEXT is a MUST**
-- **Match existing taxonomies**: ESCO, O*NET, SFIA, job postings
-- **Remove unnecessary qualifiers and redundant descriptors**
-- Follow the pattern: [Action/Process] + [Domain/Context] + [Object/Outcome]
-- **Optimal length is 2-4 words**: Provide enough context while maintaining clarity
+            ### CRITICAL Skill Naming Convention:
+            - **Use NATURAL, PROFESSIONAL terminology with sufficient context**
+            - **MUST BE 2-4 WORDS MAXIMUM, providing CONTEXT is a MUST**
+            - **Match existing taxonomies**: ESCO, O*NET, SFIA, job postings
+            - **Remove unnecessary qualifiers and redundant descriptors**
+            - Follow the pattern: [Action/Process] + [Domain/Context] + [Object/Outcome]
+            - **Optimal length is 2-4 words**: Provide enough context while maintaining clarity
 
-Examples of PROPER skill naming (2-4 words):
-- "financial data analysis" (NOT "comprehensive financial data analysis and modeling")
-- "stakeholder engagement management" (NOT "multi-stakeholder engagement and communication management")
-- "business process optimization" (NOT "enterprise-wide business process optimization and improvement")
-- "enterprise risk assessment" (NOT "comprehensive enterprise risk identification and assessment")
-- "project management" (NOT "end-to-end project lifecycle management")
-- "database design" (NOT "relational database design and modeling")
-"""
+            Examples of PROPER skill naming (2-4 words):
+            - "financial data analysis" (NOT "comprehensive financial data analysis and modeling")
+            - "stakeholder engagement management" (NOT "multi-stakeholder engagement and communication management")
+            - "business process optimization" (NOT "enterprise-wide business process optimization and improvement")
+            - "enterprise risk assessment" (NOT "comprehensive enterprise risk identification and assessment")
+            - "project management" (NOT "end-to-end project lifecycle management")
+            - "database design" (NOT "relational database design and modeling")
+            """
 
         # Skill categories with human capability focus
         skill_categories = """
@@ -159,35 +160,35 @@ Examples of PROPER skill naming (2-4 words):
 
         # Translation examples
         translation_examples = """
-## Translation Examples (KEEP NAMES 2-4 WORDS):
+            ## Translation Examples (KEEP NAMES 2-4 WORDS):
 
-WHEN TEXT SAYS → EXTRACT AS (2-4 words):
+            WHEN TEXT SAYS → EXTRACT AS (2-4 words):
 
-"Use Excel for financial reports"
-→ "spreadsheet financial analysis"
+            "Use Excel for financial reports"
+            → "spreadsheet financial analysis"
 
-"Work in teams on projects"
-→ "cross-functional team collaboration"
+            "Work in teams on projects"
+            → "cross-functional team collaboration"
 
-"Communicate with stakeholders"
-→ "stakeholder expectation alignment"
+            "Communicate with stakeholders"
+            → "stakeholder expectation alignment"
 
-"Manage customer relationships"
-→ "customer relationship management"
+            "Manage customer relationships"
+            → "customer relationship management"
 
-"Implement software solutions"
-→ "software solution architecture"
+            "Implement software solutions"
+            → "software solution architecture"
 
-"Analyze business processes"
-→ "business process analysis"
+            "Analyze business processes"
+            → "business process analysis"
 
-## Optimal Length Examples:
-- "strategic business planning" (3 words) ✓
-- "financial data analysis" (3 words) ✓
-- "cross-functional team collaboration" (3 words) ✓
-- "comprehensive risk assessment" → "risk assessment planning" (3 words) ✓
-- "budget compliance monitoring" (3 words) ✓
-"""
+            ## Optimal Length Examples:
+            - "strategic business planning" (3 words) ✓
+            - "financial data analysis" (3 words) ✓
+            - "cross-functional team collaboration" (3 words) ✓
+            - "comprehensive risk assessment" → "risk assessment planning" (3 words) ✓
+            - "budget compliance monitoring" (3 words) ✓
+            """
 
         context_rules = """
         ## Context Classification Guidelines:
@@ -227,128 +228,162 @@ WHEN TEXT SAYS → EXTRACT AS (2-4 words):
         - Practice-only assessment → PRACTICAL
         - Mixed assessment → HYBRID
             """
-
+        is_uni = 'uni' in item_type.lower()
         # Level calibration based on Bloom's taxonomy
-        if study_level:
-            study_enum = StudyLevel.from_string(study_level)
-            expected_min, expected_max = StudyLevel.get_expected_skill_level_range(study_enum)
-            
-            level_rules = f"""
-            ## SFIA Level Assignment:
-            For each skill, assign a SFIA level (1-7) based on the following attributes. BE CONSERVATIVE - most skills should be at levels 2-4, with level 5+ being exceptional.
-            
-            ### SFIA Level Definitions:
-            - **Level 1 (Follow)**: Entry level, works under close supervision, follows instructions, performs routine tasks
-            - **Level 2 (Assist)**: Junior level, provides assistance, works under routine supervision, uses limited discretion  
-            - **Level 3 (Apply)**: Mid-level, performs varied tasks, works under general direction, exercises discretion
-            - **Level 4 (Enable)**: Senior level, performs diverse complex activities, guides others, works autonomously
-            - **Level 5 (Ensure/Advise)**: Expert level, provides authoritative guidance, accountable for significant outcomes
-            - **Level 6 (Initiate/Influence)**: Leadership level, has significant organizational influence, makes high-level decisions
-            - **Level 7 (Set Strategy)**: Executive level, operates at highest level, determines vision and strategy
+        study_enum = StudyLevel.from_string(study_level)
+        expected_min, expected_max = StudyLevel.get_expected_skill_level_range(study_enum)
+        
+        level_rules = f"""
+        ## SFIA Level Assignment:
+        For each skill, assign a SFIA level (1-7) based on the following attributes.
+        
+        ### SFIA Level Definitions:
+        - **Level 1 (Follow)**: Entry level, works under close supervision, follows instructions, performs routine tasks
+        - **Level 2 (Assist)**: Junior level, provides assistance, works under routine supervision, uses limited discretion  
+        - **Level 3 (Apply)**: Mid-level, performs varied tasks, works under general direction, exercises discretion
+        - **Level 4 (Enable)**: Senior level, performs diverse complex activities, guides others, works autonomously
+        - **Level 5 (Ensure/Advise)**: Expert level, provides authoritative guidance, accountable for significant outcomes
+        - **Level 6 (Initiate/Influence)**: Leadership level, has significant organizational influence, makes high-level decisions
+        - **Level 7 (Set Strategy)**: Executive level, operates at highest level, determines vision and strategy
+        """
+        if is_uni:
+            if university_year >= 3:
+                level_rules += f"""
+                ## UNIVERSITY YEAR {university_year} SKILL LEVEL RULES:
+                This is an ADVANCED university course requiring HIGHER-ORDER THINKING and COMPLEX APPLICATION.
 
-            ### IMPORTANT DISTRIBUTION GUIDELINES:
-            - Levels 1-3: Should be ~60-70% of skills (most common)
-            - Level 4: Should be ~20-25% of skills (experienced professional)
-            - Level 5: Should be ~5-10% of skills (true expertise required)
-            - Levels 6-7: Should be <5% of skills (rare, strategic roles only)
+                ### Expected SFIA Levels for Year {university_year}:
+                - Minimum: Level 3 (Apply) - for basic competencies
+                - Typical: Level 4 (Enable) - for core competencies  
+                - Advanced: Level 5 (Ensure/Advise) - for specialized competencies
 
-            ### Level Assignment Rules by Evidence:
-            
-            **Assign Level 1-2 when evidence shows:**
-            - Basic tasks, routine work, following procedures
-            - Words like "assist", "support", "help", "basic", "simple"
-            - Entry-level or foundational skills
-            - No mention of independence or leadership
-            
-            **Assign Level 3 (MOST COMMON) when evidence shows:**
-            - Standard professional work
-            - Words like "perform", "complete", "conduct", "manage own work"
-            - Typical day-to-day activities
-            - Some independence but not leading others
-            
-            **Assign Level 4 when evidence shows:**
-            - Complex work, mentoring others
-            - Words like "lead", "coordinate", "design", "develop solutions"
-            - Clear evidence of autonomy and guiding others
-            - Senior-level responsibilities
-            
-            **Assign Level 5 ONLY when evidence shows:**
-            - Expert-level work with organizational impact
-            - Words like "strategic", "authoritative", "accountable for outcomes"
-            - Evidence of setting standards or policies
-            - Consulting or advisory roles
-            
-            **RARELY assign Level 6-7 unless evidence explicitly shows:**
-            - C-suite or executive responsibilities
-            - Organizational strategy setting
-            - Industry-wide influence
+                ### Year {university_year} Level Indicators:
+                **Level 3 (Apply) - MINIMUM for year {university_year}:**
+                - Independent work, varied tasks
+                - "analyze", "evaluate", "design", "develop"
+                - Foundation skills that support advanced work
 
-            ### For {study_level} study level:
-            - Expected TYPICAL levels: {max(1, expected_min-1)}-{min(4, expected_max-1)}
-            - Most skills should be at level {min(3, int((expected_min + expected_max) / 2))}
-            - Only assign level 5+ if there's explicit evidence of expert/strategic work
-            
-            ### DEFAULT ASSIGNMENT:
-            - If unclear from evidence → Level 3 (Apply)
-            - If some complexity shown → Level 4 (Enable)
-            - ONLY use Level 5+ with strong evidence
+                **Level 4 (Enable) - TYPICAL for year {university_year}:**
+                - Complex problem-solving, research skills
+                - "investigate", "optimize", "architect", "lead analysis"
+                - Skills requiring deep understanding and creativity
+
+                **Level 5 (Ensure/Advise) - for specialized skills:**
+                - Expert-level analysis, original research
+                - "critical evaluation", "innovative solutions", "strategic planning"
+                - Skills demonstrating mastery and thought leadership
+
+                IMPORTANT: Year {university_year} students have {university_year - 1} years of prior learning.
+                Skills should reflect this progression. DO NOT assign levels 1-2 unless explicitly basic."""
+            else:
+                level_rules += f"""
+                ## UNIVERSITY YEAR {university_year if university_year else 1} SKILL LEVEL RULES:
+                This is a {'foundational' if university_year == 1 else 'developing'} university course.
+
+                ### Level Assignment Rules by Evidence:
+        
+                **Assign Level 1-2 when evidence shows:**
+                - Basic tasks, routine work, following procedures
+                - Words like "assist", "support", "help", "basic", "simple"
+                - Entry-level or foundational skills
+                - No mention of independence or leadership
+                
+                **Assign Level 3 when evidence shows:**
+                - Standard professional work
+                - Words like "perform", "complete", "conduct", "manage own work"
+                - Typical day-to-day activities
+                - Some independence but not leading others
+                
+                ### Expected SFIA Levels:
+                - Year 1: Levels 2-3 (Assist to Apply)
+                - Year 2: Levels 3-4 (Apply to Enable)
+
+                Skills should show theoretical understanding with emerging application abilities.
+                """
+        
+        else:
+            level_rules += f"""
+            ## VET SKILL LEVEL RULES:
+            VET courses focus on PRACTICAL APPLICATION and OPERATIONAL COMPETENCE.
+
+            ### Expected SFIA Levels for VET:
+            - Certificate III: Levels 1-2 (Follow to Assist)
+            - Certificate IV: Levels 2-3 (Assist to Apply)
+            - Diploma: Levels 2-3 (Assist to Apply)
+            - Advanced Diploma: Levels 3-4 (Apply to Enable)
+
+            ### VET Level Indicators:
+            **Level 1-2 (Follow/Assist):**
+            - Following procedures, using tools under supervision
+            - Basic operational tasks, routine work
+            - "use", "follow", "assist", "support", "help"
+
+            **Level 3 (Apply):**
+            - Independent application of skills
+            - Standard professional tasks
+            - "apply", "implement", "perform", "manage own work"
+
+            **Level 4 (Enable) - RARE in VET:**
+            - Only for advanced diplomas with leadership components
+            - "lead team", "coordinate", "design solutions"
+
+            DEFAULT: Most VET skills should be Level 2-3.
             """
 
         # Final prompt construction
         user_prompt = f"""Analyze this {item_type} description and extract human capabilities using the chain-of-thought process.
 
-{chain_of_thought}
+        {chain_of_thought}
 
-{skill_categories}
+        {skill_categories}
 
-{translation_examples}
+        {translation_examples}
 
-{level_rules}
+        {level_rules}
 
-{context_rules}
+        {context_rules}
 
-## TEXT TO ANALYZE:
-{text}
+        ## TEXT TO ANALYZE:
+        {text}
 
-## EXTRACTION STEPS:
-1. Read the text and identify all mentions of tasks, tools, and responsibilities
-2. For each identified element, determine the underlying human capability required
-3. Translate tools/technologies into human skills
-4. Add specific context to generic abilities
-5. **CRITICAL: Keep skill names to 2-4 words for optimal context but make sure the skill names are aligned with other existing taxonomies**
-6. Ensure each skill follows the naming convention: [Action/Process] + [Domain/Context] + [Object/Outcome]
-7. Validate that each skill represents a transferable human capability
-8. Assess context: Does the evidence show understanding (theoretical), doing (practical), or both (hybrid)?
-9. When context is unclear from evidence, default to hybrid as most professional skills involve both theory and practice
-10. **CRITICAL for Levels**: Be conservative! Default to level 3. Only use level 5+ when evidence explicitly shows expert/strategic work.
+        ## EXTRACTION STEPS:
+        1. Read the text and identify all mentions of tasks, tools, and responsibilities
+        2. For each identified element, determine the underlying human capability required
+        3. Translate tools/technologies into human skills
+        4. Add specific context to generic abilities
+        5. **CRITICAL: Keep skill names to 2-4 words for optimal context but make sure the skill names are aligned with other existing taxonomies**
+        6. Ensure each skill follows the naming convention: [Action/Process] + [Domain/Context] + [Object/Outcome]
+        7. Validate that each skill represents a transferable human capability
+        8. Assess context: Does the evidence show understanding (theoretical), doing (practical), or both (hybrid)?
+        9. When context is unclear from evidence, default to hybrid as most professional skills involve both theory and practice
 
-## OUTPUT REQUIREMENTS:
-Output maximum 15 high quality distinct skills or human capabilities in JSON format.
+        ## OUTPUT REQUIREMENTS:
+        Output maximum 15 high quality distinct skills or human capabilities in JSON format.
 
-Each skill must:
-- Represent a human ability (not a tool or task)
-- Include specific context
-- **BE 2-4 WORDS OPTIMAL** (provide sufficient context)
-- Follow the naming convention if possible
-- Be transferable across roles
-- Align with educational taxonomies is a MUST
-- Make sure to assign an appropriate SFIA level (1-7) based on the provided guidelines, do not output levels outside the expected range for the given study level
-"""+"""
-Strict below JSON FORMAT for direct parsing:
-[
-  {
-    "name": "financial data analysis",  // Human capability with context (2-4 WORDS OPTIMAL)
-    "category": "cognitive",  // MUST be one of: technical/cognitive/interpersonal/domain_knowledge
-    "level": 3,  // SFIA level (1-7) - default to 3, only use 5+ with strong evidence
-    "context": "hybrid",  // theoretical (understanding) / practical (doing) / hybrid (both) - default to hybrid if unclear
-    "confidence": 0.7,  // Extraction confidence
-    "evidence": "...",  // The exact unmodified text in the input showing this capability (max 200 chars)
-  }
-]
+        Each skill must:
+        - Represent a human ability (not a tool or task)
+        - Include specific context
+        - **BE 2-4 WORDS OPTIMAL** (provide sufficient context)
+        - Follow the naming convention if possible
+        - Be transferable across roles
+        - Align with educational taxonomies is a MUST
+        - Make sure to assign an appropriate SFIA level (1-7) based on the provided guidelines, do not output levels outside the expected range for the given study level
+        """+"""
+        Strict below JSON FORMAT for direct parsing:
+        [
+        {
+            "name": "financial data analysis",  // Human capability with context (2-4 WORDS OPTIMAL)
+            "category": "cognitive",  // MUST be one of: technical/cognitive/interpersonal/domain_knowledge
+            "level": 3,  // SFIA level (1-7) 
+            "context": "hybrid",  // theoretical (understanding) / practical (doing) / hybrid (both) - default to hybrid if unclear
+            "confidence": 0.7,  // Extraction confidence
+            "evidence": "...",  // The exact unmodified text in the input showing this capability (max 200 chars)
+        }
+        ]
 
-Remember: Focus on HUMAN CAPABILITIES, not tools or generic terms! Keep names at 2-4 words for optimal context!
+        Remember: Focus on HUMAN CAPABILITIES, not tools or generic terms! Keep names at 2-4 words for optimal context!
 
-Return ONLY the JSON array:"""
+        Return ONLY the JSON array:"""
 
         return system_prompt, user_prompt
     

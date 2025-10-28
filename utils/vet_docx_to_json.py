@@ -3,8 +3,9 @@ import re
 from docx import Document
 from typing import Dict, List, Optional
 from pathlib import Path
+from models.enums import StudyLevel
 
-def extract_vet_course_info(docx_path: str, debug: bool = False) -> Dict:
+def extract_vet_course_info(docx_path: str, debug: bool = False, qual_name: str = None) -> Dict:
     """
     Extract VET course information from a DOCX file and format as JSON.
     
@@ -43,6 +44,7 @@ def extract_vet_course_info(docx_path: str, debug: bool = False) -> Dict:
     result = {
         "code": None,
         "name": None,
+        "study_level": None,
         "description": None,
         "learning_outcomes": [],
         "assessment_requirements": None,
@@ -58,7 +60,10 @@ def extract_vet_course_info(docx_path: str, debug: bool = False) -> Dict:
             result["code"] = match.group(1)
             result["name"] = match.group(2)
             break
-    
+    result['study_level'] = StudyLevel.get_study_level(
+        item_type="VET",
+        course_name=qual_name if qual_name else "",
+    ).value
     # Extract sections - improved section detection
     sections = {}
     current_section = None
@@ -291,7 +296,7 @@ def main():
     try:
         # Extract course information
         for docx_file in tqdm(files):
-            course_info = extract_vet_course_info(docx_file)
+            course_info = extract_vet_course_info(docx_file, qual_name=qual['name'])
             qual["units"].append(course_info)
         # Print the result
         # print("Extracted Course Information:")

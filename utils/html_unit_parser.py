@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 import json
 import re
 from pathlib import Path
+from models.enums import StudyLevel
 
 def extract_course_info(html_file_path):
     """
@@ -126,12 +127,24 @@ def extract_course_info(html_file_path):
         cells = table.find_all('td')
         for cell in cells:
             cell_text = cell.get_text(strip=True)
-            if 'Level 1 - Undergraduate Introductory' in cell_text:
-                result["study_level"] = "introductory"
+            if 'Level 1' in cell_text:
+                result["year"] = 1
+                result["study_level"] = StudyLevel.UNI_YEAR_1.value
             elif 'Level 2' in cell_text or 'Intermediate' in cell_text:
-                result["study_level"] = "intermediate"
+                result["year"] = 2
+                result["study_level"] = StudyLevel.UNI_YEAR_2.value
             elif 'Level 3' in cell_text or 'Advanced' in cell_text:
-                result["study_level"] = "advanced"
+                result["year"] = 3
+                result["study_level"] = StudyLevel.UNI_YEAR_3.value
+            elif 'Level 4' in cell_text or 'Advanced' in cell_text:
+                result["year"] = 4
+                result["study_level"] = StudyLevel.UNI_YEAR_4.value
+            elif 'Level 5' in cell_text or 'Advanced' in cell_text:
+                result["year"] = 5
+                result["study_level"] = StudyLevel.UNI_POSTGRAD.value
+            elif 'Level 6' in cell_text or 'Advanced' in cell_text:
+                result["year"] = 6
+                result["study_level"] = StudyLevel.UNI_POSTGRAD.value
     
     # Extract assessment information
     assessment_section = soup.find(text=re.compile(r'Assessment requirements|Submission of assessment'))
