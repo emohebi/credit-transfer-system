@@ -219,7 +219,6 @@ Your expertise includes understanding educational taxonomies (Bloom's, Australia
         - Evidence shows learning theory AND doing practical work
 
         ## DETERMINATION RULES:
-        Course Type: "{item_type}", Study Level: "{study_level if study_level else 'N/A'}"
         1. Look at the EVIDENCE text - what is actually being done?
         2. If evidence shows ONLY understanding/knowing → THEORETICAL
         3. If evidence shows ONLY doing/implementing → PRACTICAL
@@ -229,8 +228,6 @@ Your expertise includes understanding educational taxonomies (Bloom's, Australia
         - Theory-only assessment → THEORETICAL
         - Practice-only assessment → PRACTICAL
         - Mixed assessment → HYBRID
-        7. University courses often lean towards THEORETICAL or HYBRID due to combined theory and practice
-        8. VET courses often lean towards PRACTICAL or HYBRID due to hands-on focus
             """
         
         # Level calibration based on Bloom's taxonomy
@@ -375,7 +372,6 @@ Your expertise includes understanding educational taxonomies (Bloom's, Australia
         6. Ensure each skill follows the naming convention: [Action/Process] + [Domain/Context] + [Object/Outcome]
         7. Validate that each skill represents a transferable human capability
         8. Assess context: Does the evidence show understanding (theoretical), doing (practical), or both (hybrid)?
-        9. When context is unclear from evidence, default to hybrid as most professional skills involve both theory and practice
 
         ## OUTPUT REQUIREMENTS:
         Output maximum 15 high quality distinct skills or human capabilities in JSON format.

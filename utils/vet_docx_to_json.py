@@ -287,9 +287,15 @@ def main():
     "level": "Diploma",
     "units": []
     }
+    qual = {
+    "code": "BSB50120",
+    "name": "Diploma of Business",
+    "level": "Diploma",
+    "units": []
+    }
     # Input file path
     parent_dir = "/Volumes/jsa_external_prod/external_vols/scratch/Scratch/Ehsan/NST/MiniProjOct25/data"
-    input_folder = Path(parent_dir) / "raw/HLT54121 Diploma of Nursing/"
+    input_folder = Path(parent_dir) / "raw/BSB50120 Diploma_filtered/"
     files = [str(file) for file in input_folder.glob('**/*.docx') if 'Complete_R' in str(file)]#[str(f) for f in dir_.glob("*.docx")]
     # docx_file = "/home/ehsan/Downloads/BSBOPS501_Complete_R1.docx"  # Update with your actual file path
     from tqdm import tqdm

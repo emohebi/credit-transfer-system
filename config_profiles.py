@@ -134,7 +134,8 @@ class ConfigProfiles:
             "enable_bidirectional_coverage": True,  # Use bidirectional coverage
             "enable_one_to_many": True,  # Support one-to-many skill mappings
             "enable_clustering_validation": True,  # Validate direct matches with clustering
-            "pre_filter_categories": True  # Pre-filter by categories for performance
+            "pre_filter_categories": True,  # Pre-filter by categories for performance
+            "SKILL_SIMILARITY_THRESHOLD": 0.9
         }
     }
     
@@ -322,7 +323,7 @@ class SimpleConfig:
         # Simplified thresholds for recommnedations
         self.THRESHOLDS = {
             "full_transfer": 0.8,
-            "partial_transfer": 0.6,
+            "partial_transfer": 0.65,
             "minimum_viable": 0.0
         }
         

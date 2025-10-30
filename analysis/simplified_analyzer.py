@@ -916,8 +916,8 @@ class SimplifiedAnalyzer:
             return None
         
         # Extract skill names for embedding
-        vet_names = [s.description for s in vet_skills]
-        uni_names = [s.description for s in uni_skills]
+        vet_names = [f"{s.name}. {s.description if s.description else ''}" for s in vet_skills]
+        uni_names = [f"{s.name}. {s.description if s.description else ''}" for s in uni_skills]
         
         # Get embeddings in batch (much faster than individual calls)
         all_names = vet_names + uni_names

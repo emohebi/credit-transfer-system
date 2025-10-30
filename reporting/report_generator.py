@@ -1965,7 +1965,7 @@ class ReportGenerator:
                     'uni_context': uni_skill_obj.context.value,
                     'uni_description': uni_desc,  # NEW
                     'mapping_type': detail['match_type'],
-                    'similarity': detail['similarity'],
+                    'similarity': detail['combined_score'],
                     'reasoning': detail['reasoning']
                 }
                 mappings.append(mapping)

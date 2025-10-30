@@ -188,8 +188,13 @@ def main():
         "name": "Bachelor of Nursing",
         "courses": []
         }
+    qual = {
+        "code": "MGB106",
+        "name": "Bachelor of Business (Marketing)",
+        "courses": []
+        }
     parent_dir = "/Volumes/jsa_external_prod/external_vols/scratch/Scratch/Ehsan/NST/MiniProjOct25/data"
-    dir_ = Path(parent_dir) / "raw/364JA Bachelor of Nursing/"
+    dir_ = Path(parent_dir) / "raw/MGB106 Bachelor of Business (Marketing)/"
     files = [str(f) for f in dir_.glob("*.html")]
     from tqdm import tqdm
     try:
