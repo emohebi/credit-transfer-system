@@ -743,8 +743,8 @@ def main():
     print("Tries XML download first, falls back to web scraping")
     print("=" * 80)
     
-    username = "WebService.Read" #input("Enter your API username: ")
-    password = "Asdf098"#input("Enter your API password: ")
+    username = input("Enter your API username: ")
+    password = input("Enter your API password: ")
     environment = "y"# input("Use sandbox? (y/n): ").lower()
     
     use_sandbox = environment == 'y'
