@@ -14,12 +14,58 @@ from multiprocessing import Pool, Manager, cpu_count
 from functools import partial
 
 # Set up logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(processName)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+import logging
+from logging.handlers import RotatingFileHandler
+import os
+from datetime import datetime
 
+def setup_logging(output_dir):
+    """
+    Set up logging to write to both console and file
+    
+    Args:
+        output_dir: Directory where log file will be created
+    """
+    # Create output directory if it doesn't exist
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Create log filename with timestamp
+    log_filename = os.path.join(output_dir, f'download_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log')
+    
+    # Create formatter
+    formatter = logging.Formatter(
+        '%(asctime)s - %(processName)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+    
+    # Get the root logger
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    
+    # Remove any existing handlers
+    logger.handlers = []
+    
+    # Console handler
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+    
+    # File handler with rotation (max 50MB per file, keep 5 backups)
+    file_handler = RotatingFileHandler(
+        log_filename,
+        maxBytes=50*1024*1024,  # 50MB
+        backupCount=5,
+        encoding='utf-8'
+    )
+    file_handler.setLevel(logging.DEBUG)  # Capture more detail in file
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+    
+    logger.info(f"Logging initialized. Log file: {log_filename}")
+    return log_filename
+
+logger = logging.getLogger(__name__)
 
 def _extract_qualification_level(title):
     """Extract qualification level from title"""
@@ -223,7 +269,7 @@ def get_unit_details_formatted(code, username, password, use_sandbox):
     Get unit details - standalone function for multiprocessing
     Tries: 1) XML download, 2) Web scraping, 3) API basic
     """
-    logger.info(f"[UNIT] Fetching: {code}")
+    # logger.info(f"[UNIT] Fetching: {code}")
     
     # Try Method 1: Download and parse XML file
     unit_data = try_xml_download(code, username, password, use_sandbox)
@@ -240,7 +286,7 @@ def get_unit_details_formatted(code, username, password, use_sandbox):
     # Method 3: Basic API fallback
     unit_data = get_basic_unit_info(code, username, password, use_sandbox)
     if unit_data:
-        logger.info(f"[UNIT] ✓ {code} via API (basic)")
+        logger.warning(f"[UNIT] ✓ {code} via API (basic)")
     return unit_data
 
 
@@ -325,16 +371,55 @@ def parse_authorit_xml(code, xml_content):
         return None
 
 
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+import time
+
+# Global driver instance (reuse across calls)
+_driver = None
+
+def get_driver():
+    """Get or create a Selenium driver"""
+    global _driver
+    if _driver is None:
+        options = Options()
+        options.add_argument('--headless')  # Run in background
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--disable-gpu')
+        options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
+        
+        service = Service(ChromeDriverManager().install())
+        _driver = webdriver.Chrome(service=service, options=options)
+    return _driver
+
 def try_web_scraping(code):
-    """Try web scraping from training.gov.au"""
+    """Try web scraping using Selenium to handle JavaScript rendering"""
     try:
         url = f"https://training.gov.au/Training/Details/{code}"
-        response = requests.get(url, timeout=30)
+        logger.info(f"[WEB] Attempting to scrape with Selenium: {url}")
         
-        if response.status_code != 200:
+        driver = get_driver()
+        driver.get(url)
+        # Wait for content to load (wait for h1 or main content)
+        try:
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.TAG_NAME, "h1"))
+            )
+        except:
+            logger.warning(f"[WEB] Timeout waiting for content: {code}")
             return None
         
-        soup = BeautifulSoup(response.content, 'html.parser')
+        # Give it a moment to fully render
+        time.sleep(2)
+        
+        # Now parse with BeautifulSoup
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
         
         unit_data = {
             'code': code,
@@ -350,16 +435,30 @@ def try_web_scraping(code):
         title_elem = soup.find('h1')
         if title_elem:
             title_text = title_elem.get_text(strip=True)
-            unit_data['name'] = title_text.replace(code, '').strip(' -')
+            unit_data['name'] = title_text.replace(code, '').strip(' -–—')
+            logger.info(f"[WEB] Found title: {unit_data['name'][:50]}...")
+        else:
+            logger.warning(f"[WEB] No title found for {code}")
+            return None
         
         description_parts = []
         
-        # Application
-        application_section = soup.find('h2', string=re.compile(r'Application', re.I))
+        # Helper function to find section
+        def find_section(text_pattern):
+            """Find a section by heading text"""
+            for tag in ['h2', 'h3', 'h4']:
+                elem = soup.find(tag, string=re.compile(text_pattern, re.I))
+                if elem:
+                    return elem
+            return None
+        
+        # Application section
+        application_section = find_section(r'Application')
         if application_section:
+            logger.info(f"[WEB] Found Application section")
             app_content = []
             for sibling in application_section.find_next_siblings():
-                if sibling.name == 'h2':
+                if sibling.name in ['h2', 'h3', 'h4']:
                     break
                 text = sibling.get_text(strip=True)
                 if text:
@@ -368,122 +467,135 @@ def try_web_scraping(code):
                 description_parts.append(f"Application:\n{' '.join(app_content)}")
         
         # Elements and Performance Criteria
-        elements_section = soup.find('h2', string=re.compile(r'Elements and Performance Criteria', re.I))
+        elements_section = find_section(r'Elements.*Performance.*Criteria')
         if elements_section:
+            logger.info(f"[WEB] Found Elements section")
             elements_text = "\n\nElements and Performance Criteria:\n"
+            
             table = elements_section.find_next('table')
             if table:
                 rows = table.find_all('tr')
-                element_num = 0
                 for row in rows:
                     cells = row.find_all(['td', 'th'])
                     if len(cells) >= 2:
-                        first_cell = cells[0].get_text(strip=True)
-                        second_cell = cells[1].get_text(strip=True)
-                        
-                        if first_cell and (first_cell.lower().startswith('element') or re.match(r'^\d+\.$', first_cell)):
-                            element_num += 1
-                            elements_text += f"\nElement {element_num}: {second_cell}\n"
-                        elif second_cell:
-                            elements_text += f"  {first_cell} {second_cell}\n"
-            
-            description_parts.append(elements_text)
+                        first = cells[0].get_text(strip=True)
+                        second = cells[1].get_text(strip=True)
+                        if first and second:
+                            elements_text += f"{first}: {second}\n"
+                description_parts.append(elements_text)
         
         # Foundation Skills
-        foundation_section = soup.find('h2', string=re.compile(r'Foundation Skills', re.I))
+        foundation_section = find_section(r'Foundation.*Skills')
         if foundation_section:
-            foundation_text = "\n\nFoundation Skills:\n"
+            logger.info(f"[WEB] Found Foundation Skills")
+            content = []
             for sibling in foundation_section.find_next_siblings():
-                if sibling.name == 'h2':
+                if sibling.name in ['h2', 'h3', 'h4']:
                     break
                 text = sibling.get_text(strip=True)
                 if text:
-                    foundation_text += f"{text}\n"
-            description_parts.append(foundation_text)
+                    content.append(text)
+            if content:
+                description_parts.append(f"\n\nFoundation Skills:\n{' '.join(content)}")
         
         unit_data['description'] = '\n'.join(description_parts) if description_parts else 'Content not available'
         
         # Knowledge Evidence
-        knowledge_section = soup.find('h3', string=re.compile(r'Knowledge Evidence', re.I))
-        if not knowledge_section:
-            knowledge_section = soup.find('h2', string=re.compile(r'Knowledge Evidence', re.I))
-        
+        knowledge_section = find_section(r'Knowledge.*Evidence')
         if knowledge_section:
-            knowledge_items = []
             ul = knowledge_section.find_next('ul')
             if ul:
-                for li in ul.find_all('li'):
+                items = []
+                for li in ul.find_all('li', recursive=False):
                     text = li.get_text(strip=True)
                     if text:
-                        knowledge_items.append(text)
-            unit_data['learning_outcomes'] = knowledge_items
-        
-        # Assessment Requirements
-        assessment_section = soup.find('h2', string=re.compile(r'Assessment Requirements', re.I))
-        if assessment_section:
-            assessment_parts = []
-            for sibling in assessment_section.find_next_siblings():
-                if sibling.name == 'h2':
-                    break
-                text = sibling.get_text(strip=True)
-                if text:
-                    assessment_parts.append(text)
-            unit_data['assessment_requirements'] = '\n'.join(assessment_parts)
+                        items.append(text)
+                unit_data['learning_outcomes'] = items
+                logger.info(f"[WEB] Found {len(items)} knowledge items")
         
         # Performance Evidence
-        performance_section = soup.find('h3', string=re.compile(r'Performance Evidence', re.I))
-        if not performance_section:
-            performance_section = soup.find('h2', string=re.compile(r'Performance Evidence', re.I))
-        
-        if performance_section:
-            perf_parts = []
-            for sibling in performance_section.find_next_siblings():
-                if sibling.name in ['h2', 'h3']:
+        perf_section = find_section(r'Performance.*Evidence')
+        if perf_section:
+            parts = []
+            for sibling in perf_section.find_next_siblings():
+                if sibling.name in ['h2', 'h3', 'h4']:
                     break
-                text = sibling.get_text(strip=True)
-                if text:
-                    perf_parts.append(text)
-            
-            if perf_parts:
-                perf_text = '\n'.join(perf_parts)
-                if unit_data['assessment_requirements']:
-                    unit_data['assessment_requirements'] += f"\n\nPerformance Evidence:\n{perf_text}"
+                if sibling.name == 'ul':
+                    for li in sibling.find_all('li', recursive=False):
+                        text = li.get_text(strip=True)
+                        if text:
+                            parts.append(f"• {text}")
                 else:
-                    unit_data['assessment_requirements'] = f"Performance Evidence:\n{perf_text}"
+                    text = sibling.get_text(strip=True)
+                    if text:
+                        parts.append(text)
+            if parts:
+                unit_data['assessment_requirements'] = '\n'.join(parts)
+        
+        # Assessment Conditions
+        assessment_section = find_section(r'Assessment.*Conditions')
+        if assessment_section:
+            parts = []
+            for sibling in assessment_section.find_next_siblings():
+                if sibling.name in ['h2', 'h3', 'h4']:
+                    break
+                if sibling.name == 'ul':
+                    for li in sibling.find_all('li', recursive=False):
+                        text = li.get_text(strip=True)
+                        if text:
+                            parts.append(f"• {text}")
+                else:
+                    text = sibling.get_text(strip=True)
+                    if text:
+                        parts.append(text)
+            if parts:
+                cond_text = '\n'.join(parts)
+                if unit_data['assessment_requirements']:
+                    unit_data['assessment_requirements'] += f"\n\nAssessment Conditions:\n{cond_text}"
+                else:
+                    unit_data['assessment_requirements'] = f"Assessment Conditions:\n{cond_text}"
         
         # Volume of Learning
-        vol_section = soup.find(string=re.compile(r'Volume of Learning', re.I))
-        if vol_section:
-            parent = vol_section.find_parent()
+        vol_text = soup.find(string=re.compile(r'Volume.*Learning', re.I))
+        if vol_text:
+            parent = vol_text.find_parent()
             if parent:
                 text = parent.get_text()
-                hours_match = re.search(r'(\d+)\s*hour', text, re.I)
+                for sibling in parent.find_next_siblings():
+                    if sibling.name in ['h2', 'h3']:
+                        break
+                    text += ' ' + sibling.get_text()
+                
+                hours_match = re.search(r'(\d+)\s*hours?', text, re.I)
                 if hours_match:
-                    try:
-                        unit_data['nominal_hours'] = int(hours_match.group(1))
-                    except:
-                        pass
+                    unit_data['nominal_hours'] = int(hours_match.group(1))
         
         # Prerequisites
-        prereq_section = soup.find('h2', string=re.compile(r'Prerequisite', re.I))
-        if not prereq_section:
-            prereq_section = soup.find('h3', string=re.compile(r'Prerequisite', re.I))
-        
+        prereq_section = find_section(r'Pre-?requisite')
         if prereq_section:
-            prereq_text = ''
+            text = ''
             for sibling in prereq_section.find_next_siblings():
-                if sibling.name in ['h2', 'h3']:
+                if sibling.name in ['h2', 'h3', 'h4']:
                     break
-                prereq_text += sibling.get_text()
+                text += ' ' + sibling.get_text()
             
-            prereq_codes = re.findall(r'[A-Z]{3,10}\d{3,6}[A-Z]?', prereq_text)
-            unit_data['prerequisites'] = prereq_codes
+            codes = re.findall(r'\b[A-Z]{3,10}\d{3,6}[A-Z]?\b', text)
+            if codes:
+                unit_data['prerequisites'] = list(set(codes))
         
+        logger.info(f"[WEB] ✓ Successfully scraped {code}")
         return unit_data
         
     except Exception as e:
-        logger.debug(f"Web scraping failed for {code}: {e}")
+        logger.warning(f"[WEB] Selenium scraping failed for {code}: {e}")
         return None
+
+def cleanup_driver():
+    """Call this at the end to close the browser"""
+    global _driver
+    if _driver:
+        _driver.quit()
+        _driver = None
 
 
 def get_basic_unit_info(code, username, password, use_sandbox):
@@ -588,6 +700,8 @@ def download_all_qualifications_parallel(username, password, use_sandbox, output
     """
     # Create output directory
     os.makedirs(output_dir, exist_ok=True)
+    
+    log_file = setup_logging(output_dir)
     
     # Initialize downloader to get qualifications list
     downloader = TrainingGovDownloader(username, password, use_sandbox)
@@ -728,6 +842,7 @@ def main():
     print("Downloads qualifications organized by training package")
     print("=" * 80)
     
+    # Get credentials
     username = input("Enter your API username: ")
     password = input("Enter your API password: ")
     environment = input("Use sandbox? (y/n): ").lower()
@@ -753,22 +868,26 @@ def main():
         print("\nStarting download...")
         print("This will be much faster with multiprocessing!")
         print("-" * 80)
-        
-        download_all_qualifications_parallel(
-            username, 
-            password, 
-            use_sandbox, 
-            output_dir=output_dir,
-            num_processes=num_processes
-        )
-        
+        try:
+            get_driver()
+            download_all_qualifications_parallel(
+                username, 
+                password, 
+                use_sandbox, 
+                output_dir=output_dir,
+                num_processes=num_processes
+            )
+        finally:
+            cleanup_driver()   
         print(f"\n✓ Complete! Check '{output_dir}' folder")
-        
+        print(f"Log file saved in '{output_dir}' folder")
     except KeyboardInterrupt:
         print("\n\nInterrupted - partial data saved")
+        print(f"Check log file in '{output_dir}' folder for details")
     except Exception as e:
         logger.error(f"Error: {e}")
         print(f"\n✗ Error: {e}")
+        print(f"Check log file in '{output_dir}' folder for details")
 
 
 if __name__ == "__main__":
