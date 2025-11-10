@@ -47,7 +47,7 @@ def setup_logging(output_dir):
     
     # Console handler
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
+    console_handler.setLevel(logging.DEBUG)
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
     
@@ -371,42 +371,208 @@ def parse_authorit_xml(code, xml_content):
         return None
 
 
+import logging
+import os
+import sys
+import subprocess
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
-import time
+
+logger = logging.getLogger(__name__)
 
 # Global driver instance (reuse across calls)
 _driver = None
+_selenium_available = None
+
+def is_databricks():
+    """Check if running in Databricks environment"""
+    return 'DATABRICKS_RUNTIME_VERSION' in os.environ or '/databricks/' in os.getcwd()
+
+def install_chrome_databricks():
+    """Install Chrome and ChromeDriver in Databricks"""
+    try:
+        logger.info("[SELENIUM] Installing Chrome and ChromeDriver in Databricks...")
+        
+        # Install chromium and chromedriver
+        commands = [
+            "apt-get update",
+            "apt-get install -y chromium-browser chromium-chromedriver",
+        ]
+        
+        for cmd in commands:
+            logger.info(f"[SELENIUM] Running: {cmd}")
+            result = subprocess.run(
+                cmd.split(),
+                capture_output=True,
+                text=True,
+                timeout=300
+            )
+            if result.returncode != 0:
+                logger.error(f"[SELENIUM] Command failed: {result.stderr}")
+                return False
+        
+        # Verify installation
+        chromium_path = subprocess.run(
+            ["which", "chromium-browser"],
+            capture_output=True,
+            text=True
+        )
+        chromedriver_path = subprocess.run(
+            ["which", "chromedriver"],
+            capture_output=True,
+            text=True
+        )
+        
+        if chromium_path.returncode == 0 and chromedriver_path.returncode == 0:
+            logger.info("[SELENIUM] ✓ Chrome and ChromeDriver installed successfully")
+            logger.info(f"[SELENIUM] Chromium: {chromium_path.stdout.strip()}")
+            logger.info(f"[SELENIUM] ChromeDriver: {chromedriver_path.stdout.strip()}")
+            return True
+        else:
+            logger.error("[SELENIUM] Installation verification failed")
+            return False
+            
+    except Exception as e:
+        logger.error(f"[SELENIUM] Failed to install Chrome in Databricks: {e}")
+        return False
+
+def install_selenium_packages():
+    """Install required Python packages"""
+    try:
+        import selenium
+        logger.info("[SELENIUM] Selenium already installed")
+        return True
+    except ImportError:
+        try:
+            logger.info("[SELENIUM] Installing selenium package...")
+            subprocess.check_call([
+                sys.executable, "-m", "pip", "install", 
+                "selenium", "webdriver-manager"
+            ])
+            logger.info("[SELENIUM] ✓ Selenium installed")
+            return True
+        except Exception as e:
+            logger.error(f"[SELENIUM] Failed to install selenium: {e}")
+            return False
+
+def check_selenium_available():
+    """Check if Selenium can be used in this environment"""
+    global _selenium_available
+    
+    if _selenium_available is not None:
+        return _selenium_available
+    
+    try:
+        # Install Python packages if needed
+        if not install_selenium_packages():
+            _selenium_available = False
+            return False
+        
+        # If in Databricks, install Chrome
+        if is_databricks():
+            logger.info("[SELENIUM] Detected Databricks environment")
+            if not install_chrome_databricks():
+                logger.warning("[SELENIUM] Chrome installation failed in Databricks")
+                _selenium_available = False
+                return False
+        
+        # Try to create a test driver
+        logger.info("[SELENIUM] Testing WebDriver setup...")
+        test_driver = get_driver()
+        if test_driver:
+            logger.info("[SELENIUM] ✓ WebDriver is available and working")
+            _selenium_available = True
+            return True
+        else:
+            _selenium_available = False
+            return False
+            
+    except Exception as e:
+        logger.warning(f"[SELENIUM] Not available: {e}")
+        _selenium_available = False
+        return False
 
 def get_driver():
     """Get or create a Selenium driver"""
     global _driver
-    if _driver is None:
+    
+    if _driver is not None:
+        return _driver
+    
+    try:
         options = Options()
-        options.add_argument('--headless')  # Run in background
+        options.add_argument('--headless')
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--disable-gpu')
+        options.add_argument('--disable-extensions')
+        options.add_argument('--disable-software-rasterizer')
         options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
         
-        service = Service(ChromeDriverManager().install())
-        _driver = webdriver.Chrome(service=service, options=options)
-    return _driver
+        if is_databricks():
+            # In Databricks, use system-installed chromedriver
+            chromedriver_path = subprocess.run(
+                ["which", "chromedriver"],
+                capture_output=True,
+                text=True
+            ).stdout.strip()
+            
+            chromium_path = subprocess.run(
+                ["which", "chromium-browser"],
+                capture_output=True,
+                text=True
+            ).stdout.strip()
+            
+            if chromedriver_path and chromium_path:
+                logger.info(f"[SELENIUM] Using Databricks ChromeDriver: {chromedriver_path}")
+                options.binary_location = chromium_path
+                service = Service(executable_path=chromedriver_path)
+                _driver = webdriver.Chrome(service=service, options=options)
+            else:
+                logger.error("[SELENIUM] ChromeDriver not found in Databricks")
+                return None
+        else:
+            # Local environment - use webdriver-manager
+            try:
+                from webdriver_manager.chrome import ChromeDriverManager
+                logger.info("[SELENIUM] Using webdriver-manager for local ChromeDriver")
+                service = Service(ChromeDriverManager().install())
+                _driver = webdriver.Chrome(service=service, options=options)
+            except Exception as e:
+                logger.error(f"[SELENIUM] Failed to initialize ChromeDriver locally: {e}")
+                return None
+        
+        logger.info("[SELENIUM] ✓ WebDriver initialized successfully")
+        return _driver
+        
+    except Exception as e:
+        logger.error(f"[SELENIUM] Failed to create WebDriver: {e}")
+        return None
 
 def try_web_scraping(code):
     """Try web scraping using Selenium to handle JavaScript rendering"""
+    
+    # Check if Selenium is available
+    if not check_selenium_available():
+        logger.debug(f"[WEB] Selenium not available, skipping web scraping for {code}")
+        return None
+    
     try:
         url = f"https://training.gov.au/Training/Details/{code}"
         logger.info(f"[WEB] Attempting to scrape with Selenium: {url}")
         
         driver = get_driver()
+        if not driver:
+            logger.warning(f"[WEB] No driver available for {code}")
+            return None
+        
         driver.get(url)
-        # Wait for content to load (wait for h1 or main content)
+        
+        # Wait for content to load
         try:
             WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.TAG_NAME, "h1"))
@@ -416,9 +582,11 @@ def try_web_scraping(code):
             return None
         
         # Give it a moment to fully render
+        import time
         time.sleep(2)
         
         # Now parse with BeautifulSoup
+        from bs4 import BeautifulSoup
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         
         unit_data = {
@@ -441,9 +609,8 @@ def try_web_scraping(code):
             logger.warning(f"[WEB] No title found for {code}")
             return None
         
-        description_parts = []
-        
         # Helper function to find section
+        import re
         def find_section(text_pattern):
             """Find a section by heading text"""
             for tag in ['h2', 'h3', 'h4']:
@@ -451,6 +618,8 @@ def try_web_scraping(code):
                 if elem:
                     return elem
             return None
+        
+        description_parts = []
         
         # Application section
         application_section = find_section(r'Application')
@@ -588,13 +757,19 @@ def try_web_scraping(code):
         
     except Exception as e:
         logger.warning(f"[WEB] Selenium scraping failed for {code}: {e}")
+        import traceback
+        logger.debug(traceback.format_exc())
         return None
 
 def cleanup_driver():
     """Call this at the end to close the browser"""
     global _driver
     if _driver:
-        _driver.quit()
+        try:
+            _driver.quit()
+            logger.info("[SELENIUM] ✓ WebDriver closed")
+        except:
+            pass
         _driver = None
 
 
@@ -841,6 +1016,14 @@ def main():
     print("Training.gov.au - Qualification Downloader (Multiprocessing)")
     print("Downloads qualifications organized by training package")
     print("=" * 80)
+    
+    # Auto-detect and set up environment
+    if is_databricks():
+        print("\n🔷 Databricks environment detected")
+        print("Setting up Chrome and ChromeDriver...")
+        if not install_chrome_databricks():
+            print("⚠️  Warning: Chrome installation failed")
+            print("Web scraping will be disabled, using XML and API only")
     
     # Get credentials
     username = input("Enter your API username: ")
