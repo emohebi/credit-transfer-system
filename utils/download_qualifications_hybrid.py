@@ -21,6 +21,36 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def _extract_qualification_level(title):
+    """Extract qualification level from title"""
+    title_lower = title.lower()
+    
+    if 'certificate iii' in title_lower:
+        return 'Certificate III'
+    elif 'certificate ii' in title_lower:
+        return 'Certificate II'
+    if 'certificate i' in title_lower and 'certificate iv' not in title_lower:
+        return 'Certificate I'
+    elif 'certificate iv' in title_lower:
+        return 'Certificate IV'
+    elif 'advanced diploma' in title_lower:
+        return 'Advanced Diploma'
+    elif 'graduate certificate' in title_lower:
+        return 'Graduate Certificate'
+    elif 'graduate diploma' in title_lower:
+        return 'Graduate Diploma'
+    elif 'diploma' in title_lower and 'advanced' not in title_lower:
+        return 'Diploma'
+    else:
+        return 'Unknown'
+    
+def _extract_training_package_code(qual_code):
+    """Extract training package code from qualification code"""
+    match = re.match(r'^([A-Z]+)', qual_code)
+    if match:
+        return match.group(1)
+    return 'OTHER'
+
 class TrainingGovDownloader:
     """
     Download all qualifications and units from training.gov.au
@@ -109,36 +139,6 @@ class TrainingGovDownloader:
             logger.error(f"Error searching: {e}")
             return all_qualifications
     
-    def _extract_qualification_level(self, title):
-        """Extract qualification level from title"""
-        title_lower = title.lower()
-        
-        if 'certificate i' in title_lower and 'certificate iv' not in title_lower:
-            return 'Certificate I'
-        elif 'certificate ii' in title_lower:
-            return 'Certificate II'
-        elif 'certificate iii' in title_lower:
-            return 'Certificate III'
-        elif 'certificate iv' in title_lower:
-            return 'Certificate IV'
-        elif 'diploma' in title_lower and 'advanced' not in title_lower:
-            return 'Diploma'
-        elif 'advanced diploma' in title_lower:
-            return 'Advanced Diploma'
-        elif 'graduate certificate' in title_lower:
-            return 'Graduate Certificate'
-        elif 'graduate diploma' in title_lower:
-            return 'Graduate Diploma'
-        else:
-            return 'Unknown'
-    
-    def _extract_training_package_code(self, qual_code):
-        """Extract training package code from qualification code"""
-        match = re.match(r'^([A-Z]+)', qual_code)
-        if match:
-            return match.group(1)
-        return 'OTHER'
-    
     def get_qualification_with_units(self, code, username, password, use_sandbox, unit_cache):
         """
         Get qualification details with all units
@@ -158,7 +158,7 @@ class TrainingGovDownloader:
                 return None
             
             title = response.Title if hasattr(response, 'Title') else ''
-            level = self._extract_qualification_level(self, title)
+            level = _extract_qualification_level(title)
             
             status = 'current'
             if hasattr(response, 'CurrencyStatus'):
@@ -170,7 +170,7 @@ class TrainingGovDownloader:
             if hasattr(response, 'ParentCode') and response.ParentCode:
                 training_package = response.ParentCode
             else:
-                training_package = self._extract_training_package_code(self, code)
+                training_package = _extract_training_package_code(code)
             
             qualification = {
                 'code': code,
@@ -728,8 +728,8 @@ def main():
     print("Downloads qualifications organized by training package")
     print("=" * 80)
     
-    username = input("\nAPI username: ")
-    password = input("API password: ")
+    username = input("Enter your API username: ")
+    password = input("Enter your API password: ")
     environment = input("Use sandbox? (y/n): ").lower()
     
     num_processes_input = input(f"Number of parallel processes (default: {max(1, cpu_count()-1)}): ")
