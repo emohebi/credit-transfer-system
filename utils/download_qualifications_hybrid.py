@@ -384,7 +384,7 @@ from selenium.webdriver.chrome.options import Options
 
 logger = logging.getLogger(__name__)
 
-# Global driver instance (reuse across calls)
+# Global driver instance
 _driver = None
 _selenium_available = None
 
@@ -393,51 +393,150 @@ def is_databricks():
     return 'DATABRICKS_RUNTIME_VERSION' in os.environ or '/databricks/' in os.getcwd()
 
 def install_chrome_databricks():
-    """Install Chrome and ChromeDriver in Databricks"""
+    """Install Chrome and ChromeDriver in Databricks with better compatibility"""
     try:
         logger.info("[SELENIUM] Installing Chrome and ChromeDriver in Databricks...")
         
-        # Install chromium and chromedriver
-        commands = [
-            "apt-get update",
-            "apt-get install -y chromium-browser chromium-chromedriver",
+        # Update package lists
+        logger.info("[SELENIUM] Updating package lists...")
+        subprocess.run(["apt-get", "update"], check=True, capture_output=True)
+        
+        # Install required dependencies first
+        logger.info("[SELENIUM] Installing dependencies...")
+        dependencies = [
+            "wget", "unzip", "libglib2.0-0", "libnss3", "libgconf-2-4",
+            "libfontconfig1", "libx11-6", "libx11-xcb1", "libxcb1",
+            "libxcomposite1", "libxcursor1", "libxdamage1", "libxi6",
+            "libxtst6", "libappindicator1", "libasound2", "libatk1.0-0",
+            "libatk-bridge2.0-0", "libcups2", "libdbus-1-3", "libdrm2",
+            "libgbm1", "libgtk-3-0", "libnspr4", "libxrandr2",
+            "libxss1", "fonts-liberation", "xdg-utils"
         ]
         
-        for cmd in commands:
-            logger.info(f"[SELENIUM] Running: {cmd}")
-            result = subprocess.run(
-                cmd.split(),
-                capture_output=True,
-                text=True,
-                timeout=300
-            )
-            if result.returncode != 0:
-                logger.error(f"[SELENIUM] Command failed: {result.stderr}")
-                return False
+        subprocess.run(
+            ["apt-get", "install", "-y", "--no-install-recommends"] + dependencies,
+            check=True,
+            capture_output=True,
+            timeout=300
+        )
         
-        # Verify installation
-        chromium_path = subprocess.run(
-            ["which", "chromium-browser"],
+        # Install Chrome (stable version)
+        logger.info("[SELENIUM] Installing Google Chrome...")
+        subprocess.run([
+            "wget", "-q", 
+            "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb",
+            "-O", "/tmp/chrome.deb"
+        ], check=True, capture_output=True, timeout=120)
+        
+        subprocess.run([
+            "apt-get", "install", "-y", "/tmp/chrome.deb"
+        ], capture_output=True)  # Don't check=True as it may have dependency warnings
+        
+        subprocess.run([
+            "apt-get", "install", "-y", "-f"  # Fix any dependency issues
+        ], check=True, capture_output=True)
+        
+        # Get Chrome version
+        chrome_version = subprocess.run(
+            ["google-chrome", "--version"],
             capture_output=True,
             text=True
         )
+        logger.info(f"[SELENIUM] Chrome version: {chrome_version.stdout.strip()}")
+        
+        # Install matching ChromeDriver
+        logger.info("[SELENIUM] Installing ChromeDriver...")
+        
+        # Get major Chrome version
+        version_output = chrome_version.stdout.strip()
+        major_version = version_output.split()[2].split('.')[0]
+        
+        # Download compatible ChromeDriver
+        logger.info(f"[SELENIUM] Downloading ChromeDriver for Chrome {major_version}...")
+        
+        # Get the latest ChromeDriver version for this Chrome version
+        chromedriver_version_url = f"https://chromedriver.storage.googleapis.com/LATEST_RELEASE_{major_version}"
+        version_result = subprocess.run(
+            ["wget", "-qO-", chromedriver_version_url],
+            capture_output=True,
+            text=True
+        )
+        
+        if version_result.returncode == 0:
+            chromedriver_version = version_result.stdout.strip()
+            logger.info(f"[SELENIUM] ChromeDriver version: {chromedriver_version}")
+            
+            download_url = f"https://chromedriver.storage.googleapis.com/{chromedriver_version}/chromedriver_linux64.zip"
+            subprocess.run([
+                "wget", "-q", download_url,
+                "-O", "/tmp/chromedriver.zip"
+            ], check=True, timeout=120)
+            
+            subprocess.run([
+                "unzip", "-o", "/tmp/chromedriver.zip",
+                "-d", "/tmp/"
+            ], check=True)
+            
+            subprocess.run([
+                "mv", "/tmp/chromedriver", "/usr/local/bin/chromedriver"
+            ], check=True)
+            
+            subprocess.run([
+                "chmod", "+x", "/usr/local/bin/chromedriver"
+            ], check=True)
+        else:
+            # Fallback: try apt-get chromedriver
+            logger.warning("[SELENIUM] Could not determine ChromeDriver version, using apt-get...")
+            subprocess.run([
+                "apt-get", "install", "-y", "chromium-chromedriver"
+            ], check=True, capture_output=True)
+        
+        # Verify installation
+        chrome_path = subprocess.run(
+            ["which", "google-chrome"],
+            capture_output=True,
+            text=True
+        )
+        
         chromedriver_path = subprocess.run(
             ["which", "chromedriver"],
             capture_output=True,
             text=True
         )
         
-        if chromium_path.returncode == 0 and chromedriver_path.returncode == 0:
+        if chrome_path.returncode != 0:
+            # Try alternative location
+            chrome_path = subprocess.run(
+                ["which", "google-chrome-stable"],
+                capture_output=True,
+                text=True
+            )
+        
+        if chrome_path.returncode == 0 and chromedriver_path.returncode == 0:
             logger.info("[SELENIUM] ✓ Chrome and ChromeDriver installed successfully")
-            logger.info(f"[SELENIUM] Chromium: {chromium_path.stdout.strip()}")
+            logger.info(f"[SELENIUM] Chrome: {chrome_path.stdout.strip()}")
             logger.info(f"[SELENIUM] ChromeDriver: {chromedriver_path.stdout.strip()}")
+            
+            # Test ChromeDriver
+            test_result = subprocess.run(
+                ["chromedriver", "--version"],
+                capture_output=True,
+                text=True
+            )
+            logger.info(f"[SELENIUM] ChromeDriver test: {test_result.stdout.strip()}")
+            
             return True
         else:
             logger.error("[SELENIUM] Installation verification failed")
             return False
             
+    except subprocess.TimeoutExpired:
+        logger.error("[SELENIUM] Installation timed out")
+        return False
     except Exception as e:
         logger.error(f"[SELENIUM] Failed to install Chrome in Databricks: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
         return False
 
 def install_selenium_packages():
@@ -451,7 +550,7 @@ def install_selenium_packages():
             logger.info("[SELENIUM] Installing selenium package...")
             subprocess.check_call([
                 sys.executable, "-m", "pip", "install", 
-                "selenium", "webdriver-manager"
+                "selenium", "webdriver-manager", "-q"
             ])
             logger.info("[SELENIUM] ✓ Selenium installed")
             return True
@@ -497,7 +596,7 @@ def check_selenium_available():
         return False
 
 def get_driver():
-    """Get or create a Selenium driver"""
+    """Get or create a Selenium driver with Databricks-optimized settings"""
     global _driver
     
     if _driver is not None:
@@ -505,36 +604,71 @@ def get_driver():
     
     try:
         options = Options()
+        
+        # Essential headless options
         options.add_argument('--headless')
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
-        options.add_argument('--disable-gpu')
-        options.add_argument('--disable-extensions')
-        options.add_argument('--disable-software-rasterizer')
-        options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
         
+        # Additional stability options for Databricks
+        options.add_argument('--disable-gpu')
+        options.add_argument('--disable-software-rasterizer')
+        options.add_argument('--disable-extensions')
+        options.add_argument('--disable-infobars')
+        options.add_argument('--disable-browser-side-navigation')
+        options.add_argument('--disable-blink-features=AutomationControlled')
+        options.add_argument('--disable-features=VizDisplayCompositor')
+        options.add_argument('--window-size=1920,1080')
+        options.add_argument('--start-maximized')
+        options.add_argument('--ignore-certificate-errors')
+        options.add_argument('--allow-running-insecure-content')
+        options.add_argument('--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+        
+        # Memory and performance options
+        options.add_argument('--disable-logging')
+        options.add_argument('--log-level=3')
+        options.add_argument('--silent')
+        
+        # Databricks-specific options
         if is_databricks():
-            # In Databricks, use system-installed chromedriver
-            chromedriver_path = subprocess.run(
-                ["which", "chromedriver"],
-                capture_output=True,
-                text=True
-            ).stdout.strip()
+            options.add_argument('--remote-debugging-port=9222')
+            options.add_argument('--disable-setuid-sandbox')
             
-            chromium_path = subprocess.run(
-                ["which", "chromium-browser"],
-                capture_output=True,
-                text=True
-            ).stdout.strip()
+        if is_databricks():
+            # Find Chrome binary
+            chrome_binary = None
+            for path in ['/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium-browser']:
+                if os.path.exists(path):
+                    chrome_binary = path
+                    break
             
-            if chromedriver_path and chromium_path:
-                logger.info(f"[SELENIUM] Using Databricks ChromeDriver: {chromedriver_path}")
-                options.binary_location = chromium_path
-                service = Service(executable_path=chromedriver_path)
-                _driver = webdriver.Chrome(service=service, options=options)
-            else:
-                logger.error("[SELENIUM] ChromeDriver not found in Databricks")
+            if not chrome_binary:
+                logger.error("[SELENIUM] Chrome binary not found")
                 return None
+            
+            options.binary_location = chrome_binary
+            logger.info(f"[SELENIUM] Using Chrome binary: {chrome_binary}")
+            
+            # Find ChromeDriver
+            chromedriver_path = None
+            for path in ['/usr/local/bin/chromedriver', '/usr/bin/chromedriver']:
+                if os.path.exists(path):
+                    chromedriver_path = path
+                    break
+            
+            if not chromedriver_path:
+                logger.error("[SELENIUM] ChromeDriver not found")
+                return None
+            
+            logger.info(f"[SELENIUM] Using ChromeDriver: {chromedriver_path}")
+            
+            service = Service(
+                executable_path=chromedriver_path,
+                log_path='/tmp/chromedriver.log'
+            )
+            
+            _driver = webdriver.Chrome(service=service, options=options)
+            
         else:
             # Local environment - use webdriver-manager
             try:
@@ -546,12 +680,39 @@ def get_driver():
                 logger.error(f"[SELENIUM] Failed to initialize ChromeDriver locally: {e}")
                 return None
         
+        # Set timeouts
+        _driver.set_page_load_timeout(30)
+        _driver.implicitly_wait(5)
+        
         logger.info("[SELENIUM] ✓ WebDriver initialized successfully")
         return _driver
         
     except Exception as e:
         logger.error(f"[SELENIUM] Failed to create WebDriver: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+        
+        # Try to read chromedriver log if available
+        if is_databricks() and os.path.exists('/tmp/chromedriver.log'):
+            try:
+                with open('/tmp/chromedriver.log', 'r') as f:
+                    log_content = f.read()
+                    logger.error(f"[SELENIUM] ChromeDriver log:\n{log_content}")
+            except:
+                pass
+        
         return None
+
+def cleanup_driver():
+    """Call this at the end to close the browser"""
+    global _driver
+    if _driver:
+        try:
+            _driver.quit()
+            logger.info("[SELENIUM] ✓ WebDriver closed")
+        except:
+            pass
+        _driver = None
 
 def try_web_scraping(code):
     """Try web scraping using Selenium to handle JavaScript rendering"""
