@@ -119,6 +119,8 @@ class SkillCategory(Enum):
 
 class StudyLevel(Enum):
     """Study levels with expected skill level mappings"""
+    VET_CERT_I = 'VET_Certificate_I'
+    VET_CERT_II = 'VET_Certificate_II'
     VET_CERT_III = 'VET_Certificate_III'
     VET_CERT_IV = 'VET_Certificate_IV' 
     VET_DIPLOMA = 'VET_Diploma'
@@ -135,16 +137,23 @@ class StudyLevel(Enum):
     @classmethod
     def get_study_level(cls, item_type: str, course_name: str, course_year: int = None) -> 'StudyLevel':
         """Convert string to StudyLevel enum"""
-        name_lower = course_name.lower()
+        title_lower = course_name.lower()
         
         # Check if VET
         if item_type.lower() == "vet" or "vet" in item_type.lower():
-            if "diploma" in name_lower:
-                if "advanced" in name_lower:
-                    return cls.VET_ADV_DIPLOMA
-                return cls.VET_DIPLOMA
-            elif "iv" in name_lower or "4" in name_lower:
+    
+            if 'certificate iii' in title_lower:
+                return cls.VET_CERT_III
+            elif 'certificate ii' in title_lower:
+                return cls.VET_CERT_II
+            if 'certificate i' in title_lower and 'certificate iv' not in title_lower:
+                return cls.VET_CERT_I
+            elif 'certificate iv' in title_lower:
                 return cls.VET_CERT_IV
+            elif 'advanced diploma' in title_lower:
+                return cls.VET_ADV_DIPLOMA
+            elif 'diploma' in title_lower and 'advanced' not in title_lower:
+                return cls.VET_DIPLOMA
             else:
                 return cls.VET_CERT_III
             
@@ -179,6 +188,8 @@ class StudyLevel(Enum):
         """
         ranges = {
             # VET levels (typically operational/practical focus)
+            cls.VET_CERT_I: (1, 2),        # Follow to Assist
+            cls.VET_CERT_II: (1, 2),       # Follow to Assist
             cls.VET_CERT_III: (1, 2),      # Follow to Assist
             cls.VET_CERT_IV: (2, 3),       # Assist to Apply
             cls.VET_DIPLOMA: (2, 3),        # Assist to Apply
