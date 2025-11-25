@@ -1,0 +1,249 @@
+"""
+Interface for local GenAI model integration using vLLM with true batch processing
+"""
+import os
+import json
+import logging
+import re
+import shutil
+import torch
+from typing import List, Dict, Any, Optional
+from pathlib import Path
+from huggingface_hub import snapshot_download
+from config.settings import CONFIG
+from src.utils.converters import JSONExtraction
+from vllm import LLM, SamplingParams
+
+logger = logging.getLogger(__name__)
+
+
+class VLLMGenAIInterfaceBatch:
+    """Interface for local GenAI model integration using vLLM with batch processing"""
+    
+    def __init__(self, 
+                 model_name: str = "meta-llama--Llama-3.1-8B-Instruct",
+                 number_gpus: int = 1,
+                 max_model_len: int = 8192,
+                 batch_size: int = 8,
+                 model_cache_dir: str = "/root/.cache/huggingface/hub",
+                 external_model_dir: str = "/Volumes/jsa_external_prod/external_vols/scratch/Scratch/Ehsan/Models",
+                 gpu_memory_utilization: float = 0.85,
+                 gpu_id: int = 0):  # Add explicit GPU ID parameter
+        """
+        Initialize vLLM GenAI interface with batch processing
+        
+        Args:
+            model_name: Name of the model to use
+            number_gpus: Number of GPUs for tensor parallelism
+            max_model_len: Maximum model context length
+            batch_size: Default batch size for processing
+            model_cache_dir: Directory for HuggingFace cache
+            external_model_dir: Directory containing pre-downloaded models
+            gpu_id: GPU ID to use (default 0)
+        """
+        self.MODELS = CONFIG['models']['llm_models']
+        self.model_name = model_name
+        self.number_gpus = number_gpus
+        self.max_model_len = max_model_len
+        self.batch_size = batch_size
+        self.model_cache_dir = Path(model_cache_dir)
+        self.external_model_dir = Path(external_model_dir)
+        self.gpu_memory_utilization = gpu_memory_utilization
+        self.gpu_id = gpu_id
+        
+        # Set environment variable to control GPU visibility for vLLM
+        if self.number_gpus == 1:
+            os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
+            logger.info(f"Set CUDA_VISIBLE_DEVICES={gpu_id} for vLLM batch interface")
+        else:
+            # For multi-GPU, set the range starting from gpu_id
+            gpu_list = ",".join(str(gpu_id + i) for i in range(number_gpus))
+            os.environ["CUDA_VISIBLE_DEVICES"] = gpu_list
+            logger.info(f"Set CUDA_VISIBLE_DEVICES={gpu_list} for vLLM batch interface")
+        
+        # Get model configuration
+        if model_name not in self.MODELS:
+            raise ValueError(f"Unknown model: {model_name}")
+        
+        self.model_config = self.MODELS[model_name]
+        self.template = self.model_config.get("template", "Mistral")
+        
+        # Import prompts
+        self.prompts = None
+        
+        # Initialize the model
+        self.llm = None
+        self._initialize_model()
+        
+    def _initialize_model(self):
+        """Initialize the vLLM model"""
+        try:
+            snapshot_location = self._get_snapshot_location()
+            logger.info(f"Loading model from: {snapshot_location}")
+            
+            # Initialize vLLM (it will use the GPUs specified by CUDA_VISIBLE_DEVICES)
+            self.llm = LLM(
+                model=snapshot_location,
+                tensor_parallel_size=self.number_gpus,
+                max_model_len=self.max_model_len,
+                gpu_memory_utilization=self.gpu_memory_utilization  # Allow vLLM to use 90% of GPU memory
+            )
+            logger.info(f"Successfully loaded model: {self.model_name} on GPU(s) specified by CUDA_VISIBLE_DEVICES")
+            
+        except Exception as e:
+            logger.error(f"Failed to initialize model: {e}")
+            raise
+    
+    def _get_snapshot_location(self, copy_model: bool = False) -> str:
+        """Get or download model snapshot location"""
+        model_id = self.model_config['model_id']
+        revision = self.model_config['revision']
+        
+        if revision:
+            external_path = self.external_model_dir / f"models--{self.model_name}"
+            cache_path = self.model_cache_dir / f"models--{self.model_name}"
+            
+            if copy_model and external_path.exists():
+                try:
+                    shutil.copytree(str(external_path), str(cache_path))
+                    logger.info(f"Copied model from {external_path} to {cache_path}")
+                except FileExistsError:
+                    logger.info(f"Model already exists in cache: {cache_path}")
+            
+            snapshot_location = snapshot_download(
+                repo_id=model_id,
+                revision=revision,
+                cache_dir=str(self.model_cache_dir)
+            )
+        else:
+            if copy_model:
+                external_path = self.external_model_dir / self.model_name
+                cache_path = self.model_cache_dir / self.model_name
+                
+                if external_path.exists():
+                    try:
+                        shutil.copytree(str(external_path), str(cache_path))
+                        logger.info(f"Copied model from {external_path} to {cache_path}")
+                    except FileExistsError:
+                        logger.info(f"Model already exists in cache: {cache_path}")
+                
+                snapshot_location = str(cache_path)
+            else:
+                snapshot_location = model_id
+        
+        return snapshot_location
+    
+    def _format_instruction(self, sys_message: str, query: str) -> str:
+        """Format instruction based on model template"""
+        if self.template == 'Phi':
+            return f'<|system|> {sys_message} <|end|><|user|> {query} <|end|><|assistant|>'
+        elif self.template == 'Llama':
+            return f'''<|begin_of_text|><|start_header_id|>system<|end_header_id|>{sys_message}<|eot_id|><|start_header_id|>user<|end_header_id|>{query}<|eot_id|><|start_header_id|>assistant<|end_header_id|>'''
+        elif self.template == "GPT":
+            return f'''<|start|>system<|message|>{sys_message}\n\nReasoning: low\n\n# Valid channels: analysis, commentary, final. Channel must be included for every message.<|end|><|start|>user<|message|>{query}<|end|><|start|>assistant'''
+        else:  # Default Mistral format
+            return f'<s> [INST] {sys_message} [/INST]\nUser: {query}\nAssistant: '
+    
+    def _generate_batch(self, system_prompt: str, user_prompts: List[str], max_tokens: int = 2048) -> List[str]:
+        """Generate responses for a batch of prompts"""
+        full_prompts = [
+            self._format_instruction(system_prompt, user_prompt) 
+            for user_prompt in user_prompts
+        ]
+        
+        sampling_params = SamplingParams(
+            max_tokens=max_tokens,
+            temperature=0.0,
+            top_p=1,
+            frequency_penalty=0,
+            presence_penalty=0,
+            n=1,
+            best_of=1
+        )
+        
+        outputs = self.llm.generate(full_prompts, sampling_params=sampling_params, use_tqdm=False)
+        return [output.outputs[0].text for output in outputs]
+
+    def generate_response(self, system_prompt: str, user_prompt: str, max_tokens: int = 2048) -> str:
+        """
+        Unified method for generating responses
+        
+        Args:
+            system_prompt: System prompt
+            user_prompt: User prompt
+            max_tokens: Maximum tokens for response
+            
+        Returns:
+            Generated text response
+        """
+        if max_tokens is None:
+            max_tokens = 2048
+        # Use batch method with single prompt
+        responses = self._generate_batch(system_prompt, [user_prompt], max_tokens)
+        # logger.info(f"{responses[0]}")
+        return responses[0] if responses else ""
+    
+    def detect_edge_cases(self, vet_text: str, uni_text: str, mapping_info: Dict) -> Dict:
+        """Detect edge cases in credit mapping"""
+        system_prompt = self.prompts.edge_case_detection_prompt()
+        user_prompt = f"""VET content: {vet_text[:1000]}
+University content: {uni_text[:1000]}
+Mapping summary: {json.dumps(mapping_info, indent=2)}"""
+        
+        response = self._generate_batch(system_prompt, [user_prompt])[0]
+        return self._parse_json_response(response)
+    
+    def _parse_json_response(self, response: str) -> Dict:
+        """Parse JSON from model response"""
+        try:
+            json_match = JSONExtraction.extract_json_from_text(response)
+            if json_match:
+                return json.loads(json_match)
+        except json.JSONDecodeError as e:
+            logger.warning(f"Failed to parse JSON response: {e}")
+        return {}
+    
+    def determine_context(self, text: str) -> Dict:
+        """Determine context for single text (delegates to batch)"""
+        results = self.determine_contexts_batch([text])
+        return results[0] if results else {}
+    
+    def determine_contexts_batch(self, texts: List[str]) -> List[Dict]:
+        """Determine theoretical vs practical context for multiple texts"""
+        system_prompt = self.prompts.context_determination_prompt()
+        user_prompts = [f"Text to analyze:\n{text[:2000]}" for text in texts]
+        
+        all_results = []
+        for i in range(0, len(user_prompts), self.batch_size):
+            batch = user_prompts[i:i + self.batch_size]
+            responses = self._generate_batch(system_prompt, batch, max_tokens=512)
+            
+            for response in responses:
+                all_results.append(self._parse_json_response(response))
+        
+        return all_results
+    
+    def extract_technology_versions(self, text: str) -> Dict:
+        """Extract technology versions and assess currency"""
+        system_prompt = self.prompts.technology_version_extraction_prompt()
+        user_prompt = f"Text to analyze:\n{text[:2000]}"
+        
+        response = self._generate_batch(system_prompt, [user_prompt])[0]
+        return self._parse_json_response(response)
+    
+    def analyze_prerequisites(self, prerequisites: List[str], course_text: str) -> Dict:
+        """Analyze prerequisites and dependencies"""
+        system_prompt = self.prompts.prerequisite_analysis_prompt()
+        user_prompt = f"""Prerequisites: {', '.join(prerequisites)}
+Course context: {course_text[:1000]}"""
+        
+        response = self._generate_batch(system_prompt, [user_prompt])[0]
+        return self._parse_json_response(response)
+    
+    def decompose_composite_skills(self, skills: List[str]) -> Dict:
+        """Decompose composite skills into components"""
+        system_prompt = self.prompts.composite_skill_decomposition_prompt()
+        user_prompt = f"Skills to analyze:\n{json.dumps(skills[:30], indent=2)}"
+        
+        response = self._generate_batch(system_prompt, [user_prompt])[0]
+        return self._parse_json_response(response)
