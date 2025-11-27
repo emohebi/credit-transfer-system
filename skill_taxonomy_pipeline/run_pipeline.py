@@ -49,7 +49,7 @@ def load_input_file(file_path: str) -> pd.DataFrame:
     if path.suffix.lower() == '.csv':
         df = pd.read_csv(file_path)
     elif path.suffix.lower() in ['.xlsx', '.xls']:
-        df = pd.read_excel(file_path, nrows=1000)
+        df = pd.read_excel(file_path, nrows=10000)
     elif path.suffix.lower() == '.parquet':
         df = pd.read_parquet(file_path)
     elif path.suffix.lower() == '.json':
@@ -228,7 +228,7 @@ def main():
         
         # Load configuration
         config = load_config(args.config)
-        
+        print(json.dumps(config, indent=2))
         # Apply command-line overrides
         if args.confidence_threshold:
             config['data']['confidence_threshold'] = args.confidence_threshold

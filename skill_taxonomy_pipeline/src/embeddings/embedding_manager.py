@@ -777,7 +777,11 @@ class SimilarityDeduplicator:
             # Select master skill
             master_idx = self._select_master_skill(df, group, details)
             master_skill_id = df.loc[master_idx, 'skill_id']
-            
+            old_master_idx = details['master_idx']
+            details['master_idx'] = master_idx
+            for i, match in enumerate(details['matches']):
+                if match['index'] == master_idx:
+                    details['matches'][i]['index'] = old_master_idx
             # Mark duplicates
             for idx in group:
                 df_result.loc[idx, 'duplicate_group'] = group_id
@@ -806,7 +810,7 @@ class SimilarityDeduplicator:
     
     def _extract_level_value(self, level) -> int:
         """Extract numeric level value"""
-        if isinstance(level, (int, float)):
+        if isinstance(level, (int, float, np.int64, np.float64)):
             return int(level)
         elif hasattr(level, 'value'):
             return level.value
@@ -820,8 +824,8 @@ class SimilarityDeduplicator:
         
         # Calculate composite score
         for idx, row in group_df.iterrows():
-            confidence = row.get('confidence', 0.5)
-            level = self._extract_level_value(row.get('level', 3))
+            confidence = row.get('confidence', 0.0)
+            level = self._extract_level_value(row.get('level', -1))
             desc_length = len(str(row.get('description', '')))
             
             score = (
@@ -844,6 +848,7 @@ class SimilarityDeduplicator:
         logger.info("=" * 60)
         logger.info("DEDUPLICATION STATISTICS (OPTIMIZED)")
         logger.info("=" * 60)
+        logger.info(f"Deduplication similarity threshold: {self.similarity_threshold}")
         logger.info(f"Total skills: {len(df)}")
         logger.info(f"Duplicate skills found: {total_duplicates}")
         logger.info(f"  - Direct matches: {direct_matches}")
@@ -864,18 +869,20 @@ class SimilarityDeduplicator:
                 master_idx = group_df[~group_df['is_duplicate']].index[0]
                 
                 # Merge keywords
-                all_keywords = []
-                for keywords in group_df['keywords']:
-                    if isinstance(keywords, list):
-                        all_keywords.extend(keywords)
-                unique_keywords = list(set(all_keywords))
-                unique_df.loc[master_idx, 'keywords'] = [[kw] for kw in unique_keywords]
-                unique_df.loc[master_idx, 'keywords_str'] = ' '.join(unique_keywords)
+                # all_keywords = []
+                # for keywords in group_df['keywords']:
+                #     if isinstance(keywords, list):
+                #         all_keywords.extend(keywords)
+                # unique_keywords = list(set(all_keywords))
+                # unique_df.loc[master_idx, 'keywords'] = [[kw] for kw in unique_keywords]
+                # unique_df.loc[master_idx, 'keywords_str'] = ' '.join(unique_keywords)
                 
                 # Keep best description
                 best_description = group_df.loc[group_df['description_length'].idxmax(), 'description']
                 unique_df.loc[master_idx, 'description'] = best_description
                 
+                best_keywords = group_df.loc[group_df['description_length'].idxmax(), 'keywords']
+                unique_df.loc[master_idx, 'keywords'] = best_keywords
                 # Keep highest level
                 if 'level' in group_df.columns:
                     levels = [self._extract_level_value(level) for level in group_df['level']]
@@ -884,7 +891,7 @@ class SimilarityDeduplicator:
                 
                 # Update combined text
                 unique_df.loc[master_idx, 'combined_text'] = (
-                    # unique_df.loc[master_idx, 'name'] + ': ' +
+                    unique_df.loc[master_idx, 'name'] + '. ' +
                     best_description #+ ' ' +
                     # ' '.join(unique_keywords)
                 )

@@ -103,15 +103,11 @@ class SkillTaxonomyPipeline:
         
         # Add level column if missing (with warning)
         if 'level' not in df.columns:
-            logger.warning("'level' column not found. Using default level 3 for all skills")
-            logger.warning("For better results, include skill levels (1-7 SFIA scale)")
-            df['level'] = 3  # Default to APPLY level
+            raise Exception("'level' column is required for multi-factor matching but not found.")
         
         # Add context column if missing
         if 'context' not in df.columns:
-            logger.warning("'context' column not found. Using 'hybrid' for all skills")
-            logger.warning("For better results, include context (practical/theoretical/hybrid)")
-            df['context'] = 'hybrid'
+            raise Exception("'context' column is required for multi-factor matching but not found.")
         
         # Validate level values (1-7 range)
         if 'level' in df.columns:
@@ -134,7 +130,7 @@ class SkillTaxonomyPipeline:
             level_int = int(level)
             return max(1, min(7, level_int))  # Clamp to 1-7
         except:
-            return 3  # Default to APPLY level
+            raise ValueError(f"Invalid level value: {level}")
     
     def run(self, 
             input_data: pd.DataFrame, 
@@ -186,11 +182,11 @@ class SkillTaxonomyPipeline:
             
             # Log deduplication statistics
             self._log_deduplication_stats(df_with_duplicates)
-            df_with_duplicates.to_csv(output_path / "df_with_duplicates.csv", index=False)
+            df_with_duplicates.to_excel(output_path / "df_with_duplicates.xlsx", index=False)
             # Merge duplicates
             df_unique = self.deduplicator.merge_duplicates(df_with_duplicates)
             logger.info(f"Reduced to {len(df_unique)} unique skills")
-            df_unique.to_csv(output_path / "df_unique.csv", index=False)
+            df_unique.to_excel(output_path / "df_unique.xlsx", index=False)
             # 4. RE-GENERATE EMBEDDINGS FOR UNIQUE SKILLS
             logger.info("\n[Step 4] Re-generating embeddings for unique skills...")
             embeddings_unique = self.embedding_manager.generate_embeddings_for_dataframe(df_unique)
@@ -198,14 +194,15 @@ class SkillTaxonomyPipeline:
             # 5. MULTI-FACTOR CLUSTERING
             logger.info("\n[Step 5] Clustering with multi-factor features...")
             df_clustered = self.clusterer.cluster_skills(df_unique, embeddings_unique)
-            df_clustered.to_csv(output_path / "df_clustered.csv", index=False)
+            df_clustered.to_excel(output_path / "df_clustered.xlsx", index=False)
             # Log clustering statistics
             self._log_clustering_stats(df_clustered)
              
             # 6. BUILD HIERARCHY
             logger.info("\n[Step 6] Building taxonomy hierarchy...")
             taxonomy = self.hierarchy_builder.build_hierarchy(df_clustered)
-            
+            with open(output_path / "taxonomy.json", 'w') as f:
+                json.dump(taxonomy, f, indent=2)
             # 7. LLM REFINEMENT (if configured)
             if use_llm_refinement or (use_llm_refinement is None and self.config['hierarchy']['use_llm_refinement']):
                 if self.llm_refiner:

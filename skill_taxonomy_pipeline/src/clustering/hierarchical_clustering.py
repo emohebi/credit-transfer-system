@@ -14,6 +14,7 @@ from sklearn.decomposition import PCA
 from collections import Counter
 import pickle
 from pathlib import Path
+from src.clustering.clustering_algo import GridSearchSkillsClusterer
 import warnings
 warnings.filterwarnings('ignore', category=UserWarning)
 
@@ -125,7 +126,7 @@ class MultiFactorClusterer:
                         level_features[idx, l-1] = 0.25
         else:
             # No level info, use uniform
-            level_features.fill(1.0 / 7)
+            raise Exception("'level' column is required for multi-factor matching but not found.")
         
         return level_features
     
@@ -153,7 +154,7 @@ class MultiFactorClusterer:
     
     def _extract_level_value(self, level) -> int:
         """Extract numeric level value from various formats"""
-        if isinstance(level, (int, float)):
+        if isinstance(level, (int, float, np.int64, np.float64)):
             return int(np.clip(level, 1, 7))
         elif hasattr(level, 'value'):  # Enum
             return level.value
@@ -161,9 +162,9 @@ class MultiFactorClusterer:
             try:
                 return int(''.join(filter(str.isdigit, level)))
             except:
-                return 3  # Default to middle level
+                raise ValueError(f"Invalid level value: {level}")
         else:
-            return 3
+            raise ValueError(f"Invalid level value: {level}")
     
     def _extract_context_value(self, context) -> str:
         """Extract context string from various formats"""
@@ -172,7 +173,7 @@ class MultiFactorClusterer:
         elif hasattr(context, 'value'):  # Enum
             return context.value
         else:
-            return 'hybrid'
+            raise ValueError(f"Invalid context value: {context}")
     
     def cluster_skills(self, 
                       df: pd.DataFrame, 
@@ -200,20 +201,29 @@ class MultiFactorClusterer:
             logger.info(f"Clustering all {len(df_subset)} skills")
         
         # Prepare multi-factor features
-        enhanced_features = self.prepare_multi_factor_features(df_subset, embeddings_subset)
+        enhanced_features = embeddings_subset# self.prepare_multi_factor_features(df_subset, embeddings_subset)
+        
+        
         
         # Reduce dimensionality if needed
-        if self.use_umap and enhanced_features.shape[0] > 5000:
-            reduced_features = self._reduce_dimensions(enhanced_features)
-        else:
-            reduced_features = enhanced_features
+        # if self.use_umap and enhanced_features.shape[0] > 5000:
+        #     reduced_features = self._reduce_dimensions(enhanced_features)
+        # else:
+        #     reduced_features = enhanced_features
         
-        # Perform clustering
-        cluster_labels = self._perform_hdbscan(reduced_features)
+        # # Perform clustering
+        # cluster_labels = self._perform_hdbscan(reduced_features)
+        
+        grid_clusterer = GridSearchSkillsClusterer(memory_limit_gb=10,
+                                                      batch_size=256,
+                                                      embedding_models=["Auto"],
+                                                      embedders={"Auto": enhanced_features},
+                                                      clustering_algorithms=['kmeans'])
+        cluster_labels = grid_clusterer.grid_search_clustering(skills=df['combined_text'].values.tolist(), embeddings_available=True)
         
         # Add cluster information
         df_subset['cluster_id'] = cluster_labels
-        df_subset['cluster_probability'] = self.clusterer.probabilities_
+        # df_subset['cluster_probability'] = self.clusterer.probabilities_
         
         # Generate cluster statistics with level and context analysis
         cluster_stats = self._generate_enhanced_cluster_stats(df_subset, embeddings_subset)
@@ -359,7 +369,7 @@ class MultiFactorClusterer:
             'max_level': max(levels),
             'level_range': max(levels) - min(levels),
             'level_distribution': Counter(levels),
-            'dominant_level': Counter(levels).most_common(1)[0][0] if levels else 3
+            'dominant_level': Counter(levels).most_common(1)[0][0] if levels else -1
         }
     
     def _calculate_context_stats(self, cluster_df: pd.DataFrame) -> Dict:
@@ -372,7 +382,7 @@ class MultiFactorClusterer:
         
         return {
             'context_distribution': dict(context_counts),
-            'dominant_context': context_counts.most_common(1)[0][0] if contexts else 'hybrid',
+            'dominant_context': context_counts.most_common(1)[0][0] if contexts else 'None',
             'context_diversity': len(set(contexts)) / 3.0  # Normalized by max contexts
         }
     
@@ -413,11 +423,11 @@ class MultiFactorClusterer:
         )
         
         df['cluster_level'] = df['cluster_id'].map(
-            lambda x: cluster_stats.get(x, {}).get('level_stats', {}).get('dominant_level', 3) if x != -1 else 3
+            lambda x: cluster_stats.get(x, {}).get('level_stats', {}).get('dominant_level', 3) if x != -1 else -1
         )
         
         df['cluster_context'] = df['cluster_id'].map(
-            lambda x: cluster_stats.get(x, {}).get('context_stats', {}).get('dominant_context', 'hybrid') if x != -1 else 'hybrid'
+            lambda x: cluster_stats.get(x, {}).get('context_stats', {}).get('dominant_context', 'hybrid') if x != -1 else 'None'
         )
         
         df['is_noise'] = df['cluster_id'] == -1
@@ -515,13 +525,13 @@ class MultiFactorClusterer:
                 
                 # Calculate similarity based on level and context
                 level_diff = abs(
-                    small_stats.get('level_stats', {}).get('dominant_level', 3) -
-                    stats.get('level_stats', {}).get('dominant_level', 3)
+                    small_stats.get('level_stats', {}).get('dominant_level', -1) -
+                    stats.get('level_stats', {}).get('dominant_level', -1)
                 )
                 
                 context_match = (
-                    small_stats.get('context_stats', {}).get('dominant_context', 'hybrid') ==
-                    stats.get('context_stats', {}).get('dominant_context', 'hybrid')
+                    small_stats.get('context_stats', {}).get('dominant_context', 'None') ==
+                    stats.get('context_stats', {}).get('dominant_context', 'None')
                 )
                 
                 similarity = (1.0 / (1 + level_diff)) * (1.0 if context_match else 0.5)

@@ -92,7 +92,7 @@ class SkillDataPreprocessor:
         # Convert to string and strip whitespace
         df['skill_id'] = df['skill_id'].astype(str).str.strip()
         df['name'] = df['name'].astype(str).str.strip()
-        
+        df['evidence'] = df['evidence'].str.replace(r"[^a-zA-Z0-9\s]", "").str.strip()
         return df
     
     def _filter_by_confidence(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -178,10 +178,10 @@ class SkillDataPreprocessor:
             else:
                 return []
         
-        df['keywords'] = df['keywords'].apply(parse_keywords)
+        # df['keywords'] = df['keywords'].apply(parse_keywords)
         
         # Create keywords string for text processing
-        df['keywords_str'] = df['keywords'].apply(lambda x: ' '.join(x) if x else '')
+        # df['keywords_str'] = df['keywords'].apply(lambda x: ' '.join(x) if x else '')
         
         return df
     
@@ -233,13 +233,11 @@ class SkillDataPreprocessor:
         
         # Add level if missing (handled in main.py validation too)
         if 'level' not in df.columns:
-            df['level'] = 3  # Default to APPLY level
-            logger.info("No level column found, defaulting to level 3")
+            raise ValueError("No level column found in data")
         
         # Add context if missing
         if 'context' not in df.columns:
-            df['context'] = 'hybrid'
-            logger.info("No context column found, defaulting to 'hybrid'")
+            raise ValueError("No context column found in data")
         
         return df
     
@@ -250,7 +248,7 @@ class SkillDataPreprocessor:
         if 'level' in df.columns:
             def normalize_level(level):
                 if pd.isna(level):
-                    return 3
+                    raise ValueError("Missing level value")
                 
                 # If it's already a number
                 try:
@@ -281,7 +279,7 @@ class SkillDataPreprocessor:
                     if key in level_str:
                         return value
                 
-                return 3  # Default
+                return -1  # Default
             
             df['level'] = df['level'].apply(normalize_level)
         
@@ -291,7 +289,7 @@ class SkillDataPreprocessor:
             
             def normalize_context(context):
                 if pd.isna(context):
-                    return 'hybrid'
+                    raise ValueError("Missing context value")
                 
                 context_str = str(context).lower()
                 
@@ -302,7 +300,7 @@ class SkillDataPreprocessor:
                 elif context_str in valid_contexts:
                     return context_str
                 else:
-                    return 'hybrid'
+                    raise ValueError(f"Invalid context value: {context}")
             
             df['context'] = df['context'].apply(normalize_context)
         

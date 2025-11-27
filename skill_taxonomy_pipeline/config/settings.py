@@ -73,6 +73,7 @@ DATA_CONFIG = {
 
 EMBEDDING_CONFIG = {
     "model_name": "sentence-transformers--all-mpnet-base-v2",
+    # "model_name": "boboliu--Qwen3-Embedding-8B-W4A16-G128",
     # "model_name": "jinaai--jina-embeddings-v4",
     "batch_size": 8,
     "cache_embeddings": True,
@@ -98,7 +99,7 @@ EMBEDDING_CONFIG = {
 # ============================================================================
 
 DEDUP_CONFIG = {
-    "similarity_threshold": MATCH_THRESHOLDS["minimum_threshold"],  # Base threshold
+    "similarity_threshold": MATCH_THRESHOLDS["partial_threshold"],  # Base threshold
     
     # Match type thresholds
     **MATCH_THRESHOLDS,
@@ -311,11 +312,11 @@ EMBEDDING_MODELS = {
         "trust_remote_code": True,
         "embedding_dim": 4096
     },
-    "BAAI--bge-large-en-v1.5": {
-        "model_id": "BAAI/bge-large-en-v1.5",
+    "boboliu--Qwen3-Embedding-8B-W4A16-G128": {
+        "model_id": "boboliu/Qwen3-Embedding-8B-W4A16-G128",
         "revision": None,
         "trust_remote_code": False,
-        "embedding_dim": 1024
+        "embedding_dim": 4096
     },
     "BAAI--bge-base-en-v1.5": {
         "model_id": "BAAI/bge-base-en-v1.5",
@@ -461,9 +462,9 @@ def get_config_profile(profile: str = "balanced") -> Dict[str, Any]:
             "partial_threshold": 0.78,
         },
         "balanced": {
-            "semantic_weight": 0.65,
-            "level_weight": 0.20,
-            "context_weight": 0.15,
+            "semantic_weight": 0.80,
+            "level_weight": 0.10,
+            "context_weight": 0.10,
             "direct_match_threshold": 0.90,
             "partial_threshold": 0.80,
         },
