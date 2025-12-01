@@ -19,6 +19,7 @@ from src.clustering.hierarchical_clustering import MultiFactorClusterer
 from src.taxonomy.hierarchy_builder import TaxonomyBuilder
 from src.validation.taxonomy_validator import TaxonomyValidator
 from src.data_processing.data_preprocessor import SkillDataPreprocessor
+from src.taxonomy.generate_visualization import generate_html
 from config.settings import CONFIG, get_config_profile
 
 # Configure logging
@@ -199,10 +200,21 @@ class SkillTaxonomyPipeline:
             self._log_clustering_stats(df_clustered)
              
             # 6. BUILD HIERARCHY
-            logger.info("\n[Step 6] Building taxonomy hierarchy...")
-            taxonomy = self.hierarchy_builder.build_hierarchy(df_clustered)
+            logger.info("\n[Step 6] Building multi-dimensional taxonomy hierarchy...")
+            
+            # Pass embeddings to enable relationship building
+            taxonomy = self.hierarchy_builder.build_hierarchy(
+                df_clustered, 
+                embeddings=embeddings_unique,  # NEW: pass embeddings for relationships
+                embedding_model=self.embedding_manager.model
+            )
             with open(output_path / "taxonomy.json", 'w') as f:
                 json.dump(taxonomy, f, indent=2)
+                
+            generate_html(
+                str(output_path / 'taxonomy.json'),
+                str(output_path / 'taxonomy_explorer.html')
+            )
             # 7. LLM REFINEMENT (if configured)
             if use_llm_refinement or (use_llm_refinement is None and self.config['hierarchy']['use_llm_refinement']):
                 if self.llm_refiner:

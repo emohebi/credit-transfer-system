@@ -303,13 +303,14 @@ class GridSearchSkillsClusterer:
         print(f"Input shape: {n_samples} x {n_features}")
         
         # Only reduce if very high dimensional
-        if n_features <= 512 or n_samples < 100:
+        if n_features <= target_dim or n_samples < 100: #512
             print("Keeping original embedding dimensions")
             return X, None
         
-        target_dim = min(n_samples, n_features // 3)
+        # target_dim = min(n_samples, n_features // 3)
+        target_dim = min(target_dim, n_features // 2)
         
-        if n_samples > 50000:
+        if n_samples > 500000:
             print(f"Using IncrementalPCA for dimensionality reduction to {target_dim}...")
             reducer = IncrementalPCA(n_components=target_dim, batch_size=min(1000, n_samples//10))
             
@@ -328,7 +329,7 @@ class GridSearchSkillsClusterer:
         print(f"Reduced to shape: {X_reduced.shape}")
         return X_reduced, reducer
     
-    def estimate_optimal_clusters(self, X, max_k=200, sample_size=10000, algo='kmeans'):
+    def estimate_optimal_clusters(self, X, max_k=500, sample_size=10000, algo='kmeans'):
         """Estimate optimal clusters with different algorithms"""
         n_samples = X.shape[0]
         np.random.seed(42)
@@ -342,17 +343,17 @@ class GridSearchSkillsClusterer:
         print(f"Estimating optimal clusters using {X_sample.shape[0]} samples with {algo}...")
         
         # Skills typically have more clusters than general text
-        max_k = min(max_k, X_sample.shape[0] // 2)#, 25)
+        max_k = min(max_k, X_sample.shape[0] // 5)#, 25)
         
         # Test more k values for skills
         if max_k > 50:
             # k_values = [2, 3, 4, 5, 6, 8, 10, 12, 15, 18, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90]
-            k_values = [x for x in range(10, max_k, 1)]
+            k_values = [x for x in range(10, max_k, 2)]
         else:
             k_values = list(range(4, max_k + 1))
         
         k_values = [k for k in k_values if k < X_sample.shape[0]]
-        print(f"k values: {k_values}")
+        print(f"k values: from {min(k_values)} to {max(k_values)} (total {len(k_values)})")
         
         best_score = -1
         best_k = 4  # Default for skills
@@ -392,7 +393,7 @@ class GridSearchSkillsClusterer:
         print(f"Clustering with {algo} into {n_clusters} clusters...")
         
         if algo == 'kmeans':
-            if X.shape[0] > 100000:
+            if X.shape[0] > 500000:
                 clusterer = MiniBatchKMeans(
                     n_clusters=n_clusters, 
                     random_state=42, 

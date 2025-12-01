@@ -228,7 +228,7 @@ def main():
         
         # Load configuration
         config = load_config(args.config)
-        print(json.dumps(config, indent=2))
+        # print(json.dumps(config, indent=2))
         # Apply command-line overrides
         if args.confidence_threshold:
             config['data']['confidence_threshold'] = args.confidence_threshold
