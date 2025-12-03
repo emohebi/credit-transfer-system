@@ -49,7 +49,7 @@ def load_input_file(file_path: str) -> pd.DataFrame:
     if path.suffix.lower() == '.csv':
         df = pd.read_csv(file_path)
     elif path.suffix.lower() in ['.xlsx', '.xls']:
-        df = pd.read_excel(file_path, nrows=10000)
+        df = pd.read_excel(file_path, nrows=20000)
     elif path.suffix.lower() == '.parquet':
         df = pd.read_parquet(file_path)
     elif path.suffix.lower() == '.json':
@@ -268,7 +268,7 @@ def main():
         pipeline = SkillTaxonomyPipeline(config)
         
         logger.info("Starting pipeline execution...")
-        results = pipeline.run(df, output_dir=args.output)
+        results = pipeline.run(df, output_dir=args.output, skip_genai=True)
         
         if args.profile:
             profiler.disable()

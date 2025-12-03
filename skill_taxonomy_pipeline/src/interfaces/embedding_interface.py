@@ -10,18 +10,24 @@ from typing import List, Optional, Union, Dict
 import shutil
 from pathlib import Path
 from huggingface_hub import snapshot_download
-from config.settings import CONFIG
+from config.settings import CONFIG as Config
 
 logger = logging.getLogger(__name__)
 
-# Import sentence-transformers
-try:
-    from sentence_transformers import SentenceTransformer
-    SENTENCE_TRANSFORMERS_AVAILABLE = True
-except ImportError:
-    SENTENCE_TRANSFORMERS_AVAILABLE = False
-    logger.error("sentence-transformers not installed. Please install it for embedding support.")
+# Lazy imports
+torch = None
+SentenceTransformer = None
 
+
+def _load_dependencies():
+    """Lazy load dependencies"""
+    global torch, SentenceTransformer
+    if torch is None:
+        import torch as _torch
+        torch = _torch
+    if SentenceTransformer is None:
+        from sentence_transformers import SentenceTransformer as _ST
+        SentenceTransformer = _ST
 
 class EmbeddingInterface:
     """Interface for local embedding model with multi-GPU support"""
@@ -42,10 +48,9 @@ class EmbeddingInterface:
             device: Device to run model on (cuda, cuda:0, cuda:1, cpu)
             batch_size: Default batch size for encoding
         """
-        if not SENTENCE_TRANSFORMERS_AVAILABLE:
-            raise ImportError("sentence-transformers is required for embeddings. Install with: pip install sentence-transformers")
+        _load_dependencies()
         
-        self.MODELS = CONFIG['models']['embedding_models']
+        self.MODELS = Config['models']['embedding_models']
         self.model_name = model_name
         self.model_cache_dir = Path(model_cache_dir)
         self.external_model_dir = Path(external_model_dir)
@@ -81,8 +86,8 @@ class EmbeddingInterface:
         else:
             self.model_config = self.MODELS[model_name]
         
-        self.embedding_dim = self.model_config.get("embedding_dim", 768)
-        self.trust_remote_code = self.model_config.get("trust_remote_code", False)
+        self.embedding_dim = self.model_config.get('embedding_dim', 1024)
+        self.trust_remote_code = self.model_config.get('trust_remote_code', False)
         
         # Initialize the model
         self.model = None
@@ -246,22 +251,32 @@ class EmbeddingInterface:
                         batch_size=batch_size,
                         show_progress_bar=show_progress,
                         convert_to_tensor=convert_to_tensor,
-                        convert_to_numpy=not convert_to_tensor,
                         normalize_embeddings=normalize_embeddings
                     )
-                else:   
+                elif 'qwen' in self.model_name.lower():
+                    embeddings = self.model.encode(
+                        texts,
+                        task='text-matching',
+                        prompt='you are a helpful assistant, embed the following skill and its description for skill matching task:',
+                        batch_size=batch_size,
+                        show_progress_bar=show_progress,
+                        convert_to_tensor=convert_to_tensor,
+                        normalize_embeddings=normalize_embeddings
+                    )
+                else:
                     embeddings = self.model.encode(
                         texts,
                         batch_size=batch_size,
                         show_progress_bar=show_progress,
                         convert_to_tensor=convert_to_tensor,
-                        convert_to_numpy=not convert_to_tensor,
-                        normalize_embeddings=normalize_embeddings
+                        normalize_embeddings=normalize_embeddings,
+                        device=self.device
                     )
                     
             except Exception as e:
-                logger.error(f"Encoding failed: {e}.")
+                logger.error(f"Custom encoding failed: {e}. Falling back to standard encode with device.")
                 # Fallback to standard encode
+                
         
         # Cache single text results
         if len(texts) == 1 and not convert_to_tensor:
@@ -373,3 +388,11 @@ class EmbeddingInterface:
         """Clear the embedding cache"""
         self.cache.clear()
         logger.info("Embedding cache cleared")
+    
+    def is_available(self) -> bool:
+        """Check if embedding model is available"""
+        try:
+            _load_dependencies()
+            return True
+        except ImportError:
+            return False
