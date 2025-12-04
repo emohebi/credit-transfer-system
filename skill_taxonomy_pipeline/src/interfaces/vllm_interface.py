@@ -209,25 +209,58 @@ class VLLMGenAIInterface:
         # Add JSON hint to prompt
         json_prompt = prompt + "\n\nRespond with valid JSON only:"
         
-        response = self.generate(
-            prompt=json_prompt,
+        response = self.generate_response(
+            user_prompt=json_prompt,
             system_prompt=json_system,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            **kwargs
+            max_tokens=max_tokens
         )
         
         return self._parse_json_response(response)
     
     def _parse_json_response(self, response: str) -> Dict:
         """Parse JSON from model response"""
+        if not response:
+            return {}
+        
+        text = response.strip()
+        
+        # Remove markdown code blocks
+        if text.startswith('```json'):
+            text = text[7:]
+        elif text.startswith('```'):
+            text = text[3:]
+        
+        if text.endswith('```'):
+            text = text[:-3]
+        
+        text = text.strip()
+        
+        # Try to find JSON array or object
+        import re
+        
+        # Try array first
+        array_match = re.search(r'\[[\s\S]*\]', text)
+        if array_match:
+            try:
+                return json.loads(array_match.group())
+            except json.JSONDecodeError:
+                pass
+        
+        # Try object
+        obj_match = re.search(r'\{[\s\S]*\}', text)
+        if obj_match:
+            try:
+                return json.loads(obj_match.group())
+            except json.JSONDecodeError:
+                pass
+        
+        # Try parsing the whole text
         try:
-            json_match = JSONExtraction.extract_json_from_text(response)
-            if json_match:
-                return json.loads(json_match)
+            return json.loads(text)
         except json.JSONDecodeError as e:
             logger.warning(f"Failed to parse JSON response: {e}")
-        return {}
+            logger.debug(f"Response was: {text[:500]}...")
+            return {}
 
 
 # Alias for backwards compatibility

@@ -98,7 +98,7 @@ class SkillFamilyAssigner:
             self.family_embeddings = self.embedding_interface.encode(
                 family_texts,
                 batch_size=32,
-                show_progress=False
+                show_progress=True
             )
             logger.info(f"  Computed embeddings for {len(self.family_keys)} families")
     
@@ -479,27 +479,44 @@ Respond with JSON only:"""
         {candidates_text}
 
         Which family (1-{len(candidates)}) is the BEST match? Respond with JSON only:"""
-
-        try:
-            response = self.genai_interface.generate_json(
-                prompt=user_prompt,
-                system_prompt=system_prompt,
-                max_tokens=100,
-                temperature=0.1
-            )
-            
-            if response and isinstance(response, dict):
-                choice = response.get('choice', 1)
-                confidence = response.get('confidence', 0.7)
+        loop = True
+        counter = 5
+        while loop:
+            loop = False
+            try:
+                response = self.genai_interface.generate_json(
+                    prompt=user_prompt,
+                    system_prompt=system_prompt,
+                    max_tokens=1000,
+                    temperature=0.1
+                )
                 
-                if 1 <= choice <= len(candidates):
+                if response and isinstance(response, dict):
+                    choice = response['choice']
+                    confidence = response['confidence']
+                    
+                    # if 1 <= choice <= len(candidates):
                     selected = candidates[choice - 1]
-                    # Blend LLM confidence with embedding similarity
+                    #     # Blend LLM confidence with embedding similarity
                     final_confidence = (confidence + selected['similarity']) / 2
                     return selected['key'], final_confidence
+                else:
+                    logger.info(f"Response in LLM re-ranking is not a dictionary")
+                    logger.info(f"Response: {response}")
                     
-        except Exception as e:
-            logger.error(f"LLM re-ranking failed for '{skill_name}': {e}")
+                    if counter >= 0:
+                        counter -= 1
+                        loop = True
+                    logger.info(f"Trying {counter} more time ..")
+                        
+            except Exception as e:
+                logger.error(f"LLM re-ranking failed for '{skill_name}': {e}")
+                logger.info(f"Response: {response}")
+                if counter >= 0:
+                    counter -= 1
+                    loop = True
+                logger.info(f"Trying {counter} more time ..")
+                pass
         
         return None, 0.0
     

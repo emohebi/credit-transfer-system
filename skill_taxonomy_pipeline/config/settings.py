@@ -4963,10 +4963,10 @@ EMBEDDING_CONFIG = {
     "batch_size": 64,
     "cache_embeddings": True,
     "normalize_embeddings": False,
-    "device": "cuda" if os.environ.get("CUDA_AVAILABLE") else "cpu",
+    "device": "cuda" if os.environ.get("CUDA_AVAILABLE") else "cuda:1",
     "external_model_dir": os.getenv("EXTERNAL_MODEL_DIR", "/Volumes/jsa_external_prod/external_vols/scratch/Scratch/Ehsan/Models"),
     "model_cache_dir": os.getenv("MODEL_CACHE_DIR", "/root/.cache/huggingface/hub"),
-    "similarity_method": os.environ.get("SIMILARITY_METHOD", "faiss"),
+    "similarity_method": os.environ.get("SIMILARITY_METHOD", "matrix"),
     "matrix_memory_threshold": 500000,
     "faiss_exact_search_threshold": 5000,
     **MULTI_FACTOR_WEIGHTS
@@ -4979,7 +4979,7 @@ EMBEDDING_CONFIG = {
 DEDUP_CONFIG = {
     "similarity_threshold": MATCH_THRESHOLDS["partial_threshold"],
     **MATCH_THRESHOLDS,
-    "use_faiss": True,
+    "use_faiss": False,
     "faiss_index_type": "IVF1024,Flat",
     "nprobe": 64,
     "fuzzy_ratio_threshold": 90,
@@ -5147,7 +5147,7 @@ MODELS = {
 # ============================================================================
 
 CONFIG: Dict[str, Any] = {
-    "backed_type": "openai",
+    "backed_type": "vllm",
     "data": DATA_CONFIG,
     "embedding": EMBEDDING_CONFIG,
     "dedup": DEDUP_CONFIG,

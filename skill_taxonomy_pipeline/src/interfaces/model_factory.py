@@ -96,7 +96,7 @@ class ModelFactory:
             
             interface = VLLMGenAIInterface(
                 model_name=model_name,
-                num_gpus=config.get('num_gpus', 1),
+                number_gpus=config.get('num_gpus', 1),
                 gpu_id=config.get('gpu_id', 0),
                 max_model_len=config.get('max_model_len', 8192),
                 batch_size=config.get('batch_size', 8),

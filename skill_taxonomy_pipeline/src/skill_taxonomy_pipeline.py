@@ -113,7 +113,7 @@ class SkillTaxonomyPipeline:
             self.backed_type = self.config.get('backed_type', 'azure_openai')
             try:
                 self.genai_interface = ModelFactory.create_genai_interface(self.config)
-                if self.genai_interface and self.genai_interface.is_available():
+                if self.genai_interface:
                     logger.info("GenAI interface initialized for family assignment")
                 else:
                     logger.warning("GenAI interface not available")
