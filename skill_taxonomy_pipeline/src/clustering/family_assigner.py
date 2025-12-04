@@ -142,7 +142,7 @@ class SkillFamilyAssigner:
         unassigned_mask = df_result['assigned_family'].isna()
         if unassigned_mask.any() and self.use_embedding_similarity and self.family_embeddings is not None:
             logger.info(f"Using embedding similarity for {unassigned_mask.sum()} unassigned skills")
-            df_result = self._assign_with_embeddings(df_result, unassigned_mask)
+            df_result = self._assign_with_embeddings_batch(df_result, unassigned_mask)
         
         # Method 3: Keyword matching fallback
         # unassigned_mask = df_result['assigned_family'].isna()
@@ -373,7 +373,7 @@ Respond with JSON only:"""
             return df
         
         indices = df[mask].index.tolist()
-        
+        to_be_reranked = []
         for idx in tqdm(indices, desc="Embedding similarity assignment"):
             # Get skill embedding
             position = df.index.get_loc(idx)
@@ -441,11 +441,6 @@ Respond with JSON only:"""
                 df.loc[idx, 'family_assignment_confidence'] = float(best_similarity)
                 self.assignment_stats['embedding'] += 1
             else:
-                # Assign to most generic family in the category if we have category info
-                # if 'category' in df.columns:
-                #     category = str(df.loc[idx, 'category']).lower()
-                #     default_family = self._get_default_family_for_category(category)
-                #     if default_family:
                 family_key = self.family_keys[best_idx]
                 df.loc[idx, 'assigned_family'] = None
                 df.loc[idx, 'assigned_family_name'] = self.family_names[family_key]
@@ -454,6 +449,185 @@ Respond with JSON only:"""
                 self.assignment_stats['Not assigned'] += 1
         
         return df
+    
+    def _assign_with_embeddings_batch(self, df: pd.DataFrame, mask: pd.Series) -> pd.DataFrame:
+        """Assign skills using embedding similarity"""
+        if self.skill_embeddings is None or self.family_embeddings is None:
+            return df
+        
+        indices = df[mask].index.tolist()
+        to_be_reranked = []
+        for idx in tqdm(indices, desc="Embedding similarity assignment"):
+            # Get skill embedding
+            position = df.index.get_loc(idx)
+            skill_emb = self.skill_embeddings[position].reshape(1, -1)
+            
+            # Calculate similarity to all families
+            similarities = self.embedding_interface.similarity(skill_emb, self.family_embeddings)[0]
+
+            # Get top-K candidates
+            top_k = self.rerank_top_k if self.use_llm_reranking else 1
+            top_indices = np.argsort(similarities)[-top_k:][::-1]
+            top_similarities = similarities[top_indices]
+            
+            # Default: use best embedding match
+            best_idx = top_indices[0]
+            best_similarity = top_similarities[0]
+            
+            # If LLM re-ranking is enabled and we have multiple candidates above threshold
+            if self.use_llm_reranking and len(top_indices) > 1 and top_similarities[0] >= self.rerank_similarity_threshold and best_similarity < self.embedding_threshold:
+                # Get skill info
+                skill_name = df.loc[idx, 'name']
+                skill_desc = df.loc[idx, 'description'] if 'description' in df.columns else ''
+                
+                # Get top-K family candidates
+                candidates = []
+                for i, fam_idx in enumerate(top_indices):
+                    if top_similarities[i] >= self.rerank_similarity_threshold:
+                        family_key = self.family_keys[fam_idx]
+                        candidates.append({
+                            'key': family_key,
+                            'name': self.families[family_key].get('name', family_key),
+                            'description': self.families[family_key].get('description', ''),
+                            'similarity': float(top_similarities[i])
+                        })
+                
+                # Re-rank with LLM if we have multiple candidates
+                if len(candidates) > 1:
+                    to_be_reranked.append((idx, skill_name, skill_desc, candidates))
+                else:
+                    # Fallback to best embedding match
+                    family_key = self.family_keys[best_idx]
+                    df.loc[idx, 'assigned_family'] = None
+                    df.loc[idx, 'assigned_family_name'] = self.family_names[family_key]
+                    df.loc[idx, 'family_assignment_method'] = 'Not assigned'
+                    df.loc[idx, 'family_assignment_confidence'] = float(best_similarity)
+                    self.assignment_stats['Not assigned'] += 1
+            
+            elif best_similarity >= self.embedding_threshold:
+                family_key = self.family_keys[best_idx]
+                df.loc[idx, 'assigned_family'] = family_key
+                df.loc[idx, 'family_assignment_method'] = 'embedding'
+                df.loc[idx, 'family_assignment_confidence'] = float(best_similarity)
+                self.assignment_stats['embedding'] += 1
+            else:
+                family_key = self.family_keys[best_idx]
+                df.loc[idx, 'assigned_family'] = None
+                df.loc[idx, 'assigned_family_name'] = self.family_names[family_key]
+                df.loc[idx, 'family_assignment_method'] = 'Not assigned'
+                df.loc[idx, 'family_assignment_confidence'] = float(best_similarity)
+                self.assignment_stats['Not assigned'] += 1
+        
+        if to_be_reranked:
+            logger.info(f"Re-ranking {len(to_be_reranked)} skills with LLM...")
+            rerank_results = self._rerank_with_llm_batch(to_be_reranked)
+            for (idx, _, _, _), (best_family, confidence) in zip(to_be_reranked, rerank_results):
+                if best_family and confidence >= self.rerank_similarity_threshold:
+                    df.loc[idx, 'assigned_family'] = best_family
+                    df.loc[idx, 'family_assignment_method'] = 'embedding+llm_rerank'
+                    df.loc[idx, 'family_assignment_confidence'] = confidence
+                    self.assignment_stats['embedding+llm_rerank'] += 1
+                else:
+                    # Fallback to best embedding match
+                    position = df.index.get_loc(idx)
+                    skill_emb = self.skill_embeddings[position].reshape(1, -1)
+                    similarities = self.embedding_interface.similarity(skill_emb, self.family_embeddings)[0]
+                    best_idx = np.argmax(similarities)
+                    best_similarity = similarities[best_idx]
+                    
+                    family_key = self.family_keys[best_idx]
+                    df.loc[idx, 'assigned_family'] = None
+                    df.loc[idx, 'assigned_family_name'] = self.family_names[family_key]
+                    df.loc[idx, 'family_assignment_method'] = 'Not assigned'
+                    df.loc[idx, 'family_assignment_confidence'] = float(best_similarity)
+                    self.assignment_stats['Not assigned'] += 1
+        return df
+    
+    
+    def _rerank_with_llm_batch(self, to_be_reranked: List[Tuple[Any, str, str, List[Dict]]]) -> List[Tuple[Optional[str], float]]:
+        """Batch re-rank skills with LLM"""
+        user_prompts = []
+        system_prompt = None
+        results = []
+        for idx, skill_name, skill_desc, candidates in to_be_reranked:
+            system_prompt, user_prompt = self.get_prompt(skill_name, skill_desc, candidates)
+            user_prompts.append(user_prompt)
+        loop = True
+        counter = 5
+        while loop:
+            loop = False
+            try:
+                responses = self.genai_interface.generate_batch_json(
+                    user_prompts=user_prompts,
+                    system_prompt=system_prompt
+                )
+                
+                for response, (idx, skill_name, skill_desc, candidates) in zip(responses, to_be_reranked):
+                    response = self.genai_interface.parse_json_response(response)
+                    if response and isinstance(response, dict):
+                        choice = response['choice']
+                        confidence = response['confidence']
+                        
+                        selected = candidates[choice - 1]
+                        final_confidence = (confidence + selected['similarity']) / 2
+                        results.append((selected['key'], final_confidence))
+                    else:
+                        logger.info(f"Response in LLM re-ranking is not a dictionary")
+                        logger.info(f"Response: {response}")
+                        
+                        if counter >= 0:
+                            counter -= 1
+                            loop = True
+                        logger.info(f"Trying {counter} more time ..")
+            except Exception as e:
+                logger.error(f"LLM batch re-ranking failed: {e}")
+                logger.info(f"Response: {response}")
+                if counter >= 0:
+                    counter -= 1
+                    loop = True
+                logger.info(f"Trying {counter} more time ..")
+                pass
+        
+        return results
+    
+    def get_prompt(self, skill_name: str, skill_desc: str, candidates: List[Dict]) -> Tuple[str, str]:
+        """
+        Generate system and user prompts for LLM re-ranking.
+        
+        Args:
+            skill_name: Name of the skill
+            skill_desc: Description of the skill
+            candidates: List of candidate families with keys, names, descriptions, and similarities
+            """
+        system_prompt = """You are an expert in vocational skills classification. Your task is to select the BEST matching skill family for a given skill from a list of candidates.
+
+        Analyze the skill's name and description, then select the single most appropriate family based on:
+        1. Domain alignment (e.g., IT skills should match IT families, not finance)
+        2. Technical terminology match
+        3. Job function alignment
+
+        Respond with JSON only: {"choice": <number>, "confidence": <0.0-1.0>}
+        \n\n
+        You must respond with valid JSON only. No additional text, explanation, or markdown."""
+
+        # Format candidates
+        candidates_text = "\n".join([
+            f"{i+1}. {c['name']}: {c['description']}"
+            for i, c in enumerate(candidates)
+        ])
+        
+        user_prompt = f"""Select the BEST skill family match for this skill:
+
+        SKILL: {skill_name}
+        DESCRIPTION: {skill_desc}
+
+        CANDIDATE FAMILIES:
+        {candidates_text}
+
+        Which family (1-{len(candidates)}) is the BEST match? Respond with JSON only: \n\nRespond with valid JSON only:"""
+        
+        return system_prompt, user_prompt
+        
     
     def _rerank_with_llm(self, skill_name: str, skill_desc: str, candidates: List[Dict]) -> Tuple[Optional[str], float]:
         """
@@ -470,30 +644,7 @@ Respond with JSON only:"""
         if not self.genai_interface or not candidates:
             return None, 0.0
         
-        system_prompt = """You are an expert in vocational skills classification. Your task is to select the BEST matching skill family for a given skill from a list of candidates.
-
-        Analyze the skill's name and description, then select the single most appropriate family based on:
-        1. Domain alignment (e.g., IT skills should match IT families, not finance)
-        2. Technical terminology match
-        3. Job function alignment
-
-        Respond with JSON only: {"choice": <number>, "confidence": <0.0-1.0>}"""
-
-        # Format candidates
-        candidates_text = "\n".join([
-            f"{i+1}. {c['name']}: {c['description']}"
-            for i, c in enumerate(candidates)
-        ])
-        
-        user_prompt = f"""Select the BEST skill family match for this skill:
-
-        SKILL: {skill_name}
-        DESCRIPTION: {skill_desc}
-
-        CANDIDATE FAMILIES:
-        {candidates_text}
-
-        Which family (1-{len(candidates)}) is the BEST match? Respond with JSON only:"""
+        system_prompt, user_prompt = self.get_prompt(skill_name, skill_desc, candidates)
         loop = True
         counter = 5
         while loop:

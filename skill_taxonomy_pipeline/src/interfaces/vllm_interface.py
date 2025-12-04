@@ -210,8 +210,8 @@ class VLLMGenAIInterface:
         json_prompt = prompt + "\n\nRespond with valid JSON only:"
         
         response = self.generate_response(
-            user_prompt=json_prompt,
             system_prompt=json_system,
+            user_prompt=json_prompt,
             max_tokens=max_tokens
         )
         
@@ -261,6 +261,17 @@ class VLLMGenAIInterface:
             logger.warning(f"Failed to parse JSON response: {e}")
             logger.debug(f"Response was: {text[:500]}...")
             return {}
+
+    
+    # def _parse_json_response(self, response: str) -> Dict:
+    #     """Parse JSON from model response"""
+    #     try:
+    #         json_match = JSONExtraction.extract_json_from_text(response)
+    #         if json_match:
+    #             return json.loads(json_match)
+    #     except json.JSONDecodeError as e:
+    #         logger.warning(f"Failed to parse JSON response: {e}")
+    #     return {}
 
 
 # Alias for backwards compatibility
