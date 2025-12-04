@@ -414,6 +414,7 @@ Respond with JSON only:"""
                     best_family, confidence = self._rerank_with_llm(skill_name, skill_desc, candidates)
                     if best_family and confidence >= self.rerank_similarity_threshold:
                         df.loc[idx, 'assigned_family'] = best_family
+                        df.loc[idx, 'assigned_family_name'] = self.family_names[best_family]
                         df.loc[idx, 'family_assignment_method'] = 'embedding+llm_rerank'
                         df.loc[idx, 'family_assignment_confidence'] = confidence
                         self.assignment_stats['embedding+llm_rerank'] += 1
@@ -437,6 +438,7 @@ Respond with JSON only:"""
             elif best_similarity >= self.embedding_threshold:
                 family_key = self.family_keys[best_idx]
                 df.loc[idx, 'assigned_family'] = family_key
+                df.loc[idx, 'assigned_family_name'] = self.family_names[family_key]
                 df.loc[idx, 'family_assignment_method'] = 'embedding'
                 df.loc[idx, 'family_assignment_confidence'] = float(best_similarity)
                 self.assignment_stats['embedding'] += 1
@@ -507,6 +509,7 @@ Respond with JSON only:"""
             elif best_similarity >= self.embedding_threshold:
                 family_key = self.family_keys[best_idx]
                 df.loc[idx, 'assigned_family'] = family_key
+                df.loc[idx, 'assigned_family_name'] = self.family_names[family_key]
                 df.loc[idx, 'family_assignment_method'] = 'embedding'
                 df.loc[idx, 'family_assignment_confidence'] = float(best_similarity)
                 self.assignment_stats['embedding'] += 1
@@ -524,6 +527,7 @@ Respond with JSON only:"""
             for (idx, _, _, _), (best_family, confidence) in zip(to_be_reranked, rerank_results):
                 if best_family and confidence >= self.rerank_similarity_threshold:
                     df.loc[idx, 'assigned_family'] = best_family
+                    df.loc[idx, 'assigned_family_name'] = self.family_names[best_family]
                     df.loc[idx, 'family_assignment_method'] = 'embedding+llm_rerank'
                     df.loc[idx, 'family_assignment_confidence'] = confidence
                     self.assignment_stats['embedding+llm_rerank'] += 1

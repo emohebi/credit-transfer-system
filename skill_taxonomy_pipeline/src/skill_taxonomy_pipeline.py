@@ -22,6 +22,7 @@ from src.validation.taxonomy_validator import TaxonomyValidator
 from src.data_processing.data_preprocessor import SkillDataPreprocessor
 from src.interfaces.model_factory import ModelFactory
 from config.settings import CONFIG, get_config_profile
+from src.utils.converters import NpEncoder
 
 # Configure logging
 logging.basicConfig(
@@ -505,12 +506,12 @@ class SkillTaxonomyPipeline:
                     stats_serializable[str(cluster_id)] = stats_copy
                 
                 with open(output_path / "cluster_statistics.json", 'w') as f:
-                    json.dump(stats_serializable, f, indent=2)
+                    json.dump(stats_serializable, f, indent=2, cls=NpEncoder)
         else:
             # Save family statistics
             family_stats = self._generate_family_statistics(df)
             with open(output_path / "family_statistics.json", 'w') as f:
-                json.dump(family_stats, f, indent=2)
+                json.dump(family_stats, f, indent=2, cls=NpEncoder)
         
         # Save configuration used
         config_summary = {
@@ -540,7 +541,7 @@ class SkillTaxonomyPipeline:
             }
         
         with open(output_path / "pipeline_config.json", 'w') as f:
-            json.dump(config_summary, f, indent=2)
+            json.dump(config_summary, f, indent=2, cls=NpEncoder)
         
         logger.info(f"All results saved to {output_path}")
     
@@ -552,9 +553,9 @@ class SkillTaxonomyPipeline:
         stats = {
             'summary': {
                 'total_skills': len(df),
-                'assigned_skills': df['assigned_family'].notna().sum(),
-                'families_used': df['assigned_family'].nunique(),
-                'domains_used': df['assigned_domain'].nunique() if 'assigned_domain' in df.columns else 0
+                'assigned_skills': int(df['assigned_family'].notna().sum()),
+                'families_used': int(df['assigned_family'].nunique()),
+                'domains_used': int(df['assigned_domain'].nunique()) if 'assigned_domain' in df.columns else 0
             },
             'by_domain': {},
             'by_family': {}
@@ -570,7 +571,7 @@ class SkillTaxonomyPipeline:
                 stats['by_domain'][domain_key] = {
                     'name': domain_name,
                     'skill_count': len(domain_df),
-                    'family_count': domain_df['assigned_family'].nunique(),
+                    'family_count': int(domain_df['assigned_family'].nunique()),
                     'avg_level': float(domain_df['level'].mean()) if 'level' in domain_df.columns else None
                 }
         
