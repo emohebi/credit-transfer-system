@@ -557,13 +557,13 @@ Respond with JSON only:"""
         while loop:
             loop = False
             try:
-                responses = self.genai_interface.generate_batch_json(
+                responses = self.genai_interface._generate_batch(
                     user_prompts=user_prompts,
                     system_prompt=system_prompt
                 )
                 
                 for response, (idx, skill_name, skill_desc, candidates) in zip(responses, to_be_reranked):
-                    response = self.genai_interface.parse_json_response(response)
+                    response = self.genai_interface._parse_json_response(response)
                     if response and isinstance(response, dict):
                         choice = response['choice']
                         confidence = response['confidence']
