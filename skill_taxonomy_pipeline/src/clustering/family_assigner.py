@@ -387,8 +387,12 @@ Respond with JSON only:"""
             top_indices = np.argsort(similarities)[-top_k:][::-1]
             top_similarities = similarities[top_indices]
             
+            # Default: use best embedding match
+            best_idx = top_indices[0]
+            best_similarity = top_similarities[0]
+            
             # If LLM re-ranking is enabled and we have multiple candidates above threshold
-            if self.use_llm_reranking and len(top_indices) > 1 and top_similarities[0] >= self.rerank_similarity_threshold:
+            if self.use_llm_reranking and len(top_indices) > 1 and top_similarities[0] >= self.rerank_similarity_threshold and best_similarity < self.embedding_threshold:
                 # Get skill info
                 skill_name = df.loc[idx, 'name']
                 skill_desc = df.loc[idx, 'description'] if 'description' in df.columns else ''
@@ -408,18 +412,29 @@ Respond with JSON only:"""
                 # Re-rank with LLM if we have multiple candidates
                 if len(candidates) > 1:
                     best_family, confidence = self._rerank_with_llm(skill_name, skill_desc, candidates)
-                    if best_family:
+                    if best_family and confidence >= self.rerank_similarity_threshold:
                         df.loc[idx, 'assigned_family'] = best_family
                         df.loc[idx, 'family_assignment_method'] = 'embedding+llm_rerank'
                         df.loc[idx, 'family_assignment_confidence'] = confidence
                         self.assignment_stats['embedding+llm_rerank'] += 1
-                        continue
+                    else:
+                        # Fallback to best embedding match
+                        family_key = self.family_keys[best_idx]
+                        df.loc[idx, 'assigned_family'] = None
+                        df.loc[idx, 'assigned_family_name'] = self.family_names[family_key]
+                        df.loc[idx, 'family_assignment_method'] = 'Not assigned'
+                        df.loc[idx, 'family_assignment_confidence'] = float(best_similarity)
+                        self.assignment_stats['Not assigned'] += 1
+                else:
+                        # Fallback to best embedding match
+                        family_key = self.family_keys[best_idx]
+                        df.loc[idx, 'assigned_family'] = None
+                        df.loc[idx, 'assigned_family_name'] = self.family_names[family_key]
+                        df.loc[idx, 'family_assignment_method'] = 'Not assigned'
+                        df.loc[idx, 'family_assignment_confidence'] = float(best_similarity)
+                        self.assignment_stats['Not assigned'] += 1
             
-            # Default: use best embedding match
-            best_idx = top_indices[0]
-            best_similarity = top_similarities[0]
-            
-            if best_similarity >= self.embedding_threshold:
+            elif best_similarity >= self.embedding_threshold:
                 family_key = self.family_keys[best_idx]
                 df.loc[idx, 'assigned_family'] = family_key
                 df.loc[idx, 'family_assignment_method'] = 'embedding'
@@ -473,7 +488,7 @@ Respond with JSON only:"""
         user_prompt = f"""Select the BEST skill family match for this skill:
 
         SKILL: {skill_name}
-        DESCRIPTION: {skill_desc[:300]}
+        DESCRIPTION: {skill_desc}
 
         CANDIDATE FAMILIES:
         {candidates_text}

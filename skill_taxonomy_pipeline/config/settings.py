@@ -229,8 +229,8 @@ SKILL_FAMILIES = {
     "vineyard_management": {
         "name": "Viticulture Management",
         "domain": "agriculture_primary",
-        "description": "Grape vine cultivation, pruning, and vineyard operations",
-        "keywords": ["vineyard", "viticulture", "grape", "vine pruning", "vine training", "grape harvest", "vintage", "canopy management"]
+        "description": "Managing grape vine cultivation including pruning, trellising, canopy management, and vineyard operations for wine production. Plant viticulture.",
+        "keywords": ['viticulture', 'vineyard', 'grape vines', 'vine pruning', 'wine grapes', 'plant cultivation', 'vine management', 'vineyard operations']
     },
     "winemaking": {
         "name": "Winemaking Cellar Operations",
@@ -243,8 +243,8 @@ SKILL_FAMILIES = {
     "cattle_beef": {
         "name": "Beef Cattle Production",
         "domain": "agriculture_primary",
-        "description": "Managing beef cattle including breeding, calving, calf marking, weaning, mustering, and feedlot operations on pastoral properties.",
-        "keywords": ['beef cattle', 'cattle', 'beef', 'mustering', 'cattle yard', 'feedlot', 'calving', 'calf', 'weaning', 'cattle breeding', 'branding', 'cow-calf']
+        "description": "Managing beef cattle on farms and stations including cattle breeding, calving, calf marking, weaning, mustering, and feedlot operations. Livestock animal production.",
+        "keywords": ['beef cattle', 'cattle farming', 'livestock', 'calving', 'mustering', 'feedlot', 'cattle breeding', 'animal production', 'pastoral']
     },
     "dairy_farming": {
         "name": "Dairy Farming",
@@ -255,26 +255,26 @@ SKILL_FAMILIES = {
     "sheep_wool": {
         "name": "Sheep Wool Production",
         "domain": "agriculture_primary",
-        "description": "Managing sheep flocks including breeding, lambing, lamb marking, weaning, shearing, and wool production on pastoral properties.",
-        "keywords": ['sheep', 'wool', 'shearing', 'lamb', 'lambing', 'flock', 'ewe', 'ram', 'sheep breeding', 'lamb marking', 'weaning lambs', 'crutching']
+        "description": "Managing sheep and wool production on farms including sheep breeding, lambing, lamb marking, wool classing, shearing, and flock management. Ovine animal husbandry.",
+        "keywords": ['sheep farming', 'wool production', 'shearing', 'lambing', 'wool classing', 'flock management', 'sheep breeding', 'ovine husbandry']
     },
     "pig_farming": {
         "name": "Pig Production",
         "domain": "agriculture_primary",
-        "description": "Managing pig production including breeding programs, farrowing, sow and piglet care, piglet fostering, sow-piglet bonding, weaning, growing, and finishing pigs in production systems.",
-        "keywords": ['pig', 'pork', 'piggery', 'farrowing', 'pig farming', 'swine', 'sow', 'piglet', 'piglet fostering', 'sow bonding', 'pig breeding', 'weaning pigs', 'litter management']
+        "description": "Managing pig production on farms including pig breeding programs, farrowing, sow and piglet care, piglet fostering, sow-piglet bonding, and pork production. Swine animal husbandry.",
+        "keywords": ['pig farming', 'swine', 'pork production', 'farrowing', 'piglet care', 'sow management', 'pig breeding', 'animal husbandry']
     },
     "poultry_eggs": {
         "name": "Poultry Production",
         "domain": "agriculture_primary",
-        "description": "Managing poultry production including breeding, hatching, chick rearing, broiler growing, layer management, and egg production.",
-        "keywords": ['poultry', 'chicken', 'eggs', 'egg production', 'broiler', 'layer', 'hatchery', 'chick', 'hatching', 'poultry breeding', 'pullet', 'hen']
+        "description": "Managing poultry production on farms including chicken breeding, hatching, chick rearing, broiler growing, layer management, and egg production. Poultry animal husbandry.",
+        "keywords": ['poultry', 'chicken farming', 'egg production', 'broiler', 'layer hens', 'chick rearing', 'hatching', 'poultry husbandry']
     },
     "goat_farming": {
         "name": "Goat Production",
         "domain": "agriculture_primary",
-        "description": "Managing goat herds including breeding, kidding, kid rearing, meat production, dairy goats, or fibre production.",
-        "keywords": ['goat', 'goat farming', 'kidding', 'goat breeding', 'dairy goat', 'meat goat', 'fibre goat', 'kid rearing', 'doe', 'buck', 'goat husbandry']
+        "description": "Managing goat herds on farms including goat breeding, kidding, kid rearing, goat meat production, dairy goats, and fibre goats. Caprine animal husbandry.",
+        "keywords": ['goat farming', 'goat breeding', 'kidding', 'goat meat', 'dairy goats', 'fibre goats', 'caprine husbandry', 'goat herds']
     },
     
     # Horticulture
@@ -287,8 +287,8 @@ SKILL_FAMILIES = {
     "turf_management": {
         "name": "Turf Management",
         "domain": "agriculture_primary",
-        "description": "Turf installation, sports turf maintenance, and lawn care",
-        "keywords": ["turf", "turf management", "lawn", "sports turf", "green keeping", "turf installation", "mowing", "aeration", "golf course", "oval"]
+        "description": "Managing turf grass and lawns including turf installation, sports turf maintenance, lawn care, and grass cultivation for sports fields and parks.",
+        "keywords": ['turf management', 'lawn care', 'sports turf', 'grass maintenance', 'turf installation', 'lawn mowing', 'grass cultivation', 'grounds']
     },
     "landscape_construction": {
         "name": "Landscape Construction",
@@ -299,8 +299,8 @@ SKILL_FAMILIES = {
     "garden_maintenance": {
         "name": "Grounds Maintenance",
         "domain": "agriculture_primary",
-        "description": "Maintaining gardens and grounds including mowing, pruning, weeding, planting, and general horticultural upkeep",
-        "keywords": ["garden maintenance", "grounds maintenance", "pruning", "hedge trimming", "weeding", "mulching", "garden care", "groundskeeper"]
+        "description": "Maintaining gardens and grounds including plant care, mowing, pruning, weeding, planting, and general horticultural upkeep of landscaped areas.",
+        "keywords": ['garden maintenance', 'grounds maintenance', 'plant care', 'pruning', 'weeding', 'mowing', 'horticulture', 'landscaping', 'garden upkeep']
     },
     "arboriculture": {
         "name": "Arboriculture Tree Care",
@@ -319,32 +319,32 @@ SKILL_FAMILIES = {
     "veterinary_nursing": {
         "name": "Veterinary Nursing",
         "domain": "agriculture_primary",
-        "description": "Providing veterinary nursing care for animals in veterinary clinics including clinical procedures, animal anaesthesia, post-operative animal care, and animal hospital support.",
-        "keywords": ['veterinary nursing', 'vet nurse', 'animal nursing', 'veterinary assistant', 'animal clinic', 'animal anaesthesia', 'animal hospital', 'veterinary care', 'animal recovery']
+        "description": "Providing veterinary nursing care for animals in veterinary clinics and hospitals including clinical procedures, animal anaesthesia, post-operative animal care, and veterinary assistance. Animal healthcare only.",
+        "keywords": ['veterinary nursing', 'vet nurse', 'animal care', 'veterinary clinic', 'animal anaesthesia', 'animal surgery', 'veterinary hospital', 'animal patients']
     },
     "dog_grooming": {
         "name": "Pet Grooming",
         "domain": "agriculture_primary",
-        "description": "Grooming dogs and pets including washing, clipping, styling, nail trimming, coat care, and breed-specific grooming in salons or mobile services.",
-        "keywords": ['dog grooming', 'pet grooming', 'dog washing', 'dog clipping', 'breed styling', 'dog bathing', 'coat care', 'dog salon', 'pet styling']
+        "description": "Grooming dogs and pets in grooming salons including pet washing, coat clipping, styling, nail trimming, and breed-specific grooming. Animal grooming only, not human hairdressing.",
+        "keywords": ['dog grooming', 'pet grooming', 'animal grooming', 'dog washing', 'coat clipping', 'pet salon', 'breed grooming', 'animal styling', 'nail trimming']
     },
     "kennel_cattery": {
         "name": "Animal Care Facilities",
         "domain": "agriculture_primary",
-        "description": "Operating animal boarding, breeding, and training facilities including kennels, catteries, dog breeding, puppy care, whelping, fostering pups, operant conditioning, positive reinforcement, mother-pup bonding, obedience training, and animal socialization.",
-        "keywords": ['kennel', 'cattery', 'animal boarding', 'dog breeding', 'puppy care', 'whelping', 'pup fostering', 'operant conditioning', 'positive reinforcement', 'dog training', 'obedience training', 'litter care', 'puppy socialization', 'pup monitoring', 'animal fostering', 'species behavior', 'behavior selection']
+        "description": "Operating animal boarding, breeding, and training facilities including dog kennels, catteries, dog breeding, puppy care, whelping, animal behaviour assessment, and pet boarding. Animal facilities only.",
+        "keywords": ['kennel', 'cattery', 'animal boarding', 'dog breeding', 'puppy care', 'whelping', 'pet boarding', 'animal facility', 'dog training facility']
     },
     "horse_care": {
         "name": "Equine Husbandry",
         "domain": "agriculture_primary",
-        "description": "Managing horses including stable management, feeding, health care, breeding, foaling, mare and foal care, and stud operations.",
-        "keywords": ['horse', 'equine', 'stable', 'horse care', 'horse husbandry', 'stud', 'mare', 'stallion', 'foaling', 'foal care', 'horse breeding', 'yearling']
+        "description": "Managing horses including stable management, horse feeding, equine health care, horse breeding, foaling, mare and foal care, and stud operations. Equine animal husbandry.",
+        "keywords": ['horse care', 'equine', 'stable management', 'horse feeding', 'horse breeding', 'foaling', 'mare care', 'stud operations', 'equine husbandry']
     },
     "horse_riding": {
         "name": "Horse Training",
         "domain": "agriculture_primary",
-        "description": "Teaching horse riding and equestrian skills to human riders including dressage, jumping, western riding, and horsemanship instruction. Training horses and riders.",
-        "keywords": ['horse riding', 'equestrian', 'riding instruction', 'horse training', 'dressage', 'jumping', 'riding lessons', 'horsemanship', 'horse schooling', 'breaking horses']
+        "description": "Teaching horse riding and equestrian skills to human riders including dressage, jumping, western riding, and horsemanship at riding schools and equestrian centres.",
+        "keywords": ['horse riding', 'equestrian', 'human riders', 'dressage', 'jumping', 'western riding', 'horsemanship', 'riding school', 'riding instructor']
     },
     "farrier": {
         "name": "Farriery Horseshoeing",
@@ -355,8 +355,8 @@ SKILL_FAMILIES = {
     "racing_industry": {
         "name": "Racing Industry Operations",
         "domain": "agriculture_primary",
-        "description": "Working in horse racing or greyhound racing including stable hands, track work, animal conditioning, breeding operations, and race day operations.",
-        "keywords": ['horse racing', 'greyhound racing', 'racehorse', 'stable hand', 'track work', 'racing greyhound', 'thoroughbred', 'racing industry', 'racing breeding']
+        "description": "Working in horse racing or greyhound racing including stable hands, track work, animal conditioning, racing animal breeding, and racing operations. Racing animals only.",
+        "keywords": ['racing industry', 'horse racing', 'greyhound racing', 'stable hand', 'track work', 'animal conditioning', 'racing breeding', 'racing operations']
     },
     
     # Aquaculture & Fishing
@@ -455,14 +455,14 @@ SKILL_FAMILIES = {
     "boning_slicing": {
         "name": "Meat Boning Slicing",
         "domain": "agriculture_primary",
-        "description": "Breaking down meat carcasses including boning, slicing, trimming, and preparing primal cuts",
-        "keywords": ["boning", "slicing", "meat cutting", "carcase", "primal cuts", "boner", "slicer", "meat breakdown"]
+        "description": "Breaking down animal meat carcasses in processing facilities including beef boning, lamb boning, pork boning, meat slicing, trimming, and primal cut preparation.",
+        "keywords": ['meat boning', 'animal carcass', 'beef boning', 'lamb boning', 'pork boning', 'meat slicing', 'trimming', 'primal cuts', 'meat processing']
     },
     "retail_butchery": {
         "name": "Retail Butchery",
         "domain": "agriculture_primary",
-        "description": "Retail meat cutting, display, and customer service",
-        "keywords": ["butcher", "retail butchery", "meat retail", "butcher shop", "meat display", "meat preparation", "smallgoods"]
+        "description": "Preparing and selling animal meat in retail butcher shops including meat cutting, display, sausage making, customer service, and retail meat operations.",
+        "keywords": ['retail butchery', 'animal meat', 'butcher shop', 'meat cutting', 'meat display', 'sausage making', 'customer service', 'retail meat']
     },
     "meat_inspection": {
         "name": "Meat Inspection",
@@ -1535,8 +1535,8 @@ SKILL_FAMILIES = {
     "community_nursing": {
         "name": "Community Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care in community settings including home visits, wound care, and chronic disease management.",
-        "keywords": ["community nursing", "district nursing", "home nursing", "community health", "visiting nurse", "outreach nursing"]
+        "description": "Providing nursing care for human patients in community settings including home visits, wound care, chronic disease management, and community health nursing.",
+        "keywords": ['community nursing', 'human patients', 'home visits', 'wound care', 'chronic disease', 'district nursing', 'community health', 'home nursing']
     },
     "mental_health_nursing": {
         "name": "Mental Health Nursing",
@@ -1553,76 +1553,76 @@ SKILL_FAMILIES = {
     "wound_care": {
         "name": "Wound Care Management",
         "domain": "healthcare_clinical",
-        "description": "Assessing and treating patient wounds in clinical settings including wound dressings, pressure injury assessment, wound healing management, and clinical wound care.",
-        "keywords": ['wound care', 'wound dressing', 'wound assessment', 'pressure injury', 'wound healing', 'clinical wound care', 'wound management', 'patient wounds']
+        "description": "Assessing and treating wounds on human patients in clinical settings including wound dressings, pressure injury prevention, wound healing management, and clinical wound care.",
+        "keywords": ['wound care', 'human patients', 'wound dressing', 'pressure injury', 'wound healing', 'clinical wound care', 'wound assessment', 'wound management']
     },
     "medication_administration": {
         "name": "Medication Administration",
         "domain": "healthcare_clinical",
-        "description": "Administering medications to human patients safely including oral, injection, IV medications, drug calculations, and medication safety protocols in healthcare settings.",
-        "keywords": ['medication', 'drug administration', 'IV', 'injection', 'oral medication', 'drug calculation', 'medication safety', 'human patient', 'nursing medication']
+        "description": "Administering medications to human patients safely including oral medications, injections, IV medications, drug calculations, and medication safety protocols.",
+        "keywords": ['medication administration', 'human patients', 'oral medications', 'injections', 'IV medications', 'drug calculations', 'medication safety']
     },
     "infection_control": {
         "name": "Infection Control",
         "domain": "healthcare_clinical",
-        "description": "Implementing infection prevention and control measures including hand hygiene, PPE, and infection surveillance.",
-        "keywords": ["infection control", "infection prevention", "hand hygiene", "PPE", "isolation", "sterilisation", "aseptic technique"]
+        "description": "Implementing infection prevention and control measures in human healthcare settings including hand hygiene, PPE, infection surveillance, and hospital infection control.",
+        "keywords": ['infection control', 'human healthcare', 'hand hygiene', 'PPE', 'infection prevention', 'hospital', 'healthcare infection', 'surveillance']
     },
     "clinical_observations": {
         "name": "Clinical Observations",
         "domain": "healthcare_clinical",
-        "description": "Taking and recording patient vital signs in hospitals and clinics including blood pressure, temperature, pulse, respiration, and oxygen saturation for human patients.",
-        "keywords": ['vital signs', 'observations', 'blood pressure', 'temperature', 'pulse', 'respiration', 'SpO2', 'clinical obs', 'patient monitoring', 'nursing observations', 'human patient']
+        "description": "Taking and recording vital signs of human patients in hospitals and clinics including blood pressure, temperature, pulse, respirations, and clinical monitoring.",
+        "keywords": ['clinical observations', 'human patients', 'vital signs', 'blood pressure', 'temperature', 'pulse', 'respirations', 'patient monitoring']
     },
     
     # Allied Health
     "physiotherapy": {
         "name": "Physiotherapy Services",
         "domain": "healthcare_clinical",
-        "description": "Providing physiotherapy treatment including exercise prescription, manual therapy, and rehabilitation programs.",
-        "keywords": ["physiotherapy", "physical therapy", "physio", "rehabilitation", "exercise therapy", "manual therapy", "mobility"]
+        "description": "Providing physiotherapy treatment for human patients including exercise prescription, manual therapy, musculoskeletal rehabilitation, and physical therapy programs.",
+        "keywords": ['physiotherapy', 'human patients', 'physical therapy', 'exercise prescription', 'manual therapy', 'rehabilitation', 'physio', 'musculoskeletal']
     },
     "occupational_therapy": {
         "name": "Occupational Therapy",
         "domain": "healthcare_clinical",
-        "description": "Providing occupational therapy including activities of daily living assessment, equipment prescription, and rehabilitation.",
-        "keywords": ["occupational therapy", "OT", "ADL", "activities of daily living", "functional assessment", "home modifications"]
+        "description": "Providing occupational therapy for human patients including activities of daily living assessment, equipment prescription, rehabilitation, and functional capacity.",
+        "keywords": ['occupational therapy', 'OT', 'human patients', 'ADLs', 'rehabilitation', 'equipment prescription', 'functional capacity', 'occupational therapist']
     },
     "speech_pathology": {
         "name": "Speech Pathology",
         "domain": "healthcare_clinical",
-        "description": "Providing speech pathology services including communication disorders, swallowing assessment, and speech therapy.",
-        "keywords": ["speech pathology", "speech therapy", "speech language", "swallowing", "dysphagia", "communication disorder", "stuttering"]
+        "description": "Providing speech pathology services for human patients including communication disorders, swallowing assessment (dysphagia), speech therapy, and language development.",
+        "keywords": ['speech pathology', 'human patients', 'communication disorders', 'dysphagia', 'speech therapy', 'language development', 'speech pathologist']
     },
     "dietetics": {
         "name": "Dietetics Clinical Nutrition",
         "domain": "healthcare_clinical",
         "description": "Providing dietetic services for human patients including nutritional assessment, therapeutic diets, enteral feeding, tube feeding, and clinical nutrition counselling.",
-        "keywords": ['dietetics', 'dietitian', 'clinical nutrition', 'therapeutic diet', 'enteral feeding', 'tube feeding', 'nutritional assessment', 'human nutrition', 'patient diet']
+        "keywords": ['dietetics', 'human patients', 'nutrition', 'therapeutic diets', 'enteral feeding', 'clinical nutrition', 'dietitian', 'nutritional counselling']
     },
     "podiatry": {
         "name": "Podiatry Services",
         "domain": "healthcare_clinical",
-        "description": "Providing podiatry services including foot assessment, nail care, orthotics, and diabetic foot care.",
-        "keywords": ["podiatry", "podiatrist", "foot care", "diabetic foot", "orthotic", "nail care", "foot assessment"]
+        "description": "Providing podiatry services for human patients including foot assessment, nail care, orthotics prescription, diabetic foot care, and podiatric treatment.",
+        "keywords": ['podiatry', 'human patients', 'foot care', 'nail care', 'orthotics', 'diabetic foot', 'podiatrist', 'foot assessment']
     },
     "audiology": {
         "name": "Audiology Services",
         "domain": "healthcare_clinical",
-        "description": "Providing audiology services including hearing assessment, hearing aids, and audiological rehabilitation.",
-        "keywords": ["audiology", "hearing", "audiologist", "hearing test", "hearing aid", "audiometry", "cochlear implant"]
+        "description": "Providing audiology services for human patients including hearing assessment, hearing aids fitting, audiological rehabilitation, and hearing loss management.",
+        "keywords": ['audiology', 'human patients', 'hearing assessment', 'hearing aids', 'audiological rehabilitation', 'hearing loss', 'audiologist']
     },
     "optometry": {
         "name": "Optometry Services",
         "domain": "healthcare_clinical",
-        "description": "Providing optometry services including eye examinations, vision testing, and optical prescriptions.",
-        "keywords": ["optometry", "optometrist", "eye test", "vision", "glasses", "contact lenses", "eye examination"]
+        "description": "Providing optometry services for human patients including eye examinations, vision testing, optical prescriptions, and spectacle dispensing.",
+        "keywords": ['optometry', 'human patients', 'eye examination', 'vision testing', 'optical prescription', 'spectacles', 'optometrist', 'eye care']
     },
     "exercise_physiology": {
         "name": "Exercise Physiology",
         "domain": "healthcare_clinical",
-        "description": "Providing exercise physiology services including exercise prescription for chronic conditions and rehabilitation.",
-        "keywords": ["exercise physiology", "exercise physiologist", "clinical exercise", "exercise prescription", "cardiac rehab", "exercise therapy"]
+        "description": "Providing exercise physiology services for human patients including clinical exercise prescription for chronic conditions, cardiac rehabilitation, and diabetes management.",
+        "keywords": ['exercise physiology', 'human patients', 'clinical exercise', 'chronic conditions', 'cardiac rehabilitation', 'diabetes', 'exercise prescription']
     },
     
     # Medical Support
@@ -1641,14 +1641,14 @@ SKILL_FAMILIES = {
     "medical_billing": {
         "name": "Medical Billing Coding",
         "domain": "healthcare_clinical",
-        "description": "Processing medical billing including Medicare, health fund claims, and medical accounts.",
-        "keywords": ["medical billing", "medical coding", "ICD-10", "Medicare billing", "health insurance claims", "coding", "billing"]
+        "description": "Processing medical billing for human patient services including Medicare claims, health fund claims, medical accounts, and healthcare billing administration.",
+        "keywords": ['medical billing', 'human patients', 'Medicare', 'health fund', 'medical accounts', 'healthcare billing', 'medical coding', 'patient billing']
     },
     "pathology_collection": {
         "name": "Pathology Collection",
         "domain": "healthcare_clinical",
-        "description": "Collecting pathology specimens including venepuncture, blood collection, and specimen handling.",
-        "keywords": ["pathology collection", "blood collection", "phlebotomy", "venepuncture", "specimen collection", "blood draw"]
+        "description": "Collecting pathology specimens from human patients including venepuncture, blood collection, specimen handling, and pathology processing.",
+        "keywords": ['pathology collection', 'human patients', 'venepuncture', 'blood collection', 'specimen handling', 'pathology', 'phlebotomy', 'blood test']
     },
     "medical_imaging_assistance": {
         "name": "Medical Imaging Assistance",
@@ -1659,8 +1659,8 @@ SKILL_FAMILIES = {
     "sterilisation_services": {
         "name": "Sterilisation Services",
         "domain": "healthcare_clinical",
-        "description": "Sterilising medical instruments and equipment in hospitals including CSSD operations, autoclave operation, instrument processing, and infection control sterilisation.",
-        "keywords": ['sterilisation', 'CSSD', 'sterile processing', 'autoclave', 'instrument sterilisation', 'medical sterilisation', 'infection control', 'sterile supplies', 'hospital sterilisation']
+        "description": "Sterilising medical instruments and equipment for human patient procedures in hospitals including CSSD operations, autoclave operation, and infection control.",
+        "keywords": ['sterilisation', 'human patient procedures', 'CSSD', 'autoclave', 'medical instruments', 'infection control', 'hospital sterilisation', 'sterile supply']
     },
     
     # Pharmacy
@@ -1673,86 +1673,86 @@ SKILL_FAMILIES = {
     "pharmacy_retail": {
         "name": "Community Pharmacy",
         "domain": "healthcare_clinical",
-        "description": "Working in community pharmacies including dispensing, OTC sales, health advice, and retail operations",
-        "keywords": ["pharmacy retail", "community pharmacy", "chemist", "OTC", "pharmacy sales", "front shop", "pharmacy customer service"]
+        "description": "Working in community pharmacies serving human customers including dispensing prescriptions, OTC medication sales, health advice, and pharmacy retail operations.",
+        "keywords": ['community pharmacy', 'human customers', 'dispensing', 'OTC', 'prescription', 'pharmacist', 'retail pharmacy', 'health advice']
     },
     "hospital_pharmacy": {
         "name": "Hospital Pharmacy",
         "domain": "healthcare_clinical",
-        "description": "Working in hospital pharmacies including clinical pharmacy, drug distribution, and pharmacy services.",
-        "keywords": ["hospital pharmacy", "clinical pharmacy", "ward pharmacy", "medication review", "hospital dispensary"]
+        "description": "Working in hospital pharmacies serving human patients including clinical pharmacy, drug distribution, medication review, and hospital pharmacy services.",
+        "keywords": ['hospital pharmacy', 'human patients', 'clinical pharmacy', 'drug distribution', 'medication review', 'pharmacist', 'hospital dispensing']
     },
     
     # Dental
     "dental_assisting": {
         "name": "Dental Assisting",
         "domain": "healthcare_clinical",
-        "description": "Assisting dentists during procedures including chairside assistance, instrument preparation, and patient care.",
-        "keywords": ["dental assistant", "dental assisting", "chairside", "dental nurse", "dental surgery", "dental instruments"]
+        "description": "Assisting dentists during dental procedures on human patients including chairside assistance, instrument preparation, patient comfort, and dental surgery support.",
+        "keywords": ['dental assisting', 'human patients', 'chairside', 'dental surgery', 'instrument preparation', 'dental assistant', 'dentist support']
     },
     "dental_radiography": {
         "name": "Dental Radiography",
         "domain": "healthcare_clinical",
-        "description": "Taking dental x-rays including intraoral and extraoral radiography and radiation safety.",
-        "keywords": ["dental radiography", "dental X-ray", "dental imaging", "OPG", "periapical", "bitewing"]
+        "description": "Taking dental x-rays of human patients including intraoral radiography, extraoral radiography, OPG, and dental radiation safety.",
+        "keywords": ['dental radiography', 'human patients', 'dental x-ray', 'intraoral', 'extraoral', 'OPG', 'dental imaging', 'radiation safety']
     },
     "dental_hygiene": {
         "name": "Dental Hygiene",
         "domain": "healthcare_clinical",
-        "description": "Providing dental hygiene services for human patients including scaling, prophylaxis, professional teeth cleaning, preventive care, and oral health education.",
-        "keywords": ['dental hygiene', 'dental hygienist', 'scaling', 'prophylaxis', 'teeth cleaning', 'oral hygiene', 'preventive dental', 'dental cleaning', 'human dental care']
+        "description": "Providing dental hygiene services for human patients including scaling, prophylaxis, professional teeth cleaning, preventive dental care, and oral health education.",
+        "keywords": ['dental hygiene', 'human patients', 'scaling', 'teeth cleaning', 'prophylaxis', 'oral health', 'dental hygienist', 'preventive dental']
     },
     "dental_prosthetics": {
         "name": "Dental Prosthetics",
         "domain": "healthcare_clinical",
-        "description": "Manufacturing dental prosthetics including dentures, crowns, and dental laboratory work.",
-        "keywords": ["dental prosthetics", "dentures", "dental technician", "dental lab", "crown", "bridge", "dental prosthesis"]
+        "description": "Manufacturing dental prosthetics for human patients including dentures, crowns, bridges, implant components, and dental laboratory work.",
+        "keywords": ['dental prosthetics', 'human patients', 'dentures', 'crowns', 'bridges', 'dental laboratory', 'dental technician', 'prosthetics']
     },
     
     # Mental Health
     "mental_health_support": {
         "name": "Mental Health Support",
         "domain": "community_services",
-        "description": "Providing mental health support work including recovery support, psychosocial support, and mental health programs.",
-        "keywords": ["mental health support", "mental health worker", "recovery support", "psychosocial support", "mental health care"]
+        "description": "Providing mental health support work for human clients including recovery support, psychosocial support, peer support, and mental health programs.",
+        "keywords": ['mental health support', 'human clients', 'recovery support', 'psychosocial', 'peer support', 'mental health worker', 'mental health programs']
     },
     "counselling": {
         "name": "Counselling Services",
         "domain": "community_services",
-        "description": "Providing counselling services including individual counselling, therapy, and mental health support.",
-        "keywords": ["counselling", "counselor", "therapy", "talk therapy", "psychotherapy", "therapeutic counselling"]
+        "description": "Providing counselling services for human clients including individual counselling, therapy, mental health support, and psychological counselling.",
+        "keywords": ['counselling', 'human clients', 'therapy', 'mental health', 'psychological counselling', 'individual counselling', 'counsellor', 'psychotherapy']
     },
     "drug_alcohol_support": {
         "name": "AOD Support",
         "domain": "community_services",
-        "description": "Supporting people with alcohol and drug issues including AOD counselling, harm reduction, and recovery programs",
-        "keywords": ["drug and alcohol", "AOD", "substance abuse", "addiction", "detox", "rehabilitation", "drug counselling"]
+        "description": "Supporting human people with alcohol and drug issues including AOD counselling, harm reduction, recovery programs, and addiction support services.",
+        "keywords": ['AOD support', 'human clients', 'alcohol', 'drugs', 'addiction', 'harm reduction', 'recovery', 'substance abuse', 'rehabilitation']
     },
     "crisis_intervention": {
         "name": "Crisis Intervention",
         "domain": "community_services",
-        "description": "Providing crisis support for people in mental health or personal crisis including crisis counselling, suicide prevention, safety planning, and emergency mental health response.",
-        "keywords": ['crisis intervention', 'crisis support', 'crisis counselling', 'suicide prevention', 'mental health crisis', 'safety planning', 'crisis response', 'emergency support']
+        "description": "Providing crisis support for human people in mental health or personal crisis including crisis counselling, suicide prevention, safety planning, and emergency response.",
+        "keywords": ['crisis intervention', 'human clients', 'crisis support', 'suicide prevention', 'mental health crisis', 'safety planning', 'crisis counselling']
     },
     
     # Aged Care
     "personal_care": {
         "name": "Personal Care Support",
         "domain": "community_services",
-        "description": "Providing personal care support for human clients including bathing, dressing, toileting, grooming, and daily living assistance.",
-        "keywords": ['personal care', 'ADL', 'bathing', 'showering', 'dressing', 'toileting', 'human personal care', 'daily living', 'personal support']
+        "description": "Providing personal care support for human clients in aged care or disability settings including bathing, dressing, toileting, grooming, and daily living assistance.",
+        "keywords": ['personal care', 'human clients', 'aged care', 'disability care', 'bathing', 'dressing', 'toileting', 'daily living', 'ADLs']
     },
     "mobility_assistance": {
         "name": "Mobility Assistance",
         "domain": "community_services",
-        "description": "Assisting with mobility including transfers, walking support, wheelchair assistance, and mobility aids.",
-        "keywords": ["mobility assistance", "transfer", "hoisting", "mobility aid", "walking frame", "wheelchair", "mobility support"]
+        "description": "Assisting human clients with mobility in aged care or disability settings including transfers, walking support, wheelchair assistance, and mobility aids.",
+        "keywords": ['mobility assistance', 'human clients', 'transfers', 'walking support', 'wheelchair', 'mobility aids', 'aged care', 'disability support']
     },
     "dementia_care": {
         "name": "Dementia Care",
         "domain": "community_services",
-        "description": "Providing care for human clients with dementia including memory support, behavior management, and specialized dementia care techniques.",
-        "keywords": ['dementia', 'dementia care', 'memory support', "Alzheimer's", 'dementia support', 'human dementia', 'cognitive impairment', 'dementia behaviour']
+        "description": "Providing care for human clients with dementia in aged care settings including memory support, behaviour management, person-centred care, and dementia-specific interventions.",
+        "keywords": ['dementia care', 'human clients', 'aged care', 'memory support', 'behaviour management', 'person-centred care', "Alzheimer's", 'dementia nursing']
     },
     "palliative_care": {
         "name": "Palliative Care",
@@ -1763,28 +1763,28 @@ SKILL_FAMILIES = {
     "meal_assistance": {
         "name": "Meal Assistance",
         "domain": "community_services",
-        "description": "Assisting human clients with meals including food preparation, feeding assistance, and nutrition support for aged care or disability clients. Not animal feeding.",
-        "keywords": ['meal assistance', 'feeding assistance', 'food preparation', 'nutrition support', 'human clients', 'aged care meals', 'disability meals', 'mealtime support']
+        "description": "Assisting human clients with meals in aged care or disability settings including food preparation, feeding assistance, texture-modified diets, and nutrition support.",
+        "keywords": ['meal assistance', 'human clients', 'aged care', 'feeding assistance', 'food preparation', 'nutrition support', 'disability meals', 'texture modified']
     },
     "lifestyle_activities": {
         "name": "Lifestyle Recreation Support",
         "domain": "community_services",
-        "description": "Facilitating recreational activities for aged care or disability clients including social programs and leisure activities",
-        "keywords": ["lifestyle", "activities", "recreation", "diversional therapy", "aged care activities", "leisure", "social activities"]
+        "description": "Facilitating recreational activities for human aged care or disability clients including social programs, craft activities, outings, and leisure activities.",
+        "keywords": ['lifestyle activities', 'recreation', 'human clients', 'aged care', 'disability', 'social programs', 'leisure activities', 'diversional therapy']
     },
     
     # Disability
     "disability_support": {
         "name": "Disability Support",
         "domain": "community_services",
-        "description": "Supporting people with disability in daily activities including personal care, community access, skill development, and NDIS support work. Human clients only.",
-        "keywords": ['disability', 'disability support', 'NDIS', 'disability worker', 'support worker', 'human disability', 'disability care', 'DSW', 'community access']
+        "description": "Supporting human people with disability in daily activities including personal care, community access, skill development, and NDIS support services.",
+        "keywords": ['disability support', 'human clients', 'NDIS', 'personal care', 'community access', 'skill development', 'disability worker', 'support worker']
     },
     "community_participation": {
         "name": "Community Participation Support",
         "domain": "community_services",
-        "description": "Supporting community participation including social activities, outings, and community access.",
-        "keywords": ["community participation", "community access", "social participation", "community inclusion", "outings", "day program"]
+        "description": "Supporting human disability clients with community participation including social activities, outings, community access, and social skill development.",
+        "keywords": ['community participation', 'human clients', 'disability', 'NDIS', 'community access', 'social activities', 'outings', 'social skills']
     },
     "supported_independent_living": {
         "name": "Supported Independent Living",
@@ -1795,8 +1795,8 @@ SKILL_FAMILIES = {
     "behaviour_support": {
         "name": "Behaviour Support",
         "domain": "community_services",
-        "description": "Implementing positive behaviour support for human clients with disability including behaviour plans, strategies, and PBS approaches.",
-        "keywords": ['behaviour support', 'PBS', 'positive behaviour', 'behaviour plan', 'human behaviour', 'behaviour management', 'restrictive practices', 'behaviour intervention']
+        "description": "Implementing positive behaviour support for human clients with disability including behaviour plans, PBS strategies, functional behaviour assessment, and restrictive practices.",
+        "keywords": ['behaviour support', 'PBS', 'human clients', 'disability', 'behaviour plans', 'functional assessment', 'positive behaviour', 'NDIS']
     },
     "assistive_technology": {
         "name": "Assistive Technology",
@@ -1810,25 +1810,25 @@ SKILL_FAMILIES = {
         "name": "Case Management",
         "domain": "community_services",
         "description": "Coordinating human services for clients with complex needs including social work case coordination, client needs assessment, service referrals, and welfare case management.",
-        "keywords": ['case management', 'case manager', 'care coordination', 'social work', 'client services', 'service coordination', 'welfare', 'case work', 'human services', 'client needs']
+        "keywords": ['case management', 'human clients', 'social work', 'case coordination', 'service referrals', 'welfare', 'needs assessment', 'case worker']
     },
     "child_protection": {
         "name": "Child Protection",
         "domain": "community_services",
-        "description": "Working in child protection services for human children including child safety assessment, case work, and family intervention.",
-        "keywords": ['child protection', 'child safety', 'human children', 'child welfare', 'child abuse', 'protective services', 'mandatory reporting']
+        "description": "Working in child protection services for human children including child safety assessment, case work, family intervention, and child welfare investigations.",
+        "keywords": ['child protection', 'human children', 'child safety', 'child welfare', 'case work', 'family intervention', 'child protection officer']
     },
     "youth_work": {
         "name": "Youth Work",
         "domain": "community_services",
-        "description": "Working with young people (human adolescents) including youth programs, engagement, support services, and youth development.",
-        "keywords": ['youth work', 'youth services', 'young people', 'human youth', 'adolescent', 'youth worker', 'youth program', 'teen']
+        "description": "Working with young people (human adolescents and young adults) including youth programs, youth engagement, support services, and youth development.",
+        "keywords": ['youth work', 'human adolescents', 'young people', 'youth programs', 'youth engagement', 'youth services', 'youth development', 'youth worker']
     },
     "family_support": {
         "name": "Family Support Services",
         "domain": "community_services",
-        "description": "Providing support services for human families including parenting support, family intervention, and family counselling services.",
-        "keywords": ['family support', 'parenting', 'family services', 'human families', 'family intervention', 'parent support', 'family counselling']
+        "description": "Providing support services for human families including parenting support, family intervention, family counselling services, and child and family welfare.",
+        "keywords": ['family support', 'human families', 'parenting support', 'family intervention', 'family counselling', 'child welfare', 'family services']
     },
     "housing_support": {
         "name": "Housing Support",
@@ -1839,8 +1839,8 @@ SKILL_FAMILIES = {
     "domestic_violence_support": {
         "name": "Family Violence Support",
         "domain": "community_services",
-        "description": "Supporting victims of domestic and family violence including crisis intervention, safety planning, and advocacy",
-        "keywords": ["domestic violence", "DV support", "family violence", "DFV", "women's refuge", "domestic abuse", "safety planning"]
+        "description": "Supporting human victims of domestic and family violence including crisis intervention, safety planning, advocacy, and domestic violence counselling.",
+        "keywords": ['domestic violence', 'family violence', 'human victims', 'crisis intervention', 'safety planning', 'DV support', 'advocacy', 'violence counselling']
     },
     "community_development": {
         "name": "Community Development",
@@ -1851,30 +1851,30 @@ SKILL_FAMILIES = {
     "volunteer_management": {
         "name": "Volunteer Management",
         "domain": "community_services",
-        "description": "Coordinating volunteers including recruitment, training, and volunteer program management.",
-        "keywords": ["volunteer management", "volunteer coordinator", "volunteer program", "volunteer recruitment", "volunteering"]
+        "description": "Coordinating human volunteers in organisations including volunteer recruitment, volunteer training, volunteer program management, and volunteer recognition.",
+        "keywords": ['volunteer management', 'human volunteers', 'volunteer coordination', 'recruitment', 'volunteer training', 'volunteer programs', 'community volunteers']
     },
     
     # First Aid & Emergency
     "first_aid": {
         "name": "First Aid",
         "domain": "healthcare_clinical",
-        "description": "Providing first aid and basic life support for human emergencies including CPR, bleeding control, burns, fractures, and emergency first response in workplace or community settings.",
-        "keywords": ['first aid', 'CPR', 'basic life support', 'emergency response', 'first responder', 'HLTAID', 'human first aid', 'workplace first aid', 'bleeding control']
+        "description": "Providing first aid and basic life support for human emergencies including CPR, bleeding control, burns treatment, fracture management, and emergency response.",
+        "keywords": ['first aid', 'human emergencies', 'CPR', 'basic life support', 'bleeding control', 'burns', 'fractures', 'emergency first aid']
     },
     "advanced_life_support": {
         "name": "Advanced Life Support",
         "domain": "healthcare_clinical",
-        "description": "Providing advanced resuscitation including ACLS, ALS, airway management, and emergency cardiac care.",
-        "keywords": ["advanced life support", "ALS", "ACLS", "advanced resuscitation", "defibrillation", "intubation", "cardiac arrest"]
+        "description": "Providing advanced resuscitation for human patients including ACLS, ALS, advanced airway management, emergency cardiac care, and critical care interventions.",
+        "keywords": ['advanced life support', 'ALS', 'ACLS', 'human patients', 'resuscitation', 'airway management', 'cardiac care', 'critical care']
     },
     
     # Indigenous Health
     "aboriginal_health": {
         "name": "Aboriginal Health",
         "domain": "healthcare_clinical",
-        "description": "Working in Aboriginal and Torres Strait Islander health services including cultural safety and Indigenous health programs.",
-        "keywords": ["Aboriginal health", "Indigenous health", "Aboriginal health worker", "First Nations health", "cultural safety", "ATSI health"]
+        "description": "Working in Aboriginal and Torres Strait Islander health services for human community members including cultural safety, Indigenous health programs, and community health.",
+        "keywords": ['Aboriginal health', 'human community', 'Indigenous health', 'cultural safety', 'Torres Strait Islander', 'community health', 'First Nations', 'Aboriginal health worker']
     },
     
     # ═══════════════════════════════════════════════════════════════════════════
@@ -1985,8 +1985,8 @@ SKILL_FAMILIES = {
     "reception": {
         "name": "Front Desk Reception",
         "domain": "business_administration",
-        "description": "Providing front desk reception services including greeting visitors, answering phones, and administrative support",
-        "keywords": ["reception", "receptionist", "front desk", "greeting visitors", "switchboard", "front of house", "visitor management"]
+        "description": "Providing front desk reception services in offices including greeting human visitors, answering phones, and administrative support for businesses.",
+        "keywords": ['reception', 'front desk', 'human visitors', 'office reception', 'phone answering', 'administrative support', 'receptionist', 'corporate reception']
     },
     "data_entry": {
         "name": "Data Entry",
@@ -2033,8 +2033,8 @@ SKILL_FAMILIES = {
     "executive_assistant": {
         "name": "Executive Assistance",
         "domain": "business_administration",
-        "description": "Supporting C-suite executives and senior managers in corporations including executive diary management, board papers, correspondence, and high-level corporate administration.",
-        "keywords": ['executive assistant', 'EA', 'PA', 'executive support', 'C-suite support', 'board papers', 'executive administration', 'senior management support']
+        "description": "Providing executive assistance to human executives and senior managers in corporations including diary management, board papers, correspondence, and corporate administration.",
+        "keywords": ['executive assistant', 'EA', 'PA', 'human executives', 'executive support', 'board papers', 'correspondence', 'corporate administration', 'diary management']
     },
     "mail_handling": {
         "name": "Mail Handling",
@@ -2097,8 +2097,8 @@ SKILL_FAMILIES = {
     "legal_secretary": {
         "name": "Legal Secretarial",
         "domain": "business_administration",
-        "description": "Providing secretarial support in legal environments including legal documents, court filings, and law firm administration",
-        "keywords": ["legal secretary", "law firm", "legal admin", "legal correspondence", "legal documents", "legal typing"]
+        "description": "Providing secretarial support in law firms and legal environments for human lawyers including legal documents, court filings, and legal administration.",
+        "keywords": ['legal secretary', 'law firm', 'human lawyers', 'legal documents', 'court filings', 'legal administration', 'solicitor support', 'legal support']
     },
     "conveyancing": {
         "name": "Property Conveyancing",
@@ -2109,8 +2109,8 @@ SKILL_FAMILIES = {
     "litigation_support": {
         "name": "Litigation Support",
         "domain": "business_administration",
-        "description": "Supporting litigation including document management, discovery, and legal research.",
-        "keywords": ["litigation", "court", "litigation support", "court documents", "discovery", "legal research", "trial preparation"]
+        "description": "Supporting legal litigation in law firms including document management, discovery, legal research, and litigation administration for human legal cases.",
+        "keywords": ['litigation support', 'legal litigation', 'human legal cases', 'document management', 'discovery', 'legal research', 'law firm', 'court support']
     },
     "contract_administration": {
         "name": "Contract Administration",
@@ -2123,8 +2123,8 @@ SKILL_FAMILIES = {
     "project_coordination": {
         "name": "Project Coordination",
         "domain": "business_administration",
-        "description": "Coordinating corporate project activities including project scheduling, documentation, stakeholder coordination, and project administration support for business projects.",
-        "keywords": ['project coordination', 'project support', 'project administration', 'project scheduling', 'project documentation', 'business projects', 'corporate projects']
+        "description": "Coordinating corporate project activities for human stakeholders in organisations including project scheduling, documentation, coordination, and project administration.",
+        "keywords": ['project coordination', 'corporate projects', 'human stakeholders', 'project scheduling', 'stakeholder coordination', 'project administration', 'business projects']
     },
     "project_management": {
         "name": "Project Management",
@@ -2465,8 +2465,8 @@ SKILL_FAMILIES = {
     "meat_processing": {
         "name": "Meat Processing",
         "domain": "manufacturing_engineering",
-        "description": "Processing meat products including boning, slicing, mincing, and smallgoods manufacturing.",
-        "keywords": ["meat processing", "smallgoods", "sausage making", "meat production", "ham", "bacon", "meat plant"]
+        "description": "Processing animal meat products in factories including boning, slicing, mincing, smallgoods manufacturing, and meat product production.",
+        "keywords": ['meat processing', 'animal meat', 'boning', 'slicing', 'mincing', 'smallgoods', 'meat products', 'meat factory', 'processing plant']
     },
     "dairy_processing": {
         "name": "Dairy Processing",
@@ -2547,60 +2547,60 @@ SKILL_FAMILIES = {
     "childcare": {
         "name": "Childcare Services",
         "domain": "education_training",
-        "description": "Caring for human children in childcare centres including supervision, activities, and developmental support for infants and toddlers. Does not include animal care.",
-        "keywords": ['childcare', 'child care', 'daycare', 'long day care', 'childcare centre', 'childcare worker', 'child minding', 'human children', 'infant care', 'toddler care', 'early childhood']
+        "description": "Caring for human children in childcare centres including supervision, developmental activities, early childhood education, and care for infants, toddlers, and preschoolers.",
+        "keywords": ['childcare', 'human children', 'early childhood', 'child care centre', 'infants', 'toddlers', 'preschool', 'child development', 'kindergarten']
     },
     "outside_school_hours": {
         "name": "OSHC Care",
         "domain": "education_training",
-        "description": "Providing before and after school care for school-aged human children including vacation care, homework help, and recreational activities.",
-        "keywords": ['OSHC', 'outside school hours', 'before school', 'after school', 'vacation care', 'school age care', 'holiday program', 'human children']
+        "description": "Providing before and after school care for school-aged human children including vacation care, homework help, recreational activities, and OSHC programs.",
+        "keywords": ['OSHC', 'outside school hours', 'human children', 'before school', 'after school', 'vacation care', 'school age care', 'homework help']
     },
     
     # School Education
     "primary_teaching": {
         "name": "Primary Teaching",
         "domain": "education_training",
-        "description": "Teaching primary school students including curriculum delivery and classroom management.",
-        "keywords": ["primary teaching", "primary school", "primary teacher", "primary education", "elementary", "classroom teaching"]
+        "description": "Teaching primary school students (human children) including curriculum delivery, classroom management, literacy, numeracy, and child development.",
+        "keywords": ['primary teaching', 'primary school', 'human children', 'teacher', 'classroom', 'curriculum', 'literacy', 'numeracy', 'child education']
     },
     "secondary_teaching": {
         "name": "Secondary Teaching",
         "domain": "education_training",
-        "description": "Teaching secondary school students including subject specialisation and student engagement.",
-        "keywords": ["secondary teaching", "high school", "secondary teacher", "secondary education", "subject teaching", "high school teacher"]
+        "description": "Teaching secondary school students (human teenagers) including subject specialisation, student engagement, assessment, and adolescent education.",
+        "keywords": ['secondary teaching', 'high school', 'human teenagers', 'teacher', 'subject specialist', 'student engagement', 'adolescent education']
     },
     "special_education": {
         "name": "Special Education",
         "domain": "education_training",
-        "description": "Teaching students with special needs including learning support and adapted curriculum.",
-        "keywords": ["special education", "special needs", "learning support", "special ed", "disability education", "inclusion"]
+        "description": "Teaching human students with special needs including learning support, adapted curriculum, individual education plans (IEPs), and inclusive education.",
+        "keywords": ['special education', 'special needs', 'human students', 'learning support', 'IEP', 'inclusive education', 'adapted curriculum', 'disability education']
     },
     "teacher_aide": {
         "name": "Teacher Aide",
         "domain": "education_training",
-        "description": "Supporting teachers in school classrooms with human students including learning support, supervision, and educational assistance.",
-        "keywords": ['teacher aide', 'education assistant', 'classroom support', 'teacher assistant', 'learning support', 'school assistant', 'human students']
+        "description": "Supporting teachers in school classrooms with human students including learning support, student supervision, classroom assistance, and educational support.",
+        "keywords": ['teacher aide', 'education assistant', 'human students', 'classroom support', 'learning support', 'student supervision', 'school assistant']
     },
     
     # Tertiary & VET
     "vet_training": {
         "name": "VET Training Delivery",
         "domain": "education_training",
-        "description": "Delivering vocational education and training including competency-based training and assessment.",
-        "keywords": ["VET", "vocational training", "TAE", "trainer", "assessor", "RTO", "competency", "training delivery"]
+        "description": "Delivering vocational education and training (VET) to human adult learners including competency-based training, workplace assessment, and RTO training delivery.",
+        "keywords": ['VET training', 'vocational training', 'human learners', 'adult education', 'RTO', 'competency-based', 'workplace training', 'training delivery']
     },
     "assessment": {
         "name": "Competency Assessment",
         "domain": "education_training",
-        "description": "Assessing vocational training competencies including practical skills assessment, Recognition of Prior Learning (RPL), workplace assessment, and VET assessment.",
-        "keywords": ['competency assessment', 'VET assessment', 'RPL', 'skills assessment', 'training assessment', 'practical assessment', 'workplace assessment', 'vocational assessment']
+        "description": "Assessing vocational training competencies of human students and workers including practical skills assessment, RPL, workplace-based assessment, and VET assessment.",
+        "keywords": ['competency assessment', 'VET assessment', 'human students', 'RPL', 'skills assessment', 'workplace assessment', 'vocational assessment', 'training assessment']
     },
     "learning_design": {
         "name": "Learning Design",
         "domain": "education_training",
-        "description": "Designing learning programs including curriculum development and instructional design.",
-        "keywords": ["learning design", "curriculum development", "instructional design", "course development", "training materials", "learning resources"]
+        "description": "Designing learning programs for human learners including curriculum development, instructional design, e-learning development, and training materials.",
+        "keywords": ['learning design', 'instructional design', 'human learners', 'curriculum development', 'e-learning', 'training design', 'course development']
     },
     "elearning": {
         "name": "E-Learning Development",
@@ -2613,8 +2613,8 @@ SKILL_FAMILIES = {
     "training_coordination": {
         "name": "Training Coordination",
         "domain": "education_training",
-        "description": "Coordinating corporate training programs including training calendar scheduling, venue booking, trainer coordination, and training administration.",
-        "keywords": ['training coordination', 'training administration', 'training scheduling', 'training logistics', 'course coordination', 'trainer booking', 'training programs']
+        "description": "Coordinating corporate training programs for human employees including training calendar scheduling, venue booking, trainer coordination, and training administration.",
+        "keywords": ['training coordination', 'training administration', 'human employees', 'corporate training', 'training scheduling', 'training logistics', 'training programs']
     },
     "student_support": {
         "name": "Student Support Services",
@@ -2633,14 +2633,14 @@ SKILL_FAMILIES = {
     "workplace_coaching": {
         "name": "Workplace Coaching",
         "domain": "education_training",
-        "description": "Coaching and mentoring in workplaces including performance coaching and professional development.",
-        "keywords": ["workplace coaching", "coaching", "mentoring", "on-the-job training", "buddy", "workplace mentor", "skills coaching"]
+        "description": "Coaching and mentoring human employees in workplaces including performance coaching, career development, leadership development, and professional mentoring.",
+        "keywords": ['workplace coaching', 'mentoring', 'human employees', 'performance coaching', 'career development', 'leadership coaching', 'professional development']
     },
     "facilitation": {
         "name": "Training Facilitation",
         "domain": "education_training",
-        "description": "Facilitating training workshops and group sessions including adult learning, group dynamics, and participatory methods",
-        "keywords": ["facilitation", "facilitator", "workshop", "group facilitation", "training facilitation", "session facilitation"]
+        "description": "Facilitating training workshops and group sessions for human adult learners including group dynamics, participatory methods, and adult learning principles.",
+        "keywords": ['facilitation', 'workshop facilitation', 'human learners', 'adult learning', 'group dynamics', 'training workshops', 'participatory methods']
     },
     "presentation_skills": {
         "name": "Presentation Skills",
@@ -2677,8 +2677,8 @@ SKILL_FAMILIES = {
     "commercial_cookery": {
         "name": "Commercial Cookery",
         "domain": "hospitality_tourism",
-        "description": "Preparing food in commercial kitchens including cooking techniques, menu planning, and kitchen operations.",
-        "keywords": ["commercial cookery", "chef", "cook", "commercial kitchen", "cooking", "professional cooking", "kitchen"]
+        "description": "Preparing meals in commercial kitchens for human diners including cooking techniques, menu planning, food presentation, and professional cookery.",
+        "keywords": ['commercial cookery', 'chef', 'cooking', 'human diners', 'menu planning', 'food presentation', 'professional kitchen', 'culinary']
     },
     "pastry_baking": {
         "name": "Patisserie Baking",
@@ -2701,14 +2701,14 @@ SKILL_FAMILIES = {
     "kitchen_operations": {
         "name": "Kitchen Operations",
         "domain": "hospitality_tourism",
-        "description": "Working in commercial kitchens including kitchen hand duties, cleaning, and kitchen support.",
-        "keywords": ["kitchen hand", "kitchen assistant", "kitchen operations", "dishwashing", "food prep", "kitchen duties", "kitchen steward"]
+        "description": "Working in commercial restaurant and hotel kitchens preparing food for human diners including kitchen hand duties, food preparation support, and kitchen hygiene.",
+        "keywords": ['kitchen operations', 'commercial kitchen', 'human diners', 'restaurant kitchen', 'kitchen hand', 'food preparation', 'kitchen hygiene', 'hospitality kitchen']
     },
     "food_preparation": {
         "name": "Food Preparation",
         "domain": "hospitality_tourism",
-        "description": "Preparing ingredients for cooking including mise en place, food handling, and basic food preparation.",
-        "keywords": ["food preparation", "food prep", "mise en place", "prep cook", "vegetable prep", "ingredient preparation"]
+        "description": "Preparing food ingredients in commercial kitchens for human consumption including mise en place, vegetable preparation, and basic cooking techniques.",
+        "keywords": ['food preparation', 'mise en place', 'commercial kitchen', 'human consumption', 'ingredient preparation', 'cooking preparation', 'kitchen prep']
     },
     "catering": {
         "name": "Catering Services",
@@ -2721,8 +2721,8 @@ SKILL_FAMILIES = {
     "food_beverage_service": {
         "name": "Food Beverage Service",
         "domain": "hospitality_tourism",
-        "description": "Providing food and beverage service in restaurants including table service, order taking, and customer care",
-        "keywords": ["food service", "beverage service", "waiter", "waitress", "table service", "restaurant service", "F&B service"]
+        "description": "Providing food and beverage service to human restaurant guests and diners including table service, order taking, wine service, and customer hospitality.",
+        "keywords": ['food service', 'beverage service', 'restaurant service', 'table service', 'waiter', 'waitress', 'human guests', 'hospitality', 'dining service']
     },
     "barista": {
         "name": "Barista Skills",
@@ -2765,8 +2765,8 @@ SKILL_FAMILIES = {
     "housekeeping": {
         "name": "Hotel Housekeeping",
         "domain": "hospitality_tourism",
-        "description": "Providing hotel housekeeping services including room cleaning, bed making, and housekeeping standards",
-        "keywords": ["housekeeping", "room cleaning", "hotel cleaning", "room attendant", "housekeeping attendant", "bed making", "room servicing"]
+        "description": "Providing hotel housekeeping services in hotels and resorts including guest room cleaning, bed making, bathroom sanitising, and housekeeping standards for hotel guests.",
+        "keywords": ['hotel housekeeping', 'room attendant', 'hotel cleaning', 'guest rooms', 'bed making', 'hotel standards', 'resort housekeeping', 'room service']
     },
     "hotel_operations": {
         "name": "Hotel Operations Management",
@@ -2831,8 +2831,8 @@ SKILL_FAMILIES = {
     "food_safety": {
         "name": "Food Safety",
         "domain": "hospitality_tourism",
-        "description": "Implementing food safety practices including HACCP, food handling, and hygiene compliance.",
-        "keywords": ["food safety", "food hygiene", "food handling", "HACCP", "food safety supervisor", "temperature control", "food handler"]
+        "description": "Implementing food safety practices in commercial kitchens and food businesses including HACCP, food handling for human consumption, temperature control, and hygiene compliance.",
+        "keywords": ['food safety', 'HACCP', 'food handling', 'human consumption', 'food hygiene', 'temperature control', 'food compliance', 'kitchen safety']
     },
     
     # ═══════════════════════════════════════════════════════════════════════════
@@ -3125,14 +3125,14 @@ SKILL_FAMILIES = {
     "hairdressing": {
         "name": "Hairdressing Styling",
         "domain": "retail_services",
-        "description": "Cutting and styling hair including haircuts, blow-drying, styling techniques, and hair treatments",
-        "keywords": ["hairdressing", "hairdresser", "hair cutting", "hair styling", "hair colour", "salon", "haircut", "balayage"]
+        "description": "Cutting and styling hair for human clients including haircuts, blow-drying, styling techniques, and hair treatments in salons and barbershops.",
+        "keywords": ['hairdressing', 'human clients', 'haircuts', 'styling', 'blow-drying', 'salon', 'hair stylist', 'hair treatments']
     },
     "barbering": {
         "name": "Barbering Services",
         "domain": "retail_services",
-        "description": "Providing barbering services including men's haircuts, shaving, beard trimming, and grooming",
-        "keywords": ["barbering", "barber", "men's haircut", "fade", "beard trim", "barber shop", "clipper cut", "shave"]
+        "description": "Providing barbering services for human clients including men's haircuts, shaving, beard trimming, and grooming in barbershops.",
+        "keywords": ['barbering', 'human clients', "men's haircuts", 'shaving', 'beard trimming', 'barbershop', 'male grooming', 'barber']
     },
     "hair_colouring": {
         "name": "Hair Colouring",
@@ -3143,8 +3143,8 @@ SKILL_FAMILIES = {
     "beauty_therapy": {
         "name": "Beauty Therapy",
         "domain": "retail_services",
-        "description": "Providing beauty treatments including facials, skin treatments, body treatments, and beauty therapy",
-        "keywords": ["beauty therapy", "beauty therapist", "facial", "skincare", "beauty treatment", "beauty salon", "spa treatment"]
+        "description": "Providing beauty treatments for human clients including facials, skin treatments, body treatments, and beauty therapy in salons and spas.",
+        "keywords": ['beauty therapy', 'human clients', 'facials', 'skin treatments', 'body treatments', 'salon', 'spa', 'beautician']
     },
     "nail_services": {
         "name": "Nail Services",
@@ -3167,8 +3167,8 @@ SKILL_FAMILIES = {
     "massage_therapy": {
         "name": "Massage Therapy",
         "domain": "retail_services",
-        "description": "Providing massage therapy including remedial massage, relaxation massage, and therapeutic bodywork",
-        "keywords": ["massage", "massage therapy", "remedial massage", "relaxation massage", "massage therapist", "deep tissue", "sports massage"]
+        "description": "Providing massage therapy for human clients including remedial massage, relaxation massage, therapeutic bodywork, and soft tissue therapy.",
+        "keywords": ['massage therapy', 'human clients', 'remedial massage', 'relaxation massage', 'therapeutic massage', 'bodywork', 'soft tissue therapy']
     },
     "makeup_artistry": {
         "name": "Makeup Artistry",
@@ -3201,8 +3201,8 @@ SKILL_FAMILIES = {
     "funeral_services": {
         "name": "Funeral Services",
         "domain": "retail_services",
-        "description": "Providing funeral services including funeral directing, mortuary work, and bereavement support",
-        "keywords": ["funeral", "funeral director", "funeral services", "mortuary", "embalming", "burial", "cremation", "bereavement"]
+        "description": "Providing funeral services for deceased humans including funeral directing, mortuary work, bereavement support, and funeral ceremony coordination.",
+        "keywords": ['funeral services', 'deceased humans', 'funeral directing', 'mortuary', 'bereavement support', 'funeral director', 'funeral ceremony', 'death care']
     },
     
     # Locksmith
@@ -3217,8 +3217,8 @@ SKILL_FAMILIES = {
     "dry_cleaning": {
         "name": "Dry Cleaning",
         "domain": "retail_services",
-        "description": "Providing dry cleaning services including garment care, stain removal, and laundry processing",
-        "keywords": ["dry cleaning", "laundry", "pressing", "ironing", "garment care", "commercial laundry", "laundromat"]
+        "description": "Providing dry cleaning services for human customers' garments including garment care, stain removal, pressing, and laundry processing.",
+        "keywords": ['dry cleaning', 'human customers', 'garment care', 'stain removal', 'laundry', 'pressing', 'garment cleaning', 'textile care']
     },
     
     # ═══════════════════════════════════════════════════════════════════════════
@@ -3235,8 +3235,8 @@ SKILL_FAMILIES = {
     "crowd_control": {
         "name": "Crowd Control",
         "domain": "public_safety",
-        "description": "Managing crowds at events and venues including crowd safety, barrier control, and event security",
-        "keywords": ["crowd control", "crowd management", "bouncer", "door security", "event security", "venue security"]
+        "description": "Managing crowds of people at events and venues including crowd safety, barrier control, event security, and public gathering management.",
+        "keywords": ['crowd control', 'crowd management', 'human crowds', 'event security', 'barrier control', 'public safety', 'venue security', 'event management']
     },
     "cctv_monitoring": {
         "name": "CCTV Surveillance",
@@ -3297,8 +3297,8 @@ SKILL_FAMILIES = {
     "lifesaving": {
         "name": "Lifeguarding Services",
         "domain": "public_safety",
-        "description": "Providing lifeguard services at pools and beaches including water rescue, CPR, and aquatic safety",
-        "keywords": ["lifesaving", "lifeguard", "pool lifeguard", "surf lifesaving", "beach patrol", "water rescue", "aquatic safety"]
+        "description": "Providing lifeguard services at pools and beaches for human swimmers including water rescue, CPR, first aid, and aquatic safety supervision.",
+        "keywords": ['lifeguarding', 'lifesaver', 'human swimmers', 'water rescue', 'CPR', 'pool safety', 'beach safety', 'aquatic safety']
     },
     
     # Defence
@@ -3319,8 +3319,8 @@ SKILL_FAMILIES = {
     "corrections": {
         "name": "Corrections Custodial",
         "domain": "public_safety",
-        "description": "Working in correctional facilities including prisoner supervision, security, and rehabilitation programs",
-        "keywords": ["corrections", "correctional officer", "prison", "custodial", "correctional services", "jail", "detention"]
+        "description": "Working in correctional facilities with human prisoners including prisoner supervision, correctional security, inmate rehabilitation programs, and custodial operations.",
+        "keywords": ['corrections', 'correctional', 'human prisoners', 'prison', 'custodial', 'inmate supervision', 'prisoner rehabilitation', 'correctional officer']
     },
     
     # Traffic & Road Safety
@@ -3631,8 +3631,8 @@ SKILL_FAMILIES = {
     "food_testing": {
         "name": "Food Testing",
         "domain": "science_technical",
-        "description": "Testing food products in laboratories for safety, quality, and nutritional analysis including microbiological and chemical testing.",
-        "keywords": ["food testing", "food analysis", "food safety testing", "food quality", "nutritional analysis", "food laboratory"]
+        "description": "Testing food products for human consumption in laboratories including microbiological testing, chemical analysis, nutritional analysis, and food safety testing.",
+        "keywords": ['food testing', 'human consumption', 'food safety', 'microbiological testing', 'nutritional analysis', 'food laboratory', 'food quality', 'food science']
     },
     "sensory_evaluation": {
         "name": "Sensory Evaluation",
@@ -3667,8 +3667,8 @@ SKILL_FAMILIES = {
     "animal_research": {
         "name": "Animal Research",
         "domain": "science_technical",
-        "description": "Working with laboratory animals in research facilities including animal husbandry, breeding colonies, behavior monitoring, species behavior, behavioral assessment, pup fostering, mother-pup interactions, bonding assessment, weaning, and animal ethics compliance.",
-        "keywords": ['animal research', 'laboratory animals', 'animal technician', 'vivarium', 'animal breeding', 'animal behavior', 'animal behaviour', 'species behavior', 'behavioral assessment', 'pup fostering', 'mother pup bonding', 'bonding monitoring', 'pup interactions', 'litter management', 'animal husbandry', 'foster mother', 'pup care']
+        "description": "Working with laboratory animals in research facilities including animal husbandry, breeding colonies, behaviour monitoring, animal welfare, and research animal ethics. Laboratory animals only.",
+        "keywords": ['animal research', 'laboratory animals', 'research animals', 'breeding colonies', 'animal husbandry', 'animal ethics', 'research facility', 'animal welfare']
     },
     
     # Forensics
@@ -3687,134 +3687,134 @@ SKILL_FAMILIES = {
     "personal_training": {
         "name": "Personal Training",
         "domain": "sport_recreation",
-        "description": "Providing personal fitness training including exercise prescription, motivation, and one-on-one coaching",
-        "keywords": ["personal training", "personal trainer", "PT", "fitness training", "one-on-one training", "fitness coach"]
+        "description": "Providing personal fitness training for human gym clients including exercise prescription, motivation, goal setting, and one-on-one coaching in fitness centres. Human fitness only.",
+        "keywords": ['personal training', 'personal trainer', 'PT', 'fitness training', 'gym trainer', 'human fitness', 'exercise prescription', 'fitness coaching', 'client training']
     },
     "group_fitness": {
         "name": "Group Fitness Instruction",
         "domain": "sport_recreation",
-        "description": "Instructing group fitness classes including aerobics, HIIT, spin, and group exercise programming",
-        "keywords": ["group fitness", "group exercise", "fitness class", "aerobics", "spin class", "HIIT", "circuit class"]
+        "description": "Instructing group fitness classes for human participants including aerobics, HIIT, spin, body pump, and group exercise programming in gyms and fitness centres.",
+        "keywords": ['group fitness', 'aerobics', 'HIIT', 'spin class', 'group exercise', 'fitness instructor', 'human participants', 'gym classes', 'body pump']
     },
     "gym_instruction": {
         "name": "Gym Instruction",
         "domain": "sport_recreation",
-        "description": "Providing gym floor instruction including equipment induction, exercise technique, and member support",
-        "keywords": ["gym instruction", "gym instructor", "gym floor", "fitness instruction", "weights", "resistance training"]
+        "description": "Providing gym floor instruction for human gym members including equipment induction, exercise technique coaching, and member support in fitness facilities.",
+        "keywords": ['gym instruction', 'gym floor', 'fitness instructor', 'equipment induction', 'human members', 'gym support', 'exercise technique', 'fitness facility']
     },
     "strength_conditioning": {
         "name": "Strength Conditioning",
         "domain": "sport_recreation",
-        "description": "Training athletes in strength and conditioning including periodisation, power, and athletic performance",
-        "keywords": ["strength and conditioning", "S&C", "athletic training", "power training", "sports conditioning"]
+        "description": "Training human athletes in strength and conditioning including periodisation, power development, speed training, and athletic performance for sports teams and individuals.",
+        "keywords": ['strength conditioning', 'S&C', 'athletic training', 'human athletes', 'periodisation', 'power training', 'sports performance', 'athletic development']
     },
     "yoga_instruction": {
         "name": "Yoga Instruction",
         "domain": "sport_recreation",
-        "description": "Teaching yoga classes including asanas, breathing, meditation, and various yoga styles",
-        "keywords": ["yoga", "yoga instructor", "yoga teacher", "Hatha", "Vinyasa", "yoga class", "asana"]
+        "description": "Teaching yoga classes to human students including asanas, pranayama breathing, meditation techniques, and various yoga styles in studios or gyms.",
+        "keywords": ['yoga', 'yoga instruction', 'asanas', 'pranayama', 'meditation', 'human students', 'yoga teacher', 'yoga studio', 'yoga styles']
     },
     "pilates_instruction": {
         "name": "Pilates Instruction",
         "domain": "sport_recreation",
-        "description": "Teaching Pilates including mat work, reformer, and clinical Pilates instruction",
-        "keywords": ["Pilates", "Pilates instructor", "reformer", "mat Pilates", "clinical Pilates", "Pilates class"]
+        "description": "Teaching Pilates to human clients including mat work, reformer exercises, and clinical Pilates instruction in studios or rehabilitation settings.",
+        "keywords": ['pilates', 'pilates instruction', 'reformer', 'mat pilates', 'clinical pilates', 'human clients', 'pilates studio', 'core strength']
     },
     
     # Aquatics
     "swimming_instruction": {
         "name": "Swimming Instruction",
         "domain": "sport_recreation",
-        "description": "Teaching swimming including learn-to-swim, stroke correction, and water safety education",
-        "keywords": ["swimming instruction", "swim teacher", "learn to swim", "swimming lessons", "swim coach", "swim school"]
+        "description": "Teaching swimming to human learners including learn-to-swim programs for children and adults, stroke correction, squad coaching, and water safety education.",
+        "keywords": ['swimming instruction', 'learn to swim', 'swim teacher', 'stroke correction', 'human learners', 'swim coaching', 'water safety', 'swimming lessons']
     },
     "pool_operations": {
         "name": "Aquatic Facility Operations",
         "domain": "sport_recreation",
-        "description": "Operating swimming pool facilities including water quality, plant room, and aquatic facility management",
-        "keywords": ["pool operations", "pool plant", "pool maintenance", "pool chemistry", "aquatic facility", "pool technician"]
+        "description": "Operating swimming pool facilities for human swimmers including water quality management, pool plant room operation, aquatic facility maintenance, and pool safety.",
+        "keywords": ['pool operations', 'swimming pool', 'human swimmers', 'water quality', 'plant room', 'aquatic facility', 'pool maintenance', 'pool safety']
     },
     "aquatic_programming": {
         "name": "Aquatic Programs",
         "domain": "sport_recreation",
-        "description": "Developing aquatic programs including water aerobics, squad training, and aquatic activities",
-        "keywords": ["aquatic programs", "aqua aerobics", "aquatic fitness", "water exercise", "hydrotherapy", "aquatic therapy"]
+        "description": "Developing aquatic programs for human participants including water aerobics, aqua fitness, squad training, and therapeutic aquatic activities in pools.",
+        "keywords": ['aquatic programming', 'water aerobics', 'aqua fitness', 'squad training', 'human participants', 'pool programs', 'aquatic activities']
     },
     
     # Sport
     "sports_coaching": {
         "name": "Sports Coaching",
         "domain": "sport_recreation",
-        "description": "Coaching sports including skill development, team coaching, and athletic development",
-        "keywords": ["sports coaching", "coach", "sports coach", "team coaching", "athletic coaching", "sports development"]
+        "description": "Coaching human athletes in sports including skill development, team coaching, game tactics, and athletic development across various sports.",
+        "keywords": ['sports coaching', 'coach', 'human athletes', 'team coaching', 'skill development', 'athletic development', 'sports training', 'game tactics']
     },
     "sports_officiating": {
         "name": "Sports Officiating",
         "domain": "sport_recreation",
-        "description": "Officiating sports as referee or umpire including rules application and match officiating",
-        "keywords": ["officiating", "referee", "umpire", "sports official", "refereeing", "match official", "rules"]
+        "description": "Officiating human sports competitions as referee or umpire including rules application, match control, and fair play enforcement.",
+        "keywords": ['sports officiating', 'referee', 'umpire', 'human sports', 'match official', 'rules enforcement', 'fair play', 'sports rules']
     },
     "sports_administration": {
         "name": "Sports Administration",
         "domain": "sport_recreation",
-        "description": "Administering sports organisations including club management, events, and sports governance",
-        "keywords": ["sports administration", "sports management", "club administration", "sports club", "sport governance"]
+        "description": "Administering human sports organisations including club management, competition scheduling, events coordination, and sports governance.",
+        "keywords": ['sports administration', 'club management', 'human sports', 'sports governance', 'competition management', 'sports events', 'club secretary']
     },
     "athlete_management": {
         "name": "Athlete Management",
         "domain": "sport_recreation",
-        "description": "Managing athletes including performance support, career management, and elite sport coordination",
-        "keywords": ["athlete management", "athlete", "sports performance", "high performance", "elite sport", "athlete development"]
+        "description": "Managing human athletes including performance support, career management, sponsorship, contract negotiation, and elite sport coordination.",
+        "keywords": ['athlete management', 'human athletes', 'sports management', 'elite sport', 'athlete career', 'sponsorship', 'performance support']
     },
     
     # Outdoor
     "outdoor_recreation": {
         "name": "Outdoor Recreation",
         "domain": "sport_recreation",
-        "description": "Leading outdoor recreation activities including bushwalking, camping, and adventure activities",
-        "keywords": ["outdoor recreation", "outdoor activities", "adventure", "outdoor education", "bushwalking", "camping"]
+        "description": "Leading outdoor recreation activities for human participants including bushwalking, camping, adventure activities, and outdoor education programs.",
+        "keywords": ['outdoor recreation', 'human participants', 'bushwalking', 'camping', 'adventure activities', 'outdoor education', 'outdoor leader', 'recreation']
     },
     "rock_climbing": {
         "name": "Climbing Abseiling Instruction",
         "domain": "sport_recreation",
-        "description": "Instructing climbing and abseiling including indoor climbing, outdoor guiding, and rope techniques",
-        "keywords": ["rock climbing", "climbing", "abseiling", "bouldering", "climbing instruction", "belay", "climbing wall"]
+        "description": "Instructing human participants in climbing and abseiling including indoor climbing walls, outdoor rock climbing, rope techniques, and climbing safety.",
+        "keywords": ['rock climbing', 'climbing instruction', 'abseiling', 'human participants', 'climbing wall', 'rope techniques', 'outdoor climbing', 'climbing safety']
     },
     "kayaking_canoeing": {
         "name": "Paddle Sports Instruction",
         "domain": "sport_recreation",
-        "description": "Instructing paddle sports including kayaking, canoeing, SUP, and water safety",
-        "keywords": ["kayaking", "canoeing", "paddling", "kayak", "canoe", "white water", "sea kayaking"]
+        "description": "Instructing human participants in paddle sports including kayaking, canoeing, stand-up paddleboarding (SUP), and water safety for recreational paddlers.",
+        "keywords": ['kayaking', 'canoeing', 'SUP', 'paddle sports', 'human participants', 'paddling instruction', 'water safety', 'recreational paddling']
     },
     "scuba_diving": {
         "name": "Scuba Diving Instruction",
         "domain": "sport_recreation",
-        "description": "Instructing scuba diving including certification courses, dive guiding, and dive operations",
-        "keywords": ["scuba diving", "diving", "dive instructor", "PADI", "scuba", "dive master", "underwater"]
+        "description": "Instructing human divers in scuba diving including certification courses (PADI, SSI), dive guiding, and dive operations for recreational divers.",
+        "keywords": ['scuba diving', 'PADI', 'SSI', 'dive instructor', 'human divers', 'certification', 'dive guiding', 'recreational diving']
     },
     "skiing_snowboarding": {
         "name": "Snow Sports Instruction",
         "domain": "sport_recreation",
-        "description": "Instructing snow sports including skiing, snowboarding, and snow sport techniques",
-        "keywords": ["skiing", "snowboarding", "ski instructor", "snow sports", "ski school", "snowboard instructor"]
+        "description": "Instructing human participants in snow sports including skiing, snowboarding, technique development, and mountain safety at ski resorts.",
+        "keywords": ['skiing', 'snowboarding', 'snow sports', 'ski instructor', 'human participants', 'ski resort', 'snow safety', 'ski technique']
     },
     "golf_instruction": {
         "name": "Golf Coaching",
         "domain": "sport_recreation",
-        "description": "Coaching golf including swing technique, course management, and golf instruction",
-        "keywords": ["golf", "golf instruction", "golf coach", "golf pro", "golf lesson", "golf swing", "golf teaching"]
+        "description": "Coaching human golfers including swing technique, short game, course management, and golf instruction at clubs and driving ranges.",
+        "keywords": ['golf coaching', 'golf instruction', 'human golfers', 'swing technique', 'golf pro', 'course management', 'driving range', 'golf lessons']
     },
     "tennis_coaching": {
         "name": "Tennis Coaching",
         "domain": "sport_recreation",
-        "description": "Coaching tennis including stroke technique, tactics, and tennis player development",
-        "keywords": ["tennis", "tennis coaching", "tennis coach", "tennis instruction", "tennis lesson", "racquet sports"]
+        "description": "Coaching human tennis players including stroke technique, match tactics, and player development at tennis clubs and academies.",
+        "keywords": ['tennis coaching', 'tennis instruction', 'human players', 'stroke technique', 'tennis club', 'player development', 'tennis academy']
     },
     "martial_arts": {
         "name": "Martial Arts Instruction",
         "domain": "sport_recreation",
-        "description": "Teaching martial arts including technique, self-defence, and martial arts discipline",
-        "keywords": ["martial arts", "karate", "taekwondo", "judo", "jiu-jitsu", "martial arts instructor", "self-defence"]
+        "description": "Teaching martial arts to human students including technique development, self-defence, grading, and martial arts discipline across various styles.",
+        "keywords": ['martial arts', 'self-defence', 'human students', 'karate', 'taekwondo', 'judo', 'martial arts instructor', 'grading', 'discipline']
     },
     "greenhouse_hydroponics": {
         "name": "Controlled Environment Horticulture",
@@ -3843,8 +3843,8 @@ SKILL_FAMILIES = {
     "alpaca_llama": {
         "name": "Alpaca Llama Husbandry",
         "domain": "agriculture_primary",
-        "description": "Managing alpacas or llamas including breeding, birthing (unpacking), cria care, fibre production, and camelid husbandry.",
-        "keywords": ['alpaca', 'llama', 'alpaca husbandry', 'alpaca breeding', 'cria', 'unpacking', 'camelid', 'fleece', 'alpaca shearing', 'fibre animal']
+        "description": "Managing alpacas or llamas on farms including camelid breeding, birthing (unpacking), cria care, fibre production, and camelid husbandry. Camelid animal husbandry.",
+        "keywords": ['alpaca', 'llama', 'camelid', 'cria care', 'fibre production', 'alpaca breeding', 'camelid husbandry', 'unpacking']
     },
     "mushroom_production": {
         "name": "Mushroom Cultivation",
@@ -4077,14 +4077,14 @@ SKILL_FAMILIES = {
     "physical_education": {
         "name": "Physical Education",
         "domain": "education_training",
-        "description": "Teaching physical education including school sport, HPE, and fitness programs.",
-        "keywords": ['physical education', 'PE teacher', 'PE', 'school sport', 'HPE', 'health and physical education', 'sports teacher']
+        "description": "Teaching physical education to human school students including school sport, HPE curriculum, fitness programs, and movement skills for children and adolescents.",
+        "keywords": ['physical education', 'PE teacher', 'human students', 'school sport', 'HPE', 'fitness education', 'movement skills', 'school fitness']
     },
     "tutoring": {
         "name": "Tutoring Services",
         "domain": "education_training",
-        "description": "Providing private tutoring for school students including homework help, exam preparation, academic coaching, and subject-specific tutoring.",
-        "keywords": ['tutoring', 'private tutor', 'academic coaching', 'homework help', 'exam preparation', 'student tutoring', 'school tutoring']
+        "description": "Providing private tutoring for human school students including homework help, exam preparation, academic coaching, and subject-specific tutoring.",
+        "keywords": ['tutoring', 'private tutor', 'human students', 'homework help', 'exam preparation', 'academic coaching', 'school tutoring', 'student tutoring']
     },
     "stem_education": {
         "name": "STEM Education",
@@ -4107,8 +4107,8 @@ SKILL_FAMILIES = {
     "perioperative_nursing": {
         "name": "Perioperative Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care in operating theatres including scrub, scout, anaesthetic, and PACU nursing.",
-        "keywords": ['perioperative', 'operating theatre', 'theatre nurse', 'scrub nurse', 'scout nurse', 'anaesthetic nurse', 'recovery', 'PACU']
+        "description": "Providing nursing care for human patients in operating theatres including scrub nursing, scout nursing, anaesthetic nursing, and PACU recovery nursing.",
+        "keywords": ['perioperative nursing', 'human patients', 'operating theatre', 'scrub nurse', 'scout nurse', 'anaesthetic', 'PACU', 'surgical nursing']
     },
     "midwifery": {
         "name": "Midwifery Services",
@@ -4119,8 +4119,8 @@ SKILL_FAMILIES = {
     "continence_care": {
         "name": "Continence Care",
         "domain": "healthcare_clinical",
-        "description": "Providing continence care for patients including bladder and bowel assessment, continence aids, incontinence management, and clinical continence nursing.",
-        "keywords": ['continence care', 'incontinence', 'bladder care', 'bowel care', 'continence nursing', 'continence aids', 'patient continence', 'clinical continence']
+        "description": "Providing continence care for human patients including bladder and bowel assessment, continence aids, incontinence management, and clinical continence nursing.",
+        "keywords": ['continence care', 'human patients', 'incontinence', 'bladder care', 'bowel care', 'continence aids', 'continence nursing']
     },
     "stomal_therapy": {
         "name": "Stomal Therapy",
@@ -4131,32 +4131,32 @@ SKILL_FAMILIES = {
     "diabetes_education": {
         "name": "Diabetes Education",
         "domain": "healthcare_clinical",
-        "description": "Providing diabetes education including blood glucose management, insulin education, and diabetes self-management.",
-        "keywords": ['diabetes education', 'diabetes educator', 'diabetes management', 'blood glucose', 'insulin', 'HbA1c', 'diabetes care']
+        "description": "Providing diabetes education for human patients including blood glucose management, insulin education, diabetes self-management, and lifestyle counselling.",
+        "keywords": ['diabetes education', 'human patients', 'blood glucose', 'insulin', 'diabetes self-management', 'diabetes educator', 'diabetes care']
     },
     "practice_nursing": {
         "name": "Practice Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care in general practice clinics including immunisations, wound care, and chronic disease management.",
-        "keywords": ['practice nurse', 'practice nursing', 'GP nursing', 'clinic nurse', 'immunisation', 'health assessment', 'chronic disease management']
+        "description": "Providing nursing care for human patients in general practice clinics including immunisations, wound care, chronic disease management, and preventive health.",
+        "keywords": ['practice nursing', 'human patients', 'general practice', 'immunisation', 'wound care', 'chronic disease', 'GP clinic', 'practice nurse']
     },
     "telehealth": {
         "name": "Telehealth Services",
         "domain": "healthcare_clinical",
-        "description": "Delivering healthcare services via telehealth including virtual consultations and remote patient monitoring.",
-        "keywords": ['telehealth', 'telemedicine', 'virtual consultation', 'remote health', 'video consultation', 'telehealth nursing']
+        "description": "Delivering healthcare services to human patients via telehealth including virtual consultations, remote patient monitoring, video consultations, and digital health.",
+        "keywords": ['telehealth', 'human patients', 'virtual consultations', 'remote monitoring', 'video consultations', 'digital health', 'telemedicine']
     },
     "respiratory_care": {
         "name": "Respiratory Care",
         "domain": "healthcare_clinical",
-        "description": "Providing respiratory care including oxygen therapy, CPAP, nebulisers, and respiratory assessment.",
-        "keywords": ['respiratory care', 'oxygen therapy', 'nebuliser', 'CPAP', 'BiPAP', 'respiratory', 'spirometry', 'peak flow']
+        "description": "Providing respiratory care for human patients including oxygen therapy, CPAP therapy, nebuliser treatment, respiratory assessment, and pulmonary rehabilitation.",
+        "keywords": ['respiratory care', 'human patients', 'oxygen therapy', 'CPAP', 'nebuliser', 'respiratory assessment', 'pulmonary', 'breathing support']
     },
     "lymphoedema": {
         "name": "Lymphoedema Therapy",
         "domain": "healthcare_clinical",
-        "description": "Providing lymphoedema therapy including compression therapy, manual lymphatic drainage, and lymphoedema management.",
-        "keywords": ['lymphoedema', 'lymphedema', 'compression therapy', 'manual lymphatic drainage', 'MLD', 'compression garment', 'swelling']
+        "description": "Providing lymphoedema therapy for human patients including compression therapy, manual lymphatic drainage, lymphoedema management, and limb care.",
+        "keywords": ['lymphoedema', 'human patients', 'compression therapy', 'manual lymphatic drainage', 'MLD', 'lymphoedema management', 'limb swelling']
     },
     "room_service": {
         "name": "Room Service",
@@ -4191,8 +4191,8 @@ SKILL_FAMILIES = {
     "butchery_hotel": {
         "name": "Institutional Butchery",
         "domain": "hospitality_tourism",
-        "description": "Large-scale meat preparation for hotels and institutions",
-        "keywords": ['hotel butchery', 'institutional butchery', 'meat preparation', 'portion control', 'carcass breakdown', 'meat fabrication']
+        "description": "Large-scale animal meat preparation for hotels, hospitals, and institutions including bulk meat cutting, portion control, and institutional meat service.",
+        "keywords": ['institutional butchery', 'animal meat', 'hotel butchery', 'bulk meat', 'portion control', 'large-scale meat', 'institutional catering']
     },
     "cad_cam": {
         "name": "CAD CAM Design",
@@ -4299,20 +4299,20 @@ SKILL_FAMILIES = {
     "skin_consultation": {
         "name": "Skin Analysis",
         "domain": "retail_services",
-        "description": "Analysing skin conditions and providing skincare consultations including product recommendations",
-        "keywords": ['skin consultation', 'skin analysis', 'skin assessment', 'skincare consultation', 'skin type', 'skin condition', 'dermascope']
+        "description": "Analysing skin conditions of human clients and providing skincare consultations including product recommendations and skin treatment plans.",
+        "keywords": ['skin consultation', 'human clients', 'skin analysis', 'skincare', 'product recommendations', 'skin treatment', 'beauty consultation']
     },
     "florist": {
         "name": "Floristry Design",
         "domain": "retail_services",
-        "description": "Creating floral arrangements including bouquets, installations, event floristry, and flower care",
-        "keywords": ['floristry', 'florist', 'floral design', 'flower arrangement', 'bouquet', 'floral', 'wedding flowers', 'flower shop']
+        "description": "Creating floral arrangements for human customers including bouquets, installations, event floristry, and cut flower care in florist shops.",
+        "keywords": ['floristry', 'florist', 'human customers', 'bouquets', 'floral arrangements', 'flowers', 'event floristry', 'flower shop', 'cut flowers']
     },
     "shoe_repair": {
         "name": "Shoe Repair",
         "domain": "retail_services",
-        "description": "Repairing footwear including sole replacement, heel repairs, and leather goods restoration",
-        "keywords": ['shoe repair', 'cobbler', 'shoe restoration', 'heel replacement', 'sole replacement', 'leather repair', 'shoe care']
+        "description": "Repairing human footwear including sole replacement, heel repairs, stitching, and leather goods restoration in cobbler shops.",
+        "keywords": ['shoe repair', 'human footwear', 'cobbler', 'sole replacement', 'heel repair', 'leather repair', 'footwear restoration', 'shoe restoration']
     },
     "watch_repair": {
         "name": "Watch Repair Horology",
@@ -4371,44 +4371,44 @@ SKILL_FAMILIES = {
     "dance_instruction": {
         "name": "Dance Instruction",
         "domain": "sport_recreation",
-        "description": "Teaching dance including ballet, contemporary, ballroom, and dance technique across styles",
-        "keywords": ['dance instruction', 'dance teacher', 'dance class', 'ballet teacher', 'hip hop', 'contemporary', 'ballroom', 'dance studio']
+        "description": "Teaching dance to human students including ballet, contemporary, ballroom, hip-hop, and dance technique across styles in studios and schools.",
+        "keywords": ['dance instruction', 'dance teacher', 'human students', 'ballet', 'contemporary', 'ballroom', 'dance studio', 'choreography']
     },
     "boxing_instruction": {
         "name": "Boxing Coaching",
         "domain": "sport_recreation",
-        "description": "Coaching boxing and combat sports including technique, fitness, and fight preparation",
-        "keywords": ['boxing', 'boxing coach', 'combat sports', 'MMA', 'kickboxing', 'Muay Thai', 'boxing training', 'fight training']
+        "description": "Coaching human boxers in boxing and combat sports including boxing technique, pad work, fitness training, and fight preparation.",
+        "keywords": ['boxing coaching', 'boxing instruction', 'human boxers', 'combat sports', 'pad work', 'boxing technique', 'fight training', 'boxing fitness']
     },
     "triathlon_coaching": {
         "name": "Endurance Coaching",
         "domain": "sport_recreation",
-        "description": "Coaching triathlon and endurance sports including swim, bike, run, and endurance training",
-        "keywords": ['triathlon', 'triathlon coaching', 'endurance', 'marathon', 'Ironman', 'running coach', 'cycling coach', 'multisport']
+        "description": "Coaching human triathletes and endurance athletes including swim, bike, run training, periodisation, and endurance race preparation.",
+        "keywords": ['triathlon coaching', 'endurance coaching', 'human athletes', 'swim bike run', 'ironman', 'endurance training', 'race preparation']
     },
     "surf_instruction": {
         "name": "Surf Instruction",
         "domain": "sport_recreation",
-        "description": "Teaching surfing including wave selection, paddling, standing, and surf safety",
-        "keywords": ['surf instruction', 'surfing', 'surf lesson', 'surf coach', 'surf school', 'learn to surf', 'stand up paddle', 'SUP']
+        "description": "Teaching surfing to human learners including wave selection, paddling technique, standing up, board handling, and surf safety at beaches.",
+        "keywords": ['surf instruction', 'surf school', 'human learners', 'surfing lessons', 'wave selection', 'surf safety', 'beach', 'surfboard']
     },
     "gymnastics_coaching": {
         "name": "Gymnastics Coaching",
         "domain": "sport_recreation",
-        "description": "Coaching gymnastics including apparatus, floor, and gymnastics skill development",
-        "keywords": ['gymnastics', 'gymnastics coaching', 'gym coach', 'tumbling', 'apparatus', 'gymnastics class', 'acrobatics']
+        "description": "Coaching human gymnasts including apparatus work, floor routines, tumbling, and gymnastics skill development at gymnastics clubs.",
+        "keywords": ['gymnastics coaching', 'gymnastics instruction', 'human gymnasts', 'apparatus', 'floor', 'tumbling', 'gymnastics club']
     },
     "sports_massage": {
         "name": "Sports Massage",
         "domain": "sport_recreation",
-        "description": "Providing sports massage including pre-event, post-event, and athletic soft tissue therapy",
-        "keywords": ['sports massage', 'athletic massage', 'sports therapy', 'pre-event massage', 'post-event', 'muscle recovery', 'sports therapist']
+        "description": "Providing sports massage for human athletes including pre-event massage, post-event recovery, and athletic soft tissue therapy for sports injuries.",
+        "keywords": ['sports massage', 'human athletes', 'athletic massage', 'pre-event', 'post-event', 'soft tissue therapy', 'sports injury', 'recovery massage']
     },
     "horse_riding_instruction": {
         "name": "Equestrian Instruction",
         "domain": "sport_recreation",
-        "description": "Teaching horse riding including dressage, jumping, and equestrian skill development",
-        "keywords": ['horse riding instruction', 'riding lesson', 'equestrian coaching', 'riding school', 'pony club', 'dressage coaching', 'jumping coach']
+        "description": "Teaching horse riding to human riders including dressage, jumping, western riding, and equestrian skill development at riding schools.",
+        "keywords": ['horse riding instruction', 'equestrian instruction', 'human riders', 'dressage', 'jumping', 'riding school', 'horsemanship']
     },
     "smart_metering": {
         "name": "Smart Metering",
@@ -4480,8 +4480,8 @@ SKILL_FAMILIES = {
     "wildlife_rescue": {
         "name": "Wildlife Rescue",
         "domain": "agriculture_primary",
-        "description": "Rescuing and rehabilitating wildlife including injured animals, marine mammals, whale disentanglement, whale behaviour assessment, wildlife capture, chemical restraint, and animal release.",
-        "keywords": ['wildlife rescue', 'animal rescue', 'wildlife rehabilitation', 'whale rescue', 'whale behaviour', 'whale assessment', 'marine mammal', 'wildlife capture', 'chemical restraint', 'wildlife release', 'injured wildlife', 'fauna rescue', 'entanglement', 'whale disentanglement']
+        "description": "Rescuing and rehabilitating wildlife including injured native animals, marine mammals, whale disentanglement, whale behaviour assessment, wildlife capture, and animal release. Wild animal rescue only.",
+        "keywords": ['wildlife rescue', 'animal rescue', 'wildlife rehabilitation', 'whale rescue', 'marine mammal', 'injured wildlife', 'animal release', 'fauna rescue']
     },
     "indigenous_land_management": {
         "name": "Indigenous Land Management",
@@ -4540,8 +4540,8 @@ SKILL_FAMILIES = {
     "assistance_dog_training": {
         "name": "Assistance Dog Training",
         "domain": "agriculture_primary",
-        "description": "Training assistance dogs and handlers including guide dogs, service dogs, therapy dogs, operant conditioning, positive reinforcement, handler training, dog behaviour assessment, and assistance animal placement.",
-        "keywords": ['assistance dog', 'guide dog', 'service dog', 'therapy dog', 'handler training', 'dog training', 'operant conditioning', 'positive reinforcement', 'classical conditioning', 'dog behaviour', 'behavior selection', 'species behavior', 'assistance animal', 'dog placement', 'working dog']
+        "description": "Training assistance dogs and human handlers including guide dogs, service dogs, therapy dogs, operant conditioning, positive reinforcement, and assistance animal placement. Service animal training.",
+        "keywords": ['assistance dog', 'guide dog', 'service dog', 'therapy dog', 'handler training', 'dog training', 'operant conditioning', 'assistance animal']
     },
 
     "solution_architecture": {
@@ -5001,8 +5001,8 @@ FAMILY_ASSIGNMENT_CONFIG = {
     "max_retries": 3,
     # LLM Re-ranking settings (Top-K + LLM selection for better accuracy)
     "use_llm_reranking": True,  # Enable LLM re-ranking of top-K embedding candidates
-    "rerank_top_k": 5,          # Number of top candidates to consider for re-ranking
-    "rerank_similarity_threshold": 0.5,  # Min similarity for candidates to be re-ranked
+    "rerank_top_k": 3,          # Number of top candidates to consider for re-ranking
+    "rerank_similarity_threshold": 0.6,  # Min similarity for candidates to be re-ranked
 }
 
 # ============================================================================
