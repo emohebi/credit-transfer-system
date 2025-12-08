@@ -485,6 +485,7 @@ class SimilarityDeduplicator:
     """
     Deduplication with alternative title tracking
     Tracks duplicate skill names as alternative titles for the master skill
+    Also aggregates keywords and codes from duplicates
     """
     
     def __init__(self, config: Dict):
@@ -558,7 +559,9 @@ class SimilarityDeduplicator:
                             'index': idx,
                             'score': float(score),
                             'type': 'direct',
-                            'name': df.iloc[idx]['name']  # Track name for alternative title
+                            'name': df.iloc[idx]['name'],  # Track name for alternative title
+                            'code': df.iloc[idx].get('code', ''),  # Track code
+                            'keywords': df.iloc[idx].get('keywords', [])  # Track keywords
                         })
                     elif score >= self.partial_threshold:
                         if self._check_level_compatibility(df.iloc[query_idx], df.iloc[idx]):
@@ -567,7 +570,9 @@ class SimilarityDeduplicator:
                                 'index': idx,
                                 'score': float(score),
                                 'type': 'partial',
-                                'name': df.iloc[idx]['name']  # Track name for alternative title
+                                'name': df.iloc[idx]['name'],  # Track name for alternative title
+                                'code': df.iloc[idx].get('code', ''),  # Track code
+                                'keywords': df.iloc[idx].get('keywords', [])  # Track keywords
                             })
                 
                 if similar_indices:
@@ -590,7 +595,7 @@ class SimilarityDeduplicator:
         df_result['master_skill_id'] = df_result['skill_id']
         df_result['match_type'] = 'none'
         df_result['match_score'] = 0.0
-        df_result['alternative_titles'] = None  # NEW: Track alternative titles
+        df_result['alternative_titles'] = None  # Track alternative titles
         
         for group_id, (group, details) in enumerate(zip(duplicate_groups, duplicate_details)):
             master_idx = self._select_master_skill(df, group, details)
@@ -604,6 +609,8 @@ class SimilarityDeduplicator:
                 if match['index'] == master_idx:
                     details['matches'][i]['index'] = old_master_idx
                     details['matches'][i]['name'] = df.iloc[old_master_idx]['name']
+                    details['matches'][i]['code'] = df.iloc[old_master_idx].get('code', '')
+                    details['matches'][i]['keywords'] = df.iloc[old_master_idx].get('keywords', [])
             
             # Collect alternative titles (names of duplicate skills)
             alternative_titles = []
@@ -694,10 +701,37 @@ class SimilarityDeduplicator:
         logger.info(f"Duplicate groups: {df[df['duplicate_group'] >= 0]['duplicate_group'].nunique()}")
         logger.info(f"Alternative titles tracked: {alt_titles_count}")
     
+    def _extract_keywords_list(self, keywords) -> List[str]:
+        """Safely extract keywords as a list"""
+        if isinstance(keywords, list):
+            return list(keywords)
+        elif pd.notna(keywords) and keywords != '':
+            if isinstance(keywords, str):
+                try:
+                    import json
+                    parsed = json.loads(keywords.replace("'", '"'))
+                    if isinstance(parsed, list):
+                        return parsed
+                except:
+                    pass
+                import re
+                return [k.strip() for k in re.split(r',|;|\||\n', keywords) if k.strip()]
+            return [str(keywords)]
+        return []
+    
+    def _extract_code_list(self, code) -> List[str]:
+        """Safely extract code as a list"""
+        if isinstance(code, list):
+            return list(code)
+        elif pd.notna(code) and code != '':
+            return [str(code)]
+        return []
+    
     def merge_duplicates(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Merge duplicate skills intelligently
         Preserves alternative titles from duplicates
+        Aggregates keywords and codes from duplicates into all_related_kw and all_related_codes
         """
         # Keep non-duplicates
         unique_df = df[~df['is_duplicate']].copy()
@@ -748,6 +782,60 @@ class SimilarityDeduplicator:
                 # Remove duplicates and store
                 unique_df.at[master_idx, 'alternative_titles'] = list(set(all_alt_titles))
                 
+                # ============================================================
+                # AGGREGATE keywords and codes from duplicates
+                # ============================================================
+                
+                # Collect all keywords from the group
+                all_keywords = []
+                existing_kw = unique_df.at[master_idx, 'all_related_kw'] if 'all_related_kw' in unique_df.columns else []
+                if isinstance(existing_kw, list):
+                    all_keywords.extend(existing_kw)
+                
+                for idx, row in group_df.iterrows():
+                    # Get keywords from each skill in the group
+                    skill_kw = self._extract_keywords_list(row.get('keywords', []))
+                    all_keywords.extend(skill_kw)
+                    
+                    # Also get from all_related_kw if present
+                    if 'all_related_kw' in row and isinstance(row.get('all_related_kw'), list):
+                        all_keywords.extend(row['all_related_kw'])
+                
+                # Remove duplicates while preserving order
+                seen_kw = set()
+                unique_keywords = []
+                for kw in all_keywords:
+                    if kw and kw not in seen_kw:
+                        seen_kw.add(kw)
+                        unique_keywords.append(kw)
+                
+                unique_df.at[master_idx, 'all_related_kw'] = unique_keywords
+                
+                # Collect all codes from the group
+                all_codes = []
+                existing_codes = unique_df.at[master_idx, 'all_related_codes'] if 'all_related_codes' in unique_df.columns else []
+                if isinstance(existing_codes, list):
+                    all_codes.extend(existing_codes)
+                
+                for idx, row in group_df.iterrows():
+                    # Get code from each skill in the group
+                    skill_code = self._extract_code_list(row.get('code', ''))
+                    all_codes.extend(skill_code)
+                    
+                    # Also get from all_related_codes if present
+                    if 'all_related_codes' in row and isinstance(row.get('all_related_codes'), list):
+                        all_codes.extend(row['all_related_codes'])
+                
+                # Remove duplicates while preserving order
+                seen_codes = set()
+                unique_codes = []
+                for code in all_codes:
+                    if code and code not in seen_codes:
+                        seen_codes.add(code)
+                        unique_codes.append(code)
+                
+                unique_df.at[master_idx, 'all_related_codes'] = unique_codes
+                
                 # Add metadata
                 unique_df.at[master_idx, 'merged_from'] = [[id_] for id_ in group_df['skill_id'].tolist()]
                 unique_df.loc[master_idx, 'merge_count'] = len(group_df)
@@ -759,5 +847,18 @@ class SimilarityDeduplicator:
             lambda x: len(x) if isinstance(x, list) else 0
         ).sum()
         logger.info(f"Total alternative titles preserved: {total_alt_titles}")
+        
+        # Log aggregation statistics
+        if 'all_related_kw' in unique_df.columns:
+            total_kw = unique_df['all_related_kw'].apply(
+                lambda x: len(x) if isinstance(x, list) else 0
+            ).sum()
+            logger.info(f"Total aggregated keywords after merge: {total_kw}")
+        
+        if 'all_related_codes' in unique_df.columns:
+            total_codes = unique_df['all_related_codes'].apply(
+                lambda x: len(x) if isinstance(x, list) else 0
+            ).sum()
+            logger.info(f"Total aggregated codes after merge: {total_codes}")
         
         return unique_df.reset_index(drop=True)

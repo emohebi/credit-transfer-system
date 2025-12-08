@@ -2,6 +2,7 @@
 Multi-Dimensional Taxonomy Hierarchy Builder
 Builds hierarchy: Domain → Family → Group (by Level) → Atomic Skills
 Includes alternative titles from deduplication
+Includes all_related_kw and all_related_codes aggregated from duplicates
 """
 import logging
 import numpy as np
@@ -176,17 +177,18 @@ class MultiDimensionalTaxonomyBuilder:
             level = int(level)
         except:
             level = 3
+        return level
         
-        if level <= 2:
-            return 1  # Foundational
-        elif level <= 3:
-            return 2  # Basic
-        elif level <= 4:
-            return 3  # Intermediate
-        elif level <= 5:
-            return 4  # Advanced
-        else:
-            return 5  # Expert
+        # if level <= 2:
+        #     return 1  # Foundational
+        # elif level <= 3:
+        #     return 2  # Basic
+        # elif level <= 4:
+        #     return 3  # Intermediate
+        # elif level <= 5:
+        #     return 4  # Advanced
+        # else:
+        #     return 5  # Expert
     
     def _calculate_transferability(self, row: pd.Series) -> str:
         """Calculate transferability index for a skill"""
@@ -356,11 +358,11 @@ class MultiDimensionalTaxonomyBuilder:
         complexity_levels = sorted(family_df['complexity_level'].unique())
         
         level_names = {
-            1: "Foundational",
-            2: "Basic", 
-            3: "Intermediate",
-            4: "Advanced",
-            5: "Expert"
+            1: "FOLLOW",
+            2: "ASSIST", 
+            3: "APPLY",
+            4: "ENABLE",
+            5: "ENSURE_ADVISE"
         }
         
         for complexity_level in complexity_levels:
@@ -423,7 +425,7 @@ class MultiDimensionalTaxonomyBuilder:
         return ""
     
     def _create_skills_list(self, skills_df: pd.DataFrame) -> List[Dict]:
-        """Create list of skill dictionaries with full metadata including alternative titles"""
+        """Create list of skill dictionaries with full metadata including alternative titles and aggregated data"""
         skills = []
         
         for _, skill in skills_df.iterrows():
@@ -436,6 +438,12 @@ class MultiDimensionalTaxonomyBuilder:
                 # Alternative titles from deduplication
                 "alternative_titles": skill.get('alternative_titles', []) if isinstance(skill.get('alternative_titles'), list) else [],
                 
+                # Aggregated keywords from exact duplicates and semantic duplicates
+                "all_related_kw": skill.get('all_related_kw', []) if isinstance(skill.get('all_related_kw'), list) else [],
+                
+                # Aggregated codes (UOC codes) from exact duplicates and semantic duplicates
+                "all_related_codes": skill.get('all_related_codes', []) if isinstance(skill.get('all_related_codes'), list) else [],
+                
                 # Core attributes
                 "level": self._extract_level_value(skill.get('level', 3)),
                 "context": skill.get('context', 'hybrid'),
@@ -445,10 +453,10 @@ class MultiDimensionalTaxonomyBuilder:
                 # Cross-cutting dimensions
                 "dimensions": {
                     "complexity_level": int(skill.get('complexity_level', 3)),
-                    "transferability": skill.get('transferability', 'sector_specific'),
-                    "digital_intensity": int(skill.get('digital_intensity', 1)) if pd.notna(skill.get('digital_intensity')) else 1,
-                    "future_readiness": skill.get('future_readiness', 'stable'),
-                    "skill_nature": skill.get('skill_nature', 'process'),
+                    # "transferability": skill.get('transferability', 'sector_specific'),
+                    # "digital_intensity": int(skill.get('digital_intensity', 1)) if pd.notna(skill.get('digital_intensity')) else 1,
+                    # "future_readiness": skill.get('future_readiness', 'stable'),
+                    # "skill_nature": skill.get('skill_nature', 'process'),
                 },
                 
                 # Assignment info
@@ -459,7 +467,7 @@ class MultiDimensionalTaxonomyBuilder:
                     "confidence": float(skill.get('family_assignment_confidence', 0)) if pd.notna(skill.get('family_assignment_confidence')) else 0,
                 },
                 
-                # Evidence and keywords
+                # Evidence and keywords (original)
                 "evidence": skill.get('evidence', ''),
                 "keywords": skill.get('keywords', []) if isinstance(skill.get('keywords'), list) else [],
             }
@@ -521,6 +529,20 @@ class MultiDimensionalTaxonomyBuilder:
                 lambda x: len(x) if isinstance(x, list) else 0
             ).sum()
             stats['alternative_titles_count'] = int(alt_count)
+        
+        # Aggregated keywords count
+        if 'all_related_kw' in df.columns:
+            kw_count = df['all_related_kw'].apply(
+                lambda x: len(x) if isinstance(x, list) else 0
+            ).sum()
+            stats['total_related_keywords'] = int(kw_count)
+        
+        # Aggregated codes count
+        if 'all_related_codes' in df.columns:
+            codes_count = df['all_related_codes'].apply(
+                lambda x: len(x) if isinstance(x, list) else 0
+            ).sum()
+            stats['total_related_codes'] = int(codes_count)
         
         return stats
     
@@ -590,6 +612,19 @@ class MultiDimensionalTaxonomyBuilder:
             lambda x: len(x) if isinstance(x, list) else 0
         ).sum() if 'alternative_titles' in df.columns else 0
         
+        # Count aggregated keywords and codes
+        total_related_kw = df['all_related_kw'].apply(
+            lambda x: len(x) if isinstance(x, list) else 0
+        ).sum() if 'all_related_kw' in df.columns else 0
+        
+        # Count unique unit codes across all skills
+        unique_codes = set()
+        if 'all_related_codes' in df.columns:
+            for codes in df['all_related_codes']:
+                if isinstance(codes, list):
+                    unique_codes.update(codes)
+        total_related_codes = len(unique_codes)
+        
         taxonomy['metadata'] = {
             "version": "2.0",
             "structure": "Domain → Family → Group → Skills",
@@ -628,6 +663,8 @@ class MultiDimensionalTaxonomyBuilder:
                 "total_families": df['assigned_family'].nunique(),
                 "total_domains": df['assigned_domain'].nunique(),
                 "total_alternative_titles": int(total_alt_titles),
+                "total_related_keywords": int(total_related_kw),
+                "total_related_codes": int(total_related_codes),
                 "depth": self._get_taxonomy_depth(taxonomy),
                 "total_nodes": self._count_nodes(taxonomy)
             },
@@ -719,13 +756,16 @@ class MultiDimensionalTaxonomyBuilder:
                 line += f" ({size} skills)"
             lines.append(line)
             
-            # Show sample skills with alternative titles
+            # Show sample skills with alternative titles and related codes
             if 'skills' in node and node['skills'] and depth <= 3:
                 for i, skill in enumerate(node['skills'][:3]):
                     skill_line = f"{indent}  • {skill['name']} (L{skill['level']})"
                     alt_titles = skill.get('alternative_titles', [])
                     if alt_titles:
                         skill_line += f" [aka: {', '.join(alt_titles[:2])}]"
+                    related_codes = skill.get('all_related_codes', [])
+                    if related_codes:
+                        skill_line += f" [codes: {', '.join(related_codes[:3])}]"
                     lines.append(skill_line)
                 if len(node['skills']) > 3:
                     lines.append(f"{indent}  ... and {len(node['skills']) - 3} more")

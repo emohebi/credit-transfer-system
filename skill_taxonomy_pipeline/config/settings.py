@@ -420,7 +420,7 @@ EMBEDDING_CONFIG = {
 # ============================================================================
 
 DEDUP_CONFIG = {
-    "similarity_threshold": MATCH_THRESHOLDS["partial_threshold"],
+    "similarity_threshold": 0.9, # MATCH_THRESHOLDS["partial_threshold"],
     **MATCH_THRESHOLDS,
     "use_faiss": False,
     "faiss_index_type": "IVF1024,Flat",
@@ -443,7 +443,7 @@ FAMILY_ASSIGNMENT_CONFIG = {
     "embedding_similarity_threshold": 0.7,
     "max_retries": 3,
     # LLM Re-ranking settings (Top-K + LLM selection for better accuracy)
-    "use_llm_reranking": True,  # Enable LLM re-ranking of top-K embedding candidates
+    "use_llm_reranking": os.getenv("USE_LLM_RERANKING", "true") == "true",  # Enable LLM re-ranking of top-K embedding candidates
     "rerank_top_k": 3,          # Number of top candidates to consider for re-ranking
     "rerank_similarity_threshold": 0.6,  # Min similarity for candidates to be re-ranked
 }
@@ -459,10 +459,10 @@ HIERARCHY_CONFIG = {
     "balance_threshold": 0.3,
     "max_level_span_per_node": 2,
     "enable_cross_cutting_dimensions": True,
-    "enable_transferability_scoring": True,
-    "enable_digital_intensity_scoring": True,
-    "enable_future_readiness_scoring": True,
-    "enable_skill_nature_classification": True,
+    "enable_transferability_scoring": False,
+    "enable_digital_intensity_scoring": False,
+    "enable_future_readiness_scoring": False,
+    "enable_skill_nature_classification": False,
     "enable_context_classification": True,
     "build_skill_relationships": True,
     "max_related_skills": 20,
@@ -590,7 +590,7 @@ MODELS = {
 # ============================================================================
 
 CONFIG: Dict[str, Any] = {
-    "backed_type": "vllm",
+    "backed_type": "openai" if os.getenv("USE_AZURE_OPENAI", "false") == "true" else "vllm",
     "data": DATA_CONFIG,
     "embedding": EMBEDDING_CONFIG,
     "dedup": DEDUP_CONFIG,

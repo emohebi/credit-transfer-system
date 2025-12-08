@@ -61,7 +61,7 @@ class SkillDataPreprocessor:
         # 8. Normalize levels and contexts
         df_processed = self._normalize_levels_and_contexts(df_processed)
         
-        # 9. Remove duplicates based on skill_id
+        # 9. Remove duplicates based on skill_id (with aggregation of keywords and codes)
         df_processed = self._remove_exact_duplicates(df_processed)
         
         # 10. Validate final data
@@ -307,21 +307,127 @@ class SkillDataPreprocessor:
         return df
     
     def _remove_exact_duplicates(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Remove exact duplicates based on skill_id"""
+        """Remove exact duplicates based on skill_id, aggregating keywords and codes"""
         
         initial_count = len(df)
         
-        # Remove duplicates, keeping first occurrence
+        # Initialize all_related_kw and all_related_codes columns
+        df = self._initialize_aggregation_columns(df)
+        
+        # Step 1: Aggregate keywords and codes for skill_id duplicates
+        if df['skill_id'].duplicated().any():
+            df = self._aggregate_duplicates_by_column(df, 'skill_id')
+            logger.info(f"Aggregated keywords and codes for skill_id duplicates")
+        
+        # Remove skill_id duplicates, keeping first occurrence
         df = df.drop_duplicates(subset=['skill_id'], keep='first')
         
-        # Also check for duplicate names at same level
-        df = df.drop_duplicates(subset=['name', 'level'], keep='first')
+        # Step 2: Aggregate keywords and codes for name+level duplicates
+        if df.duplicated(subset=['name', 'level', 'context', 'category'], keep=False).any():
+            df = self._aggregate_duplicates_by_column(df, ['name', 'level', 'context', 'category'])
+            logger.info(f"Aggregated keywords and codes for name+level+context+category duplicates")
+        
+        # Remove name+level duplicates, keeping first occurrence
+        df = df.drop_duplicates(subset=['name', 'level', 'context', 'category'], keep='first')
         
         removed_count = initial_count - len(df)
         if removed_count > 0:
             logger.info(f"Removed {removed_count} exact duplicates")
         
+        # Log aggregation statistics
+        total_kw = df['all_related_kw'].apply(lambda x: len(x) if isinstance(x, list) else 0).sum()
+        total_codes = df['all_related_codes'].apply(lambda x: len(x) if isinstance(x, list) else 0).sum()
+        logger.info(f"Total aggregated keywords: {total_kw}, Total aggregated codes: {total_codes}")
+        
         return df
+    
+    def _initialize_aggregation_columns(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Initialize all_related_kw and all_related_codes columns from existing data"""
+        
+        # Helper to safely convert keywords to list
+        def keywords_to_list(kw):
+            if isinstance(kw, list):
+                return list(kw)
+            elif pd.notna(kw) and kw != '':
+                if isinstance(kw, str):
+                    try:
+                        parsed = json.loads(kw.replace("'", '"'))
+                        if isinstance(parsed, list):
+                            return parsed
+                    except:
+                        pass
+                    return [k.strip() for k in re.split(r',|;|\||\n', kw) if k.strip()]
+                return [str(kw)]
+            return []
+        
+        # Helper to safely convert code to list
+        def code_to_list(code):
+            if isinstance(code, list):
+                return list(code)
+            elif pd.notna(code) and code != '':
+                return [str(code)]
+            return []
+        
+        # Initialize columns if not present
+        if 'all_related_kw' not in df.columns:
+            df['all_related_kw'] = df['keywords'].apply(keywords_to_list)
+        
+        if 'all_related_codes' not in df.columns:
+            df['all_related_codes'] = df['code'].apply(code_to_list)
+        
+        return df
+    
+    def _aggregate_duplicates_by_column(self, df: pd.DataFrame, subset) -> pd.DataFrame:
+        """Aggregate keywords and codes for duplicates based on given column(s)"""
+        
+        if isinstance(subset, str):
+            subset = [subset]
+        
+        # Find duplicates
+        duplicate_mask = df.duplicated(subset=subset, keep=False)
+        
+        if not duplicate_mask.any():
+            return df
+        
+        # Group duplicates and aggregate
+        duplicates_df = df[duplicate_mask].copy()
+        non_duplicates_df = df[~duplicate_mask].copy()
+        
+        # Aggregation functions
+        def aggregate_list_column(series):
+            """Aggregate list columns, removing duplicates"""
+            all_items = []
+            for items in series:
+                if isinstance(items, list):
+                    all_items.extend(items)
+                elif pd.notna(items) and items != '':
+                    all_items.append(str(items))
+            # Remove duplicates while preserving order
+            seen = set()
+            unique_items = []
+            for item in all_items:
+                if item not in seen:
+                    seen.add(item)
+                    unique_items.append(item)
+            return unique_items
+        
+        # Build aggregation dictionary
+        agg_dict = {}
+        for col in df.columns:
+            if col in subset:
+                continue
+            elif col in ['all_related_kw', 'all_related_codes']:
+                agg_dict[col] = aggregate_list_column
+            else:
+                agg_dict[col] = 'first'
+        
+        # Perform aggregation
+        aggregated = duplicates_df.groupby(subset, as_index=False).agg(agg_dict)
+        
+        # Combine with non-duplicates
+        result_df = pd.concat([non_duplicates_df, aggregated], ignore_index=True)
+        
+        return result_df
     
     def _validate_final_data(self, df: pd.DataFrame) -> pd.DataFrame:
         """Final validation of preprocessed data"""
@@ -346,6 +452,12 @@ class SkillDataPreprocessor:
         df['level'] = df['level'].astype(int)
         df['confidence'] = df['confidence'].astype(float)
         
+        # Ensure aggregation columns exist and are lists
+        if 'all_related_kw' not in df.columns:
+            df['all_related_kw'] = [[] for _ in range(len(df))]
+        if 'all_related_codes' not in df.columns:
+            df['all_related_codes'] = [[] for _ in range(len(df))]
+        
         # Reset index
         df = df.reset_index(drop=True)
         
@@ -355,6 +467,12 @@ class SkillDataPreprocessor:
         logger.info(f"  Categories: {df['category'].nunique()}")
         logger.info(f"  Level range: {df['level'].min()}-{df['level'].max()}")
         logger.info(f"  Context distribution: {df['context'].value_counts().to_dict()}")
+        
+        # Log aggregation column statistics
+        total_kw = df['all_related_kw'].apply(lambda x: len(x) if isinstance(x, list) else 0).sum()
+        total_codes = df['all_related_codes'].apply(lambda x: len(x) if isinstance(x, list) else 0).sum()
+        logger.info(f"  Total related keywords: {total_kw}")
+        logger.info(f"  Total related codes: {total_codes}")
         
         return df
     
