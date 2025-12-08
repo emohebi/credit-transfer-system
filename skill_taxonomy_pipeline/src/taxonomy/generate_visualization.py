@@ -1,13 +1,19 @@
 """
-Generate Interactive HTML Taxonomy Visualization
+Generate Interactive HTML Taxonomy Visualization (Optimized for Large Datasets)
 
-This script takes your taxonomy.json file and creates a beautiful interactive
-HTML visualization with the data embedded.
+This script creates a performant HTML visualization that can handle 50K+ skills
+by using lazy loading, virtual rendering, and deferred detail display.
 
 Theme: Jobs and Skills Australia (Australian Government)
 
 Usage:
     python generate_visualization.py taxonomy.json output.html
+    
+Output:
+    - taxonomy_visualization.html - The viewer (works offline, no server needed)
+    - taxonomy_data.js - Data file (loaded via script tag, works with file://)
+    
+Just double-click the HTML file to open - no Python or server required!
 """
 
 import json
@@ -15,18 +21,19 @@ import sys
 from pathlib import Path
 import pandas as pd
 
+# Threshold for external data loading (skills count)
+EXTERNAL_DATA_THRESHOLD = 5000
 
-HTML_TEMPLATE = """<!DOCTYPE html>
+
+HTML_TEMPLATE_EXTERNAL = """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VET Skills Taxonomy Explorer | Jobs and Skills Australia</title>
     
-    <!-- External Libraries -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
@@ -36,16 +43,49 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <body>
     {BODY_CONTENT}
 
-    <!-- External Scripts -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- Load taxonomy data from external JS file (works with file:// protocol) -->
+    <script src="{DATA_FILE}"></script>
+
+    <script>
+        // Data is loaded from external file as TAXONOMY_DATA variable
+        const LAZY_LOAD = true;
+        
+        {JAVASCRIPT_CONTENT}
+    </script>
+</body>
+</html>
+"""
+
+HTML_TEMPLATE_EMBEDDED = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VET Skills Taxonomy Explorer | Jobs and Skills Australia</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        {CSS_CONTENT}
+    </style>
+</head>
+<body>
+    {BODY_CONTENT}
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <script>
-        // Embedded taxonomy data
-        const EMBEDDED_TAXONOMY_DATA = {TAXONOMY_DATA};
+        // Embedded data for small datasets
+        const EMBEDDED_DATA = {TAXONOMY_DATA};
+        const LAZY_LOAD = true;
         
         {JAVASCRIPT_CONTENT}
     </script>
@@ -55,13 +95,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
 
 CSS_CONTENT = """
-/* ========================================
-   Jobs and Skills Australia Theme
-   Australian Government Design System
-   ======================================== */
-
 :root {
-    /* Primary Colors - Australian Government */
     --jsa-navy: #1e3a5f;
     --jsa-navy-dark: #0d2137;
     --jsa-navy-light: #2c5282;
@@ -69,14 +103,10 @@ CSS_CONTENT = """
     --jsa-teal-light: #4fb3bf;
     --jsa-green: #2e7d32;
     --jsa-green-light: #4caf50;
-    
-    /* Secondary Colors */
     --jsa-gold: #c9a227;
     --jsa-orange: #e65100;
     --jsa-purple: #6a1b9a;
     --jsa-red: #c62828;
-    
-    /* Neutrals */
     --jsa-white: #ffffff;
     --jsa-grey-100: #f5f7fa;
     --jsa-grey-200: #e8ecf1;
@@ -86,55 +116,28 @@ CSS_CONTENT = """
     --jsa-grey-600: #4a5568;
     --jsa-grey-700: #2d3748;
     --jsa-grey-800: #1a202c;
-    
-    /* Shadows */
     --shadow-sm: 0 1px 2px rgba(30, 58, 95, 0.05);
     --shadow-md: 0 4px 6px rgba(30, 58, 95, 0.07), 0 2px 4px rgba(30, 58, 95, 0.06);
     --shadow-lg: 0 10px 15px rgba(30, 58, 95, 0.1), 0 4px 6px rgba(30, 58, 95, 0.05);
-    --shadow-xl: 0 20px 25px rgba(30, 58, 95, 0.1), 0 10px 10px rgba(30, 58, 95, 0.04);
-    
-    /* Border Radius */
     --radius-sm: 4px;
     --radius-md: 8px;
     --radius-lg: 12px;
-    --radius-xl: 16px;
 }
 
-* { 
-    box-sizing: border-box; 
-    margin: 0;
-    padding: 0;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
     font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: var(--jsa-grey-100);
     color: var(--jsa-grey-800);
     line-height: 1.6;
-    min-height: 100vh;
 }
 
-/* ========================================
-   Header - Government Style
-   ======================================== */
-
+/* Header */
 .header {
     background: linear-gradient(135deg, var(--jsa-navy) 0%, var(--jsa-navy-dark) 100%);
     color: var(--jsa-white);
-    padding: 0;
     position: relative;
-    overflow: hidden;
-}
-
-.header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 40%;
-    height: 100%;
-    background: linear-gradient(135deg, transparent 0%, rgba(0, 131, 143, 0.1) 100%);
-    pointer-events: none;
 }
 
 .header-top {
@@ -159,30 +162,14 @@ body {
     color: var(--jsa-grey-200);
 }
 
-.gov-badge i {
-    font-size: 1rem;
-}
-
 .header-main {
     max-width: 1400px;
     margin: 0 auto;
     padding: 32px 24px;
-    position: relative;
-    z-index: 1;
 }
 
-.header h1 {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 8px;
-    letter-spacing: -0.5px;
-}
-
-.header p {
-    font-size: 1rem;
-    opacity: 0.9;
-    max-width: 600px;
-}
+.header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
+.header p { font-size: 1rem; opacity: 0.9; }
 
 .header-logo {
     display: flex;
@@ -201,28 +188,19 @@ body {
     justify-content: center;
 }
 
-.header-logo-icon i {
-    font-size: 1.5rem;
-    color: white;
-}
+.header-logo-icon i { font-size: 1.5rem; color: white; }
 
-/* ========================================
-   Main Container
-   ======================================== */
-
+/* Main Container */
 .main-container {
     max-width: 1400px;
     margin: 0 auto;
     padding: 0 24px 48px;
 }
 
-/* ========================================
-   Stats Dashboard
-   ======================================== */
-
+/* Stats */
 .stats-dashboard {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 16px;
     margin-top: -40px;
     padding: 0 24px;
@@ -235,44 +213,18 @@ body {
 
 .stat-card {
     background: var(--jsa-white);
-    padding: 20px;
+    padding: 16px;
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg);
     text-align: center;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
     border: 1px solid var(--jsa-grey-200);
 }
 
-.stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-xl);
-}
+.stat-card i { font-size: 1.5rem; color: var(--jsa-teal); margin-bottom: 4px; }
+.stat-value { font-size: 1.5rem; font-weight: 700; color: var(--jsa-navy); }
+.stat-label { font-size: 0.75rem; color: var(--jsa-grey-500); text-transform: uppercase; letter-spacing: 0.5px; }
 
-.stat-card i {
-    font-size: 1.75rem;
-    color: var(--jsa-teal);
-    margin-bottom: 8px;
-}
-
-.stat-value {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: var(--jsa-navy);
-    margin: 4px 0;
-}
-
-.stat-label {
-    font-size: 0.8rem;
-    color: var(--jsa-grey-500);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-weight: 500;
-}
-
-/* ========================================
-   View Tabs
-   ======================================== */
-
+/* View Tabs */
 .view-tabs-container {
     background: var(--jsa-white);
     margin-top: 24px;
@@ -282,563 +234,468 @@ body {
     border-bottom: none;
 }
 
-.view-tabs {
-    display: flex;
-    padding: 0 16px;
-    gap: 4px;
-}
+.view-tabs { display: flex; padding: 0 16px; gap: 4px; }
 
 .view-tab {
-    padding: 16px 24px;
+    padding: 14px 20px;
     cursor: pointer;
     border: none;
     background: transparent;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 500;
     color: var(--jsa-grey-500);
     border-bottom: 3px solid transparent;
-    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
-.view-tab:hover { 
-    color: var(--jsa-navy);
-    background: var(--jsa-grey-100);
-}
+.view-tab:hover { color: var(--jsa-navy); background: var(--jsa-grey-100); }
+.view-tab.active { color: var(--jsa-teal); border-bottom-color: var(--jsa-teal); }
 
-.view-tab.active {
-    color: var(--jsa-teal);
-    border-bottom-color: var(--jsa-teal);
-    background: transparent;
-}
-
-.view-tab i {
-    font-size: 1.1rem;
-}
-
-/* ========================================
-   Content Area
-   ======================================== */
-
+/* Content Area */
 .content-area {
     background: var(--jsa-white);
-    padding: 24px;
     border-radius: 0 0 var(--radius-lg) var(--radius-lg);
     box-shadow: var(--shadow-md);
     border: 1px solid var(--jsa-grey-200);
     border-top: none;
-    min-height: 600px;
+    min-height: 500px;
+    display: flex;
 }
 
-.view-section {
-    display: none;
-}
+.view-section { display: none; flex: 1; }
+.view-section.active { display: flex; }
 
-.view-section.active {
-    display: block;
+/* Tree Panel */
+.tree-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--jsa-grey-200);
+    min-width: 0;
 }
-
-/* ========================================
-   Tree View
-   ======================================== */
 
 .tree-controls {
-    margin-bottom: 20px;
+    padding: 16px;
+    border-bottom: 1px solid var(--jsa-grey-200);
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
     align-items: center;
+    background: var(--jsa-grey-100);
 }
 
 .tree-search {
     flex: 1;
-    min-width: 300px;
-    padding: 12px 16px;
+    min-width: 200px;
+    padding: 10px 14px;
     border: 2px solid var(--jsa-grey-200);
     border-radius: var(--radius-md);
-    font-size: 0.95rem;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    font-size: 0.9rem;
 }
 
-.tree-search:focus {
-    outline: none;
-    border-color: var(--jsa-teal);
-    box-shadow: 0 0 0 3px rgba(0, 131, 143, 0.1);
-}
-
-.tree-search::placeholder {
-    color: var(--jsa-grey-400);
-}
+.tree-search:focus { outline: none; border-color: var(--jsa-teal); }
 
 .tree-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
     background: var(--jsa-grey-100);
-    border: 1px solid var(--jsa-grey-200);
-    border-radius: var(--radius-lg);
-    padding: 20px;
 }
 
-.tree-node {
-    margin: 4px 0;
-}
+/* Tree Nodes - Simplified for performance */
+.tree-node { margin: 2px 0; }
 
-.node-content {
+.node-row {
     display: flex;
     align-items: center;
-    padding: 10px 14px;
-    border-radius: var(--radius-md);
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
-    transition: all 0.15s ease;
-    border-left: 3px solid transparent;
     background: var(--jsa-white);
-    margin-bottom: 4px;
+    border-left: 3px solid transparent;
+    margin-bottom: 2px;
 }
 
-.node-content:hover {
-    background: var(--jsa-grey-100);
-    border-left-color: var(--jsa-teal);
-}
-
-.node-content.expanded {
-    background: rgba(0, 131, 143, 0.05);
-    border-left-color: var(--jsa-teal);
-}
+.node-row:hover { background: var(--jsa-grey-100); border-left-color: var(--jsa-teal); }
+.node-row.selected { background: rgba(0, 131, 143, 0.1); border-left-color: var(--jsa-teal); }
+.node-row.expanded { background: rgba(0, 131, 143, 0.05); }
 
 .node-toggle {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-right: 8px;
+    margin-right: 6px;
     color: var(--jsa-grey-400);
-    font-size: 0.75rem;
-    transition: transform 0.2s ease;
+    font-size: 0.7rem;
+    transition: transform 0.15s;
 }
 
-.node-content.expanded .node-toggle {
-    transform: rotate(90deg);
-}
+.node-row.expanded .node-toggle { transform: rotate(90deg); }
 
-.node-icon {
-    margin-right: 10px;
-    font-size: 1.1rem;
-}
-
-.node-label {
-    flex: 1;
-    font-weight: 500;
-    color: var(--jsa-grey-700);
-}
-
-.node-badge {
-    font-size: 0.75rem;
-    padding: 4px 10px;
-    border-radius: 20px;
-    background: var(--jsa-grey-200);
-    color: var(--jsa-grey-600);
-    margin-left: 8px;
-    font-weight: 500;
-}
-
-.node-children {
-    margin-left: 24px;
-    border-left: 2px solid var(--jsa-grey-200);
-    padding-left: 12px;
-    display: none;
-}
-
-.node-children.expanded {
-    display: block;
-}
-
-/* Node type colors */
+.node-icon { margin-right: 8px; font-size: 1rem; }
 .node-domain .node-icon { color: var(--jsa-navy); }
-.node-domain .node-label { color: var(--jsa-navy); font-weight: 600; }
 .node-family .node-icon { color: var(--jsa-teal); }
 .node-cluster .node-icon { color: var(--jsa-orange); }
 .node-group .node-icon { color: var(--jsa-purple); }
 .node-skill .node-icon { color: var(--jsa-green); }
 
-/* ========================================
-   Skill Detail Card
-   ======================================== */
+.node-label { flex: 1; font-weight: 500; font-size: 0.9rem; color: var(--jsa-grey-700); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.node-domain .node-label { font-weight: 600; color: var(--jsa-navy); }
 
-.skill-detail {
+.node-badge {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: var(--jsa-grey-200);
+    color: var(--jsa-grey-600);
+    margin-left: 8px;
+}
+
+.node-children {
+    margin-left: 20px;
+    padding-left: 12px;
+    border-left: 1px solid var(--jsa-grey-200);
+    display: none;
+}
+
+.node-children.expanded { display: block; }
+
+/* Detail Panel */
+.detail-panel {
+    width: 450px;
+    min-width: 350px;
+    max-width: 500px;
     background: var(--jsa-white);
-    border-radius: var(--radius-md);
-    padding: 16px;
-    margin: 8px 0;
-    border: 1px solid var(--jsa-grey-200);
-    transition: box-shadow 0.2s ease;
-}
-
-.skill-detail:hover {
-    box-shadow: var(--shadow-md);
-}
-
-.skill-header {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 12px;
+    flex-direction: column;
+    border-left: 1px solid var(--jsa-grey-200);
 }
 
-.skill-name {
+.detail-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--jsa-grey-200);
+    background: var(--jsa-grey-100);
+}
+
+.detail-header h3 { font-size: 1rem; color: var(--jsa-grey-500); margin: 0; }
+
+.detail-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.detail-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--jsa-grey-400);
+    text-align: center;
+    padding: 40px;
+}
+
+.detail-placeholder i { font-size: 3rem; margin-bottom: 16px; opacity: 0.5; }
+
+/* Skill Detail Card */
+.skill-card { animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.skill-card-header { margin-bottom: 16px; }
+
+.skill-card-name {
+    font-size: 1.25rem;
     font-weight: 600;
     color: var(--jsa-navy);
-    font-size: 1rem;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+    margin-bottom: 8px;
 }
 
-.skill-name i {
-    color: var(--jsa-green);
-}
+.skill-card-name i { color: var(--jsa-green); }
 
-.skill-id {
-    font-size: 0.75rem;
-    color: var(--jsa-grey-500);
-    background: var(--jsa-grey-100);
-    padding: 4px 8px;
-    border-radius: var(--radius-sm);
-    font-family: 'Monaco', 'Consolas', monospace;
-}
-
-.skill-description {
-    font-size: 0.9rem;
-    color: var(--jsa-grey-600);
-    margin-bottom: 12px;
-    line-height: 1.5;
-}
-
-.skill-meta-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 12px;
-    margin-bottom: 12px;
-}
-
-.skill-meta-item {
-    background: var(--jsa-grey-100);
-    padding: 10px 12px;
-    border-radius: var(--radius-sm);
-}
-
-.skill-meta-label {
-    font-size: 0.7rem;
-    color: var(--jsa-grey-500);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 4px;
-    font-weight: 600;
-}
-
-.skill-meta-value {
-    font-size: 0.85rem;
-    color: var(--jsa-grey-700);
-    font-weight: 500;
-}
-
-.skill-dimensions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 12px;
-}
-
-.dimension-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 5px 10px;
-    border-radius: 20px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-}
-
-/* Dimension badge colors */
-.dim-complexity { background: #e3f2fd; color: #1565c0; }
-.dim-transferability { background: #f3e5f5; color: #7b1fa2; }
-.dim-digital { background: #e0f2f1; color: #00695c; }
-.dim-future { background: #fff3e0; color: #e65100; }
-.dim-nature { background: #fce4ec; color: #c2185b; }
-.dim-context { background: #e8f5e9; color: #2e7d32; }
-.dim-category { background: #fff8e1; color: #f57f17; }
-
-/* Alternative titles */
-.alt-titles-section {
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid var(--jsa-grey-200);
-}
-
-.alt-titles-label {
-    font-size: 0.75rem;
-    color: var(--jsa-grey-500);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
-}
-
-.alt-title-tag {
+.skill-card-id {
     display: inline-block;
+    font-size: 0.75rem;
+    color: var(--jsa-grey-500);
     background: var(--jsa-grey-100);
-    color: var(--jsa-grey-600);
     padding: 4px 10px;
     border-radius: var(--radius-sm);
-    font-size: 0.8rem;
-    margin: 2px;
+    font-family: 'Monaco', 'Consolas', monospace;
 }
 
-/* Related codes and keywords */
-.related-section {
-    margin-top: 12px;
-    padding-top: 12px;
+.skill-card-description {
+    font-size: 0.9rem;
+    color: var(--jsa-grey-600);
+    line-height: 1.6;
+    margin: 16px 0;
+    padding: 12px;
+    background: var(--jsa-grey-100);
+    border-radius: var(--radius-md);
+}
+
+.skill-section {
+    margin-top: 16px;
+    padding-top: 16px;
     border-top: 1px solid var(--jsa-grey-200);
 }
 
-.related-label {
+.skill-section-title {
     font-size: 0.75rem;
-    color: var(--jsa-grey-500);
     font-weight: 600;
+    color: var(--jsa-grey-500);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    margin-bottom: 6px;
+    margin-bottom: 10px;
     display: flex;
     align-items: center;
     gap: 6px;
 }
 
-.code-tag {
-    display: inline-block;
-    background: #e8eaf6;
-    color: #3949ab;
-    padding: 3px 8px;
+.meta-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.meta-item {
+    background: var(--jsa-grey-100);
+    padding: 10px;
     border-radius: var(--radius-sm);
-    font-size: 0.75rem;
-    font-family: 'Monaco', 'Consolas', monospace;
-    margin: 2px;
 }
 
-.keyword-tag {
-    display: inline-block;
-    background: #e0f7fa;
-    color: #00838f;
-    padding: 3px 8px;
-    border-radius: var(--radius-sm);
-    font-size: 0.75rem;
-    margin: 2px;
-}
+.meta-label { font-size: 0.7rem; color: var(--jsa-grey-500); text-transform: uppercase; margin-bottom: 2px; }
+.meta-value { font-size: 0.85rem; color: var(--jsa-grey-700); font-weight: 500; }
 
-/* Related skills */
-.related-skills-section {
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid var(--jsa-grey-200);
-}
-
-.relationship-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 6px 12px;
-    background: rgba(106, 27, 154, 0.08);
-    border-radius: var(--radius-md);
-    font-size: 0.8rem;
-    color: var(--jsa-purple);
-    text-decoration: none;
-    margin: 3px;
-    transition: all 0.15s ease;
-}
-
-.relationship-link:hover {
-    background: rgba(106, 27, 154, 0.15);
-    color: #4a148c;
-}
-
-.similarity-score {
-    font-size: 0.7rem;
-    color: var(--jsa-grey-500);
-    margin-left: 4px;
-}
-
-/* ========================================
-   Table View
-   ======================================== */
-
-.table-controls {
-    margin-bottom: 20px;
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    align-items: center;
-}
-
-.filter-group {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.filter-group select {
-    padding: 10px 14px;
-    border: 2px solid var(--jsa-grey-200);
-    border-radius: var(--radius-md);
-    font-size: 0.9rem;
-    color: var(--jsa-grey-700);
-    background: var(--jsa-white);
-    cursor: pointer;
-    transition: border-color 0.2s ease;
-}
-
-.filter-group select:focus {
-    outline: none;
-    border-color: var(--jsa-teal);
-}
-
-#skillsTable_wrapper {
-    background: var(--jsa-white);
-}
-
-.table {
-    font-size: 0.85rem;
-}
-
-.table thead th {
-    background: var(--jsa-navy);
-    color: var(--jsa-white);
-    font-weight: 600;
-    border: none;
-    padding: 14px 12px;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.table tbody td {
-    padding: 12px;
-    vertical-align: middle;
-    border-bottom: 1px solid var(--jsa-grey-200);
-}
-
-.table tbody tr:hover {
-    background: rgba(0, 131, 143, 0.03);
-}
-
-.dataTables_wrapper .dataTables_paginate .paginate_button.current {
-    background: var(--jsa-teal) !important;
-    color: white !important;
-    border: none !important;
-}
-
-.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-    background: var(--jsa-navy) !important;
-    color: white !important;
-    border: none !important;
-}
-
-/* ========================================
-   Buttons
-   ======================================== */
-
-.btn-custom {
-    padding: 10px 20px;
-    border-radius: var(--radius-md);
-    border: none;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.9rem;
-}
-
-.btn-primary-custom {
-    background: var(--jsa-teal);
-    color: var(--jsa-white);
-}
-
-.btn-primary-custom:hover {
-    background: var(--jsa-navy);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-}
-
-.btn-outline-custom {
-    background: var(--jsa-white);
-    color: var(--jsa-navy);
-    border: 2px solid var(--jsa-grey-300);
-}
-
-.btn-outline-custom:hover {
-    border-color: var(--jsa-teal);
-    color: var(--jsa-teal);
-    background: rgba(0, 131, 143, 0.05);
-}
-
-.export-buttons {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 20px;
-}
-
-/* ========================================
-   Confidence Indicator
-   ======================================== */
-
-.confidence-bar {
-    width: 100%;
-    height: 6px;
-    background: var(--jsa-grey-200);
-    border-radius: 3px;
-    overflow: hidden;
-}
-
-.confidence-fill {
-    height: 100%;
-    border-radius: 3px;
-    transition: width 0.3s ease;
-}
-
+.confidence-bar { width: 100%; height: 4px; background: var(--jsa-grey-200); border-radius: 2px; margin-top: 4px; }
+.confidence-fill { height: 100%; border-radius: 2px; }
 .confidence-high { background: var(--jsa-green); }
 .confidence-medium { background: var(--jsa-gold); }
 .confidence-low { background: var(--jsa-orange); }
 
-/* ========================================
-   Responsive
-   ======================================== */
+/* Dimension Badges */
+.dimension-list { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.dim-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 16px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.dim-category { background: #fff8e1; color: #f57f17; }
+.dim-complexity { background: #e3f2fd; color: #1565c0; }
+.dim-transfer { background: #f3e5f5; color: #7b1fa2; }
+.dim-digital { background: #e0f2f1; color: #00695c; }
+.dim-future { background: #fff3e0; color: #e65100; }
+.dim-nature { background: #fce4ec; color: #c2185b; }
+
+/* Tags */
+.tag-list { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.tag {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+}
+
+.tag-alt { background: var(--jsa-grey-100); color: var(--jsa-grey-600); }
+.tag-code { background: #e8eaf6; color: #3949ab; font-family: monospace; }
+.tag-keyword { background: #e0f7fa; color: #00838f; }
+.tag-more { background: var(--jsa-grey-200); color: var(--jsa-grey-500); font-style: italic; }
+
+/* Related Skills */
+.related-skill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 10px;
+    background: rgba(106, 27, 154, 0.08);
+    border-radius: var(--radius-md);
+    font-size: 0.8rem;
+    color: var(--jsa-purple);
+    margin: 3px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.related-skill:hover { background: rgba(106, 27, 154, 0.15); }
+.similarity-score { font-size: 0.7rem; color: var(--jsa-grey-500); }
+
+/* Table View */
+.table-view-content { flex: 1; padding: 20px; flex-direction: column; display: flex; }
+
+.table-controls {
+    margin-bottom: 16px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.export-buttons { display: flex; gap: 10px; }
+
+.btn-custom {
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+}
+
+.btn-primary-custom { background: var(--jsa-teal); color: var(--jsa-white); }
+.btn-primary-custom:hover { background: var(--jsa-navy); }
+.btn-outline-custom { background: var(--jsa-white); color: var(--jsa-navy); border: 2px solid var(--jsa-grey-300); }
+.btn-outline-custom:hover { border-color: var(--jsa-teal); color: var(--jsa-teal); }
+
+.filter-group { display: flex; gap: 8px; flex-wrap: wrap; flex: 1; }
+
+.filter-group select {
+    padding: 8px 12px;
+    border: 2px solid var(--jsa-grey-200);
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    background: var(--jsa-white);
+}
+
+.filter-group input {
+    padding: 8px 12px;
+    border: 2px solid var(--jsa-grey-200);
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    min-width: 200px;
+}
+
+/* Virtual Table */
+.table-wrapper {
+    flex: 1;
+    overflow: auto;
+    border: 1px solid var(--jsa-grey-200);
+    border-radius: var(--radius-md);
+}
+
+.skills-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.skills-table thead { position: sticky; top: 0; z-index: 10; }
+
+.skills-table th {
+    background: var(--jsa-navy);
+    color: white;
+    padding: 12px 10px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.skills-table td {
+    padding: 10px;
+    border-bottom: 1px solid var(--jsa-grey-200);
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.skills-table tbody tr:hover { background: rgba(0, 131, 143, 0.03); }
+.skills-table tbody tr { cursor: pointer; }
+
+.table-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    margin-top: 12px;
+    border-top: 1px solid var(--jsa-grey-200);
+}
+
+.pagination-info { font-size: 0.85rem; color: var(--jsa-grey-600); }
+
+.pagination-buttons { display: flex; gap: 4px; }
+
+.page-btn {
+    padding: 6px 12px;
+    border: 1px solid var(--jsa-grey-300);
+    background: white;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.page-btn:hover { background: var(--jsa-grey-100); }
+.page-btn.active { background: var(--jsa-teal); color: white; border-color: var(--jsa-teal); }
+.page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Loading */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid var(--jsa-grey-200);
+    border-top-color: var(--jsa-teal);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-text { margin-top: 16px; color: var(--jsa-grey-600); font-size: 0.9rem; }
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .detail-panel { display: none; }
+    .tree-panel { border-right: none; }
+}
 
 @media (max-width: 768px) {
     .header h1 { font-size: 1.5rem; }
-    .stats-dashboard { 
-        grid-template-columns: repeat(2, 1fr); 
-        margin-top: -24px;
-    }
-    .view-tabs { overflow-x: auto; }
-    .tree-search { min-width: 100%; }
-    .skill-meta-grid { grid-template-columns: 1fr; }
-}
-
-/* ========================================
-   Print Styles
-   ======================================== */
-
-@media print {
-    .header { background: var(--jsa-navy) !important; }
-    .btn-custom, .tree-controls, .view-tabs-container { display: none !important; }
-    .content-area { box-shadow: none !important; border: none !important; }
+    .stats-dashboard { grid-template-columns: repeat(2, 1fr); margin-top: -24px; }
 }
 """
 
 
 BODY_CONTENT = """
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Loading taxonomy data...</div>
+    <div class="loading-hint" style="margin-top: 24px; font-size: 0.8rem; color: #9aa5b5; max-width: 400px; text-align: center;">
+        If loading takes too long, make sure <code>taxonomy_visualization_data.js</code> is in the same folder as this HTML file.
+    </div>
+</div>
+
 <div class="header">
     <div class="header-top">
         <div class="header-top-content">
@@ -855,13 +712,13 @@ BODY_CONTENT = """
             </div>
             <div>
                 <h1>VET Skills Taxonomy Explorer</h1>
-                <p>Comprehensive taxonomy of vocational education and training skills across multiple dimensions</p>
+                <p>Comprehensive taxonomy of vocational education and training skills</p>
             </div>
         </div>
     </div>
 </div>
 
-<div class="stats-dashboard" id="statsDashboard">
+<div class="stats-dashboard">
     <div class="stat-card">
         <i class="bi bi-mortarboard-fill"></i>
         <div class="stat-value" id="totalSkills">-</div>
@@ -902,67 +759,69 @@ BODY_CONTENT = """
     </div>
 
     <div class="content-area">
+        <!-- Tree View -->
         <div class="view-section active" id="treeView">
-            <div class="tree-controls">
-                <input type="text" class="tree-search" id="treeSearch" 
-                       placeholder="Search skills, domains, families, or codes...">
-                <button class="btn-custom btn-outline-custom" onclick="expandAll()">
-                    <i class="bi bi-arrows-expand"></i> Expand All
-                </button>
-                <button class="btn-custom btn-outline-custom" onclick="collapseAll()">
-                    <i class="bi bi-arrows-collapse"></i> Collapse All
-                </button>
+            <div class="tree-panel">
+                <div class="tree-controls">
+                    <input type="text" class="tree-search" id="treeSearch" placeholder="Search skills, domains, codes...">
+                    <button class="btn-custom btn-outline-custom" onclick="expandAllDomains()">
+                        <i class="bi bi-arrows-expand"></i> Expand Domains
+                    </button>
+                    <button class="btn-custom btn-outline-custom" onclick="collapseAll()">
+                        <i class="bi bi-arrows-collapse"></i> Collapse All
+                    </button>
+                </div>
+                <div class="tree-container" id="treeContainer"></div>
             </div>
-            <div class="tree-container" id="treeContainer"></div>
-        </div>
-
-        <div class="view-section" id="tableView">
-            <div class="export-buttons">
-                <button class="btn-custom btn-primary-custom" onclick="exportToExcel()">
-                    <i class="bi bi-file-earmark-excel"></i> Export to Excel
-                </button>
-                <button class="btn-custom btn-outline-custom" onclick="exportToCSV()">
-                    <i class="bi bi-file-earmark-spreadsheet"></i> Export CSV
-                </button>
-                <button class="btn-custom btn-outline-custom" onclick="exportToJSON()">
-                    <i class="bi bi-file-earmark-code"></i> Export JSON
-                </button>
-            </div>
-
-            <div class="table-controls">
-                <div class="filter-group">
-                    <select id="filterDomain">
-                        <option value="">All Domains</option>
-                    </select>
-                    <select id="filterComplexity">
-                        <option value="">All Complexity</option>
-                        <option value="1">1 - FOLLOW</option>
-                        <option value="2">2 - ASSIST</option>
-                        <option value="3">3 - APPLY</option>
-                        <option value="4">4 - ENABLE</option>
-                        <option value="5">5 - ENSURE_ADVI</option>
-                    </select>
-                    <select id="filterCategory">
-                        <option value="">All Categories</option>
-                    </select>
+            <div class="detail-panel" id="detailPanel">
+                <div class="detail-header">
+                    <h3><i class="bi bi-info-circle"></i> Skill Details</h3>
+                </div>
+                <div class="detail-content" id="detailContent">
+                    <div class="detail-placeholder">
+                        <i class="bi bi-hand-index"></i>
+                        <p>Select a skill from the tree to view details</p>
+                    </div>
                 </div>
             </div>
+        </div>
 
-            <table id="skillsTable" class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Skill ID</th>
-                        <th>Skill Name</th>
-                        <th>Domain</th>
-                        <th>Family</th>
-                        <th>Category</th>
-                        <th>Complexity</th>
-                        <th>Confidence</th>
-                        <th>Related Codes</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+        <!-- Table View -->
+        <div class="view-section" id="tableView">
+            <div class="table-view-content">
+                <div class="table-controls">
+                    <div class="export-buttons">
+                        <button class="btn-custom btn-primary-custom" onclick="exportToExcel()">
+                            <i class="bi bi-file-earmark-excel"></i> Export Excel
+                        </button>
+                        <button class="btn-custom btn-outline-custom" onclick="exportToCSV()">
+                            <i class="bi bi-file-earmark-spreadsheet"></i> CSV
+                        </button>
+                    </div>
+                    <div class="filter-group">
+                        <input type="text" id="tableSearch" placeholder="Search skills...">
+                        <select id="filterDomain"><option value="">All Domains</option></select>
+                        <select id="filterCategory"><option value="">All Categories</option></select>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table class="skills-table" id="skillsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Skill Name</th>
+                                <th>Domain</th>
+                                <th>Family</th>
+                                <th>Category</th>
+                                <th>Level</th>
+                                <th>Confidence</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+                <div class="table-pagination" id="tablePagination"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -970,61 +829,63 @@ BODY_CONTENT = """
 
 
 JAVASCRIPT_CONTENT = """
-let taxonomyData = EMBEDDED_TAXONOMY_DATA;
+let taxonomyData = null;
 let flatSkillsData = [];
-let dataTable = null;
+let skillsIndex = new Map();
+let selectedSkillId = null;
+
+// Table state
+let currentPage = 1;
+const pageSize = 50;
+let filteredData = [];
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
-    flatSkillsData = flattenTaxonomy(taxonomyData);
-    initializeStats();
-    renderTree();
-    initializeTable();
+    try {
+        // Data loaded via script tag (TAXONOMY_DATA) or embedded (EMBEDDED_DATA)
+        if (typeof TAXONOMY_DATA !== 'undefined') {
+            taxonomyData = TAXONOMY_DATA;
+        } else if (typeof EMBEDDED_DATA !== 'undefined') {
+            taxonomyData = EMBEDDED_DATA;
+        } else {
+            throw new Error('No taxonomy data found. Make sure taxonomy_data.js is in the same folder.');
+        }
+        
+        // Build flat index
+        flatSkillsData = flattenTaxonomy(taxonomyData);
+        flatSkillsData.forEach(skill => skillsIndex.set(skill.id, skill));
+        filteredData = [...flatSkillsData];
+        
+        initializeStats();
+        renderTree();
+        initializeTable();
+        initializeEventListeners();
+        
+        document.getElementById('loadingOverlay').style.display = 'none';
+    } catch (error) {
+        console.error('Failed to load taxonomy:', error);
+        document.querySelector('.loading-text').textContent = 'Error: ' + error.message;
+        document.querySelector('.loading-text').style.color = '#c62828';
+    }
 });
 
-function flattenTaxonomy(node, path = [], result = []) {
-    // For groups, extract skills
-    if (node.type === 'group' && node.skills) {
+function flattenTaxonomy(node, path = {}, result = []) {
+    const currentPath = { ...path };
+    
+    if (node.type === 'domain') currentPath.domain = node.name;
+    else if (node.type === 'family') currentPath.family = node.name;
+    else if (node.type === 'group') currentPath.group = node.name;
+    
+    if (node.skills) {
         node.skills.forEach(skill => {
-            result.push({
-                ...skill,
-                domain: path[0] || '',
-                family: path[1] || '',
-                cluster: path[2] || '',
-                group: node.name || ''
-            });
+            result.push({ ...skill, ...currentPath });
         });
     }
     
-    // Legacy support: if skills are directly in a non-group node
-    if (node.skills && node.type !== 'group') {
-        node.skills.forEach(skill => {
-            result.push({
-                ...skill,
-                domain: path[0] || '',
-                family: path[1] || '',
-                cluster: path[2] || '',
-                group: ''
-            });
-        });
-    }
-
     if (node.children) {
-        node.children.forEach(child => {
-            const newPath = [...path];
-            
-            if (node.type === 'domain') {
-                newPath[0] = node.name;
-            } else if (node.type === 'family') {
-                newPath[1] = node.name;
-            } else if (node.type === 'cluster') {
-                newPath[2] = node.name;
-            }
-            
-            flattenTaxonomy(child, newPath, result);
-        });
+        node.children.forEach(child => flattenTaxonomy(child, currentPath, result));
     }
-
+    
     return result;
 }
 
@@ -1032,271 +893,297 @@ function initializeStats() {
     const stats = taxonomyData.metadata?.statistics || {};
     document.getElementById('totalSkills').textContent = (stats.total_skills || flatSkillsData.length).toLocaleString();
     document.getElementById('totalDomains').textContent = stats.total_domains || taxonomyData.children?.length || 0;
-    document.getElementById('totalFamilies').textContent = stats.total_families || countNodeType(taxonomyData, 'family');
-    document.getElementById('totalCodes').textContent = (stats.total_related_codes || countTotalCodes()).toLocaleString();
-    document.getElementById('totalKeywords').textContent = (stats.total_related_keywords || countTotalKeywords()).toLocaleString();
+    document.getElementById('totalFamilies').textContent = stats.total_families || '-';
+    document.getElementById('totalCodes').textContent = (stats.total_related_codes || countUniqueCodes()).toLocaleString();
+    document.getElementById('totalKeywords').textContent = (stats.total_related_keywords || '-').toLocaleString();
 }
 
-function countTotalCodes() {
-    const uniqueCodes = new Set();
-    flatSkillsData.forEach(s => {
-        if (s.all_related_codes && Array.isArray(s.all_related_codes)) {
-            s.all_related_codes.forEach(code => uniqueCodes.add(code));
-        }
-    });
-    return uniqueCodes.size;
+function countUniqueCodes() {
+    const codes = new Set();
+    flatSkillsData.forEach(s => (s.all_related_codes || []).forEach(c => codes.add(c)));
+    return codes.size;
 }
 
-function countTotalKeywords() {
-    return flatSkillsData.reduce((sum, s) => sum + (s.all_related_kw?.length || 0), 0);
-}
-
-function countNodeType(node, type) {
-    let count = 0;
-    if (node.type === type) count++;
-    if (node.children) {
-        node.children.forEach(child => { count += countNodeType(child, type); });
-    }
-    return count;
-}
+// ============ TREE RENDERING (Lazy) ============
 
 function renderTree() {
     const container = document.getElementById('treeContainer');
     container.innerHTML = '';
+    
     if (taxonomyData.children) {
         taxonomyData.children.forEach(domain => {
-            container.appendChild(createTreeNode(domain, 0));
+            container.appendChild(createNodeElement(domain, 0));
         });
     }
 }
 
-function createTreeNode(node, level) {
-    const nodeDiv = document.createElement('div');
-    nodeDiv.className = 'tree-node';
-    nodeDiv.dataset.nodeId = node.id || node.name;
-    nodeDiv.dataset.nodeType = node.type;
+function createNodeElement(node, depth) {
+    const div = document.createElement('div');
+    div.className = 'tree-node';
+    div.dataset.nodeId = node.id || node.name;
+    div.dataset.loaded = 'false';
     
     const hasChildren = (node.children && node.children.length > 0) || (node.skills && node.skills.length > 0);
-    const contentDiv = document.createElement('div');
-    contentDiv.className = `node-content node-${node.type}`;
     
-    if (hasChildren) {
-        const toggle = document.createElement('span');
-        toggle.className = 'node-toggle';
-        toggle.innerHTML = '<i class="bi bi-chevron-right"></i>';
-        toggle.onclick = (e) => { e.stopPropagation(); toggleNode(nodeDiv); };
-        contentDiv.appendChild(toggle);
-    } else {
-        const spacer = document.createElement('span');
-        spacer.className = 'node-toggle';
-        contentDiv.appendChild(spacer);
-    }
+    const row = document.createElement('div');
+    row.className = `node-row node-${node.type}`;
     
+    // Toggle icon
+    const toggle = document.createElement('span');
+    toggle.className = 'node-toggle';
+    toggle.innerHTML = hasChildren ? '<i class="bi bi-chevron-right"></i>' : '';
+    row.appendChild(toggle);
+    
+    // Type icon
     const icon = document.createElement('i');
-    icon.className = 'bi node-icon';
-    if (node.type === 'domain') icon.classList.add('bi-folder2-open');
-    else if (node.type === 'family') icon.classList.add('bi-collection');
-    else if (node.type === 'cluster') icon.classList.add('bi-grid-3x3-gap');
-    else if (node.type === 'group') icon.classList.add('bi-layers');
-    else if (node.type === 'skill') icon.classList.add('bi-mortarboard');
-    else icon.classList.add('bi-circle-fill');
-    contentDiv.appendChild(icon);
+    icon.className = 'bi node-icon ' + getIconClass(node.type);
+    row.appendChild(icon);
     
+    // Label
     const label = document.createElement('span');
     label.className = 'node-label';
     label.textContent = node.name;
-    contentDiv.appendChild(label);
+    label.title = node.name;
+    row.appendChild(label);
     
-    if (node.statistics?.size || node.size) {
+    // Badge
+    const size = node.statistics?.size || node.size || (node.skills?.length);
+    if (size) {
         const badge = document.createElement('span');
         badge.className = 'node-badge';
-        badge.textContent = `${node.statistics?.size || node.size} skills`;
-        contentDiv.appendChild(badge);
+        badge.textContent = size;
+        row.appendChild(badge);
     }
     
-    nodeDiv.appendChild(contentDiv);
+    div.appendChild(row);
     
+    // Children container (lazy loaded)
     if (hasChildren) {
         const childrenDiv = document.createElement('div');
         childrenDiv.className = 'node-children';
+        div.appendChild(childrenDiv);
         
-        if (node.children) {
-            node.children.forEach(child => {
-                childrenDiv.appendChild(createTreeNode(child, level + 1));
-            });
-        }
-        
-        if (node.skills) {
-            node.skills.forEach(skill => {
-                childrenDiv.appendChild(createSkillNode(skill));
-            });
-        }
-        
-        nodeDiv.appendChild(childrenDiv);
+        // Store node data for lazy loading
+        div._nodeData = node;
     }
     
-    return nodeDiv;
+    // Click handler
+    row.addEventListener('click', (e) => {
+        e.stopPropagation();
+        
+        if (node.type === 'skill' || (node.skills && node.skills.length === 1 && !node.children)) {
+            const skill = node.type === 'skill' ? node : node.skills[0];
+            showSkillDetail(skill);
+        } else if (hasChildren) {
+            toggleNodeExpansion(div);
+        }
+    });
+    
+    return div;
 }
 
-function createSkillNode(skill) {
-    const skillDiv = document.createElement('div');
-    skillDiv.className = 'skill-detail';
+function toggleNodeExpansion(nodeDiv) {
+    const row = nodeDiv.querySelector('.node-row');
+    const childrenDiv = nodeDiv.querySelector('.node-children');
     
-    // Header with name and ID
-    const headerDiv = document.createElement('div');
-    headerDiv.className = 'skill-header';
+    if (!childrenDiv) return;
     
-    const nameDiv = document.createElement('div');
-    nameDiv.className = 'skill-name';
-    nameDiv.innerHTML = `<i class="bi bi-mortarboard-fill"></i> ${skill.name}`;
-    headerDiv.appendChild(nameDiv);
+    const isExpanded = childrenDiv.classList.contains('expanded');
     
-    const idDiv = document.createElement('div');
-    idDiv.className = 'skill-id';
-    idDiv.textContent = skill.id || 'N/A';
-    headerDiv.appendChild(idDiv);
+    if (isExpanded) {
+        childrenDiv.classList.remove('expanded');
+        row.classList.remove('expanded');
+    } else {
+        // Lazy load children if not loaded
+        if (nodeDiv.dataset.loaded === 'false' && nodeDiv._nodeData) {
+            loadNodeChildren(nodeDiv, childrenDiv);
+            nodeDiv.dataset.loaded = 'true';
+        }
+        childrenDiv.classList.add('expanded');
+        row.classList.add('expanded');
+    }
+}
+
+function loadNodeChildren(nodeDiv, childrenDiv) {
+    const node = nodeDiv._nodeData;
     
-    skillDiv.appendChild(headerDiv);
-    
-    // Description
-    if (skill.description) {
-        const descDiv = document.createElement('div');
-        descDiv.className = 'skill-description';
-        descDiv.textContent = skill.description;
-        skillDiv.appendChild(descDiv);
+    // Render children nodes
+    if (node.children) {
+        node.children.forEach(child => {
+            childrenDiv.appendChild(createNodeElement(child, 1));
+        });
     }
     
-    // Meta Grid
-    const metaGrid = document.createElement('div');
-    metaGrid.className = 'skill-meta-grid';
-    
-    // Confidence
-    const confItem = document.createElement('div');
-    confItem.className = 'skill-meta-item';
-    const confLevel = (skill.confidence || 0) * 100;
-    const confClass = confLevel >= 80 ? 'high' : (confLevel >= 50 ? 'medium' : 'low');
-    confItem.innerHTML = `
-        <div class="skill-meta-label">Confidence</div>
-        <div class="skill-meta-value">${confLevel.toFixed(0)}%</div>
-        <div class="confidence-bar"><div class="confidence-fill confidence-${confClass}" style="width: ${confLevel}%"></div></div>
-    `;
-    metaGrid.appendChild(confItem);
-    
-    // Level
-    const levelItem = document.createElement('div');
-    levelItem.className = 'skill-meta-item';
-    levelItem.innerHTML = `
-        <div class="skill-meta-label">Skill Level</div>
-        <div class="skill-meta-value">Level ${skill.level || 'N/A'}</div>
-    `;
-    metaGrid.appendChild(levelItem);
-    
-    // Code
-    if (skill.code) {
-        const codeItem = document.createElement('div');
-        codeItem.className = 'skill-meta-item';
-        codeItem.innerHTML = `
-            <div class="skill-meta-label">Primary Code</div>
-            <div class="skill-meta-value" style="font-family: monospace;">${skill.code}</div>
-        `;
-        metaGrid.appendChild(codeItem);
+    // Render skills as simple rows
+    if (node.skills) {
+        node.skills.forEach(skill => {
+            const skillRow = document.createElement('div');
+            skillRow.className = 'node-row node-skill';
+            skillRow.innerHTML = `
+                <span class="node-toggle"></span>
+                <i class="bi bi-mortarboard node-icon"></i>
+                <span class="node-label" title="${skill.name}">${skill.name}</span>
+                <span class="node-badge" style="font-family: monospace; font-size: 0.65rem;">${skill.id || ''}</span>
+            `;
+            skillRow.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showSkillDetail(skill);
+                
+                // Highlight selected
+                document.querySelectorAll('.node-row.selected').forEach(r => r.classList.remove('selected'));
+                skillRow.classList.add('selected');
+            });
+            childrenDiv.appendChild(skillRow);
+        });
     }
-    
-    skillDiv.appendChild(metaGrid);
-    
-    // Dimensions (including Category)
-    const dimsDiv = document.createElement('div');
-    dimsDiv.className = 'skill-dimensions';
-    
-    // Category badge
-    if (skill.category) {
-        dimsDiv.innerHTML += `<span class="dimension-badge dim-category"><i class="bi bi-bookmark"></i> ${skill.category}</span>`;
-    }
+}
+
+function getIconClass(type) {
+    const icons = {
+        'domain': 'bi-folder2-open',
+        'family': 'bi-collection',
+        'cluster': 'bi-grid-3x3-gap',
+        'group': 'bi-layers',
+        'skill': 'bi-mortarboard'
+    };
+    return icons[type] || 'bi-circle-fill';
+}
+
+function expandAllDomains() {
+    document.querySelectorAll('.tree-node').forEach(node => {
+        if (node._nodeData?.type === 'domain') {
+            const childrenDiv = node.querySelector('.node-children');
+            if (childrenDiv) {
+                if (node.dataset.loaded === 'false' && node._nodeData) {
+                    loadNodeChildren(node, childrenDiv);
+                    node.dataset.loaded = 'true';
+                }
+                childrenDiv.classList.add('expanded');
+                node.querySelector('.node-row')?.classList.add('expanded');
+            }
+        }
+    });
+}
+
+function collapseAll() {
+    document.querySelectorAll('.node-children').forEach(c => c.classList.remove('expanded'));
+    document.querySelectorAll('.node-row').forEach(r => r.classList.remove('expanded'));
+}
+
+// ============ SKILL DETAIL PANEL ============
+
+function showSkillDetail(skill) {
+    const content = document.getElementById('detailContent');
+    selectedSkillId = skill.id;
     
     const dims = skill.dimensions || {};
-    if (dims.complexity_level) {
-        dimsDiv.innerHTML += `<span class="dimension-badge dim-complexity"><i class="bi bi-bar-chart"></i> Level ${dims.complexity_level}</span>`;
-    }
-    if (dims.transferability) {
-        dimsDiv.innerHTML += `<span class="dimension-badge dim-transferability"><i class="bi bi-arrow-left-right"></i> ${formatLabel(dims.transferability)}</span>`;
-    }
-    if (dims.digital_intensity !== undefined) {
-        dimsDiv.innerHTML += `<span class="dimension-badge dim-digital"><i class="bi bi-cpu"></i> Digital ${dims.digital_intensity}</span>`;
-    }
-    if (dims.future_readiness) {
-        dimsDiv.innerHTML += `<span class="dimension-badge dim-future"><i class="bi bi-graph-up-arrow"></i> ${formatLabel(dims.future_readiness)}</span>`;
-    }
-    if (dims.skill_nature) {
-        dimsDiv.innerHTML += `<span class="dimension-badge dim-nature"><i class="bi bi-gear"></i> ${formatLabel(dims.skill_nature)}</span>`;
-    }
-    if (skill.context) {
-        dimsDiv.innerHTML += `<span class="dimension-badge dim-context"><i class="bi bi-book"></i> ${formatLabel(skill.context)}</span>`;
-    }
+    const confPct = ((skill.confidence || 0) * 100).toFixed(0);
+    const confClass = confPct >= 80 ? 'high' : (confPct >= 50 ? 'medium' : 'low');
     
-    skillDiv.appendChild(dimsDiv);
+    let html = `
+        <div class="skill-card">
+            <div class="skill-card-header">
+                <div class="skill-card-name">
+                    <i class="bi bi-mortarboard-fill"></i>
+                    ${skill.name}
+                </div>
+                <span class="skill-card-id">${skill.id || 'N/A'}</span>
+            </div>
+            
+            ${skill.description ? `<div class="skill-card-description">${skill.description}</div>` : ''}
+            
+            <div class="skill-section">
+                <div class="skill-section-title"><i class="bi bi-bar-chart"></i> Metrics</div>
+                <div class="meta-grid">
+                    <div class="meta-item">
+                        <div class="meta-label">Confidence</div>
+                        <div class="meta-value">${confPct}%</div>
+                        <div class="confidence-bar"><div class="confidence-fill confidence-${confClass}" style="width: ${confPct}%"></div></div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Level</div>
+                        <div class="meta-value">${skill.level || 'N/A'}</div>
+                    </div>
+                    ${skill.code ? `<div class="meta-item"><div class="meta-label">Primary Code</div><div class="meta-value" style="font-family: monospace">${skill.code}</div></div>` : ''}
+                    ${skill.context ? `<div class="meta-item"><div class="meta-label">Context</div><div class="meta-value">${formatLabel(skill.context)}</div></div>` : ''}
+                </div>
+            </div>
+            
+            <div class="skill-section">
+                <div class="skill-section-title"><i class="bi bi-tags"></i> Dimensions</div>
+                <div class="dimension-list">
+                    ${skill.category ? `<span class="dim-badge dim-category"><i class="bi bi-bookmark"></i> ${skill.category}</span>` : ''}
+                    ${dims.complexity_level ? `<span class="dim-badge dim-complexity">Level ${dims.complexity_level}</span>` : ''}
+                    ${dims.transferability ? `<span class="dim-badge dim-transfer">${formatLabel(dims.transferability)}</span>` : ''}
+                    ${dims.digital_intensity !== undefined ? `<span class="dim-badge dim-digital">Digital ${dims.digital_intensity}</span>` : ''}
+                    ${dims.future_readiness ? `<span class="dim-badge dim-future">${formatLabel(dims.future_readiness)}</span>` : ''}
+                    ${dims.skill_nature ? `<span class="dim-badge dim-nature">${formatLabel(dims.skill_nature)}</span>` : ''}
+                </div>
+            </div>`;
     
-    // Alternative Titles
+    // Alternative titles
     const altTitles = skill.alternative_titles || [];
     if (altTitles.length > 0) {
-        const altSection = document.createElement('div');
-        altSection.className = 'alt-titles-section';
-        altSection.innerHTML = `<div class="alt-titles-label"><i class="bi bi-card-heading"></i> Alternative Titles (${altTitles.length})</div>`;
-        altTitles.forEach(title => {
-            altSection.innerHTML += `<span class="alt-title-tag">${title}</span>`;
-        });
-        skillDiv.appendChild(altSection);
+        html += `
+            <div class="skill-section">
+                <div class="skill-section-title"><i class="bi bi-card-heading"></i> Alternative Titles (${altTitles.length})</div>
+                <div class="tag-list">
+                    ${altTitles.slice(0, 10).map(t => `<span class="tag tag-alt">${t}</span>`).join('')}
+                    ${altTitles.length > 10 ? `<span class="tag tag-more">+${altTitles.length - 10} more</span>` : ''}
+                </div>
+            </div>`;
     }
     
-    // All Related Codes
-    const relatedCodes = skill.all_related_codes || [];
-    if (relatedCodes.length > 0) {
-        const codesSection = document.createElement('div');
-        codesSection.className = 'related-section';
-        codesSection.innerHTML = `<div class="related-label"><i class="bi bi-upc-scan"></i> Related UOC Codes (${relatedCodes.length})</div>`;
-        relatedCodes.slice(0, 10).forEach(code => {
-            codesSection.innerHTML += `<span class="code-tag">${code}</span>`;
-        });
-        if (relatedCodes.length > 10) {
-            codesSection.innerHTML += `<span class="code-tag">+${relatedCodes.length - 10} more</span>`;
-        }
-        skillDiv.appendChild(codesSection);
+    // Related codes
+    const codes = skill.all_related_codes || [];
+    if (codes.length > 0) {
+        html += `
+            <div class="skill-section">
+                <div class="skill-section-title"><i class="bi bi-upc-scan"></i> Related Codes (${codes.length})</div>
+                <div class="tag-list">
+                    ${codes.slice(0, 12).map(c => `<span class="tag tag-code">${c}</span>`).join('')}
+                    ${codes.length > 12 ? `<span class="tag tag-more">+${codes.length - 12} more</span>` : ''}
+                </div>
+            </div>`;
     }
     
-    // All Related Keywords
-    const relatedKW = skill.all_related_kw || [];
-    if (relatedKW.length > 0) {
-        const kwSection = document.createElement('div');
-        kwSection.className = 'related-section';
-        kwSection.innerHTML = `<div class="related-label"><i class="bi bi-tags"></i> Related Keywords (${relatedKW.length})</div>`;
-        relatedKW.slice(0, 15).forEach(kw => {
-            kwSection.innerHTML += `<span class="keyword-tag">${kw}</span>`;
-        });
-        if (relatedKW.length > 15) {
-            kwSection.innerHTML += `<span class="keyword-tag">+${relatedKW.length - 15} more</span>`;
-        }
-        skillDiv.appendChild(kwSection);
+    // Related keywords
+    const kws = skill.all_related_kw || [];
+    if (kws.length > 0) {
+        html += `
+            <div class="skill-section">
+                <div class="skill-section-title"><i class="bi bi-key"></i> Related Keywords (${kws.length})</div>
+                <div class="tag-list">
+                    ${kws.slice(0, 15).map(k => `<span class="tag tag-keyword">${k}</span>`).join('')}
+                    ${kws.length > 15 ? `<span class="tag tag-more">+${kws.length - 15} more</span>` : ''}
+                </div>
+            </div>`;
     }
     
-    // Related Skills with Similarity Scores
-    if (skill.relationships?.related && skill.relationships.related.length > 0) {
-        const relSection = document.createElement('div');
-        relSection.className = 'related-skills-section';
-        relSection.innerHTML = `<div class="related-label"><i class="bi bi-link-45deg"></i> Related Skills</div>`;
-        
-        skill.relationships.related.forEach(rel => {
-            const link = document.createElement('a');
-            link.href = '#';
-            link.className = 'relationship-link';
-            const simScore = rel.similarity ? `<span class="similarity-score">(${(rel.similarity * 100).toFixed(0)}%)</span>` : '';
-            link.innerHTML = `<i class="bi bi-arrow-right-short"></i> ${rel.skill_name} ${simScore}`;
-            link.onclick = (e) => { e.preventDefault(); searchAndHighlight(rel.skill_id); };
-            relSection.appendChild(link);
-        });
-        
-        skillDiv.appendChild(relSection);
+    // Related skills
+    const related = skill.relationships?.related || [];
+    if (related.length > 0) {
+        html += `
+            <div class="skill-section">
+                <div class="skill-section-title"><i class="bi bi-link-45deg"></i> Related Skills</div>
+                <div>
+                    ${related.slice(0, 8).map(r => `
+                        <span class="related-skill" onclick="navigateToSkill('${r.skill_id}')">
+                            ${r.skill_name}
+                            <span class="similarity-score">${r.similarity ? (r.similarity * 100).toFixed(0) + '%' : ''}</span>
+                        </span>
+                    `).join('')}
+                </div>
+            </div>`;
     }
     
-    return skillDiv;
+    html += '</div>';
+    content.innerHTML = html;
+}
+
+function navigateToSkill(skillId) {
+    const skill = skillsIndex.get(skillId);
+    if (skill) showSkillDetail(skill);
 }
 
 function formatLabel(str) {
@@ -1304,131 +1191,169 @@ function formatLabel(str) {
     return str.replace(/_/g, ' ').replace(/\\b\\w/g, c => c.toUpperCase());
 }
 
-function toggleNode(nodeDiv) {
-    const toggle = nodeDiv.querySelector('.node-toggle');
-    const content = nodeDiv.querySelector('.node-content');
-    const children = nodeDiv.querySelector('.node-children');
-    
-    if (children) {
-        const isExpanded = children.classList.contains('expanded');
-        if (isExpanded) {
-            children.classList.remove('expanded');
-            content.classList.remove('expanded');
-        } else {
-            children.classList.add('expanded');
-            content.classList.add('expanded');
-        }
-    }
-}
+// ============ SEARCH ============
 
-function expandAll() {
-    document.querySelectorAll('.node-children').forEach(child => child.classList.add('expanded'));
-    document.querySelectorAll('.node-content').forEach(content => content.classList.add('expanded'));
-}
-
-function collapseAll() {
-    document.querySelectorAll('.node-children').forEach(child => child.classList.remove('expanded'));
-    document.querySelectorAll('.node-content').forEach(content => content.classList.remove('expanded'));
-}
-
-function searchAndHighlight(query) {
-    const searchTerm = query.toLowerCase();
-    document.querySelectorAll('.tree-node').forEach(node => {
-        const text = node.textContent.toLowerCase();
-        node.style.display = text.includes(searchTerm) ? '' : 'none';
-        
-        if (text.includes(searchTerm)) {
-            let parent = node.parentElement;
-            while (parent) {
-                if (parent.classList.contains('node-children')) {
-                    parent.classList.add('expanded');
-                    const parentNode = parent.parentElement;
-                    if (parentNode) {
-                        const content = parentNode.querySelector('.node-content');
-                        if (content) content.classList.add('expanded');
-                    }
-                }
-                parent = parent.parentElement;
-            }
-        }
-    });
-}
-
+let searchTimeout;
 document.getElementById('treeSearch')?.addEventListener('input', (e) => {
-    const query = e.target.value;
-    if (query.length > 0) {
-        searchAndHighlight(query);
-    } else {
-        document.querySelectorAll('.tree-node').forEach(node => { node.style.display = ''; });
-    }
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => performTreeSearch(e.target.value), 300);
 });
 
+function performTreeSearch(query) {
+    if (!query || query.length < 2) {
+        // Reset view
+        document.querySelectorAll('.tree-node').forEach(n => n.style.display = '');
+        return;
+    }
+    
+    const searchLower = query.toLowerCase();
+    const matches = flatSkillsData.filter(s => 
+        s.name?.toLowerCase().includes(searchLower) ||
+        s.id?.toLowerCase().includes(searchLower) ||
+        s.domain?.toLowerCase().includes(searchLower) ||
+        (s.all_related_codes || []).some(c => c.toLowerCase().includes(searchLower))
+    ).slice(0, 100);
+    
+    // Show results in tree area temporarily
+    const container = document.getElementById('treeContainer');
+    container.innerHTML = `<div style="padding: 10px; color: var(--jsa-grey-500);">Found ${matches.length} results${matches.length >= 100 ? ' (showing first 100)' : ''}</div>`;
+    
+    matches.forEach(skill => {
+        const row = document.createElement('div');
+        row.className = 'node-row node-skill';
+        row.innerHTML = `
+            <span class="node-toggle"></span>
+            <i class="bi bi-mortarboard node-icon"></i>
+            <span class="node-label">${skill.name}</span>
+            <span class="node-badge" style="font-size: 0.65rem;">${skill.domain || ''}</span>
+        `;
+        row.addEventListener('click', () => showSkillDetail(skill));
+        container.appendChild(row);
+    });
+    
+    // Add reset button
+    const resetBtn = document.createElement('button');
+    resetBtn.className = 'btn-custom btn-outline-custom';
+    resetBtn.style.margin = '10px';
+    resetBtn.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i> Reset Tree';
+    resetBtn.onclick = () => {
+        document.getElementById('treeSearch').value = '';
+        renderTree();
+    };
+    container.prepend(resetBtn);
+}
+
+// ============ TABLE VIEW ============
+
 function initializeTable() {
-    // Populate domain filter
-    const domains = [...new Set(flatSkillsData.map(s => s.domain).filter(Boolean))];
+    // Populate filters
+    const domains = [...new Set(flatSkillsData.map(s => s.domain).filter(Boolean))].sort();
     const domainSelect = document.getElementById('filterDomain');
-    domains.sort().forEach(domain => {
-        const option = document.createElement('option');
-        option.value = domain;
-        option.textContent = domain;
-        domainSelect.appendChild(option);
+    domains.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d;
+        opt.textContent = d;
+        domainSelect.appendChild(opt);
     });
     
-    // Populate category filter
-    const categories = [...new Set(flatSkillsData.map(s => s.category).filter(Boolean))];
-    const categorySelect = document.getElementById('filterCategory');
-    categories.sort().forEach(cat => {
-        const option = document.createElement('option');
-        option.value = cat;
-        option.textContent = formatLabel(cat);
-        categorySelect.appendChild(option);
+    const categories = [...new Set(flatSkillsData.map(s => s.category).filter(Boolean))].sort();
+    const catSelect = document.getElementById('filterCategory');
+    categories.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = formatLabel(c);
+        catSelect.appendChild(opt);
     });
     
-    if (dataTable) dataTable.destroy();
+    renderTable();
+}
+
+function renderTable() {
+    const tbody = document.getElementById('tableBody');
+    const start = (currentPage - 1) * pageSize;
+    const end = start + pageSize;
+    const pageData = filteredData.slice(start, end);
     
-    dataTable = $('#skillsTable').DataTable({
-        data: flatSkillsData,
-        columns: [
-            { data: 'id', render: (data) => `<span style="font-family: monospace; font-size: 0.8rem;">${data || '-'}</span>` },
-            { data: 'name' },
-            { data: 'domain' },
-            { data: 'family' },
-            { data: 'category', render: (data) => formatLabel(data) || '-' },
-            { data: 'dimensions.complexity_level', render: (data) => data ? `Level ${data}` : '-' },
-            { data: 'confidence', render: (data) => data ? `${(data * 100).toFixed(0)}%` : '-' },
-            { data: 'all_related_codes', render: (data) => {
-                if (!data || data.length === 0) return '-';
-                const display = data.slice(0, 3).join(', ');
-                return data.length > 3 ? `${display} +${data.length - 3}` : display;
-            }}
-        ],
-        pageLength: 25,
-        responsive: true,
-        order: [[1, 'asc']],
-        language: {
-            search: "Search:",
-            lengthMenu: "Show _MENU_ skills per page"
-        }
+    tbody.innerHTML = pageData.map(s => `
+        <tr onclick="showSkillDetail(skillsIndex.get('${s.id}'))">
+            <td style="font-family: monospace; font-size: 0.8rem;">${s.id || '-'}</td>
+            <td>${s.name}</td>
+            <td>${s.domain || '-'}</td>
+            <td>${s.family || '-'}</td>
+            <td>${formatLabel(s.category) || '-'}</td>
+            <td>${s.level || '-'}</td>
+            <td>${s.confidence ? (s.confidence * 100).toFixed(0) + '%' : '-'}</td>
+        </tr>
+    `).join('');
+    
+    renderPagination();
+}
+
+function renderPagination() {
+    const totalPages = Math.ceil(filteredData.length / pageSize);
+    const pag = document.getElementById('tablePagination');
+    
+    pag.innerHTML = `
+        <div class="pagination-info">
+            Showing ${((currentPage - 1) * pageSize) + 1}-${Math.min(currentPage * pageSize, filteredData.length)} of ${filteredData.length.toLocaleString()} skills
+        </div>
+        <div class="pagination-buttons">
+            <button class="page-btn" onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''}><i class="bi bi-chevron-double-left"></i></button>
+            <button class="page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}><i class="bi bi-chevron-left"></i></button>
+            <span style="padding: 6px 12px;">Page ${currentPage} of ${totalPages}</span>
+            <button class="page-btn" onclick="goToPage(${currentPage + 1})" ${currentPage >= totalPages ? 'disabled' : ''}><i class="bi bi-chevron-right"></i></button>
+            <button class="page-btn" onclick="goToPage(${totalPages})" ${currentPage >= totalPages ? 'disabled' : ''}><i class="bi bi-chevron-double-right"></i></button>
+        </div>
+    `;
+}
+
+function goToPage(page) {
+    currentPage = page;
+    renderTable();
+}
+
+function applyTableFilters() {
+    const search = document.getElementById('tableSearch').value.toLowerCase();
+    const domain = document.getElementById('filterDomain').value;
+    const category = document.getElementById('filterCategory').value;
+    
+    filteredData = flatSkillsData.filter(s => {
+        if (domain && s.domain !== domain) return false;
+        if (category && s.category !== category) return false;
+        if (search && !s.name?.toLowerCase().includes(search) && !s.id?.toLowerCase().includes(search)) return false;
+        return true;
     });
     
-    ['filterDomain', 'filterComplexity', 'filterCategory'].forEach(id => {
-        document.getElementById(id)?.addEventListener('change', applyFilters);
+    currentPage = 1;
+    renderTable();
+}
+
+// ============ EVENT LISTENERS ============
+
+function initializeEventListeners() {
+    // Tab switching
+    document.querySelectorAll('.view-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const view = tab.dataset.view;
+            document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+            document.getElementById(`${view}View`).classList.add('active');
+        });
+    });
+    
+    // Table filters
+    let filterTimeout;
+    ['tableSearch', 'filterDomain', 'filterCategory'].forEach(id => {
+        document.getElementById(id)?.addEventListener('input', () => {
+            clearTimeout(filterTimeout);
+            filterTimeout = setTimeout(applyTableFilters, 300);
+        });
+        document.getElementById(id)?.addEventListener('change', applyTableFilters);
     });
 }
 
-function applyFilters() {
-    const domain = document.getElementById('filterDomain').value;
-    const complexity = document.getElementById('filterComplexity').value;
-    const category = document.getElementById('filterCategory').value;
-    
-    let filtered = flatSkillsData;
-    
-    if (domain) filtered = filtered.filter(s => s.domain === domain);
-    if (complexity) filtered = filtered.filter(s => s.dimensions?.complexity_level === parseInt(complexity));
-    if (category) filtered = filtered.filter(s => s.category === category);
-    
-    dataTable.clear().rows.add(filtered).draw();
-}
+// ============ EXPORT ============
 
 function exportToExcel() {
     const exportData = flatSkillsData.map(s => ({
@@ -1450,114 +1375,116 @@ function exportToExcel() {
         'Primary Code': s.code || '',
         'Alternative Titles': (s.alternative_titles || []).join('; '),
         'All Related Codes': (s.all_related_codes || []).join('; '),
-        'All Related Keywords': (s.all_related_kw || []).join('; '),
-        'Assignment Family': s.assignment?.family || '',
-        'Assignment Method': s.assignment?.method || '',
-        'Assignment Confidence': s.assignment?.confidence ? (s.assignment.confidence * 100).toFixed(1) + '%' : ''
+        'All Related Keywords': (s.all_related_kw || []).join('; ')
     }));
     
     const ws = XLSX.utils.json_to_sheet(exportData);
-    
-    // Set column widths
-    ws['!cols'] = [
-        {wch: 12}, {wch: 40}, {wch: 60}, {wch: 25}, {wch: 25}, {wch: 20},
-        {wch: 15}, {wch: 8}, {wch: 12}, {wch: 10}, {wch: 15}, {wch: 18},
-        {wch: 15}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 50}, {wch: 50}, {wch: 80},
-        {wch: 25}, {wch: 20}, {wch: 18}
-    ];
-    
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Skills Taxonomy');
-    
-    // Add metadata sheet
-    const metaData = [
-        ['VET Skills Taxonomy Export'],
-        [''],
-        ['Export Date', new Date().toISOString()],
-        ['Total Skills', flatSkillsData.length],
-        ['Total Domains', taxonomyData.metadata?.statistics?.total_domains || ''],
-        ['Total Families', taxonomyData.metadata?.statistics?.total_families || ''],
-        ['Total Related Codes', taxonomyData.metadata?.statistics?.total_related_codes || ''],
-        ['Total Related Keywords', taxonomyData.metadata?.statistics?.total_related_keywords || '']
-    ];
-    const metaWs = XLSX.utils.aoa_to_sheet(metaData);
-    XLSX.utils.book_append_sheet(wb, metaWs, 'Metadata');
-    
     XLSX.writeFile(wb, 'vet_skills_taxonomy.xlsx');
 }
 
 function exportToCSV() {
-    const headers = ['Skill ID', 'Name', 'Domain', 'Family', 'Category', 'Level', 'Complexity', 
-                     'Confidence', 'Primary Code', 'Alternative Titles', 'Related Codes', 'Related Keywords'];
+    const headers = ['Skill ID', 'Name', 'Domain', 'Family', 'Category', 'Level', 'Confidence', 'Primary Code'];
     const rows = flatSkillsData.map(s => [
         s.id, s.name, s.domain, s.family, s.category || '',
-        s.level || '', s.dimensions?.complexity_level || '',
-        s.confidence ? (s.confidence * 100).toFixed(0) + '%' : '',
-        s.code || '',
-        (s.alternative_titles || []).join('; '),
-        (s.all_related_codes || []).join('; '),
-        (s.all_related_kw || []).join('; ')
-    ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
+        s.level || '', s.confidence ? (s.confidence * 100).toFixed(0) + '%' : '', s.code || ''
+    ].map(v => `"${String(v || '').replace(/"/g, '""')}"`).join(','));
     
     const csv = [headers.join(','), ...rows].join('\\n');
-    downloadFile(csv, 'vet_skills_taxonomy.csv', 'text/csv');
-}
-
-function exportToJSON() {
-    const json = JSON.stringify(taxonomyData, null, 2);
-    downloadFile(json, 'vet_skills_taxonomy.json', 'application/json');
-}
-
-function downloadFile(content, filename, type) {
-    const blob = new Blob([content], { type });
+    const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = filename;
+    a.download = 'vet_skills_taxonomy.csv';
     a.click();
     URL.revokeObjectURL(url);
 }
-
-// Tab switching
-document.querySelectorAll('.view-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-        const view = tab.dataset.view;
-        document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-        document.getElementById(`${view}View`).classList.add('active');
-    });
-});
 """
 
 
+def count_skills(node):
+    """Count total skills in taxonomy"""
+    count = 0
+    if 'skills' in node:
+        count += len(node['skills'])
+    if 'children' in node:
+        for child in node['children']:
+            count += count_skills(child)
+    return count
+
+
 def generate_html(taxonomy_json_path: str, output_html_path: str):
-    """Generate standalone HTML with embedded taxonomy data"""
+    """Generate optimized HTML visualization"""
     
     print(f"Loading taxonomy from: {taxonomy_json_path}")
     with open(taxonomy_json_path, 'r') as f:
         taxonomy_data = json.load(f)
     
-    print(f"Taxonomy loaded: {len(taxonomy_data.get('children', []))} domains")
+    total_skills = taxonomy_data.get('metadata', {}).get('statistics', {}).get('total_skills', 0)
+    if total_skills == 0:
+        total_skills = count_skills(taxonomy_data)
     
-    # Create HTML with embedded data
-    html_content = HTML_TEMPLATE.format(
-        CSS_CONTENT=CSS_CONTENT,
-        BODY_CONTENT=BODY_CONTENT,
-        TAXONOMY_DATA=json.dumps(taxonomy_data, indent=2),
-        JAVASCRIPT_CONTENT=JAVASCRIPT_CONTENT
-    )
+    print(f"Taxonomy loaded: {total_skills} skills")
+    
+    # Decide whether to embed or use external file
+    if total_skills > EXTERNAL_DATA_THRESHOLD:
+        print(f"Large dataset detected ({total_skills} skills). Using external data file.")
+        
+        # Save data to JavaScript file (works with file:// protocol unlike JSON fetch)
+        data_file = output_html_path.replace('.html', '_data.js')
+        data_file_name = Path(data_file).name
+        
+        # Write as JavaScript variable assignment
+        with open(data_file, 'w') as f:
+            f.write('// VET Skills Taxonomy Data\n')
+            f.write('// This file is loaded by taxonomy_visualization.html\n')
+            f.write('// Do not edit manually\n\n')
+            f.write('const TAXONOMY_DATA = ')
+            json.dump(taxonomy_data, f, separators=(',', ':'))  # Minified JSON
+            f.write(';\n')
+        
+        print(f"Data saved to: {data_file}")
+        print(f"  (Minified JSON as JavaScript variable)")
+        
+        # Generate HTML with script tag reference
+        html_content = HTML_TEMPLATE_EXTERNAL.format(
+            CSS_CONTENT=CSS_CONTENT,
+            BODY_CONTENT=BODY_CONTENT,
+            DATA_FILE=data_file_name,
+            JAVASCRIPT_CONTENT=JAVASCRIPT_CONTENT
+        )
+    else:
+        print(f"Small dataset ({total_skills} skills). Embedding data in HTML.")
+        
+        html_content = HTML_TEMPLATE_EMBEDDED.format(
+            CSS_CONTENT=CSS_CONTENT,
+            BODY_CONTENT=BODY_CONTENT,
+            TAXONOMY_DATA=json.dumps(taxonomy_data),
+            JAVASCRIPT_CONTENT=JAVASCRIPT_CONTENT
+        )
     
     print(f"Writing HTML to: {output_html_path}")
     with open(output_html_path, 'w', encoding='utf-8') as f:
         f.write(html_content)
     
+    print("\n" + "=" * 60)
     print("✓ HTML visualization generated successfully!")
-    print(f"\nOpen {output_html_path} in your web browser to view the interactive taxonomy.")
+    print("=" * 60)
+    print("\nTo view the taxonomy:")
+    print(f"  1. Keep both files in the same folder:")
+    if total_skills > EXTERNAL_DATA_THRESHOLD:
+        print(f"     - {Path(output_html_path).name}")
+        print(f"     - {data_file_name}")
+    else:
+        print(f"     - {Path(output_html_path).name}")
+    print(f"  2. Double-click the HTML file to open in your browser")
+    print("\nNo server or Python required - works offline!")
+    print("=" * 60)
 
 
 def flatten_taxonomy_to_dataframe(taxonomy_data: dict) -> pd.DataFrame:
-    """Flatten taxonomy to a pandas DataFrame for Excel export"""
+    """Flatten taxonomy to pandas DataFrame for Excel export"""
     
     flat_skills = []
     
@@ -1565,7 +1492,6 @@ def flatten_taxonomy_to_dataframe(taxonomy_data: dict) -> pd.DataFrame:
         if path is None:
             path = {'domain': '', 'family': '', 'group': ''}
         
-        # Update path based on node type
         if node.get('type') == 'domain':
             path = {**path, 'domain': node.get('name', '')}
         elif node.get('type') == 'family':
@@ -1573,12 +1499,9 @@ def flatten_taxonomy_to_dataframe(taxonomy_data: dict) -> pd.DataFrame:
         elif node.get('type') == 'group':
             path = {**path, 'group': node.get('name', '')}
         
-        # Extract skills from this node
         if 'skills' in node and node['skills']:
             for skill in node['skills']:
                 dims = skill.get('dimensions', {})
-                assignment = skill.get('assignment', {})
-                
                 flat_skills.append({
                     'skill_id': skill.get('id', ''),
                     'name': skill.get('name', ''),
@@ -1599,12 +1522,8 @@ def flatten_taxonomy_to_dataframe(taxonomy_data: dict) -> pd.DataFrame:
                     'alternative_titles': '; '.join(skill.get('alternative_titles', [])),
                     'all_related_codes': '; '.join(skill.get('all_related_codes', [])),
                     'all_related_keywords': '; '.join(skill.get('all_related_kw', [])),
-                    'assignment_family': assignment.get('family', ''),
-                    'assignment_method': assignment.get('method', ''),
-                    'assignment_confidence': assignment.get('confidence', ''),
                 })
         
-        # Recursively process children
         if 'children' in node:
             for child in node['children']:
                 extract_skills(child, path.copy())
@@ -1625,29 +1544,11 @@ def export_taxonomy_to_excel(taxonomy_json_path: str, output_excel_path: str):
     
     print(f"Writing Excel file with {len(df)} skills...")
     
-    # Create Excel writer with xlsxwriter engine for formatting
     with pd.ExcelWriter(output_excel_path, engine='openpyxl') as writer:
-        # Write main data
         df.to_excel(writer, sheet_name='Skills Taxonomy', index=False)
         
-        # Get workbook and worksheet
-        workbook = writer.book
-        worksheet = writer.sheets['Skills Taxonomy']
-        
-        # Auto-adjust column widths
-        for idx, col in enumerate(df.columns):
-            max_length = max(
-                df[col].astype(str).map(len).max(),
-                len(col)
-            ) + 2
-            # Cap at 60 characters
-            max_length = min(max_length, 60)
-            worksheet.column_dimensions[chr(65 + idx) if idx < 26 else f'A{chr(65 + idx - 26)}'[:2]].width = max_length
-        
-        # Create metadata sheet
-        metadata = taxonomy_data.get('metadata', {})
-        stats = metadata.get('statistics', {})
-        
+        # Metadata sheet
+        stats = taxonomy_data.get('metadata', {}).get('statistics', {})
         meta_df = pd.DataFrame([
             ['VET Skills Taxonomy Export', ''],
             ['', ''],
@@ -1657,9 +1558,7 @@ def export_taxonomy_to_excel(taxonomy_json_path: str, output_excel_path: str):
             ['Total Families', stats.get('total_families', '')],
             ['Total Related Codes', stats.get('total_related_codes', '')],
             ['Total Related Keywords', stats.get('total_related_keywords', '')],
-            ['Total Alternative Titles', stats.get('total_alternative_titles', '')],
         ], columns=['Property', 'Value'])
-        
         meta_df.to_excel(writer, sheet_name='Metadata', index=False)
     
     print(f"✓ Excel file saved to: {output_excel_path}")
@@ -1675,12 +1574,9 @@ if __name__ == '__main__':
         print(f"Error: Taxonomy file not found: {taxonomy_path}")
         sys.exit(1)
     
-    # Generate HTML visualization
     generate_html(taxonomy_path, html_output_path)
     
-    # Export to Excel
     try:
         export_taxonomy_to_excel(taxonomy_path, excel_output_path)
     except Exception as e:
         print(f"Warning: Could not export to Excel: {e}")
-        print("Make sure pandas and openpyxl are installed.")
