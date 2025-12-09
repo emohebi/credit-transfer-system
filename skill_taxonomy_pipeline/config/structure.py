@@ -596,12 +596,6 @@ SKILL_FAMILIES = {
         "description": "Installing electrical systems in commercial and industrial buildings including power distribution and lighting.",
         "keywords": ["commercial electrical", "industrial electrical", "3 phase", "distribution board", "switchboard", "power distribution", "electrical contractor"]
     },
-    "electrical_maintenance": {
-        "name": "Industrial Electrical Maintenance",
-        "domain": "construction_building",
-        "description": "Maintaining industrial electrical systems including motors, switchboards, control panels, and factory electrical equipment. Not IT/computer systems.",
-        "keywords": ["electrical maintenance", "electrical repair", "fault finding", "electrical testing", "repair electrical", "electrical service"]
-    },
     "lighting_installation": {
         "name": "Lighting Installation",
         "domain": "electrical_communications",
@@ -615,10 +609,10 @@ SKILL_FAMILIES = {
         "keywords": ["data cabling", "structured cabling", "network cable", "cat6", "data points", "patch panel", "communications cabling", "fibre optic"]
     },
     "solar_pv_installation": {
-        "name": "Solar PV Installation",
+        "name": "Rooftop Solar Installation",
         "domain": "electrical_communications",
-        "description": "Installing rooftop solar PV systems on buildings including panels, inverters, and grid connections.",
-        "keywords": ["solar installation", "solar panel", "solar PV", "inverter", "solar system", "photovoltaic", "grid connect", "solar mounting"]
+        "description": "Installing rooftop solar PV systems on residential and commercial buildings including panels, inverters, and grid connections. Building-scale installations by licensed electricians - not utility-scale solar farms.",
+        "keywords": ["solar installation", "rooftop solar", "residential solar", "commercial solar", "solar panel installation", "inverter installation", "grid connect solar", "solar mounting", "PV installation"]
     },
     "air_conditioning_install": {
         "name": "HVAC Installation",
@@ -634,18 +628,6 @@ SKILL_FAMILIES = {
     },
     
     # Painting & Decorating
-    "interior_painting": {
-        "name": "Interior Painting",
-        "domain": "construction_building",
-        "description": "Painting interior surfaces including walls, ceilings, and trim in residential and commercial buildings.",
-        "keywords": ["interior painting", "wall painting", "ceiling painting", "indoor painting", "brush painting", "roller painting", "cutting in"]
-    },
-    "exterior_painting": {
-        "name": "Exterior Painting",
-        "domain": "construction_building",
-        "description": "Painting exterior building surfaces including weatherboards, render, and exterior trim.",
-        "keywords": ["exterior painting", "house painting", "outdoor painting", "weatherboard", "render painting", "exterior surfaces"]
-    },
     "spray_painting_building": {
         "name": "Building Spray Painting",
         "domain": "construction_building",
@@ -663,6 +645,12 @@ SKILL_FAMILIES = {
         "domain": "construction_building",
         "description": "Applying decorative paint finishes including faux finishes, venetian plaster, texture coats, and specialty coatings",
         "keywords": ["decorative finish", "faux finish", "texture coating", "venetian plaster", "specialty finish", "marbling", "colour washing"]
+    },
+    "building_painting": {
+        "name": "Building Painting",
+        "domain": "construction_building",
+        "description": "Painting interior and exterior building surfaces including walls, ceilings, trim, weatherboards, and render in residential and commercial buildings.",
+        "keywords": ["painting", "interior painting", "exterior painting", "wall painting", "ceiling painting", "house painting", "brush painting", "roller painting", "cutting in", "weatherboard", "render painting", "commercial painting"]
     },
     
     # Plastering
@@ -692,17 +680,11 @@ SKILL_FAMILIES = {
     },
     
     # Tiling
-    "wall_tiling": {
-        "name": "Wall Tiling",
+    "tiling": {
+        "name": "Wall Floor Tiling",
         "domain": "construction_building",
-        "description": "Installing ceramic, porcelain, and natural stone tiles on walls in bathrooms and wet areas.",
-        "keywords": ["wall tiling", "wall tiles", "bathroom tiles", "kitchen tiles", "ceramic tiles", "tile installation", "splashback tiles"]
-    },
-    "floor_tiling": {
-        "name": "Floor Tiling",
-        "domain": "construction_building",
-        "description": "Installing floor tiles including large format tiles, preparation, and tile layout.",
-        "keywords": ["floor tiling", "floor tiles", "porcelain tiles", "tile laying", "large format tiles", "floor tile installation", "grout"]
+        "description": "Installing ceramic, porcelain, and natural stone tiles on walls and floors including bathrooms, kitchens, wet areas, splashbacks, and large format floor tiles.",
+        "keywords": ["tiling", "wall tiling", "floor tiling", "wall tiles", "floor tiles", "ceramic tiles", "porcelain tiles", "tile installation", "bathroom tiles", "kitchen tiles", "splashback tiles", "tile laying", "grout", "tile cutting"]
     },
     "waterproofing": {
         "name": "Waterproofing Application",
@@ -1224,17 +1206,11 @@ SKILL_FAMILIES = {
         "description": "Analysing datasets using statistical methods and tools like Excel, Python, or R to identify patterns, trends, and business insights.",
         "keywords": ["data analysis", "data analyst", "data interpretation", "Excel analysis", "statistical analysis", "data insights"]
     },
-    "data_visualisation": {
-        "name": "Data Visualisation",
+    "business_intelligence_reporting": {
+        "name": "Business Intelligence Reporting",
         "domain": "digital_technology",
-        "description": "Creating charts, dashboards, and visual reports using tools like Tableau, Power BI, or D3.js to communicate data insights.",
-        "keywords": ["data visualisation", "data visualization", "dashboard", "Power BI", "Tableau", "charts", "graphs", "visual analytics"]
-    },
-    "business_intelligence": {
-        "name": "Business Intelligence",
-        "domain": "digital_technology",
-        "description": "Creating BI reports and dashboards using tools like Power BI, Tableau, or Looker for business data analysis and visualisation.",
-        "keywords": ["business intelligence", "BI", "reporting", "SSRS", "Crystal Reports", "business reporting", "BI tools"]
+        "description": "Creating business intelligence dashboards, reports, and data visualisations using tools like Power BI, Tableau, or Looker for business analysis and decision support",
+        "keywords": ["business intelligence", "BI", "data visualisation", "data visualization", "dashboard", "Power BI", "Tableau", "reporting", "charts", "graphs", "visual analytics", "SSRS", "Crystal Reports", "Looker", "business reporting"]
     },
     "data_engineering": {
         "name": "Data Engineering",
@@ -1247,52 +1223,40 @@ SKILL_FAMILIES = {
     "machine_learning": {
         "name": "Machine Learning",
         "domain": "digital_technology",
-        "description": "Developing machine learning and AI models using Python, TensorFlow, or scikit-learn for prediction, classification, and pattern recognition. Computer algorithms, not human learning.",
-        "keywords": ['machine learning', 'ML', 'AI models', 'TensorFlow', 'scikit-learn', 'neural network', 'predictive modeling', 'classification', 'computer learning', 'algorithm training']
+        "description": "Developing machine learning models using Python, TensorFlow, or scikit-learn for prediction, classification, and pattern recognition. Computer/AI algorithms only - not human learning or training delivery.",
+        "keywords": ["machine learning", "ML", "AI models", "TensorFlow", "scikit-learn", "predictive modeling", "classification", "computer learning", "algorithm training", "model training"]
     },
     "deep_learning": {
         "name": "Deep Learning",
         "domain": "digital_technology",
-        "description": "Building neural networks and deep learning models using TensorFlow, PyTorch, or Keras for image recognition, NLP, and complex pattern recognition.",
-        "keywords": ["deep learning", "neural network", "TensorFlow", "PyTorch", "CNN", "RNN", "LSTM", "transformer"]
+        "description": "Building deep neural networks using TensorFlow, PyTorch, or Keras for AI applications. Computer neural network systems only - not human learning, neuroscience, or education.",
+        "keywords": ["deep learning", "neural network", "TensorFlow", "PyTorch", "CNN", "RNN", "LSTM", "transformer", "AI neural network", "Keras"]
     },
     "nlp": {
         "name": "Natural Language Processing",
         "domain": "digital_technology",
-        "description": "Building natural language processing systems for text analysis, sentiment analysis, chatbots, and language understanding using NLP libraries.",
-        "keywords": ["NLP", "natural language processing", "text analysis", "sentiment analysis", "chatbot", "language model", "BERT", "GPT"]
+        "description": "Building computer NLP systems for text analysis, sentiment analysis, chatbots, and language understanding using AI/ML. Computer language processing only - not human linguistics, translation services, or language teaching.",
+        "keywords": ["NLP", "natural language processing", "text analysis", "sentiment analysis", "chatbot", "language model", "BERT", "GPT", "AI text", "text mining"]
     },
     "computer_vision": {
         "name": "Computer Vision",
         "domain": "digital_technology",
-        "description": "Developing image and video analysis systems using OpenCV, convolutional neural networks, and object detection algorithms.",
-        "keywords": ["computer vision", "image recognition", "object detection", "OpenCV", "image processing", "facial recognition", "YOLO"]
+        "description": "Developing AI/computer image and video analysis systems using OpenCV, CNNs, and object detection algorithms. Computer/AI visual processing systems only - not human optometry, ophthalmology, or visual assessment.",
+        "keywords": ["computer vision", "image recognition", "object detection", "OpenCV", "image processing", "YOLO", "CNN", "video analysis", "AI vision", "machine vision"]
     },
     
     # Cloud & Infrastructure
-    "aws": {
-        "name": "AWS Cloud Services",
-        "domain": "digital_technology",
-        "description": "Deploying and managing IT cloud infrastructure on Amazon Web Services including EC2 servers, S3 storage, Lambda functions, RDS databases, and AWS cloud services.",
-        "keywords": ['AWS', 'Amazon Web Services', 'EC2', 'S3', 'Lambda', 'RDS', 'cloud computing', 'AWS cloud', 'Amazon cloud', 'AWS infrastructure']
-    },
-    "azure": {
-        "name": "Azure Cloud Services",
-        "domain": "digital_technology",
-        "description": "Deploying and managing IT cloud infrastructure on Microsoft Azure including Azure VMs, Azure Functions, Azure Storage, and Microsoft cloud services.",
-        "keywords": ['Azure', 'Microsoft Azure', 'Azure cloud', 'Azure VMs', 'Azure Functions', 'Microsoft cloud', 'Azure infrastructure', 'Azure services']
-    },
-    "gcp": {
-        "name": "Google Cloud Platform",
-        "domain": "digital_technology",
-        "description": "Deploying and managing cloud infrastructure on Google Cloud Platform including Compute Engine, Cloud Functions, and GCP services.",
-        "keywords": ["GCP", "Google Cloud", "Google Cloud Platform", "BigQuery", "Google Kubernetes Engine", "GCP services"]
-    },
     "docker_containers": {
         "name": "Container Technology",
         "domain": "digital_technology",
         "description": "Working with containerisation technologies including Docker, container images, container orchestration, and microservices deployment.",
         "keywords": ["Docker", "container", "containerisation", "Docker image", "Docker compose", "container orchestration"]
+    },
+    "cloud_platforms": {
+        "name": "Cloud Platform Services",
+        "domain": "digital_technology",
+        "description": "Deploying and managing IT cloud infrastructure on major cloud platforms including AWS (EC2, S3, Lambda, RDS), Microsoft Azure (VMs, Functions, Storage), and Google Cloud Platform (Compute Engine, BigQuery, GKE).",
+        "keywords": ["cloud", "AWS", "Azure", "GCP", "Amazon Web Services", "Microsoft Azure", "Google Cloud", "EC2", "S3", "Lambda", "cloud computing", "cloud infrastructure", "cloud services", "cloud deployment", "IaaS", "PaaS"]
     },
     "kubernetes": {
         "name": "Kubernetes Orchestration",
@@ -1420,25 +1384,19 @@ SKILL_FAMILIES = {
         "description": "Designing user experiences for digital products including user research, wireframing, prototyping, and usability testing of websites and apps.",
         "keywords": ["UX design", "user experience", "UX research", "usability", "wireframing", "prototyping", "user testing"]
     },
-    "graphic_design_digital": {
-        "name": "Digital Design",
+    "digital_marketing_design": {
+        "name": "Digital Marketing Design",
         "domain": "digital_technology",
-        "description": "Creating digital graphics including web graphics, social media visuals, and digital marketing assets",
-        "keywords": ["graphic design", "digital design", "Photoshop", "Illustrator", "visual design", "digital graphics", "banner design"]
+        "description": "Creating digital marketing assets including web graphics, social media visuals, email templates, online advertising creatives, and digital campaign materials",
+        "keywords": ["digital design", "web graphics", "social media design", "digital marketing assets", "banner design", "email design", "ad creatives", "digital campaign", "online graphics"]
     },
     
     # Other
     "software_testing": {
         "name": "Software Testing QA",
         "domain": "digital_technology",
-        "description": "Testing software applications including functional, regression, and automated testing using tools like Selenium. Excludes industrial equipment testing.",
-        "keywords": ["software testing", "QA", "quality assurance", "test automation", "Selenium", "test cases", "bug testing", "regression testing"]
-    },
-    "technical_documentation": {
-        "name": "Technical Writing",
-        "domain": "digital_technology",
-        "description": "Writing technical documentation including user guides, API documentation, system specifications, and technical manuals for software products.",
-        "keywords": ["technical documentation", "technical writing", "documentation", "user manual", "API documentation", "knowledge base"]
+        "description": "Testing software applications including functional, regression, and automated testing using tools like Selenium. Software/application testing only - not industrial equipment testing, calibration, or manufacturing quality control.",
+        "keywords": ["software testing", "QA", "quality assurance", "test automation", "Selenium", "test cases", "bug testing", "regression testing", "application testing", "software QA"]
     },
     "game_development": {
         "name": "Game Development",
@@ -1471,10 +1429,10 @@ SKILL_FAMILIES = {
         "keywords": ["intensive care", "ICU nursing", "critical care", "ICU", "ventilator", "critical care nursing", "high dependency"]
     },
     "surgical_nursing": {
-        "name": "Surgical Nursing",
+        "name": "Surgical Ward Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care for surgical patients including perioperative care, wound management, and post-operative recovery.",
-        "keywords": ["surgical nursing", "perioperative", "post-operative", "surgical ward", "pre-operative", "surgical care"]
+        "description": "Providing nursing care for human surgical patients on hospital wards including pre-admission assessment, post-operative recovery care, wound management, and surgical ward nursing. Ward-based care - not operating theatre roles.",
+        "keywords": ["surgical nursing", "surgical ward", "post-operative", "pre-admission", "surgical care", "wound management", "surgical patient", "ward nursing", "post-op care"]
     },
     "medical_nursing": {
         "name": "Medical Nursing",
@@ -1597,8 +1555,8 @@ SKILL_FAMILIES = {
     "optometry": {
         "name": "Optometry Services",
         "domain": "healthcare_clinical",
-        "description": "Providing optometry services for human patients including eye examinations, vision testing, optical prescriptions, and spectacle dispensing.",
-        "keywords": ['optometry', 'human patients', 'eye examination', 'vision testing', 'optical prescription', 'spectacles', 'optometrist', 'eye care']
+        "description": "Providing optometry services for human patients including eye examinations, human vision testing, optical prescriptions, and spectacle dispensing. Human eye care only - not computer vision or machine vision systems.",
+        "keywords": ["optometry", "optometrist", "eye examination", "human vision", "optical prescription", "spectacles", "eye care", "vision correction", "eye test", "human eyesight"]
     },
     "exercise_physiology": {
         "name": "Exercise Physiology",
@@ -2380,11 +2338,11 @@ SKILL_FAMILIES = {
     },
     
     # Electrical/Electronic
-    "electrical_maintenance": {
+    "industrial_electrical_maintenance": {
         "name": "Industrial Electrical Maintenance",
         "domain": "manufacturing_engineering",
-        "description": "Maintaining industrial electrical systems including motors, switchboards, control panels, and factory electrical equipment. Not IT/computer systems.",
-        "keywords": ["electrical maintenance", "industrial electrical", "electrical repair", "motor maintenance", "electrical fault", "electrical service"]
+        "description": "Maintaining industrial electrical systems in manufacturing facilities including motors, switchboards, control panels, and factory electrical equipment. Industrial/factory context, not building maintenance.",
+        "keywords": ["industrial electrical", "electrical maintenance", "motor maintenance", "electrical fault", "factory electrical", "electrical service", "control panel", "industrial wiring"]
     },
     "motor_control": {
         "name": "Motor Control Systems",
@@ -2431,10 +2389,10 @@ SKILL_FAMILIES = {
         "keywords": ["quality inspection", "QC", "quality control", "inspection", "quality check", "product inspection", "incoming inspection"]
     },
     "quality_assurance": {
-        "name": "Quality Assurance",
+        "name": "Manufacturing Quality Assurance",
         "domain": "manufacturing_engineering",
-        "description": "Implementing quality management systems including ISO 9001, quality procedures, audits, and continuous improvement in manufacturing.",
-        "keywords": ["quality assurance", "QA", "ISO 9001", "quality system", "quality management", "audit", "quality procedures"]
+        "description": "Implementing quality management systems in manufacturing including ISO 9001, quality procedures, quality audits, and continuous improvement. Manufacturing and production quality only - not software QA/testing.",
+        "keywords": ["manufacturing QA", "quality assurance", "ISO 9001", "quality system", "quality management", "quality audit", "quality procedures", "manufacturing quality", "production quality"]
     },
     
     # Food & Beverage Manufacturing
@@ -2863,8 +2821,8 @@ SKILL_FAMILIES = {
     "graphic_design": {
         "name": "Graphic Design",
         "domain": "creative_arts",
-        "description": "Designing visual communications for print including logos, brochures, packaging, and publication design",
-        "keywords": ["graphic design", "graphic designer", "visual design", "layout", "branding", "logo design", "InDesign", "print design"]
+        "description": "Designing visual communications for print and brand including logos, brochures, packaging, publication design, and corporate identity",
+        "keywords": ["graphic design", "graphic designer", "visual design", "layout", "branding", "logo design", "InDesign", "print design", "publication design", "corporate identity"]
     },
     "fashion_design": {
         "name": "Fashion Design",
@@ -3009,10 +2967,10 @@ SKILL_FAMILIES = {
         "keywords": ["costume design", "wardrobe", "costume", "costume maker", "dresser", "costume construction", "theatrical costume"]
     },
     "makeup_effects": {
-        "name": "Makeup Special Effects",
+        "name": "Theatrical SFX Makeup",
         "domain": "creative_arts",
-        "description": "Applying makeup for stage and film including theatrical makeup, prosthetics, and special effects makeup",
-        "keywords": ["makeup", "special effects makeup", "SFX makeup", "prosthetics", "theatrical makeup", "film makeup", "makeup artist"]
+        "description": "Applying makeup for stage, film, and television productions including theatrical makeup, prosthetics, special effects makeup, ageing effects, and character transformation. Entertainment industry makeup only - not beauty/cosmetic makeup.",
+        "keywords": ["special effects makeup", "SFX makeup", "prosthetics", "theatrical makeup", "film makeup", "stage makeup", "character makeup", "ageing makeup", "wound effects", "creature makeup"]
     },
     
     # Media & Broadcast
@@ -3149,14 +3107,14 @@ SKILL_FAMILIES = {
     "massage_therapy": {
         "name": "Massage Therapy",
         "domain": "retail_services",
-        "description": "Providing massage therapy for human clients including remedial massage, relaxation massage, therapeutic bodywork, and soft tissue therapy.",
-        "keywords": ['massage therapy', 'human clients', 'remedial massage', 'relaxation massage', 'therapeutic massage', 'bodywork', 'soft tissue therapy']
+        "description": "Providing general massage therapy for human clients in salons and clinics including remedial massage, relaxation massage, and therapeutic bodywork. General therapeutic massage - sports massage is covered separately under sport_recreation.",
+        "keywords": ["massage therapy", "remedial massage", "relaxation massage", "therapeutic massage", "bodywork", "soft tissue therapy", "massage therapist", "clinic massage", "spa massage"]
     },
     "makeup_artistry": {
-        "name": "Makeup Artistry",
+        "name": "Beauty Makeup Artistry",
         "domain": "retail_services",
-        "description": "Applying professional makeup including bridal, editorial, special occasion, and makeup techniques",
-        "keywords": ["makeup artist", "makeup", "cosmetics", "bridal makeup", "makeup application", "MUA", "beauty makeup"]
+        "description": "Applying professional cosmetic makeup for human clients including bridal makeup, editorial, special occasion makeup, and everyday beauty techniques in salons and freelance settings. Beauty/cosmetic makeup only - not theatrical SFX.",
+        "keywords": ["makeup artist", "MUA", "bridal makeup", "cosmetics", "beauty makeup", "makeup application", "wedding makeup", "editorial makeup", "special occasion makeup", "glamour makeup"]
     },
     "tattooing": {
         "name": "Tattooing Art",
@@ -3419,10 +3377,10 @@ SKILL_FAMILIES = {
     
     # Renewable Energy
     "solar_pv_systems": {
-        "name": "Solar PV Systems",
+        "name": "Utility-Scale Solar Systems",
         "domain": "utilities_resources",
-        "description": "Installing and maintaining solar photovoltaic systems including panels, inverters, and grid-connected solar installations.",
-        "keywords": ["solar PV", "solar panel", "photovoltaic", "solar installation", "solar system", "rooftop solar", "solar inverter"]
+        "description": "Operating and maintaining utility-scale solar PV systems including large solar farms, solar tracking systems, and grid-scale solar infrastructure. Utility-scale installations - not residential/commercial rooftop solar.",
+        "keywords": ["solar farm", "utility solar", "large-scale solar", "solar tracking", "grid-scale solar", "solar power station", "solar array", "photovoltaic farm", "solar O&M"]
     },
     "wind_turbine": {
         "name": "Wind Turbine Maintenance",
@@ -3948,11 +3906,11 @@ SKILL_FAMILIES = {
         "description": "Installing raised access flooring systems for commercial buildings and data centres.",
         "keywords": ['access flooring', 'raised floor', 'raised access floor', 'computer floor', 'access floor tiles', 'pedestal floor']
     },
-    "electrical_maintenance_building": {
+    "building_electrical_maintenance": {
         "name": "Building Electrical Maintenance",
         "domain": "electrical_communications",
-        "description": "Maintaining electrical systems in buildings including fault finding, repairs, and electrical safety testing.",
-        "keywords": ['electrical maintenance', 'building electrical', 'electrical service', 'light replacement', 'electrical fault', 'power maintenance']
+        "description": "Maintaining electrical systems in commercial and residential buildings including fault finding, repairs, and electrical safety testing. Building maintenance context, not industrial/factory.",
+        "keywords": ["building electrical", "electrical maintenance", "electrical service", "light replacement", "electrical fault", "power maintenance", "commercial electrical maintenance"]
     },
     "music_composition": {
         "name": "Music Composition",
@@ -4087,10 +4045,10 @@ SKILL_FAMILIES = {
         "keywords": ['drama education', 'drama teacher', 'theatre education', 'acting class', 'drama workshop', 'performing arts education']
     },
     "perioperative_nursing": {
-        "name": "Perioperative Nursing",
+        "name": "Perioperative Theatre Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care for human patients in operating theatres including scrub nursing, scout nursing, anaesthetic nursing, and PACU recovery nursing.",
-        "keywords": ['perioperative nursing', 'human patients', 'operating theatre', 'scrub nurse', 'scout nurse', 'anaesthetic', 'PACU', 'surgical nursing']
+        "description": "Providing nursing care for human patients in operating theatres including scrub nursing, scout nursing, anaesthetic nursing, and PACU recovery nursing. Operating theatre roles only - not ward-based surgical care.",
+        "keywords": ["perioperative nursing", "operating theatre", "scrub nurse", "scout nurse", "anaesthetic nursing", "PACU", "theatre nursing", "surgical instruments", "OR nursing", "circulating nurse"]
     },
     "midwifery": {
         "name": "Midwifery Services",
@@ -4170,11 +4128,11 @@ SKILL_FAMILIES = {
         "description": "Operating food trucks and mobile food services including mobile catering, markets, and event food service",
         "keywords": ['food truck', 'mobile catering', 'food van', 'street food', 'mobile kitchen', 'pop-up', 'food stall']
     },
-    "butchery_hotel": {
+    "institutional_butchery": {
         "name": "Institutional Butchery",
         "domain": "hospitality_tourism",
-        "description": "Large-scale animal meat preparation for hotels, hospitals, and institutions including bulk meat cutting, portion control, and institutional meat service.",
-        "keywords": ['institutional butchery', 'animal meat', 'hotel butchery', 'bulk meat', 'portion control', 'large-scale meat', 'institutional catering']
+        "description": "Large-scale meat preparation for hotels, hospitals, and institutions including bulk meat cutting, portion control, and volume meat production",
+        "keywords": ["institutional butchery", "volume butchery", "hotel butchery", "bulk meat", "portion control", "large-scale meat", "institutional catering", "hospital kitchen"]
     },
     "cad_cam": {
         "name": "CAD CAM Design",
@@ -4383,8 +4341,8 @@ SKILL_FAMILIES = {
     "sports_massage": {
         "name": "Sports Massage",
         "domain": "sport_recreation",
-        "description": "Providing sports massage for human athletes including pre-event massage, post-event recovery, and athletic soft tissue therapy for sports injuries.",
-        "keywords": ['sports massage', 'human athletes', 'athletic massage', 'pre-event', 'post-event', 'soft tissue therapy', 'sports injury', 'recovery massage']
+        "description": "Providing sports massage for human athletes including pre-event preparation, post-event recovery, and athletic soft tissue therapy in sports performance contexts. Athletic/sports context - general massage therapy is covered separately under retail_services.",
+        "keywords": ["sports massage", "athletic massage", "pre-event massage", "post-event recovery", "sports injury massage", "athletic soft tissue", "sports therapist", "athlete massage"]
     },
     "horse_riding_instruction": {
         "name": "Equestrian Instruction",
@@ -4553,7 +4511,7 @@ SKILL_FAMILIES = {
     "technical_writing": {
         "name": "Technical Writing",
         "domain": "digital_technology",
-        "description": "Writing technical documentation for IT and software including user manuals, API documentation, system specifications, and technical guides.",
-        "keywords": ["technical writing", "documentation", "user manual", "API documentation", "technical documentation", "system documentation", "technical writer", "software documentation"]
+        "description": "Writing technical documentation for IT and software including user guides, API documentation, system specifications, technical manuals, and knowledge bases",
+        "keywords": ["technical writing", "technical documentation", "documentation", "user manual", "API documentation", "knowledge base", "technical writer", "system documentation", "software documentation"]
     },
 }
