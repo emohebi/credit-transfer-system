@@ -1203,7 +1203,7 @@ SKILL_FAMILIES = {
     "data_analysis": {
         "name": "Data Analysis",
         "domain": "digital_technology",
-        "description": "Analysing datasets using statistical methods and tools like Excel, Python, or R to identify patterns, trends, and business insights.",
+        "description": "Analysing business datasets using statistical methods and tools like Excel, Python, or R to identify patterns, trends, and commercial insights. Business analytics focus - not scientific research data.",
         "keywords": ["data analysis", "data analyst", "data interpretation", "Excel analysis", "statistical analysis", "data insights"]
     },
     "business_intelligence_reporting": {
@@ -1419,13 +1419,13 @@ SKILL_FAMILIES = {
     "emergency_nursing": {
         "name": "Emergency Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care in emergency departments including triage, trauma, and acute patient assessment.",
+        "description": "Providing nursing care for human patients in emergency departments including triage, trauma, and acute patient assessment.",
         "keywords": ["emergency nursing", "ED nursing", "emergency department", "triage", "trauma nursing", "emergency care", "resuscitation"]
     },
     "intensive_care_nursing": {
         "name": "Intensive Care Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care in intensive care units including ventilated patients, haemodynamic monitoring, and critical care.",
+        "description": "Providing nursing care for human patients in intensive care units including ventilated patients, haemodynamic monitoring, and critical care.",
         "keywords": ["intensive care", "ICU nursing", "critical care", "ICU", "ventilator", "critical care nursing", "high dependency"]
     },
     "surgical_nursing": {
@@ -1437,25 +1437,25 @@ SKILL_FAMILIES = {
     "medical_nursing": {
         "name": "Medical Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care on medical wards including medication administration, patient observations, and care planning.",
+        "description": "Providing nursing care for human patients on medical wards including medication administration, patient observations, and care planning.",
         "keywords": ["medical nursing", "medical ward", "general nursing", "ward nursing", "medical care", "inpatient nursing"]
     },
     "oncology_nursing": {
         "name": "Oncology Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care for cancer patients including chemotherapy administration, symptom management, and palliative care.",
+        "description": "Providing nursing care for human cancer patients including chemotherapy administration, symptom management, and palliative care.",
         "keywords": ["oncology nursing", "cancer care", "chemotherapy", "oncology", "cancer nursing", "palliative", "radiation therapy"]
     },
     "cardiac_nursing": {
         "name": "Cardiac Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care for cardiac patients including ECG monitoring, cardiac rehabilitation, and coronary care.",
+        "description": "Providing nursing care for human cardiac patients including ECG monitoring, cardiac rehabilitation, and coronary care.",
         "keywords": ["cardiac nursing", "cardiology", "CCU", "cardiac care", "heart failure", "ECG", "cardiac monitoring"]
     },
     "renal_nursing": {
         "name": "Renal Dialysis Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care for patients with kidney disease including haemodialysis, peritoneal dialysis, and renal patient education.",
+        "description": "Providing nursing care for human patients with kidney disease including haemodialysis, peritoneal dialysis, and renal patient education.",
         "keywords": ["renal nursing", "dialysis", "haemodialysis", "peritoneal dialysis", "kidney", "nephrology", "renal care"]
     },
     "paediatric_nursing": {
@@ -1481,7 +1481,7 @@ SKILL_FAMILIES = {
     "mental_health_nursing": {
         "name": "Mental Health Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care for mental health patients including psychiatric assessment, therapeutic interventions, and mental health care.",
+        "description": "Providing nursing care for human mental health patients including psychiatric assessment, therapeutic interventions, and mental health recovery.",
         "keywords": ["mental health nursing", "psychiatric nursing", "psych nursing", "mental health care", "psychiatric care", "inpatient psych"]
     },
     "aged_care_nursing": {
@@ -3591,7 +3591,7 @@ SKILL_FAMILIES = {
     "statistical_analysis": {
         "name": "Statistical Analysis",
         "domain": "science_technical",
-        "description": "Performing statistical analysis of research and laboratory data using SPSS, R, or similar statistical software.",
+        "description": "Performing statistical analysis of scientific research and laboratory data using SPSS, R, or similar software for academic and research purposes. Research focus - not business analytics.",
         "keywords": ["statistical analysis", "statistics", "SPSS", "data analysis", "statistical methods", "hypothesis testing"]
     },
     
