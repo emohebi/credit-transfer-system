@@ -173,38 +173,38 @@ SKILL_FAMILIES = {
     "grain_cropping": {
         "name": "Broadacre Cropping",
         "domain": "agriculture_primary",
-        "description": "Growing and harvesting grain crops including wheat, barley, oats, and canola",
-        "keywords": ["grain", "wheat", "barley", "oats", "canola", "cropping", "broadacre", "harvest", "header", "grain storage", "silo"]
+        "description": "Growing and harvesting grain crops on broadacre farms including wheat, barley, oats, and canola. Agricultural cropping operations.",
+        "keywords": ["grain", "wheat", "barley", "oats", "canola", "cropping", "broadacre", "harvest", "header", "grain storage", "silo", "broadacre farm", "agricultural cropping", "farm harvest"]
     },
     "cotton_farming": {
         "name": "Cotton Cropping",
         "domain": "agriculture_primary",
-        "description": "Cotton cultivation, irrigation, and harvesting operations",
-        "keywords": ["cotton", "cotton picking", "cotton ginning", "cotton farming", "cotton irrigation", "cotton harvest"]
+        "description": "Cultivating and harvesting cotton on agricultural farms including irrigation management, cotton picking, ginning, and farm operations.",
+        "keywords": ["cotton", "cotton picking", "cotton ginning", "cotton farming", "cotton irrigation", "cotton harvest", "cotton farm", "agricultural cotton", "farm operations"]
     },
     "sugar_cane": {
         "name": "Sugar Cane Production",
         "domain": "agriculture_primary",
-        "description": "Sugar cane cultivation, harvesting, and milling operations",
-        "keywords": ["sugar cane", "cane harvesting", "cane farming", "sugar milling", "cane planting", "bagasse"]
+        "description": "Growing and harvesting sugar cane on agricultural farms including cane planting, harvesting machinery, and farm-to-mill operations.",
+        "keywords": ["sugar cane", "cane harvesting", "cane farming", "sugar milling", "cane planting", "bagasse", "cane farm", "agricultural cane", "sugar farm"]
     },
     "vegetable_production": {
         "name": "Vegetable Production",
         "domain": "agriculture_primary",
-        "description": "Commercial vegetable growing, harvesting, and packing",
-        "keywords": ["vegetable", "vegetables", "market garden", "vegetable growing", "vegetable harvest", "tomato", "lettuce", "capsicum", "brassica"]
+        "description": "Growing vegetables commercially on farms and market gardens including planting, crop management, harvesting, grading, and packing for agricultural produce.",
+        "keywords": ["vegetable", "vegetables", "market garden", "vegetable growing", "vegetable harvest", "tomato", "lettuce", "capsicum", "brassica", "vegetable farm", "market garden", "agricultural produce"]
     },
     "fruit_orchard": {
         "name": "Orchard Production",
         "domain": "agriculture_primary",
-        "description": "Fruit tree cultivation, pruning, and fruit harvesting",
-        "keywords": ["orchard", "fruit", "fruit picking", "apple", "citrus", "stone fruit", "pruning", "thinning", "fruit packing", "avocado", "mango"]
+        "description": "Managing fruit orchards on agricultural properties including tree planting, pruning, thinning, pest management, and commercial fruit harvesting.",
+        "keywords": ["orchard", "fruit", "fruit picking", "apple", "citrus", "stone fruit", "pruning", "thinning", "fruit packing", "avocado", "mango", "orchard farm", "fruit farm", "agricultural orchard"]
     },
     "nut_production": {
         "name": "Nut Production",
         "domain": "agriculture_primary",
-        "description": "Nut tree cultivation and nut harvesting operations",
-        "keywords": ["nut", "almond", "macadamia", "walnut", "nut harvesting", "nut processing", "nut orchard"]
+        "description": "Growing nut crops on agricultural farms including almond, macadamia, and walnut orchard management, tree care, and commercial nut harvesting.",
+        "keywords": ["nut", "almond", "macadamia", "walnut", "nut harvesting", "nut processing", "nut orchard", "nut farm", "agricultural nuts", "nut orchard"]
     },
     
     # Viticulture & Wine
@@ -217,8 +217,8 @@ SKILL_FAMILIES = {
     "winemaking": {
         "name": "Winemaking Cellar Operations",
         "domain": "agriculture_primary",
-        "description": "Wine production, fermentation, and cellar management",
-        "keywords": ["winemaking", "wine", "cellar", "fermentation", "wine barrel", "wine bottling", "oenology", "wine tasting", "wine blending"]
+        "description": "Producing wine in wineries including grape crushing, fermentation, barrel aging, blending, and cellar operations for agricultural wine production.",
+        "keywords": ["winemaking", "wine", "cellar", "fermentation", "wine barrel", "wine bottling", "oenology", "wine tasting", "wine blending", "winery", "wine cellar", "agricultural wine"]
     },
     
     # Livestock
@@ -231,7 +231,7 @@ SKILL_FAMILIES = {
     "dairy_farming": {
         "name": "Dairy Farming",
         "domain": "agriculture_primary",
-        "description": "Managing dairy cattle including breeding, calving, calf rearing, milking, herd health, and dairy operations.",
+        "description": "Managing dairy cattle on farms including breeding programs, calving management, calf rearing, milking operations, herd health, and dairy farm production.",
         "keywords": ['dairy', 'dairy farming', 'milking', 'dairy cattle', 'dairy herd', 'calving', 'calf rearing', 'heifer', 'lactation', 'dairy breeding']
     },
     "sheep_wool": {
@@ -263,8 +263,8 @@ SKILL_FAMILIES = {
     "nursery_propagation": {
         "name": "Plant Propagation",
         "domain": "agriculture_primary",
-        "description": "Plant propagation, nursery production, and seedling growing",
-        "keywords": ["nursery", "propagation", "seedling", "cutting", "grafting", "potting", "plant nursery", "tissue culture", "germination"]
+        "description": "Propagating plants in commercial nurseries including seed germination, cutting propagation, grafting, potting, and nursery crop production for horticulture.",
+        "keywords": ["nursery", "propagation", "seedling", "cutting", "grafting", "potting", "plant nursery", "tissue culture", "germination", "plant nursery", "horticultural nursery", "nursery production"]
     },
     "turf_management": {
         "name": "Turf Management",
@@ -323,15 +323,15 @@ SKILL_FAMILIES = {
         "keywords": ['horse care', 'equine', 'stable management', 'horse feeding', 'horse breeding', 'foaling', 'mare care', 'stud operations', 'equine husbandry']
     },
     "horse_riding": {
-        "name": "Horse Training",
+        "name": "Equine Industry Riding",
         "domain": "agriculture_primary",
-        "description": "Teaching horse riding and equestrian skills to human riders including dressage, jumping, western riding, and horsemanship at riding schools and equestrian centres.",
-        "keywords": ['horse riding', 'equestrian', 'human riders', 'dressage', 'jumping', 'western riding', 'horsemanship', 'riding school', 'riding instructor']
+        "description": "Working with horses in the equine and agricultural industry including horse breaking, exercise riding, horse training, track riding, and stock horse work on studs, farms, and training facilities. Equine industry work - not recreational riding instruction.",
+        "keywords": ["equine industry", "horse breaking", "exercise rider", "track rider", "stock horse", "horse trainer", "stud hand", "horse farm", "equine work", "horse industry", "racehorse exercise", "horse breaker"]
     },
     "farrier": {
         "name": "Farriery Horseshoeing",
         "domain": "agriculture_primary",
-        "description": "Shoeing horses and caring for hooves including trimming, balancing, and therapeutic shoeing",
+        "description": "Shoeing horses and caring for equine hooves including hoof trimming, balancing, corrective shoeing, and therapeutic farriery on farms and equine properties.",
         "keywords": ["farrier", "horseshoeing", "hoof care", "horseshoe", "hoof trimming", "blacksmith", "hoof health"]
     },
     "racing_industry": {
@@ -345,7 +345,7 @@ SKILL_FAMILIES = {
     "fish_farming": {
         "name": "Aquaculture Fish Farming",
         "domain": "agriculture_primary",
-        "description": "Fish farming, hatchery operations, and aquaculture production",
+        "description": "Operating fish farms and aquaculture facilities including hatchery management, fish breeding, feeding, water quality, and harvest for commercial aquaculture production.",
         "keywords": ["fish farming", "aquaculture", "hatchery", "fish stock", "aquaculture production", "fish husbandry", "barramundi", "salmon", "trout"]
     },
     "oyster_shellfish": {
@@ -363,27 +363,27 @@ SKILL_FAMILIES = {
     "commercial_fishing": {
         "name": "Commercial Fishing",
         "domain": "agriculture_primary",
-        "description": "Commercial fishing, net fishing, and trawling operations",
-        "keywords": ["commercial fishing", "fishing", "trawling", "net fishing", "fishing vessel", "catch", "fish handling", "deck hand", "fishing boat"]
+        "description": "Working on commercial fishing vessels including net fishing, trawling, catch handling, and deck hand duties in the fishing industry.",
+        "keywords": ["commercial fishing", "fishing", "trawling", "net fishing", "fishing vessel", "catch", "fish handling", "deck hand", "fishing boat", "fishing vessel", "fishing industry", "commercial catch"]
     },
     
     # Forestry
     "tree_felling": {
         "name": "Tree Felling Harvesting",
         "domain": "agriculture_primary",
-        "description": "Tree felling, log extraction, and forest harvesting",
-        "keywords": ["tree felling", "logging", "forest harvesting", "log extraction", "chainsaw", "tree harvesting", "skidder", "feller buncher"]
+        "description": "Felling trees in forestry and plantation operations including chainsaw work, log extraction, skidder operation, and commercial timber harvesting.",
+        "keywords": ["tree felling", "logging", "forest harvesting", "log extraction", "chainsaw", "tree harvesting", "skidder", "feller buncher", "forestry", "timber harvesting", "logging operations"]
     },
     "sawmilling": {
         "name": "Sawmilling Timber Processing",
         "domain": "agriculture_primary",
-        "description": "Operating sawmills to process logs into timber including milling, drying, and grading lumber",
-        "keywords": ["sawmill", "sawmilling", "timber processing", "log sawing", "timber grading", "kiln drying", "timber drying", "lumber"]
+        "description": "Operating sawmill machinery to process logs into timber products including log breakdown, milling, kiln drying, and lumber grading in timber processing facilities.",
+        "keywords": ["sawmill", "sawmilling", "timber processing", "log sawing", "timber grading", "kiln drying", "timber drying", "lumber", "timber mill", "lumber processing", "sawmill operations"]
     },
     "plantation_forestry": {
         "name": "Plantation Forestry",
         "domain": "agriculture_primary",
-        "description": "Establishing and managing tree plantations for timber production including planting, thinning, and harvesting",
+        "description": "Establishing and managing tree plantations for commercial forestry including plantation establishment, silviculture, thinning, and timber harvesting operations.",
         "keywords": ["plantation", "plantation forestry", "tree planting", "forest establishment", "silviculture", "forest management", "pine plantation", "eucalyptus"]
     },
     
@@ -391,13 +391,13 @@ SKILL_FAMILIES = {
     "bushland_restoration": {
         "name": "Bushland Revegetation",
         "domain": "agriculture_primary",
-        "description": "Restoring native bushland including weed removal, revegetation, and ecological restoration techniques",
+        "description": "Restoring native bushland and natural areas including weed removal, revegetation, habitat restoration, and conservation land management techniques.",
         "keywords": ["bushland restoration", "revegetation", "native vegetation", "habitat restoration", "bush regeneration", "native planting", "ecosystem restoration"]
     },
     "weed_control": {
         "name": "Weed Management",
         "domain": "agriculture_primary",
-        "description": "Weed identification, control, and herbicide application",
+        "description": "Controlling weeds in agricultural, conservation, and land management settings including weed identification, herbicide application, and integrated weed management.",
         "keywords": ["weed control", "weed management", "herbicide", "weed spraying", "weed identification", "noxious weeds", "weed eradication"]
     },
     "pest_animal_control": {
@@ -409,13 +409,13 @@ SKILL_FAMILIES = {
     "fire_management": {
         "name": "Prescribed Fire Management",
         "domain": "agriculture_primary",
-        "description": "Managing fire in landscapes including prescribed burning, fire breaks, and bushfire risk reduction",
+        "description": "Managing fire in rural landscapes and conservation areas including prescribed burning, fire break construction, and bushfire hazard reduction for land management.",
         "keywords": ["fire management", "prescribed burning", "hazard reduction", "controlled burn", "fire break", "bushfire management", "burn off"]
     },
     "park_ranger": {
         "name": "Park Management",
         "domain": "agriculture_primary",
-        "description": "Managing national parks and reserves including conservation, visitor management, and natural resource management",
+        "description": "Managing national parks and conservation reserves including wildlife conservation, visitor management, natural resource management, and park ranger duties.",
         "keywords": ["park ranger", "ranger", "national park", "reserve management", "park management", "conservation area", "wildlife management"]
     },
     
@@ -423,8 +423,8 @@ SKILL_FAMILIES = {
     "beekeeping": {
         "name": "Beekeeping Apiculture",
         "domain": "agriculture_primary",
-        "description": "Beehive management, honey extraction, and pollination services",
-        "keywords": ["beekeeping", "apiculture", "honey", "beehive", "bees", "queen rearing", "honey extraction", "pollination", "apiary"]
+        "description": "Managing beehives for commercial honey production and agricultural pollination services including queen rearing, hive inspection, honey extraction, and apiary management.",
+        "keywords": ["beekeeping", "apiculture", "honey", "beehive", "bees", "queen rearing", "honey extraction", "pollination", "apiary", "apiary", "honey farm", "agricultural bees"]
     },
     
     # Meat Processing
@@ -467,19 +467,19 @@ SKILL_FAMILIES = {
     "roof_framing": {
         "name": "Roof Framing",
         "domain": "construction_building",
-        "description": "Constructing timber roof structures including trusses, rafters, and roof framing systems.",
+        "description": "Constructing timber roof structures on building sites including roof trusses, rafters, ridge beams, and roof framing systems for residential and commercial construction.",
         "keywords": ["roof framing", "roof truss", "rafter", "ridge beam", "roof construction", "hip roof", "gable", "ceiling joist", "purlin"]
     },
     "floor_framing": {
         "name": "Floor Framing",
         "domain": "construction_building",
-        "description": "Constructing timber floor frames and subfloor structures including bearers and joists.",
+        "description": "Constructing timber floor frames on building sites including bearers, joists, and subfloor structures for residential and commercial construction.",
         "keywords": ["floor framing", "floor joist", "bearer", "subfloor", "floor construction", "stumps", "piers", "floor system"]
     },
     "formwork": {
         "name": "Formwork Construction",
         "domain": "construction_building",
-        "description": "Constructing concrete formwork for slabs, walls, and structural concrete including traditional and system formwork.",
+        "description": "Constructing concrete formwork on building sites for slabs, walls, columns, and structural concrete including traditional and system formwork for construction.",
         "keywords": ["formwork", "concrete formwork", "shuttering", "form construction", "formwork installation", "stripping formwork", "boxing"]
     },
     "timber_flooring": {
@@ -523,26 +523,26 @@ SKILL_FAMILIES = {
     "bricklaying": {
         "name": "Bricklaying Masonry",
         "domain": "construction_building",
-        "description": "Laying bricks and blocks for walls, fences, and structures including brick bonds and mortar work.",
+        "description": "Laying bricks and blocks on construction sites for walls, fences, and structures including brick bonds, mortar work, and masonry construction.",
         "keywords": ["bricklaying", "brick", "bricklayer", "brick wall", "mortar", "brick course", "pointing", "brick veneer"]
     },
     "blocklaying": {
         "name": "Block Laying",
         "domain": "construction_building",
-        "description": "Laying concrete blocks and masonry units for structural and retaining walls.",
-        "keywords": ["blocklaying", "concrete block", "block wall", "masonry block", "block laying", "besser block", "core filling"]
+        "description": "Laying concrete blocks and masonry units on construction sites for structural walls, retaining walls, and building foundations. Block masonry construction trade.",
+        "keywords": ["blocklaying", "concrete block", "block wall", "masonry block", "block laying", "besser block", "core filling", "construction site", "building blocks", "masonry construction"]
     },
     "stone_masonry": {
         "name": "Stone Masonry",
         "domain": "construction_building",
-        "description": "Working with natural and manufactured stone including stone walls, cladding, and masonry restoration.",
+        "description": "Working with natural and manufactured stone on building sites including stone walls, cladding, paving, and masonry restoration for construction projects.",
         "keywords": ["stone masonry", "stone wall", "stonework", "natural stone", "stone laying", "sandstone", "bluestone", "limestone"]
     },
     "paving": {
         "name": "Paving Installation",
         "domain": "construction_building",
-        "description": "Laying pavers and segmental paving for driveways, paths, and outdoor areas.",
-        "keywords": ["paving", "pavers", "brick paving", "segmental paving", "paver installation", "driveway paving", "pathway", "paver laying"]
+        "description": "Installing pavers and segmental paving for driveways, pathways, patios, and outdoor areas in residential and commercial construction projects.",
+        "keywords": ["paving", "pavers", "brick paving", "segmental paving", "paver installation", "driveway paving", "pathway", "paver laying", "construction paving", "building paths", "outdoor construction"]
     },
     
     # Plumbing
@@ -617,7 +617,7 @@ SKILL_FAMILIES = {
     "air_conditioning_install": {
         "name": "HVAC Installation",
         "domain": "electrical_communications",
-        "description": "Split system and ducted air conditioning installation",
+        "description": "Installing split system and ducted air conditioning in residential and commercial buildings including refrigerant handling, electrical connections, and HVAC commissioning. Licensed electrical/refrigeration trade.",
         "keywords": ["air conditioning", "air con installation", "split system", "ducted air conditioning", "HVAC installation", "AC installation", "refrigerant"]
     },
     "refrigeration": {
@@ -637,7 +637,7 @@ SKILL_FAMILIES = {
     "wallpapering": {
         "name": "Wallpapering Installation",
         "domain": "construction_building",
-        "description": "Hanging wallpaper and wall coverings including preparation, adhesive application, and pattern matching.",
+        "description": "Hanging wallpaper and wall coverings in residential and commercial buildings including surface preparation, adhesive application, and pattern matching for interior decoration.",
         "keywords": ["wallpaper", "wallpapering", "wall covering", "wallpaper hanging", "wallpaper installation", "vinyl wallpaper", "paper hanging"]
     },
     "decorative_finishes": {
@@ -737,8 +737,8 @@ SKILL_FAMILIES = {
     "carpet_laying": {
         "name": "Carpet Laying",
         "domain": "construction_building",
-        "description": "Installing carpet flooring including underlay, stretching, and seaming.",
-        "keywords": ["carpet laying", "carpet installation", "carpet fitting", "carpet stretching", "underlay", "carpet gripper", "carpet seaming"]
+        "description": "Installing carpet flooring in residential and commercial buildings including underlay laying, carpet stretching, seaming, and floor preparation. Floor covering trade.",
+        "keywords": ["carpet laying", "carpet installation", "carpet fitting", "carpet stretching", "underlay", "carpet gripper", "carpet seaming", "building flooring", "construction flooring", "floor installation"]
     },
     "vinyl_flooring": {
         "name": "Vinyl Flooring Installation",
@@ -1013,22 +1013,22 @@ SKILL_FAMILIES = {
     "crane_operation": {
         "name": "Crane Operation",
         "domain": "transport_logistics",
-        "description": "Operating cranes including mobile cranes, tower cranes, and crane licence classifications.",
-        "keywords": ["crane", "crane operation", "crane driver", "mobile crane", "tower crane", "slewing crane", "crane licence"]
+        "description": "Operating cranes on construction sites and industrial facilities including mobile cranes, tower cranes, and crane licence classifications for materials handling and lifting.",
+        "keywords": ["crane", "crane operation", "crane driver", "mobile crane", "tower crane", "slewing crane", "crane licence", "construction crane", "industrial lifting", "crane operator"]
     },
     "ewp_operation": {
         "name": "EWP Operation",
         "domain": "transport_logistics",
-        "description": "Operating elevated work platforms including scissor lifts, boom lifts, and EWP licence.",
-        "keywords": ["EWP", "elevated work platform", "boom lift", "scissor lift", "cherry picker", "MEWP", "working at heights"]
+        "description": "Operating elevated work platforms in construction and industrial settings including scissor lifts, boom lifts, and obtaining EWP licences for working at heights.",
+        "keywords": ["EWP", "elevated work platform", "boom lift", "scissor lift", "cherry picker", "MEWP", "working at heights", "construction EWP", "industrial platform", "height access"]
     },
     
     # Warehousing
     "warehouse_operations": {
         "name": "Warehouse Operations",
         "domain": "transport_logistics",
-        "description": "Working in warehouses including receiving, storage, inventory management, and dispatch operations.",
-        "keywords": ["warehouse", "warehouse operations", "warehousing", "receival", "dispatch", "inventory", "stock control", "warehouse management"]
+        "description": "Working in logistics warehouses including goods receiving, storage, inventory management, order picking, packing, and dispatch for supply chain operations.",
+        "keywords": ["warehouse", "warehouse operations", "warehousing", "receival", "dispatch", "inventory", "stock control", "warehouse management", "logistics warehouse", "distribution centre", "supply chain"]
     },
     "order_picking": {
         "name": "Order Picking Fulfilment",
@@ -1081,14 +1081,14 @@ SKILL_FAMILIES = {
     "train_driving": {
         "name": "Train Driving",
         "domain": "transport_logistics",
-        "description": "Driving trains and locomotives including passenger and freight train operation.",
-        "keywords": ["train driving", "train driver", "locomotive", "rail operations", "train operation", "rail driver"]
+        "description": "Driving trains and locomotives in the rail transport industry including passenger train services, freight train operation, and rail network navigation.",
+        "keywords": ["train driving", "train driver", "locomotive", "rail operations", "train operation", "rail driver", "rail transport", "train operator", "railway driving"]
     },
     "rail_shunting": {
         "name": "Rail Shunting",
         "domain": "transport_logistics",
-        "description": "Shunting rail wagons and carriages including yard operations and rail coupling.",
-        "keywords": ["shunting", "rail shunting", "rail yard", "shunter", "coupling", "marshalling", "rail operations"]
+        "description": "Shunting rail wagons and carriages in rail yards including wagon coupling, yard operations, and rail vehicle movements for the rail freight and transport industry.",
+        "keywords": ["shunting", "rail shunting", "rail yard", "shunter", "coupling", "marshalling", "rail operations", "rail yard", "freight rail", "rail logistics"]
     },
     
     # Aviation
@@ -1203,13 +1203,13 @@ SKILL_FAMILIES = {
     "data_analysis": {
         "name": "Data Analysis",
         "domain": "digital_technology",
-        "description": "Analysing business datasets using statistical methods and tools like Excel, Python, or R to identify patterns, trends, and commercial insights. Business analytics focus - not scientific research data.",
+        "description": "Analysing datasets using statistical methods and tools like Excel, Python, or R to identify patterns, trends, and business insights.",
         "keywords": ["data analysis", "data analyst", "data interpretation", "Excel analysis", "statistical analysis", "data insights"]
     },
     "business_intelligence_reporting": {
         "name": "Business Intelligence Reporting",
         "domain": "digital_technology",
-        "description": "Creating business intelligence dashboards, reports, and data visualisations using tools like Power BI, Tableau, or Looker for business analysis and decision support",
+        "description": "Creating business intelligence dashboards, reports, and data visualisations using software tools like Power BI, Tableau, or Looker for IT-enabled business analysis and corporate decision support.",
         "keywords": ["business intelligence", "BI", "data visualisation", "data visualization", "dashboard", "Power BI", "Tableau", "reporting", "charts", "graphs", "visual analytics", "SSRS", "Crystal Reports", "Looker", "business reporting"]
     },
     "data_engineering": {
@@ -1419,13 +1419,13 @@ SKILL_FAMILIES = {
     "emergency_nursing": {
         "name": "Emergency Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care for human patients in emergency departments including triage, trauma, and acute patient assessment.",
+        "description": "Providing nursing care in emergency departments including triage, trauma, and acute patient assessment.",
         "keywords": ["emergency nursing", "ED nursing", "emergency department", "triage", "trauma nursing", "emergency care", "resuscitation"]
     },
     "intensive_care_nursing": {
         "name": "Intensive Care Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care for human patients in intensive care units including ventilated patients, haemodynamic monitoring, and critical care.",
+        "description": "Providing nursing care in intensive care units including ventilated patients, haemodynamic monitoring, and critical care.",
         "keywords": ["intensive care", "ICU nursing", "critical care", "ICU", "ventilator", "critical care nursing", "high dependency"]
     },
     "surgical_nursing": {
@@ -1437,25 +1437,25 @@ SKILL_FAMILIES = {
     "medical_nursing": {
         "name": "Medical Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care for human patients on medical wards including medication administration, patient observations, and care planning.",
+        "description": "Providing nursing care on medical wards including medication administration, patient observations, and care planning.",
         "keywords": ["medical nursing", "medical ward", "general nursing", "ward nursing", "medical care", "inpatient nursing"]
     },
     "oncology_nursing": {
         "name": "Oncology Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care for human cancer patients including chemotherapy administration, symptom management, and palliative care.",
+        "description": "Providing nursing care for cancer patients including chemotherapy administration, symptom management, and palliative care.",
         "keywords": ["oncology nursing", "cancer care", "chemotherapy", "oncology", "cancer nursing", "palliative", "radiation therapy"]
     },
     "cardiac_nursing": {
         "name": "Cardiac Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care for human cardiac patients including ECG monitoring, cardiac rehabilitation, and coronary care.",
+        "description": "Providing nursing care for cardiac patients including ECG monitoring, cardiac rehabilitation, and coronary care.",
         "keywords": ["cardiac nursing", "cardiology", "CCU", "cardiac care", "heart failure", "ECG", "cardiac monitoring"]
     },
     "renal_nursing": {
         "name": "Renal Dialysis Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care for human patients with kidney disease including haemodialysis, peritoneal dialysis, and renal patient education.",
+        "description": "Providing nursing care for patients with kidney disease including haemodialysis, peritoneal dialysis, and renal patient education.",
         "keywords": ["renal nursing", "dialysis", "haemodialysis", "peritoneal dialysis", "kidney", "nephrology", "renal care"]
     },
     "paediatric_nursing": {
@@ -1481,7 +1481,7 @@ SKILL_FAMILIES = {
     "mental_health_nursing": {
         "name": "Mental Health Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care for human mental health patients including psychiatric assessment, therapeutic interventions, and mental health recovery.",
+        "description": "Providing nursing care for mental health patients including psychiatric assessment, therapeutic interventions, and mental health care.",
         "keywords": ["mental health nursing", "psychiatric nursing", "psych nursing", "mental health care", "psychiatric care", "inpatient psych"]
     },
     "aged_care_nursing": {
@@ -1697,7 +1697,7 @@ SKILL_FAMILIES = {
     "palliative_care": {
         "name": "Palliative Care",
         "domain": "community_services",
-        "description": "Providing palliative and end-of-life care for terminally ill patients including comfort care, pain management, and family support in hospice or aged care settings.",
+        "description": "Providing palliative and end-of-life support for terminally ill human clients in community, hospice, or aged care settings including comfort care, emotional support, and family assistance. Community support work - not clinical nursing.",
         "keywords": ['palliative care', 'end of life', 'hospice', 'terminal care', 'comfort care', 'dying patient', 'palliative nursing', 'hospice care']
     },
     "meal_assistance": {
@@ -1831,7 +1831,7 @@ SKILL_FAMILIES = {
     "accounts_receivable": {
         "name": "Accounts Receivable",
         "domain": "finance_accounting",
-        "description": "Managing accounts receivable including customer invoicing, payment collection, and debtor follow-up",
+        "description": "Managing accounts receivable in finance and accounting departments including customer invoicing, payment collection, debtor follow-up, and credit control for financial administration.",
         "keywords": ["accounts receivable", "AR", "debtors", "invoicing", "collections", "customer billing", "receivables"]
     },
     "bookkeeping": {
@@ -1985,7 +1985,7 @@ SKILL_FAMILIES = {
     "office_equipment": {
         "name": "Office Equipment Operation",
         "domain": "business_administration",
-        "description": "Operating office equipment including photocopiers, printers, and office machines.",
+        "description": "Operating office equipment in corporate and business environments including photocopiers, multifunction printers, binding machines, and general office administration.",
         "keywords": ["office equipment", "photocopying", "printing", "scanner", "fax", "laminating", "binding", "office machines"]
     },
     
@@ -2101,7 +2101,7 @@ SKILL_FAMILIES = {
     "account_management": {
         "name": "Account Management",
         "domain": "business_administration",
-        "description": "Managing client accounts including relationship management, account growth, and client retention.",
+        "description": "Managing client accounts in business and corporate settings including relationship management, account growth strategies, and client retention for B2B sales and services.",
         "keywords": ["account management", "account manager", "client management", "customer relationship", "key accounts", "client retention"]
     },
     "marketing": {
@@ -2159,13 +2159,13 @@ SKILL_FAMILIES = {
     "customer_service": {
         "name": "Customer Service",
         "domain": "business_administration",
-        "description": "Providing customer service including enquiry handling, problem resolution, and service delivery.",
+        "description": "Providing customer service in corporate call centres and business offices including enquiry handling, complaint resolution, and service delivery for business customers.",
         "keywords": ["customer service", "customer support", "customer care", "client service", "enquiries", "customer enquiry", "service desk"]
     },
     "call_centre": {
         "name": "Call Centre Operations",
         "domain": "business_administration",
-        "description": "Working in call centres including inbound calls, outbound calls, and telephone customer service.",
+        "description": "Working in corporate call centres and contact centres including inbound enquiries, outbound sales calls, and telephone customer service for business operations.",
         "keywords": ["call centre", "call center", "inbound calls", "outbound calls", "phone support", "contact centre", "telephony"]
     },
     "complaints_handling": {
@@ -2429,7 +2429,7 @@ SKILL_FAMILIES = {
     "brewing": {
         "name": "Beer Brewing",
         "domain": "manufacturing_engineering",
-        "description": "Operating brewery equipment for beer production including mashing, fermentation, and packaging.",
+        "description": "Operating brewery equipment in beer manufacturing facilities including mashing, fermentation, filtering, packaging, and brewing process control for industrial beverage production.",
         "keywords": ["brewing", "beer production", "brewery", "craft beer", "fermentation", "brewhouse", "kegging", "beer"]
     },
     
@@ -2699,7 +2699,7 @@ SKILL_FAMILIES = {
     "concierge": {
         "name": "Concierge Services",
         "domain": "hospitality_tourism",
-        "description": "Providing concierge services including guest assistance, recommendations, and VIP services.",
+        "description": "Providing concierge services in hotels and resorts including guest assistance, local recommendations, booking services, and VIP guest services in the hospitality industry.",
         "keywords": ["concierge", "guest assistance", "guest services", "hotel concierge", "porter", "bell desk"]
     },
     "housekeeping": {
@@ -2719,7 +2719,7 @@ SKILL_FAMILIES = {
     "tour_guiding": {
         "name": "Tour Guiding",
         "domain": "hospitality_tourism",
-        "description": "Guiding tours including tour commentary, group management, and tourism interpretation.",
+        "description": "Guiding tours in the tourism industry including tour commentary, visitor group management, destination interpretation, and tourist services for travel and tourism.",
         "keywords": ["tour guide", "tour guiding", "guided tour", "interpretation", "tourist guide", "tour leader", "sightseeing"]
     },
     "travel_consulting": {
@@ -2903,10 +2903,10 @@ SKILL_FAMILIES = {
         "keywords": ["acting", "actor", "theatre", "drama", "performance", "stage", "screen acting", "audition"]
     },
     "dance": {
-        "name": "Dance Performance",
+        "name": "Professional Dance Performance",
         "domain": "creative_arts",
-        "description": "Performing dance including ballet, contemporary, jazz, hip-hop, or cultural dance styles and choreography",
-        "keywords": ["dance", "dancer", "choreography", "ballet", "contemporary dance", "dance performance", "choreographer"]
+        "description": "Performing dance professionally for stage, film, television, and live entertainment including ballet, contemporary, jazz, hip-hop, and cultural dance. Professional dancer and choreographer work in the entertainment industry - not teaching.",
+        "keywords": ["professional dancer", "dance performer", "choreographer", "ballet dancer", "contemporary dancer", "stage performance", "dance company", "entertainment dance", "dance artist", "show dancer"]
     },
     "music_performance": {
         "name": "Music Performance",
@@ -3591,7 +3591,7 @@ SKILL_FAMILIES = {
     "statistical_analysis": {
         "name": "Statistical Analysis",
         "domain": "science_technical",
-        "description": "Performing statistical analysis of scientific research and laboratory data using SPSS, R, or similar software for academic and research purposes. Research focus - not business analytics.",
+        "description": "Performing statistical analysis of research and laboratory data using SPSS, R, or similar statistical software.",
         "keywords": ["statistical analysis", "statistics", "SPSS", "data analysis", "statistical methods", "hypothesis testing"]
     },
     
@@ -3759,7 +3759,7 @@ SKILL_FAMILIES = {
     "greenhouse_hydroponics": {
         "name": "Controlled Environment Horticulture",
         "domain": "agriculture_primary",
-        "description": "Controlled environment agriculture and soilless growing",
+        "description": "Growing plants in greenhouses and controlled environment agriculture facilities including hydroponics, soilless growing systems, climate control, and protected cropping.",
         "keywords": ['greenhouse', 'hydroponics', 'glasshouse', 'controlled environment', 'NFT', 'aquaponics', 'vertical farming', 'grow lights']
     },
     "agricultural_machinery": {
@@ -3777,7 +3777,7 @@ SKILL_FAMILIES = {
     "organic_farming": {
         "name": "Organic Farming",
         "domain": "agriculture_primary",
-        "description": "Organic certification and regenerative agriculture practices",
+        "description": "Implementing organic farming and regenerative agriculture practices on farms including organic certification, soil health, composting, and sustainable farming methods.",
         "keywords": ['organic farming', 'organic certification', 'regenerative', 'biodynamic', 'permaculture', 'no-till', 'cover cropping', 'composting']
     },
     "alpaca_llama": {
@@ -3867,7 +3867,7 @@ SKILL_FAMILIES = {
     "insulation_installation": {
         "name": "Insulation Installation",
         "domain": "construction_building",
-        "description": "Installing thermal and acoustic insulation in walls, ceilings, and floors.",
+        "description": "Installing thermal and acoustic insulation in residential and commercial buildings including batts, blown insulation, and building insulation for construction projects.",
         "keywords": ['insulation', 'insulation installation', 'thermal insulation', 'batts', 'wall insulation', 'ceiling insulation', 'acoustic insulation', 'R-value']
     },
     "steel_framing": {
@@ -3897,7 +3897,7 @@ SKILL_FAMILIES = {
     "fire_stopping": {
         "name": "Passive Fire Protection",
         "domain": "construction_building",
-        "description": "Fire stopping and passive fire protection installation",
+        "description": "Installing fire stopping and passive fire protection systems in buildings including fire collars, intumescent seals, fire barriers, and penetration sealing for construction fire compliance.",
         "keywords": ['fire stopping', 'passive fire', 'fire collar', 'fire seal', 'intumescent', 'fire barrier', 'fire protection', 'fire rating']
     },
     "access_flooring": {
@@ -3987,7 +3987,7 @@ SKILL_FAMILIES = {
     "mainframe_legacy": {
         "name": "Mainframe Systems",
         "domain": "digital_technology",
-        "description": "Mainframe programming and legacy system maintenance",
+        "description": "Programming and maintaining mainframe computer systems including COBOL, JCL, CICS, and legacy system support for enterprise IT environments.",
         "keywords": ['mainframe', 'COBOL', 'legacy systems', 'AS/400', 'JCL', 'CICS', 'mainframe programming', 'IBM mainframe']
     },
     "accessibility_testing": {
@@ -4309,10 +4309,10 @@ SKILL_FAMILIES = {
         "keywords": ['chromatography', 'HPLC', 'gas chromatography', 'GC', 'LC', 'column', 'separation', 'chromatograph']
     },
     "dance_instruction": {
-        "name": "Dance Instruction",
+        "name": "Dance Teaching",
         "domain": "sport_recreation",
-        "description": "Teaching dance to human students including ballet, contemporary, ballroom, hip-hop, and dance technique across styles in studios and schools.",
-        "keywords": ['dance instruction', 'dance teacher', 'human students', 'ballet', 'contemporary', 'ballroom', 'dance studio', 'choreography']
+        "description": "Teaching dance classes to human students in dance studios, fitness centres, and schools including ballet, contemporary, ballroom, hip-hop, and social dance instruction. Recreation and fitness teaching - not professional dance performance.",
+        "keywords": ["dance teacher", "dance instructor", "dance lessons", "dance class", "dance studio", "ballroom teacher", "ballet teacher", "learn to dance", "dance school", "fitness dance"]
     },
     "boxing_instruction": {
         "name": "Boxing Coaching",
@@ -4345,10 +4345,10 @@ SKILL_FAMILIES = {
         "keywords": ["sports massage", "athletic massage", "pre-event massage", "post-event recovery", "sports injury massage", "athletic soft tissue", "sports therapist", "athlete massage"]
     },
     "horse_riding_instruction": {
-        "name": "Equestrian Instruction",
+        "name": "Recreational Riding Instruction",
         "domain": "sport_recreation",
-        "description": "Teaching horse riding to human riders including dressage, jumping, western riding, and equestrian skill development at riding schools.",
-        "keywords": ['horse riding instruction', 'equestrian instruction', 'human riders', 'dressage', 'jumping', 'riding school', 'horsemanship']
+        "description": "Teaching recreational horse riding to human students at riding schools and equestrian centres including beginner lessons, dressage, show jumping, and pony club instruction. Sport and recreation teaching - not equine industry work.",
+        "keywords": ["riding instructor", "riding lessons", "learn to ride", "riding school", "pony club", "equestrian coach", "recreational riding", "riding teacher", "horse riding lessons", "beginner riding"]
     },
     "smart_metering": {
         "name": "Smart Metering",
