@@ -307,7 +307,7 @@ SKILL_FAMILIES = {
     "dog_grooming": {
         "name": "Pet Grooming",
         "domain": "agriculture_primary",
-        "description": "Grooming dogs and pets in grooming salons including pet washing, coat clipping, styling, nail trimming, and breed-specific grooming. Animal grooming only, not human hairdressing.",
+        "description": "Grooming dogs and pets in grooming salons including pet washing, coat clipping, styling, nail trimming, and breed-specific grooming. Animal grooming only",
         "keywords": ['dog grooming', 'pet grooming', 'animal grooming', 'dog washing', 'coat clipping', 'pet salon', 'breed grooming', 'animal styling', 'nail trimming']
     },
     "kennel_cattery": {
@@ -325,7 +325,7 @@ SKILL_FAMILIES = {
     "horse_riding": {
         "name": "Equine Industry Riding",
         "domain": "agriculture_primary",
-        "description": "Working with horses in the equine and agricultural industry including horse breaking, exercise riding, horse training, track riding, and stock horse work on studs, farms, and training facilities. Equine industry work - not recreational riding instruction.",
+        "description": "Working with horses in the equine and agricultural industry including horse breaking, exercise riding, horse training, track riding, and stock horse work on studs, farms, and training facilities. Equine industry work only.",
         "keywords": ["equine industry", "horse breaking", "exercise rider", "track rider", "stock horse", "horse trainer", "stud hand", "horse farm", "equine work", "horse industry", "racehorse exercise", "horse breaker"]
     },
     "farrier": {
@@ -611,7 +611,7 @@ SKILL_FAMILIES = {
     "solar_pv_installation": {
         "name": "Rooftop Solar Installation",
         "domain": "electrical_communications",
-        "description": "Installing rooftop solar PV systems on residential and commercial buildings including panels, inverters, and grid connections. Building-scale installations by licensed electricians - not utility-scale solar farms.",
+        "description": "Installing rooftop solar PV systems on residential and commercial buildings including panels, inverters, and grid connections. Building-scale installations by licensed electricians",
         "keywords": ["solar installation", "rooftop solar", "residential solar", "commercial solar", "solar panel installation", "inverter installation", "grid connect solar", "solar mounting", "PV installation"]
     },
     "air_conditioning_install": {
@@ -1113,7 +1113,7 @@ SKILL_FAMILIES = {
     "javascript_programming": {
         "name": "JavaScript Development",
         "domain": "digital_technology",
-        "description": "Developing web applications using JavaScript and TypeScript including Node.js, npm packages, and modern ES6+ features.",
+        "description": "Developing applications using JavaScript and TypeScript including Node.js backend development, npm packages, and ES6+ features. JavaScript language skills",
         "keywords": ["JavaScript", "JS", "TypeScript", "ES6", "Node.js", "npm", "JavaScript programming", "frontend JavaScript"]
     },
     "java_programming": {
@@ -1145,25 +1145,25 @@ SKILL_FAMILIES = {
     "frontend_web": {
         "name": "Frontend Development",
         "domain": "digital_technology",
-        "description": "Building website front-ends using HTML, CSS, JavaScript, and responsive design techniques for browser-based user interfaces.",
+        "description": "Building website front-ends using HTML, CSS, and vanilla JavaScript including responsive design, accessibility, and browser compatibility. General frontend web development",
         "keywords": ["frontend", "front-end", "HTML", "CSS", "web design", "responsive design", "Bootstrap", "Tailwind", "web layout"]
     },
     "react_development": {
         "name": "React Development",
         "domain": "digital_technology",
-        "description": "Building user interfaces using React JavaScript library including hooks, state management, and component-based architecture.",
+        "description": "Building user interfaces using React JavaScript library including hooks, Redux state management, component architecture, and Next.js. React framework specialization",
         "keywords": ["React", "ReactJS", "React.js", "React development", "Redux", "React hooks", "React components", "Next.js"]
     },
     "angular_development": {
         "name": "Angular Development",
         "domain": "digital_technology",
-        "description": "Building single-page applications using Angular framework including TypeScript, RxJS, and Angular CLI.",
+        "description": "Building single-page applications using Angular framework including TypeScript, RxJS, Angular CLI, and dependency injection. Angular framework specialization",
         "keywords": ["Angular", "AngularJS", "Angular development", "Angular components", "RxJS", "Angular CLI"]
     },
     "vue_development": {
         "name": "Vue.js Development",
         "domain": "digital_technology",
-        "description": "Building web interfaces using Vue.js framework including Vuex state management, Vue Router, and component composition.",
+        "description": "Building web interfaces using Vue.js framework including Vuex state management, Vue Router, Nuxt.js, and component composition. Vue framework specialization",
         "keywords": ["Vue", "Vue.js", "Vuex", "Nuxt.js", "Vue development", "Vue components"]
     },
     "backend_web": {
@@ -1209,13 +1209,13 @@ SKILL_FAMILIES = {
     "business_intelligence_reporting": {
         "name": "Business Intelligence Reporting",
         "domain": "digital_technology",
-        "description": "Creating business intelligence dashboards, reports, and data visualisations using software tools like Power BI, Tableau, or Looker for IT-enabled business analysis and corporate decision support.",
+        "description": "Creating business intelligence dashboards and data visualisations using BI software tools like Power BI, Tableau, or Looker. Data reporting and analytics software",
         "keywords": ["business intelligence", "BI", "data visualisation", "data visualization", "dashboard", "Power BI", "Tableau", "reporting", "charts", "graphs", "visual analytics", "SSRS", "Crystal Reports", "Looker", "business reporting"]
     },
     "data_engineering": {
         "name": "Data Engineering",
         "domain": "digital_technology",
-        "description": "Building and maintaining data pipelines, ETL processes, data warehouses, and data infrastructure using tools like Spark, Airflow, or dbt.",
+        "description": "Building and maintaining data pipelines, ETL software processes, data warehouses, and data infrastructure using tools like Spark, Airflow, or dbt. Data engineering software only",
         "keywords": ["data engineering", "ETL", "data pipeline", "data warehouse", "data lake", "Apache Spark", "Airflow", "data integration"]
     },
     
@@ -1223,25 +1223,25 @@ SKILL_FAMILIES = {
     "machine_learning": {
         "name": "Machine Learning",
         "domain": "digital_technology",
-        "description": "Developing machine learning models using Python, TensorFlow, or scikit-learn for prediction, classification, and pattern recognition. Computer/AI algorithms only - not human learning or training delivery.",
+        "description": "Developing machine learning models and AI algorithms using Python, TensorFlow, or scikit-learn for computer-based prediction and classification. AI/ML software development only.",
         "keywords": ["machine learning", "ML", "AI models", "TensorFlow", "scikit-learn", "predictive modeling", "classification", "computer learning", "algorithm training", "model training"]
     },
     "deep_learning": {
         "name": "Deep Learning",
         "domain": "digital_technology",
-        "description": "Building deep neural networks using TensorFlow, PyTorch, or Keras for AI applications. Computer neural network systems only - not human learning, neuroscience, or education.",
+        "description": "Building deep learning computer neural networks using TensorFlow, PyTorch, or Keras for AI applications. Artificial neural network software only.",
         "keywords": ["deep learning", "neural network", "TensorFlow", "PyTorch", "CNN", "RNN", "LSTM", "transformer", "AI neural network", "Keras"]
     },
     "nlp": {
         "name": "Natural Language Processing",
         "domain": "digital_technology",
-        "description": "Building computer NLP systems for text analysis, sentiment analysis, chatbots, and language understanding using AI/ML. Computer language processing only - not human linguistics, translation services, or language teaching.",
+        "description": "Building computer NLP systems for text analysis, sentiment analysis, chatbots, and language understanding using AI/ML. Computer language processing only.",
         "keywords": ["NLP", "natural language processing", "text analysis", "sentiment analysis", "chatbot", "language model", "BERT", "GPT", "AI text", "text mining"]
     },
     "computer_vision": {
         "name": "Computer Vision",
         "domain": "digital_technology",
-        "description": "Developing AI/computer image and video analysis systems using OpenCV, CNNs, and object detection algorithms. Computer/AI visual processing systems only - not human optometry, ophthalmology, or visual assessment.",
+        "description": "Developing AI/computer image and video analysis systems using OpenCV, CNNs, and object detection algorithms. Computer/AI visual processing systems only.",
         "keywords": ["computer vision", "image recognition", "object detection", "OpenCV", "image processing", "YOLO", "CNN", "video analysis", "AI vision", "machine vision"]
     },
     
@@ -1269,19 +1269,19 @@ SKILL_FAMILIES = {
     "cicd": {
         "name": "CI/CD DevOps",
         "domain": "digital_technology",
-        "description": "Building CI/CD pipelines for automated software deployment using Jenkins, GitHub Actions, GitLab CI, or Azure DevOps.",
+        "description": "Building CI/CD pipelines for automated software code deployment using Jenkins, GitHub Actions, GitLab CI, or Azure DevOps. Software release automation only.",
         "keywords": ["CI/CD", "continuous integration", "continuous deployment", "pipeline", "Jenkins", "GitLab CI", "GitHub Actions"]
     },
     "infrastructure_code": {
         "name": "Infrastructure as Code",
         "domain": "digital_technology",
-        "description": "Managing infrastructure as code using Terraform, CloudFormation, Ansible, or Pulumi for automated infrastructure provisioning.",
+        "description": "Managing IT infrastructure as code using Terraform, CloudFormation, Ansible, or Pulumi for automated server and cloud provisioning. IT infrastructure automation only.",
         "keywords": ["infrastructure as code", "IaC", "Terraform", "Ansible", "Puppet", "Chef", "CloudFormation"]
     },
     "git_version_control": {
         "name": "Version Control",
         "domain": "digital_technology",
-        "description": "Using Git for source code version control including branching strategies, merging, pull requests, and repository management.",
+        "description": "Using Git for source code version control including branching strategies, merging, pull requests, and repository management. Software version control only.",
         "keywords": ["Git", "version control", "GitHub", "GitLab", "Bitbucket", "branching", "merge", "pull request", "repository"]
     },
     
@@ -1301,7 +1301,7 @@ SKILL_FAMILIES = {
     "wireless_networking": {
         "name": "Wireless Networking",
         "domain": "digital_technology",
-        "description": "Configuring and managing wireless networks including WiFi access points, controllers, and wireless security protocols.",
+        "description": "Configuring and managing wireless network infrastructure including WiFi access points, wireless controllers, and security protocols. IT network equipment configuration only.",
         "keywords": ["wireless", "WiFi", "wireless network", "access point", "wireless security", "802.11", "wireless configuration"]
     },
     
@@ -1395,7 +1395,7 @@ SKILL_FAMILIES = {
     "software_testing": {
         "name": "Software Testing QA",
         "domain": "digital_technology",
-        "description": "Testing software applications including functional, regression, and automated testing using tools like Selenium. Software/application testing only - not industrial equipment testing, calibration, or manufacturing quality control.",
+        "description": "Testing software applications including functional, regression, and automated test scripts using tools like Selenium. Software QA testing only",
         "keywords": ["software testing", "QA", "quality assurance", "test automation", "Selenium", "test cases", "bug testing", "regression testing", "application testing", "software QA"]
     },
     "game_development": {
@@ -1407,7 +1407,7 @@ SKILL_FAMILIES = {
     "blockchain_development": {
         "name": "Blockchain Development",
         "domain": "digital_technology",
-        "description": "Developing blockchain applications and smart contracts using Solidity, Ethereum, or other distributed ledger technologies.",
+        "description": "Developing blockchain applications and smart contract code using Solidity, Ethereum, Web3, or other distributed ledger technologies. Blockchain programming only.",
         "keywords": ["blockchain", "smart contract", "Solidity", "Ethereum", "Web3", "cryptocurrency", "DeFi", "NFT"]
     },
     
@@ -1431,7 +1431,7 @@ SKILL_FAMILIES = {
     "surgical_nursing": {
         "name": "Surgical Ward Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care for human surgical patients on hospital wards including pre-admission assessment, post-operative recovery care, wound management, and surgical ward nursing. Ward-based care - not operating theatre roles.",
+        "description": "Providing nursing care for human surgical patients on hospital wards including pre-admission assessment, post-operative recovery care, wound management, and surgical ward nursing. Ward-based care.",
         "keywords": ["surgical nursing", "surgical ward", "post-operative", "pre-admission", "surgical care", "wound management", "surgical patient", "ward nursing", "post-op care"]
     },
     "medical_nursing": {
@@ -1555,7 +1555,7 @@ SKILL_FAMILIES = {
     "optometry": {
         "name": "Optometry Services",
         "domain": "healthcare_clinical",
-        "description": "Providing optometry services for human patients including eye examinations, human vision testing, optical prescriptions, and spectacle dispensing. Human eye care only - not computer vision or machine vision systems.",
+        "description": "Providing optometry services for human patients including eye examinations, human vision testing, optical prescriptions, and spectacle dispensing. Human eye care only.",
         "keywords": ["optometry", "optometrist", "eye examination", "human vision", "optical prescription", "spectacles", "eye care", "vision correction", "eye test", "human eyesight"]
     },
     "exercise_physiology": {
@@ -1697,7 +1697,7 @@ SKILL_FAMILIES = {
     "palliative_care": {
         "name": "Palliative Care",
         "domain": "community_services",
-        "description": "Providing palliative and end-of-life support for terminally ill human clients in community, hospice, or aged care settings including comfort care, emotional support, and family assistance. Community support work - not clinical nursing.",
+        "description": "Providing palliative and end-of-life support for terminally ill human clients in community, hospice, or aged care settings including comfort care, emotional support, and family assistance. Community support work.",
         "keywords": ['palliative care', 'end of life', 'hospice', 'terminal care', 'comfort care', 'dying patient', 'palliative nursing', 'hospice care']
     },
     "meal_assistance": {
@@ -2195,7 +2195,7 @@ SKILL_FAMILIES = {
     "cnc_programming": {
         "name": "CNC Programming",
         "domain": "manufacturing_engineering",
-        "description": "Creating CNC programs using G-code and CAM software for automated machining of metal and plastic components.",
+        "description": "Creating CNC machine programs using G-code and CAM software for automated machining of metal and plastic components. CNC machine programming only.",
         "keywords": ["CNC programming", "G-code", "CNC code", "CAM", "CNC setup", "program editing", "CNC programming"]
     },
     "cnc_operation": {
@@ -2341,7 +2341,7 @@ SKILL_FAMILIES = {
     "industrial_electrical_maintenance": {
         "name": "Industrial Electrical Maintenance",
         "domain": "manufacturing_engineering",
-        "description": "Maintaining industrial electrical systems in manufacturing facilities including motors, switchboards, control panels, and factory electrical equipment. Industrial/factory context, not building maintenance.",
+        "description": "Maintaining industrial electrical systems in manufacturing facilities including motors, switchboards, control panels, and factory electrical equipment. Industrial/factory context.",
         "keywords": ["industrial electrical", "electrical maintenance", "motor maintenance", "electrical fault", "factory electrical", "electrical service", "control panel", "industrial wiring"]
     },
     "motor_control": {
@@ -2353,7 +2353,7 @@ SKILL_FAMILIES = {
     "plc_programming": {
         "name": "PLC Programming",
         "domain": "manufacturing_engineering",
-        "description": "Programming industrial Programmable Logic Controllers for factory automation, machine control, and process control using ladder logic and structured text.",
+        "description": "Programming industrial Programmable Logic Controllers (PLCs) for factory machine automation and process control using ladder logic and structured text. Industrial control system programming only.",
         "keywords": ["PLC", "PLC programming", "programmable logic controller", "ladder logic", "Siemens", "Allen Bradley", "automation"]
     },
     "instrumentation": {
@@ -2391,7 +2391,7 @@ SKILL_FAMILIES = {
     "quality_assurance": {
         "name": "Manufacturing Quality Assurance",
         "domain": "manufacturing_engineering",
-        "description": "Implementing quality management systems in manufacturing including ISO 9001, quality procedures, quality audits, and continuous improvement. Manufacturing and production quality only - not software QA/testing.",
+        "description": "Implementing quality management systems in manufacturing including ISO 9001, quality procedures, quality audits, and continuous improvement. Manufacturing and production quality only.",
         "keywords": ["manufacturing QA", "quality assurance", "ISO 9001", "quality system", "quality management", "quality audit", "quality procedures", "manufacturing quality", "production quality"]
     },
     
@@ -2481,7 +2481,7 @@ SKILL_FAMILIES = {
     "early_childhood_education": {
         "name": "Early Childhood Education",
         "domain": "education_training",
-        "description": "Educating human children in early childhood settings including kindergarten, preschool, and developmental programs for children aged 0-5 years. Not animal-related.",
+        "description": "Educating human children in early childhood settings including kindergarten, preschool, and developmental programs for children aged 0-5 years.",
         "keywords": ['early childhood', 'kindergarten', 'preschool', 'early learning', 'EYLF', 'NQS', 'child development', 'human children', 'pre-prep', 'early years']
     },
     "childcare": {
@@ -2905,7 +2905,7 @@ SKILL_FAMILIES = {
     "dance": {
         "name": "Professional Dance Performance",
         "domain": "creative_arts",
-        "description": "Performing dance professionally for stage, film, television, and live entertainment including ballet, contemporary, jazz, hip-hop, and cultural dance. Professional dancer and choreographer work in the entertainment industry - not teaching.",
+        "description": "Performing dance professionally for stage, film, television, and live entertainment including ballet, contemporary, jazz, hip-hop, and cultural dance. Professional dancer and choreographer work in the entertainment industry.",
         "keywords": ["professional dancer", "dance performer", "choreographer", "ballet dancer", "contemporary dancer", "stage performance", "dance company", "entertainment dance", "dance artist", "show dancer"]
     },
     "music_performance": {
@@ -2969,7 +2969,7 @@ SKILL_FAMILIES = {
     "makeup_effects": {
         "name": "Theatrical SFX Makeup",
         "domain": "creative_arts",
-        "description": "Applying makeup for stage, film, and television productions including theatrical makeup, prosthetics, special effects makeup, ageing effects, and character transformation. Entertainment industry makeup only - not beauty/cosmetic makeup.",
+        "description": "Applying makeup for stage, film, and television productions including theatrical makeup, prosthetics, special effects makeup, ageing effects, and character transformation. Entertainment industry makeup only.",
         "keywords": ["special effects makeup", "SFX makeup", "prosthetics", "theatrical makeup", "film makeup", "stage makeup", "character makeup", "ageing makeup", "wound effects", "creature makeup"]
     },
     
@@ -3113,7 +3113,7 @@ SKILL_FAMILIES = {
     "makeup_artistry": {
         "name": "Beauty Makeup Artistry",
         "domain": "retail_services",
-        "description": "Applying professional cosmetic makeup for human clients including bridal makeup, editorial, special occasion makeup, and everyday beauty techniques in salons and freelance settings. Beauty/cosmetic makeup only - not theatrical SFX.",
+        "description": "Applying professional cosmetic makeup for human clients including bridal makeup, editorial, special occasion makeup, and everyday beauty techniques in salons and freelance settings. Beauty/cosmetic makeup only.",
         "keywords": ["makeup artist", "MUA", "bridal makeup", "cosmetics", "beauty makeup", "makeup application", "wedding makeup", "editorial makeup", "special occasion makeup", "glamour makeup"]
     },
     "tattooing": {
@@ -3379,7 +3379,7 @@ SKILL_FAMILIES = {
     "solar_pv_systems": {
         "name": "Utility-Scale Solar Systems",
         "domain": "utilities_resources",
-        "description": "Operating and maintaining utility-scale solar PV systems including large solar farms, solar tracking systems, and grid-scale solar infrastructure. Utility-scale installations - not residential/commercial rooftop solar.",
+        "description": "Operating and maintaining utility-scale solar PV systems including large solar farms, solar tracking systems, and grid-scale solar infrastructure. Utility-scale installations.",
         "keywords": ["solar farm", "utility solar", "large-scale solar", "solar tracking", "grid-scale solar", "solar power station", "solar array", "photovoltaic farm", "solar O&M"]
     },
     "wind_turbine": {
@@ -3909,7 +3909,7 @@ SKILL_FAMILIES = {
     "building_electrical_maintenance": {
         "name": "Building Electrical Maintenance",
         "domain": "electrical_communications",
-        "description": "Maintaining electrical systems in commercial and residential buildings including fault finding, repairs, and electrical safety testing. Building maintenance context, not industrial/factory.",
+        "description": "Maintaining electrical systems in commercial and residential buildings including fault finding, repairs, and electrical safety testing. Building maintenance context.",
         "keywords": ["building electrical", "electrical maintenance", "electrical service", "light replacement", "electrical fault", "power maintenance", "commercial electrical maintenance"]
     },
     "music_composition": {
@@ -3963,14 +3963,14 @@ SKILL_FAMILIES = {
     "sap_erp": {
         "name": "ERP Implementation",
         "domain": "digital_technology",
-        "description": "Implementing and customising SAP ERP systems including SAP ABAP development, SAP HANA, and SAP modules configuration.",
+        "description": "Implementing and customising SAP ERP enterprise software systems including SAP ABAP development, SAP HANA, and SAP module configuration. Enterprise software implementation only.",
         "keywords": ['SAP', 'ERP', 'enterprise resource planning', 'SAP ABAP', 'SAP HANA', 'Oracle ERP', 'SAP Fiori', 'SAP S/4HANA']
     },
     "rpa_automation": {
         "name": "Robotic Process Automation",
         "domain": "digital_technology",
-        "description": "Automating business processes using robotic process automation tools like UiPath, Blue Prism, or Automation Anywhere.",
-        "keywords": ['RPA', 'robotic process automation', 'UiPath', 'Blue Prism', 'Automation Anywhere', 'process automation', 'bot development']
+        "description": "Developing software robots and bots to automate repetitive computer tasks using RPA tools like UiPath, Blue Prism, or Automation Anywhere. Software bot development only.",
+        "keywords": ["RPA", "robotic process automation", "UiPath", "Blue Prism", "Automation Anywhere", "software bot", "bot development", "screen scraping", "workflow automation software", "unattended bot", "attended bot"]
     },
     "low_code_development": {
         "name": "Low-Code Development",
@@ -3999,7 +3999,7 @@ SKILL_FAMILIES = {
     "mobile_testing": {
         "name": "Mobile Testing",
         "domain": "digital_technology",
-        "description": "Testing mobile applications on iOS and Android devices, including functional testing, UI testing, and mobile test automation with Appium.",
+        "description": "Testing mobile applications on iOS and Android devices including functional testing, UI testing, and automated test scripts using Appium. Mobile app QA software testing only.",
         "keywords": ['mobile testing', 'app testing', 'iOS testing', 'Android testing', 'mobile QA', 'device testing', 'Appium', 'mobile automation']
     },
     "performance_testing": {
@@ -4047,7 +4047,7 @@ SKILL_FAMILIES = {
     "perioperative_nursing": {
         "name": "Perioperative Theatre Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care for human patients in operating theatres including scrub nursing, scout nursing, anaesthetic nursing, and PACU recovery nursing. Operating theatre roles only - not ward-based surgical care.",
+        "description": "Providing nursing care for human patients in operating theatres including scrub nursing, scout nursing, anaesthetic nursing, and PACU recovery nursing. Operating theatre roles only.",
         "keywords": ["perioperative nursing", "operating theatre", "scrub nurse", "scout nurse", "anaesthetic nursing", "PACU", "theatre nursing", "surgical instruments", "OR nursing", "circulating nurse"]
     },
     "midwifery": {
@@ -4221,7 +4221,7 @@ SKILL_FAMILIES = {
     "teeth_whitening": {
         "name": "Teeth Whitening",
         "domain": "retail_services",
-        "description": "Providing cosmetic teeth whitening services in beauty or retail settings using non-clinical whitening systems. Not clinical dental procedures.",
+        "description": "Providing cosmetic teeth whitening services in beauty or retail settings using non-clinical whitening systems.",
         "keywords": ['teeth whitening', 'cosmetic whitening', 'tooth whitening', 'bleaching', 'beauty teeth', 'non-clinical whitening', 'retail whitening']
     },
     "cosmetic_tattooing": {
@@ -4311,7 +4311,7 @@ SKILL_FAMILIES = {
     "dance_instruction": {
         "name": "Dance Teaching",
         "domain": "sport_recreation",
-        "description": "Teaching dance classes to human students in dance studios, fitness centres, and schools including ballet, contemporary, ballroom, hip-hop, and social dance instruction. Recreation and fitness teaching - not professional dance performance.",
+        "description": "Teaching dance classes to human students in dance studios, fitness centres, and schools including ballet, contemporary, ballroom, hip-hop, and social dance instruction. Recreation and fitness teaching",
         "keywords": ["dance teacher", "dance instructor", "dance lessons", "dance class", "dance studio", "ballroom teacher", "ballet teacher", "learn to dance", "dance school", "fitness dance"]
     },
     "boxing_instruction": {
@@ -4347,7 +4347,7 @@ SKILL_FAMILIES = {
     "horse_riding_instruction": {
         "name": "Recreational Riding Instruction",
         "domain": "sport_recreation",
-        "description": "Teaching recreational horse riding to human students at riding schools and equestrian centres including beginner lessons, dressage, show jumping, and pony club instruction. Sport and recreation teaching - not equine industry work.",
+        "description": "Teaching recreational horse riding to human students at riding schools and equestrian centres including beginner lessons, dressage, show jumping, and pony club instruction. Sport and recreation teaching.",
         "keywords": ["riding instructor", "riding lessons", "learn to ride", "riding school", "pony club", "equestrian coach", "recreational riding", "riding teacher", "horse riding lessons", "beginner riding"]
     },
     "smart_metering": {
