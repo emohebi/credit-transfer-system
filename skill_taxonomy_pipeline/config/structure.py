@@ -413,7 +413,7 @@ SKILL_FAMILIES = {
         "keywords": ["fire management", "prescribed burning", "hazard reduction", "controlled burn", "fire break", "bushfire management", "burn off"]
     },
     "park_ranger": {
-        "name": "Park Management",
+        "name": "National Park Management",
         "domain": "agriculture_primary",
         "description": "Managing national parks and conservation reserves including wildlife conservation, visitor management, natural resource management, and park ranger duties.",
         "keywords": ["park ranger", "ranger", "national park", "reserve management", "park management", "conservation area", "wildlife management"]
@@ -615,13 +615,13 @@ SKILL_FAMILIES = {
         "keywords": ["solar installation", "rooftop solar", "residential solar", "commercial solar", "solar panel installation", "inverter installation", "grid connect solar", "solar mounting", "PV installation"]
     },
     "air_conditioning_install": {
-        "name": "HVAC Installation",
+        "name": "Heating, Ventilation, and Air Conditioning Installation",
         "domain": "electrical_communications",
         "description": "Installing split system and ducted air conditioning in residential and commercial buildings including refrigerant handling, electrical connections, and HVAC commissioning. Licensed electrical/refrigeration trade.",
         "keywords": ["air conditioning", "air con installation", "split system", "ducted air conditioning", "HVAC installation", "AC installation", "refrigerant"]
     },
     "refrigeration": {
-        "name": "Refrigeration Systems",
+        "name": "Refrigeration Installation and Service",
         "domain": "electrical_communications",
         "description": "Installing and servicing commercial refrigeration systems including cool rooms, display units, and refrigeration equipment.",
         "keywords": ["refrigeration", "commercial refrigeration", "coolroom", "freezer", "refrigeration service", "refrigerant handling", "cold storage"]
@@ -761,7 +761,7 @@ SKILL_FAMILIES = {
         "keywords": ["concrete", "concrete placement", "concrete finishing", "concrete pour", "screeding", "trowelling", "concrete slab"]
     },
     "exposed_aggregate": {
-        "name": "Decorative Concrete",
+        "name": "Decorative Concreting",
         "domain": "construction_building",
         "description": "Creating decorative concrete finishes including exposed aggregate, stamped concrete, and polished concrete floors",
         "keywords": ["exposed aggregate", "decorative concrete", "polished concrete", "stamped concrete", "stencilled concrete", "coloured concrete"]
@@ -801,7 +801,7 @@ SKILL_FAMILIES = {
         "keywords": ["asbestos", "asbestos removal", "asbestos abatement", "friable asbestos", "non-friable", "ACM", "asbestos disposal"]
     },
     "fencing": {
-        "name": "Fencing Installation",
+        "name": "Fence Installation",
         "domain": "construction_building",
         "description": "Installing fences including timber, Colorbond, pool fencing, and security fencing.",
         "keywords": ["fencing", "fence installation", "fence construction", "timber fence", "colorbond fence", "pool fence", "gate", "post hole"]
@@ -813,7 +813,7 @@ SKILL_FAMILIES = {
         "keywords": ["swimming pool", "pool construction", "pool building", "pool shell", "pool tiling", "pool coping", "fibreglass pool", "concrete pool"]
     },
     "building_inspection": {
-        "name": "Building Inspection",
+        "name": "Building Inspection and Certification",
         "domain": "construction_building",
         "description": "Inspecting buildings for compliance including building certifiers and inspection reporting.",
         "keywords": ["building inspection", "building inspector", "construction inspection", "compliance inspection", "defect inspection", "pre-purchase inspection"]
@@ -825,19 +825,19 @@ SKILL_FAMILIES = {
     
     # Mechanical
     "engine_repair": {
-        "name": "Engine Repair",
+        "name": "Automotive Engine Repair",
         "domain": "automotive_repair",
         "description": "Repairing and overhauling internal combustion engines including diagnosis, component replacement, and engine rebuilding for vehicles.",
         "keywords": ["engine repair", "engine overhaul", "engine rebuild", "engine diagnostics", "cylinder head", "engine block", "timing", "valve"]
     },
     "brake_systems": {
-        "name": "Brake System Repair",
+        "name": "Automotive Brake System Repair",
         "domain": "automotive_repair",
         "description": "Servicing and repairing vehicle brake systems including disc brakes, drum brakes, ABS, and brake component replacement.",
         "keywords": ["brake", "brake repair", "brake pads", "brake rotors", "disc brakes", "drum brakes", "brake service", "ABS", "brake fluid"]
     },
     "suspension_steering": {
-        "name": "Suspension Steering Repair",
+        "name": "Automotive Suspension Steering Repair",
         "domain": "automotive_repair",
         "description": "Repairing vehicle suspension and steering systems including shocks, springs, ball joints, and steering components.",
         "keywords": ["suspension", "steering", "shock absorber", "strut", "control arm", "wheel alignment", "power steering", "rack and pinion"]
@@ -849,19 +849,19 @@ SKILL_FAMILIES = {
         "keywords": ["transmission", "gearbox", "clutch", "differential", "drivetrain", "CV joint", "driveshaft", "automatic transmission", "manual transmission"]
     },
     "vehicle_servicing": {
-        "name": "Vehicle Servicing",
+        "name": "Automotive Servicing",
         "domain": "automotive_repair",
         "description": "Performing scheduled vehicle servicing including oil changes, filters, fluids, and routine maintenance.",
         "keywords": ["vehicle service", "car service", "oil change", "log book service", "routine maintenance", "filter replacement", "service schedule"]
     },
     "exhaust_systems": {
-        "name": "Exhaust System Repair",
+        "name": "Automotive Exhaust System Repair",
         "domain": "automotive_repair",
         "description": "Repairing exhaust systems including mufflers, catalytic converters, and exhaust component replacement.",
         "keywords": ["exhaust", "exhaust system", "muffler", "catalytic converter", "exhaust manifold", "exhaust repair", "DPF"]
     },
     "tyre_fitting": {
-        "name": "Tyre Wheel Service",
+        "name": "Automotive Tyre Wheel Service",
         "domain": "automotive_repair",
         "description": "Fitting and balancing tyres including wheel alignment, puncture repairs, and tyre rotation.",
         "keywords": ["tyre fitting", "tyre", "wheel balancing", "tyre change", "wheel alignment", "tyre repair", "puncture repair", "tyre rotation"]
@@ -869,19 +869,19 @@ SKILL_FAMILIES = {
     
     # Electrical
     "auto_electrical": {
-        "name": "Auto Electrical Systems",
+        "name": "Automotive Electrical Services",
         "domain": "automotive_repair",
         "description": "Diagnosing and repairing automotive electrical systems including starters, alternators, wiring, and electrical faults.",
         "keywords": ["auto electrical", "automotive electrical", "car electrical", "wiring", "alternator", "starter motor", "battery", "electrical fault"]
     },
     "vehicle_electronics": {
-        "name": "Vehicle Diagnostics",
+        "name": "Automotive Diagnostics",
         "domain": "automotive_repair",
         "description": "Diagnosing vehicle electronic systems using scan tools including ECU faults, sensors, and electronic components",
         "keywords": ["vehicle electronics", "ECU", "diagnostic", "scan tool", "engine management", "OBD", "vehicle computer", "electronic control"]
     },
     "air_conditioning_auto": {
-        "name": "Automotive Air Conditioning",
+        "name": "Automotive Air Conditioning Services",
         "domain": "automotive_repair",
         "description": "Servicing automotive air conditioning systems including refrigerant recovery, regas, and A/C repairs.",
         "keywords": ["automotive air conditioning", "car AC", "vehicle air con", "refrigerant", "AC regas", "compressor", "car climate control"]
@@ -901,7 +901,7 @@ SKILL_FAMILIES = {
         "keywords": ["spray painting", "automotive painting", "car painting", "vehicle refinishing", "clear coat", "base coat", "paint booth", "colour matching"]
     },
     "paint_preparation": {
-        "name": "Paint Preparation",
+        "name": "Automotive Paint Preparation",
         "domain": "automotive_repair",
         "description": "Preparing vehicle surfaces for painting including sanding, priming, and masking.",
         "keywords": ["paint preparation", "sanding", "primer", "filler", "surface prep", "block sanding", "masking", "prep work"]
@@ -913,13 +913,13 @@ SKILL_FAMILIES = {
         "keywords": ["paintless dent repair", "PDR", "dent removal", "hail damage", "dent puller", "dent tools"]
     },
     "windscreen_repair": {
-        "name": "Windscreen Replacement",
+        "name": "Automotive Windscreen Replacement",
         "domain": "automotive_repair",
         "description": "Repairing and replacing automotive windscreens and vehicle glass including chip repairs and installations",
         "keywords": ["windscreen", "windscreen repair", "windscreen replacement", "auto glass", "chip repair", "glass replacement"]
     },
     "vehicle_detailing": {
-        "name": "Vehicle Detailing",
+        "name": "Automotive Detailing",
         "domain": "automotive_repair",
         "description": "Detailing vehicles including interior and exterior cleaning, polishing, and paint protection.",
         "keywords": ["vehicle detailing", "car detailing", "car wash", "polishing", "waxing", "interior cleaning", "paint correction", "ceramic coating"]
@@ -927,13 +927,13 @@ SKILL_FAMILIES = {
     
     # Heavy Vehicle
     "heavy_vehicle_mechanic": {
-        "name": "Heavy Vehicle Mechanical",
+        "name": "Heavy Vehicle Mechanical Repair",
         "domain": "automotive_repair",
         "description": "Maintaining and repairing heavy vehicles including trucks, buses, and heavy commercial vehicles.",
         "keywords": ["heavy vehicle", "truck mechanic", "bus mechanic", "diesel mechanic", "heavy duty", "truck repair", "commercial vehicle"]
     },
     "diesel_systems": {
-        "name": "Diesel Fuel Systems",
+        "name": "Diesel Fuel Systems Servicing",
         "domain": "automotive_repair",
         "description": "Servicing diesel fuel systems including injectors, fuel pumps, turbochargers, and diesel engine components.",
         "keywords": ["diesel", "diesel fuel system", "fuel injection", "common rail", "diesel pump", "injector", "diesel engine"]
@@ -947,19 +947,19 @@ SKILL_FAMILIES = {
     
     # Motorcycle & Small Engine
     "motorcycle_mechanic": {
-        "name": "Motorcycle Mechanical",
+        "name": "Motorcycle Mechanical Repair",
         "domain": "automotive_repair",
         "description": "Maintaining and repairing motorcycles including engines, brakes, and electrical systems.",
         "keywords": ["motorcycle", "motorbike", "motorcycle mechanic", "motorcycle service", "motorcycle repair", "two-wheeler"]
     },
     "outdoor_power_equipment": {
-        "name": "Outdoor Power Equipment",
+        "name": "Outdoor Power Equipment Servicing",
         "domain": "automotive_repair",
         "description": "Servicing outdoor power equipment including mowers, chainsaws, and small engines.",
         "keywords": ["outdoor power equipment", "small engine", "lawn mower", "chainsaw", "brush cutter", "blower", "garden equipment"]
     },
     "marine_mechanic": {
-        "name": "Marine Mechanical",
+        "name": "Marine Mechanical Repair",
         "domain": "automotive_repair",
         "description": "Maintaining and repairing marine engines and boat systems including outboards, inboards, and marine equipment.",
         "keywords": ["marine mechanic", "boat engine", "outboard motor", "marine engine", "boat repair", "inboard engine"]
@@ -1037,7 +1037,7 @@ SKILL_FAMILIES = {
         "keywords": ["order picking", "picking", "packing", "order fulfilment", "pick and pack", "order processing", "RF scanner"]
     },
     "goods_receival": {
-        "name": "Goods Receival Dispatch",
+        "name": "Goods Receival Dispatch Operations",
         "domain": "transport_logistics",
         "description": "Receiving and dispatching goods including checking deliveries, documentation, and loading vehicles.",
         "keywords": ["receival", "dispatch", "goods receival", "shipping", "receiving goods", "consignment", "delivery docket"]
@@ -1108,6 +1108,12 @@ SKILL_FAMILIES = {
         "name": "Python Programming",
         "domain": "digital_technology",
         "description": "Developing applications and scripts using Python programming language including libraries like NumPy, Pandas, Django, and Flask.",
+        "keywords": ["Python", "Python programming", "Python development", "Python script", "Python code", "Django", "Flask", "pandas"]
+    },
+    "python_programming": {
+        "name": "Software Development",
+        "domain": "digital_technology",
+        "description": "Developing applications and scripts using programming languages like C++, C# and etc",
         "keywords": ["Python", "Python programming", "Python development", "Python script", "Python code", "Django", "Flask", "pandas"]
     },
     "javascript_programming": {
@@ -1233,9 +1239,9 @@ SKILL_FAMILIES = {
         "keywords": ["deep learning", "neural network", "TensorFlow", "PyTorch", "CNN", "RNN", "LSTM", "transformer", "AI neural network", "Keras"]
     },
     "nlp": {
-        "name": "Natural Language Processing",
+        "name": "Natural Language Processing (Computer-Based)",
         "domain": "digital_technology",
-        "description": "Building computer NLP systems for text analysis, sentiment analysis, chatbots, and language understanding using AI/ML. Computer language processing only.",
+        "description": "Building computer Natural Language Processing systems for text analysis, sentiment analysis, chatbots, and language understanding using AI/ML. Computer language processing only.",
         "keywords": ["NLP", "natural language processing", "text analysis", "sentiment analysis", "chatbot", "language model", "BERT", "GPT", "AI text", "text mining"]
     },
     "computer_vision": {
@@ -1247,7 +1253,7 @@ SKILL_FAMILIES = {
     
     # Cloud & Infrastructure
     "docker_containers": {
-        "name": "Container Technology",
+        "name": "Digital Container Technology",
         "domain": "digital_technology",
         "description": "Working with containerisation technologies including Docker, container images, container orchestration, and microservices deployment.",
         "keywords": ["Docker", "container", "containerisation", "Docker image", "Docker compose", "container orchestration"]
@@ -1279,7 +1285,7 @@ SKILL_FAMILIES = {
         "keywords": ["infrastructure as code", "IaC", "Terraform", "Ansible", "Puppet", "Chef", "CloudFormation"]
     },
     "git_version_control": {
-        "name": "Version Control",
+        "name": "Digital Version Control",
         "domain": "digital_technology",
         "description": "Using Git for source code version control including branching strategies, merging, pull requests, and repository management. Software version control only.",
         "keywords": ["Git", "version control", "GitHub", "GitLab", "Bitbucket", "branching", "merge", "pull request", "repository"]
@@ -1399,7 +1405,7 @@ SKILL_FAMILIES = {
         "keywords": ["software testing", "QA", "quality assurance", "test automation", "Selenium", "test cases", "bug testing", "regression testing", "application testing", "software QA"]
     },
     "game_development": {
-        "name": "Game Development",
+        "name": "Video Game Development",
         "domain": "digital_technology",
         "description": "Creating video games using game engines like Unity or Unreal Engine including game mechanics, graphics, and gameplay programming.",
         "keywords": ["game development", "Unity", "Unreal Engine", "game programming", "game design", "game engine", "C# game"]
@@ -1419,13 +1425,13 @@ SKILL_FAMILIES = {
     "emergency_nursing": {
         "name": "Emergency Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care in emergency departments including triage, trauma, and acute patient assessment.",
+        "description": "Providing nursing care for human in emergency departments including triage, trauma, and acute patient assessment.",
         "keywords": ["emergency nursing", "ED nursing", "emergency department", "triage", "trauma nursing", "emergency care", "resuscitation"]
     },
     "intensive_care_nursing": {
         "name": "Intensive Care Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care in intensive care units including ventilated patients, haemodynamic monitoring, and critical care.",
+        "description": "Providing nursing care for human in intensive care units including ventilated patients, haemodynamic monitoring, and critical care.",
         "keywords": ["intensive care", "ICU nursing", "critical care", "ICU", "ventilator", "critical care nursing", "high dependency"]
     },
     "surgical_nursing": {
@@ -1437,25 +1443,25 @@ SKILL_FAMILIES = {
     "medical_nursing": {
         "name": "Medical Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care on medical wards including medication administration, patient observations, and care planning.",
+        "description": "Providing nursing care for human on medical wards including medication administration, patient observations, and care planning.",
         "keywords": ["medical nursing", "medical ward", "general nursing", "ward nursing", "medical care", "inpatient nursing"]
     },
     "oncology_nursing": {
         "name": "Oncology Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care for cancer patients including chemotherapy administration, symptom management, and palliative care.",
+        "description": "Providing nursing care for human cancer patients including chemotherapy administration, symptom management, and palliative care.",
         "keywords": ["oncology nursing", "cancer care", "chemotherapy", "oncology", "cancer nursing", "palliative", "radiation therapy"]
     },
     "cardiac_nursing": {
         "name": "Cardiac Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care for cardiac patients including ECG monitoring, cardiac rehabilitation, and coronary care.",
+        "description": "Providing nursing care for human cardiac patients including ECG monitoring, cardiac rehabilitation, and coronary care.",
         "keywords": ["cardiac nursing", "cardiology", "CCU", "cardiac care", "heart failure", "ECG", "cardiac monitoring"]
     },
     "renal_nursing": {
         "name": "Renal Dialysis Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care for patients with kidney disease including haemodialysis, peritoneal dialysis, and renal patient education.",
+        "description": "Providing nursing care for human patients with kidney disease including haemodialysis, peritoneal dialysis, and renal patient education.",
         "keywords": ["renal nursing", "dialysis", "haemodialysis", "peritoneal dialysis", "kidney", "nephrology", "renal care"]
     },
     "paediatric_nursing": {
@@ -1481,7 +1487,7 @@ SKILL_FAMILIES = {
     "mental_health_nursing": {
         "name": "Mental Health Nursing",
         "domain": "healthcare_clinical",
-        "description": "Providing nursing care for mental health patients including psychiatric assessment, therapeutic interventions, and mental health care.",
+        "description": "Providing nursing care for human mental health patients including psychiatric assessment, therapeutic interventions, and mental health care.",
         "keywords": ["mental health nursing", "psychiatric nursing", "psych nursing", "mental health care", "psychiatric care", "inpatient psych"]
     },
     "aged_care_nursing": {
@@ -1569,13 +1575,13 @@ SKILL_FAMILIES = {
     "medical_reception": {
         "name": "Medical Reception",
         "domain": "healthcare_clinical",
-        "description": "Providing reception services in medical practices including appointments, billing, and patient administration.",
+        "description": "Providing reception services in medical practices including appointments, billing, and human patient administration.",
         "keywords": ["medical reception", "medical receptionist", "practice reception", "patient booking", "medical admin", "appointment scheduling"]
     },
     "medical_records": {
         "name": "Health Information Management",
         "domain": "healthcare_clinical",
-        "description": "Managing health information and medical records including clinical coding, documentation, and health data",
+        "description": "Managing health information and medical records including clinical coding, documentation, and health data for human patients.",
         "keywords": ["medical records", "health records", "patient records", "medical documentation", "health information", "medical filing"]
     },
     "medical_billing": {
@@ -1593,7 +1599,7 @@ SKILL_FAMILIES = {
     "medical_imaging_assistance": {
         "name": "Medical Imaging Assistance",
         "domain": "healthcare_clinical",
-        "description": "Assisting with medical imaging procedures including patient positioning, radiography, and imaging support",
+        "description": "Assisting with medical imaging procedures for human including patient positioning, radiography, and imaging support",
         "keywords": ["medical imaging", "radiology", "X-ray", "imaging assistant", "radiography", "CT scan", "MRI"]
     },
     "sterilisation_services": {
@@ -1733,13 +1739,13 @@ SKILL_FAMILIES = {
         "keywords": ['SIL', 'supported independent living', 'disability housing', 'independent living', 'NDIS housing', 'daily living support', 'disability support']
     },
     "behaviour_support": {
-        "name": "Behaviour Support",
+        "name": "Posititve Behaviour Support",
         "domain": "community_services",
         "description": "Implementing positive behaviour support for human clients with disability including behaviour plans, PBS strategies, functional behaviour assessment, and restrictive practices.",
         "keywords": ['behaviour support', 'PBS', 'human clients', 'disability', 'behaviour plans', 'functional assessment', 'positive behaviour', 'NDIS']
     },
     "assistive_technology": {
-        "name": "Assistive Technology",
+        "name": "Assistive Technology Support",
         "domain": "community_services",
         "description": "Supporting use of assistive technology including mobility aids, communication devices, and adaptive equipment.",
         "keywords": ["assistive technology", "AT", "adaptive equipment", "mobility equipment", "communication device", "AAC"]
@@ -1747,7 +1753,7 @@ SKILL_FAMILIES = {
     
     # Community Services
     "case_management": {
-        "name": "Case Management",
+        "name": "Social Work Case Management",
         "domain": "community_services",
         "description": "Coordinating human services for clients with complex needs including social work case coordination, client needs assessment, service referrals, and welfare case management.",
         "keywords": ['case management', 'human clients', 'social work', 'case coordination', 'service referrals', 'welfare', 'needs assessment', 'case worker']
@@ -1771,7 +1777,7 @@ SKILL_FAMILIES = {
         "keywords": ['family support', 'human families', 'parenting support', 'family intervention', 'family counselling', 'child welfare', 'family services']
     },
     "housing_support": {
-        "name": "Housing Support",
+        "name": "Homeless Housing Support",
         "domain": "community_services",
         "description": "Providing housing support for homeless or at-risk people including crisis accommodation, tenancy support, social housing, and homelessness services.",
         "keywords": ['housing support', 'homelessness', 'crisis accommodation', 'social housing', 'tenancy support', 'housing assistance', 'homeless services']
@@ -1811,7 +1817,7 @@ SKILL_FAMILIES = {
     
     # Indigenous Health
     "aboriginal_health": {
-        "name": "Aboriginal Health",
+        "name": "Aboriginal Health Services",
         "domain": "healthcare_clinical",
         "description": "Working in Aboriginal and Torres Strait Islander health services for human community members including cultural safety, Indigenous health programs, and community health.",
         "keywords": ['Aboriginal health', 'human community', 'Indigenous health', 'cultural safety', 'Torres Strait Islander', 'community health', 'First Nations', 'Aboriginal health worker']
@@ -1891,7 +1897,7 @@ SKILL_FAMILIES = {
         "keywords": ["bank teller", "teller", "banking", "cash handling", "bank transactions", "customer banking", "bank deposits"]
     },
     "lending": {
-        "name": "Lending Credit",
+        "name": "Lending Credit Assessment",
         "domain": "finance_accounting",
         "description": "Processing bank loans and mortgages including borrower creditworthiness assessment, home loan applications, personal loan documentation, and banking lending compliance. Financial lending only.",
         "keywords": ['lending', 'loans', 'credit', 'loan processing', 'mortgage', 'home loan', 'personal loan', 'borrower assessment', 'bank lending', 'financial lending', 'loan application', 'creditworthiness']
@@ -2003,9 +2009,9 @@ SKILL_FAMILIES = {
         "keywords": ["onboarding", "induction", "new employee", "orientation", "employee induction", "new starter", "onboarding process"]
     },
     "hr_administration": {
-        "name": "HR Administration",
+        "name": "Human Resource Administration",
         "domain": "business_administration",
-        "description": "Administering HR functions including employee records, HR systems, and HR documentation.",
+        "description": "Administering human resource functions including employee records, HR systems, and HR documentation.",
         "keywords": ["HR administration", "HR admin", "personnel", "employee records", "HR systems", "HRIS", "HR documentation"]
     },
     "performance_management": {
@@ -2021,13 +2027,13 @@ SKILL_FAMILIES = {
         "keywords": ["employee relations", "workplace relations", "grievance", "disciplinary", "industrial relations", "ER", "workplace dispute"]
     },
     "whs_compliance": {
-        "name": "WHS Compliance",
+        "name": "Work Health Safety Compliance",
         "domain": "business_administration",
         "description": "Ensuring workplace health and safety compliance including risk assessment, safety procedures, and WHS systems.",
         "keywords": ["WHS", "work health safety", "OHS", "safety compliance", "workplace safety", "safety officer", "hazard management"]
     },
     "workers_compensation": {
-        "name": "Workers Compensation",
+        "name": "Workers Compensation Management",
         "domain": "business_administration",
         "description": "Managing workers compensation insurance claims including workplace injury claims, return to work programs, WorkCover, and injury management for employees.",
         "keywords": ['workers compensation', 'WorkCover', 'injury management', 'return to work', 'workplace injury', 'workers comp claims', 'RTW', 'injury claims']
@@ -2035,7 +2041,7 @@ SKILL_FAMILIES = {
     
     # Legal
     "legal_secretary": {
-        "name": "Legal Secretarial",
+        "name": "Legal Secretarial Support",
         "domain": "business_administration",
         "description": "Providing secretarial support in law firms and legal environments for human lawyers including legal documents, court filings, and legal administration.",
         "keywords": ['legal secretary', 'law firm', 'human lawyers', 'legal documents', 'court filings', 'legal administration', 'solicitor support', 'legal support']
@@ -2169,7 +2175,7 @@ SKILL_FAMILIES = {
         "keywords": ["call centre", "call center", "inbound calls", "outbound calls", "phone support", "contact centre", "telephony"]
     },
     "complaints_handling": {
-        "name": "Complaints Resolution",
+        "name": "Customer Complaints Resolution",
         "domain": "business_administration",
         "description": "Resolving customer complaints including investigation, resolution, escalation, and complaint management",
         "keywords": ["complaints handling", "complaints", "complaint resolution", "dispute resolution", "customer complaints", "escalation"]
@@ -2219,21 +2225,21 @@ SKILL_FAMILIES = {
     
     # Welding & Fabrication
     "mig_welding": {
-        "name": "MIG Welding",
+        "name": "Metal Inert Gas Welding",
         "domain": "manufacturing_engineering",
-        "description": "Welding metals using MIG/GMAW process with wire-fed welding machines for fabrication and manufacturing applications.",
+        "description": "Welding metals using Metal Inert Gas, or Gas Metal Arc Welding (MIG/GMAW) process with wire-fed welding machines for fabrication and manufacturing applications.",
         "keywords": ["MIG welding", "GMAW", "MIG", "wire welding", "gas metal arc", "MIG welder", "steel welding"]
     },
     "tig_welding": {
-        "name": "TIG Welding",
+        "name": "Tungsten Inert Gas Welding",
         "domain": "manufacturing_engineering",
-        "description": "Welding metals using TIG/GTAW process for precision welding of stainless steel, aluminium, and thin materials.",
+        "description": "Welding metals using Tungsten Inert Gas (TIG/GTAW) process for precision welding of stainless steel, aluminium, and thin materials.",
         "keywords": ["TIG welding", "GTAW", "TIG", "tungsten", "TIG welder", "argon welding", "stainless welding", "aluminium welding"]
     },
     "stick_welding": {
-        "name": "MMA Welding",
+        "name": "Manual Metal Arc Welding",
         "domain": "manufacturing_engineering",
-        "description": "Welding metals using stick/MMA welding process with consumable electrodes for structural and maintenance welding.",
+        "description": "Welding metals using Manual Metal Arc stick/MMA welding process with consumable electrodes for structural and maintenance welding.",
         "keywords": ["stick welding", "MMA", "MMAW", "arc welding", "manual metal arc", "electrode", "stick welder"]
     },
     "pipe_welding": {
@@ -2255,7 +2261,7 @@ SKILL_FAMILIES = {
         "keywords": ["metal fabrication", "fabrication", "sheet metal", "plate work", "fabricator", "metal work", "steel fabrication"]
     },
     "sheet_metal": {
-        "name": "Sheet Metal Work",
+        "name": "Sheet Metal Forming",
         "domain": "manufacturing_engineering",
         "description": "Forming sheet metal into components using folding, rolling, pressing, and fabrication techniques.",
         "keywords": ["sheet metal", "sheet metal work", "folding", "bending", "guillotine", "press brake", "sheet metal forming"]
@@ -2275,25 +2281,25 @@ SKILL_FAMILIES = {
         "keywords": ["mechanical fitting", "fitter", "fitting", "assembly", "mechanical assembly", "machine assembly", "fitter and turner"]
     },
     "hydraulics": {
-        "name": "Hydraulic Systems",
+        "name": "Hydraulic Systems Installation and Maintenance",
         "domain": "manufacturing_engineering",
         "description": "Installing and maintaining hydraulic systems including pumps, cylinders, valves, and hydraulic power units in industrial equipment.",
         "keywords": ["hydraulics", "hydraulic", "hydraulic system", "hydraulic cylinder", "hydraulic pump", "hydraulic repair", "fluid power"]
     },
     "pneumatics": {
-        "name": "Pneumatic Systems",
+        "name": "Pneumatic Systems Installation and Maintenance",
         "domain": "manufacturing_engineering",
         "description": "Installing and maintaining pneumatic systems including compressors, air cylinders, valves, and pneumatic control circuits.",
         "keywords": ["pneumatics", "pneumatic", "pneumatic system", "air system", "compressed air", "pneumatic cylinder", "pneumatic valves"]
     },
     "bearing_installation": {
-        "name": "Bearing Seal Installation",
+        "name": "Bearing Seal Installation and Maintenance",
         "domain": "manufacturing_engineering",
         "description": "Installing and maintaining bearings, seals, and rotating equipment components in industrial machinery.",
         "keywords": ["bearing", "bearing installation", "seal", "bearing replacement", "bearing fitting", "shaft seal", "bearing maintenance"]
     },
     "precision_measurement": {
-        "name": "Precision Measurement",
+        "name": "Precision Measurement and Inspection",
         "domain": "manufacturing_engineering",
         "description": "Using precision measuring instruments including micrometers, calipers, CMMs, and gauges for quality control.",
         "keywords": ["precision measurement", "measuring", "micrometer", "vernier", "caliper", "gauge", "inspection", "CMM"]
@@ -2345,19 +2351,19 @@ SKILL_FAMILIES = {
         "keywords": ["industrial electrical", "electrical maintenance", "motor maintenance", "electrical fault", "factory electrical", "electrical service", "control panel", "industrial wiring"]
     },
     "motor_control": {
-        "name": "Motor Control Systems",
+        "name": "Motor Control Systems Installation and Maintenance",
         "domain": "manufacturing_engineering",
         "description": "Installing and maintaining electric motor control systems including variable speed drives, soft starters, and motor control centres.",
         "keywords": ["motor control", "electric motor", "VSD", "variable speed drive", "motor starter", "soft starter", "motor control centre"]
     },
     "plc_programming": {
-        "name": "PLC Programming",
+        "name": "Programmable Logic Controllers Programming",
         "domain": "manufacturing_engineering",
         "description": "Programming industrial Programmable Logic Controllers (PLCs) for factory machine automation and process control using ladder logic and structured text. Industrial control system programming only.",
         "keywords": ["PLC", "PLC programming", "programmable logic controller", "ladder logic", "Siemens", "Allen Bradley", "automation"]
     },
     "instrumentation": {
-        "name": "Industrial Instrumentation",
+        "name": "Industrial Instrumentation Installation and Maintenance",
         "domain": "manufacturing_engineering",
         "description": "Installing and maintaining industrial measurement instruments including sensors, transmitters, gauges, and process control instrumentation.",
         "keywords": ["instrumentation", "instruments", "process control", "sensors", "transmitters", "calibration", "control systems"]
@@ -2365,7 +2371,7 @@ SKILL_FAMILIES = {
     
     # Production
     "production_operation": {
-        "name": "Production Operations",
+        "name": "Production Line Operations",
         "domain": "manufacturing_engineering",
         "description": "Operating production lines and manufacturing processes including machine operation, assembly, and production monitoring.",
         "keywords": ["production", "production operation", "production line", "manufacturing", "production worker", "assembly line", "process operator"]
@@ -2383,7 +2389,7 @@ SKILL_FAMILIES = {
         "keywords": ["packaging", "packing", "labelling", "packaging machine", "shrink wrap", "carton", "palletising"]
     },
     "quality_inspection": {
-        "name": "Quality Inspection",
+        "name": "Product Quality Inspection",
         "domain": "manufacturing_engineering",
         "description": "Inspecting manufactured products for quality conformance including dimensional inspection, visual inspection, and testing.",
         "keywords": ["quality inspection", "QC", "quality control", "inspection", "quality check", "product inspection", "incoming inspection"]
@@ -2397,31 +2403,31 @@ SKILL_FAMILIES = {
     
     # Food & Beverage Manufacturing
     "food_processing": {
-        "name": "Food Processing",
+        "name": "Commercial Food Processing",
         "domain": "manufacturing_engineering",
         "description": "Operating food processing equipment and performing food manufacturing operations including HACCP compliance.",
         "keywords": ["food processing", "food production", "food manufacturing", "food factory", "food processing equipment"]
     },
     "meat_processing": {
-        "name": "Meat Processing",
+        "name": "Commercial Meat Processing",
         "domain": "manufacturing_engineering",
         "description": "Processing animal meat products in factories including boning, slicing, mincing, smallgoods manufacturing, and meat product production.",
         "keywords": ['meat processing', 'animal meat', 'boning', 'slicing', 'mincing', 'smallgoods', 'meat products', 'meat factory', 'processing plant']
     },
     "dairy_processing": {
-        "name": "Dairy Processing",
+        "name": "Commercial Dairy Processing",
         "domain": "manufacturing_engineering",
         "description": "Processing dairy products including milk, cheese, yogurt, and dairy product manufacturing.",
         "keywords": ["dairy processing", "milk processing", "cheese making", "yogurt", "dairy plant", "pasteurisation"]
     },
     "bakery_production": {
-        "name": "Bakery Production",
+        "name": "Commercial Bakery Production",
         "domain": "manufacturing_engineering",
         "description": "Operating commercial bakery equipment for bread, pastry, and baked goods production.",
         "keywords": ["bakery production", "commercial baking", "bread production", "bakery", "dough", "oven operation", "baking production"]
     },
     "beverage_production": {
-        "name": "Beverage Production",
+        "name": "Commercial Beverage Production",
         "domain": "manufacturing_engineering",
         "description": "Operating beverage production equipment for drinks manufacturing including filling, bottling, and packaging.",
         "keywords": ["beverage production", "drink production", "bottling", "beverage manufacturing", "soft drink", "juice production"]
@@ -2525,13 +2531,13 @@ SKILL_FAMILIES = {
     
     # Tertiary & VET
     "vet_training": {
-        "name": "VET Training Delivery",
+        "name": "Vocational Education and Training Delivery",
         "domain": "education_training",
         "description": "Delivering vocational education and training (VET) to human adult learners including competency-based training, workplace assessment, and RTO training delivery.",
         "keywords": ['VET training', 'vocational training', 'human learners', 'adult education', 'RTO', 'competency-based', 'workplace training', 'training delivery']
     },
     "assessment": {
-        "name": "Competency Assessment",
+        "name": "Vocational Training Competency Assessment",
         "domain": "education_training",
         "description": "Assessing vocational training competencies of human students and workers including practical skills assessment, RPL, workplace-based assessment, and VET assessment.",
         "keywords": ['competency assessment', 'VET assessment', 'human students', 'RPL', 'skills assessment', 'workplace assessment', 'vocational assessment', 'training assessment']
@@ -2571,13 +2577,13 @@ SKILL_FAMILIES = {
     
     # Coaching & Development
     "workplace_coaching": {
-        "name": "Workplace Coaching",
+        "name": "Workplace Mentoring and Coaching",
         "domain": "education_training",
         "description": "Coaching and mentoring human employees in workplaces including performance coaching, career development, leadership development, and professional mentoring.",
         "keywords": ['workplace coaching', 'mentoring', 'human employees', 'performance coaching', 'career development', 'leadership coaching', 'professional development']
     },
     "facilitation": {
-        "name": "Training Facilitation",
+        "name": "Training Workshop Facilitation",
         "domain": "education_training",
         "description": "Facilitating training workshops and group sessions for human adult learners including group dynamics, participatory methods, and adult learning principles.",
         "keywords": ['facilitation', 'workshop facilitation', 'human learners', 'adult learning', 'group dynamics', 'training workshops', 'participatory methods']
@@ -2633,7 +2639,7 @@ SKILL_FAMILIES = {
         "keywords": ["Asian cookery", "Asian cuisine", "wok", "Chinese cooking", "Japanese", "Thai", "Vietnamese", "Asian food"]
     },
     "short_order_cooking": {
-        "name": "Short Order Cooking",
+        "name": "Fast Food Preparation",
         "domain": "hospitality_tourism",
         "description": "Preparing short order and fast food including grilling, frying, and quick service cooking.",
         "keywords": ["short order", "fast food", "grill cook", "line cook", "fast food cooking", "quick service"]
@@ -2645,7 +2651,7 @@ SKILL_FAMILIES = {
         "keywords": ['kitchen operations', 'commercial kitchen', 'human diners', 'restaurant kitchen', 'kitchen hand', 'food preparation', 'kitchen hygiene', 'hospitality kitchen']
     },
     "food_preparation": {
-        "name": "Food Preparation",
+        "name": "Commercial Food Preparation",
         "domain": "hospitality_tourism",
         "description": "Preparing food ingredients in commercial kitchens for human consumption including mise en place, vegetable preparation, and basic cooking techniques.",
         "keywords": ['food preparation', 'mise en place', 'commercial kitchen', 'human consumption', 'ingredient preparation', 'cooking preparation', 'kitchen prep']
@@ -2683,7 +2689,7 @@ SKILL_FAMILIES = {
         "keywords": ["sommelier", "wine service", "wine", "beverage service", "wine list", "wine pairing", "wine knowledge"]
     },
     "rsl_gaming": {
-        "name": "Gaming Operations",
+        "name": "Club Gaming Operations",
         "domain": "hospitality_tourism",
         "description": "Operating gaming facilities in clubs including poker machines, keno, TAB, and gaming compliance",
         "keywords": ["RSL", "gaming", "club", "poker machines", "gaming attendant", "club operations", "gaming venue", "RCG"]
@@ -2697,7 +2703,7 @@ SKILL_FAMILIES = {
         "keywords": ["hotel reception", "front desk", "check-in", "check-out", "hotel reservations", "front office", "guest services"]
     },
     "concierge": {
-        "name": "Concierge Services",
+        "name": "Hotel Concierge Services",
         "domain": "hospitality_tourism",
         "description": "Providing concierge services in hotels and resorts including guest assistance, local recommendations, booking services, and VIP guest services in the hospitality industry.",
         "keywords": ["concierge", "guest assistance", "guest services", "hotel concierge", "porter", "bell desk"]
@@ -2735,7 +2741,7 @@ SKILL_FAMILIES = {
         "keywords": ["tourism information", "visitor information", "tourist information", "information centre", "visitor services"]
     },
     "eco_tourism": {
-        "name": "Eco Tourism",
+        "name": "Eco Tourism Services",
         "domain": "hospitality_tourism",
         "description": "Providing eco tourism and nature-based tourism services including environmental interpretation.",
         "keywords": ["eco tourism", "ecotourism", "nature tourism", "sustainable tourism", "wildlife tourism", "adventure tourism"]
@@ -2761,7 +2767,7 @@ SKILL_FAMILIES = {
         "keywords": ["conference", "exhibition", "convention", "conference operations", "exhibition stand", "trade show", "venue management"]
     },
     "audio_visual_events": {
-        "name": "Event Audio Visual",
+        "name": "Event Audio Visual Operations",
         "domain": "hospitality_tourism",
         "description": "Operating audio visual equipment for events including projectors, screens, microphones, and AV systems",
         "keywords": ["audio visual", "AV", "event AV", "sound", "lighting", "projection", "event technology", "staging"]
@@ -2769,7 +2775,7 @@ SKILL_FAMILIES = {
     
     # Food Safety
     "food_safety": {
-        "name": "Food Safety",
+        "name": "Food Safety Practices",
         "domain": "hospitality_tourism",
         "description": "Implementing food safety practices in commercial kitchens and food businesses including HACCP, food handling for human consumption, temperature control, and hygiene compliance.",
         "keywords": ['food safety', 'HACCP', 'food handling', 'human consumption', 'food hygiene', 'temperature control', 'food compliance', 'kitchen safety']
@@ -2843,7 +2849,7 @@ SKILL_FAMILIES = {
         "keywords": ["industrial design", "product design", "3D design", "product designer", "CAD design", "prototype", "consumer products"]
     },
     "jewellery_design": {
-        "name": "Jewellery Making",
+        "name": "Jewellery Making and Design",
         "domain": "creative_arts",
         "description": "Designing and making jewellery including metalsmithing, stone setting, and precious metal work",
         "keywords": ["jewellery design", "jewellery making", "goldsmith", "silversmith", "stone setting", "metalsmith", "jeweller"]
@@ -2877,7 +2883,7 @@ SKILL_FAMILIES = {
     
     # Animation & VFX
     "2d_animation": {
-        "name": "2D Animation",
+        "name": "2D Animation Modelling",
         "domain": "creative_arts",
         "description": "Creating two-dimensional animation including traditional animation, motion graphics, and digital 2D techniques",
         "keywords": ["2D animation", "animation", "animator", "character animation", "After Effects", "frame by frame", "motion graphics"]
@@ -2897,7 +2903,7 @@ SKILL_FAMILIES = {
     
     # Performing Arts
     "acting": {
-        "name": "Acting Performance",
+        "name": "Acting Performance Skills",
         "domain": "creative_arts",
         "description": "Performing dramatic roles for stage or screen including character development, script interpretation, and performance",
         "keywords": ["acting", "actor", "theatre", "drama", "performance", "stage", "screen acting", "audition"]
@@ -2909,13 +2915,13 @@ SKILL_FAMILIES = {
         "keywords": ["professional dancer", "dance performer", "choreographer", "ballet dancer", "contemporary dancer", "stage performance", "dance company", "entertainment dance", "dance artist", "show dancer"]
     },
     "music_performance": {
-        "name": "Music Performance",
+        "name": "Music Performance on Instruments",
         "domain": "creative_arts",
         "description": "Performing music on instruments including instrumental technique, ensemble playing, and live performance",
         "keywords": ["music performance", "musician", "instrument", "singer", "vocalist", "band", "orchestra", "live music"]
     },
     "singing": {
-        "name": "Vocal Performance",
+        "name": "Vocal Performance Skills",
         "domain": "creative_arts",
         "description": "Performing vocals including singing technique, breath control, vocal styles, and live vocal performance",
         "keywords": ["singing", "vocal", "singer", "vocalist", "voice", "choir", "backing vocals", "vocal training"]
@@ -2949,7 +2955,7 @@ SKILL_FAMILIES = {
         "keywords": ["stage management", "stage manager", "backstage", "cues", "production management", "call sheet", "theatre production"]
     },
     "lighting_design": {
-        "name": "Lighting Design",
+        "name": "Lighting Design and Operation",
         "domain": "creative_arts",
         "description": "Designing lighting for stage and events including lighting plots, programming, and theatrical lighting",
         "keywords": ["lighting design", "lighting operator", "stage lighting", "lighting rig", "LX", "lighting programming", "moving lights"]
@@ -2961,13 +2967,13 @@ SKILL_FAMILIES = {
         "keywords": ["set design", "scenic", "set construction", "set builder", "scenic artist", "props", "stage design"]
     },
     "costume_design": {
-        "name": "Costume Wardrobe",
+        "name": "Costume Wardrobe Design and Management",
         "domain": "creative_arts",
         "description": "Designing costumes for performance including period costumes, wardrobe management, and costume construction",
         "keywords": ["costume design", "wardrobe", "costume", "costume maker", "dresser", "costume construction", "theatrical costume"]
     },
     "makeup_effects": {
-        "name": "Theatrical SFX Makeup",
+        "name": "Theatrical SFX Makeup and Prosthetics",
         "domain": "creative_arts",
         "description": "Applying makeup for stage, film, and television productions including theatrical makeup, prosthetics, special effects makeup, ageing effects, and character transformation. Entertainment industry makeup only.",
         "keywords": ["special effects makeup", "SFX makeup", "prosthetics", "theatrical makeup", "film makeup", "stage makeup", "character makeup", "ageing makeup", "wound effects", "creature makeup"]
@@ -2975,7 +2981,7 @@ SKILL_FAMILIES = {
     
     # Media & Broadcast
     "broadcasting": {
-        "name": "Media Broadcasting",
+        "name": "Media Broadcasting Services",
         "domain": "creative_arts",
         "description": "Working in radio and television broadcasting including presenting, production, and broadcast operations",
         "keywords": ["broadcasting", "broadcast", "radio", "TV", "on-air", "presenter", "announcer", "broadcast journalist"]
@@ -2987,7 +2993,7 @@ SKILL_FAMILIES = {
         "keywords": ["podcasting", "podcast", "podcast production", "audio content", "podcast editing", "podcast host"]
     },
     "streaming": {
-        "name": "Live Streaming",
+        "name": "Live Streaming Production",
         "domain": "creative_arts",
         "description": "Creating live streaming content including setup, broadcasting, audience engagement, and streaming platforms",
         "keywords": ["streaming", "live streaming", "Twitch", "YouTube live", "streamer", "OBS", "content creator"]
@@ -3007,7 +3013,7 @@ SKILL_FAMILIES = {
         "keywords": ["creative writing", "writing", "fiction", "novelist", "short story", "screenplay", "script writing", "author"]
     },
     "copywriting": {
-        "name": "Copywriting Content",
+        "name": "Copywriting Content Creation",
         "domain": "creative_arts",
         "description": "Writing marketing and advertising copy including headlines, body copy, taglines, and persuasive content",
         "keywords": ["copywriting", "copywriter", "advertising copy", "marketing copy", "content writing", "web copy", "ad copy"]
@@ -3019,7 +3025,7 @@ SKILL_FAMILIES = {
         "keywords": ["journalism", "journalist", "news writing", "reporting", "news", "press", "media", "investigative journalism"]
     },
     "editing_proofreading": {
-        "name": "Editing Proofreading",
+        "name": "Editing Proofreading Services",
         "domain": "creative_arts",
         "description": "Editing and proofreading text including grammar, spelling, style, and substantive editing",
         "keywords": ["editing", "proofreading", "editor", "copy editing", "manuscript", "publishing", "sub-editing"]
@@ -3031,7 +3037,7 @@ SKILL_FAMILIES = {
     
     # Retail
     "retail_sales": {
-        "name": "Retail Sales",
+        "name": "Retail Sales Techniques",
         "domain": "retail_services",
         "description": "Selling products in retail environments including customer service, product knowledge, and sales techniques",
         "keywords": ["retail", "retail sales", "shop assistant", "sales assistant", "customer service", "retail store", "selling"]
@@ -3055,7 +3061,7 @@ SKILL_FAMILIES = {
         "keywords": ["point of sale", "POS", "cash register", "checkout", "till", "EFTPOS", "cashier", "sales processing"]
     },
     "loss_prevention": {
-        "name": "Loss Prevention",
+        "name": "Loss Prevention in Retail",
         "domain": "retail_services",
         "description": "Preventing retail loss including theft prevention, surveillance, and retail security measures",
         "keywords": ["loss prevention", "retail security", "shrinkage", "theft prevention", "shoplifting", "stock loss"]
@@ -3131,7 +3137,7 @@ SKILL_FAMILIES = {
     
     # Optical
     "optical_dispensing": {
-        "name": "Optical Dispensing",
+        "name": "Optical Dispensing Services",
         "domain": "retail_services",
         "description": "Dispensing spectacles and optical products including frame selection, lens fitting, and adjustments",
         "keywords": ["optical dispensing", "optical", "spectacles", "glasses", "frame fitting", "lens dispensing", "optician"]
@@ -3155,7 +3161,7 @@ SKILL_FAMILIES = {
     
     # Dry Cleaning & Laundry
     "dry_cleaning": {
-        "name": "Dry Cleaning",
+        "name": "Dry Cleaning Services",
         "domain": "retail_services",
         "description": "Providing dry cleaning services for human customers' garments including garment care, stain removal, pressing, and laundry processing.",
         "keywords": ['dry cleaning', 'human customers', 'garment care', 'stain removal', 'laundry', 'pressing', 'garment cleaning', 'textile care']
@@ -3167,13 +3173,13 @@ SKILL_FAMILIES = {
     
     # Security
     "security_guarding": {
-        "name": "Security Guarding",
+        "name": "Security Guarding Services",
         "domain": "public_safety",
         "description": "Providing security guard services including static guarding, patrols, and security officer duties",
         "keywords": ["security guard", "security officer", "guarding", "security patrol", "static security", "mobile patrol", "security licence"]
     },
     "crowd_control": {
-        "name": "Crowd Control",
+        "name": "Crowd Control Services",
         "domain": "public_safety",
         "description": "Managing crowds of people at events and venues including crowd safety, barrier control, event security, and public gathering management.",
         "keywords": ['crowd control', 'crowd management', 'human crowds', 'event security', 'barrier control', 'public safety', 'venue security', 'event management']
@@ -3197,13 +3203,13 @@ SKILL_FAMILIES = {
         "keywords": ["security systems", "alarm system", "security installation", "intruder alarm", "security alarm", "access control system"]
     },
     "cash_transit": {
-        "name": "Cash in Transit",
+        "name": "Cash in Transit Services",
         "domain": "public_safety",
         "description": "Transporting cash and valuables in armoured vehicles including cash collection and secure transport",
         "keywords": ["cash-in-transit", "CIT", "armoured vehicle", "cash transport", "security transport", "cash collection"]
     },
     "investigation": {
-        "name": "Private Investigation",
+        "name": "Private Investigation Services",
         "domain": "public_safety",
         "description": "Conducting private investigations including surveillance, background checks, and evidence gathering",
         "keywords": ["investigation", "investigator", "private investigator", "surveillance", "inquiry agent", "evidence gathering"]
@@ -3249,7 +3255,7 @@ SKILL_FAMILIES = {
         "keywords": ["military", "defence", "army", "navy", "air force", "ADF", "military operations", "combat"]
     },
     "military_logistics": {
-        "name": "Defence Logistics",
+        "name": "Defence Logistics Management",
         "domain": "public_safety",
         "description": "Managing defence logistics including supply chain, procurement, and military equipment support",
         "keywords": ["military logistics", "defence logistics", "military supply", "quartermaster", "defence supply chain"]
@@ -3265,7 +3271,7 @@ SKILL_FAMILIES = {
     
     # Traffic & Road Safety
     "traffic_control": {
-        "name": "Traffic Control",
+        "name": "Traffic Control Services",
         "domain": "public_safety",
         "description": "Controlling traffic at worksites and events using stop-slow procedures and traffic management plans",
         "keywords": ["traffic control", "traffic controller", "stop slow", "road traffic", "traffic management", "TC", "traffic marshal"]
@@ -3285,7 +3291,7 @@ SKILL_FAMILIES = {
         "keywords": ['emergency management', 'disaster management', 'emergency operations', 'disaster response', 'EOC', 'evacuation', 'disaster recovery', 'emergency coordination', 'major incident']
     },
     "emergency_dispatch": {
-        "name": "Emergency Dispatch",
+        "name": "Emergency Dispatch Services",
         "domain": "public_safety",
         "description": "Dispatching emergency services including 000 call taking, CAD systems, and emergency coordination",
         "keywords": ["emergency dispatch", "000", "triple zero", "dispatch", "emergency call", "call taker", "emergency communications"]
@@ -3297,19 +3303,19 @@ SKILL_FAMILIES = {
     
     # Electrical Infrastructure
     "powerline_work": {
-        "name": "Powerline Work",
+        "name": "Powerline Work and Maintenance",
         "domain": "utilities_resources",
         "description": "Working on overhead powerlines including construction, maintenance, and repair of electrical transmission and distribution lines.",
         "keywords": ["powerline", "overhead power", "lineworker", "power pole", "transmission", "distribution lines", "powerline maintenance"]
     },
     "underground_cables": {
-        "name": "Underground Cabling",
+        "name": "Underground Cabling Installation",
         "domain": "utilities_resources",
         "description": "Installing underground electrical cables including trenching, jointing, and cable termination",
         "keywords": ["underground cable", "cable jointing", "cable installation", "HV cable", "underground power", "cable laying"]
     },
     "substation_work": {
-        "name": "Substation Operations",
+        "name": "Substation Operations and Maintenance",
         "domain": "utilities_resources",
         "description": "Operating electrical substations including high voltage switching, maintenance, and substation equipment",
         "keywords": ["substation", "electrical substation", "transformer", "switchyard", "high voltage", "substation maintenance"]
@@ -3329,7 +3335,7 @@ SKILL_FAMILIES = {
         "keywords": ["telecommunications", "telco", "cabling", "phone line", "telecom", "communications cabling", "pit and pipe"]
     },
     "tower_climbing": {
-        "name": "Tower Climbing",
+        "name": "Telecommunication Tower Climbing",
         "domain": "utilities_resources",
         "description": "Climbing telecommunications and transmission towers for installation and maintenance of antennas and equipment.",
         "keywords": ["tower climbing", "tower technician", "telecommunications tower", "antenna", "tower installation", "rigging"]
@@ -3337,13 +3343,13 @@ SKILL_FAMILIES = {
     
     # Water & Wastewater
     "water_treatment": {
-        "name": "Water Treatment",
+        "name": "Water Treatment Operations",
         "domain": "utilities_resources",
         "description": "Operating water treatment plants and systems including filtration, disinfection, and potable water production.",
         "keywords": ["water treatment", "water plant", "potable water", "water quality", "filtration", "chlorination", "water treatment operator"]
     },
     "wastewater_treatment": {
-        "name": "Wastewater Treatment",
+        "name": "Wastewater Treatment Operations",
         "domain": "utilities_resources",
         "description": "Operating wastewater treatment plants including sewage processing, biological treatment, and effluent management.",
         "keywords": ["wastewater", "sewage treatment", "wastewater plant", "effluent", "sludge", "wastewater operator", "STP"]
@@ -3363,7 +3369,7 @@ SKILL_FAMILIES = {
     
     # Gas
     "gas_distribution": {
-        "name": "Gas Distribution",
+        "name": "Gas Distribution Network Operations",
         "domain": "utilities_resources",
         "description": "Operating and maintaining gas distribution networks including pipelines, regulators, and gas infrastructure.",
         "keywords": ["gas distribution", "gas network", "gas main", "natural gas", "gas pipeline", "gas infrastructure"]
@@ -3397,19 +3403,19 @@ SKILL_FAMILIES = {
     
     # Mining
     "underground_mining": {
-        "name": "Underground Mining",
+        "name": "Underground Mining Operations",
         "domain": "utilities_resources",
         "description": "Working in underground mining operations including development, production, and underground mine services.",
         "keywords": ["underground mining", "underground mine", "mining", "miner", "stoping", "development", "long wall", "coal mining"]
     },
     "surface_mining": {
-        "name": "Surface Mining",
+        "name": "Surface Mining Operations",
         "domain": "utilities_resources",
         "description": "Working in surface mining operations including open cut mining, quarrying, and overburden removal.",
         "keywords": ["surface mining", "open cut", "open pit", "strip mining", "quarry", "surface mine", "overburden"]
     },
     "drilling_blasting": {
-        "name": "Drilling Blasting",
+        "name": "Drilling Blasting Operations",
         "domain": "utilities_resources",
         "description": "Performing drilling and blasting operations for mining, quarrying, and civil construction.",
         "keywords": ["drilling", "blasting", "blast", "drill rig", "explosives", "shotfirer", "blast hole", "detonation"]
@@ -3421,7 +3427,7 @@ SKILL_FAMILIES = {
         "keywords": ["mining equipment", "haul truck", "excavator", "loader", "dozer", "mining machinery", "dump truck"]
     },
     "mineral_processing": {
-        "name": "Mineral Processing",
+        "name": "Mineral Processing Operations",
         "domain": "utilities_resources",
         "description": "Operating mineral processing plants including crushing, grinding, flotation, and ore beneficiation.",
         "keywords": ["mineral processing", "processing plant", "crushing", "grinding", "flotation", "ore processing", "concentrator"]
@@ -3443,7 +3449,7 @@ SKILL_FAMILIES = {
     
     # Civil Infrastructure
     "road_construction": {
-        "name": "Road Construction",
+        "name": "Road Construction Services",
         "domain": "utilities_resources",
         "description": "Constructing roads including pavement laying, road base preparation, and road surfacing.",
         "keywords": ["road construction", "road building", "asphalt", "bitumen", "pavement", "road works", "road maintenance"]
@@ -3455,19 +3461,19 @@ SKILL_FAMILIES = {
         "keywords": ["earthmoving", "excavation", "excavator", "bulldozer", "grader", "backhoe", "earthworks", "cut and fill"]
     },
     "bridge_construction": {
-        "name": "Bridge Construction",
+        "name": "Bridge Construction Services",
         "domain": "utilities_resources",
         "description": "Constructing bridges and bridge structures including formwork, reinforcement, and bridge deck construction.",
         "keywords": ["bridge construction", "bridge", "bridge building", "bridge maintenance", "structural bridge", "bridge deck"]
     },
     "tunnel_construction": {
-        "name": "Tunnel Construction",
+        "name": "Tunnel Construction Services",
         "domain": "utilities_resources",
         "description": "Constructing tunnels using boring machines, drill and blast, or cut and cover methods.",
         "keywords": ["tunnel", "tunnelling", "TBM", "tunnel construction", "underground construction", "tunnel boring"]
     },
     "civil_surveying": {
-        "name": "Civil Surveying",
+        "name": "Civil Surveying Services",
         "domain": "utilities_resources",
         "description": "Conducting civil engineering surveys including set out, levelling, and survey data collection for construction projects.",
         "keywords": ["surveying", "survey", "surveyor", "civil survey", "set out", "GPS survey", "total station", "levels"]
@@ -3475,7 +3481,7 @@ SKILL_FAMILIES = {
     
     # Environment
     "environmental_monitoring": {
-        "name": "Environmental Monitoring",
+        "name": "Environmental Monitoring Services",
         "domain": "utilities_resources",
         "description": "Monitoring environmental conditions in the field including water sampling, air quality monitoring, wildlife monitoring, ecological surveys, and environmental data collection.",
         "keywords": ['environmental monitoring', 'environmental sampling', 'water sampling', 'air quality', 'wildlife monitoring', 'ecological survey', 'environmental testing', 'habitat monitoring', 'population monitoring']
@@ -3505,7 +3511,7 @@ SKILL_FAMILIES = {
     
     # Laboratory
     "laboratory_techniques": {
-        "name": "Laboratory Techniques",
+        "name": "Laboratory Techniques and Procedures",
         "domain": "science_technical",
         "description": "Performing general laboratory procedures including sample preparation, documentation, and laboratory safety.",
         "keywords": ["laboratory", "lab techniques", "laboratory skills", "lab work", "laboratory procedures", "lab assistant"]
@@ -3535,9 +3541,9 @@ SKILL_FAMILIES = {
         "keywords": ["histology", "histopathology", "tissue processing", "embedding", "microtome", "staining", "tissue sections"]
     },
     "molecular_biology": {
-        "name": "Molecular Biology",
+        "name": "Molecular Biology Techniques",
         "domain": "science_technical",
-        "description": "Performing molecular biology techniques including PCR, DNA extraction, gel electrophoresis, and genetic analysis.",
+        "description": "Performing molecular biology techniques in laboratories including PCR, DNA extraction, gel electrophoresis, and genetic analysis.",
         "keywords": ["molecular biology", "PCR", "DNA", "RNA", "gene", "sequencing", "molecular techniques", "gel electrophoresis"]
     },
     "sample_preparation": {
@@ -3583,7 +3589,7 @@ SKILL_FAMILIES = {
     
     # Research
     "research_methods": {
-        "name": "Research Methodology",
+        "name": "Research Methodology Development",
         "domain": "science_technical",
         "description": "Applying scientific research methodology including experimental design, literature review, and research protocols.",
         "keywords": ["research methods", "research", "scientific research", "methodology", "research design", "data collection"]
@@ -3675,7 +3681,7 @@ SKILL_FAMILIES = {
         "keywords": ['pool operations', 'swimming pool', 'human swimmers', 'water quality', 'plant room', 'aquatic facility', 'pool maintenance', 'pool safety']
     },
     "aquatic_programming": {
-        "name": "Aquatic Programs",
+        "name": "Aquatic Programs Development",
         "domain": "sport_recreation",
         "description": "Developing aquatic programs for human participants including water aerobics, aqua fitness, squad training, and therapeutic aquatic activities in pools.",
         "keywords": ['aquatic programming', 'water aerobics', 'aqua fitness', 'squad training', 'human participants', 'pool programs', 'aquatic activities']
@@ -3799,13 +3805,13 @@ SKILL_FAMILIES = {
         "keywords": ['olive', 'olive growing', 'olive oil', 'olive grove', 'olive harvest', 'olive press', 'extra virgin']
     },
     "wheel_alignment": {
-        "name": "Wheel Alignment",
+        "name": "Automotive Wheel Alignment",
         "domain": "automotive_repair",
         "description": "Performing wheel alignment including camber, caster, toe adjustment, and steering geometry.",
         "keywords": ['wheel alignment', 'alignment', 'camber', 'caster', 'toe', 'thrust angle', 'alignment machine', 'steering geometry']
     },
     "battery_service": {
-        "name": "Battery Service",
+        "name": "Automotive Battery Service",
         "domain": "automotive_repair",
         "description": "Testing and replacing vehicle batteries including battery diagnostics, charging systems, and jump starting.",
         "keywords": ['battery service', 'battery testing', 'battery replacement', 'car battery', 'battery charging', 'jump start', 'battery diagnostics']
@@ -3817,7 +3823,7 @@ SKILL_FAMILIES = {
         "keywords": ['fuel system', 'fuel pump', 'fuel injector', 'fuel filter', 'fuel tank', 'petrol system', 'fuel line', 'fuel pressure']
     },
     "window_tinting": {
-        "name": "Window Tinting",
+        "name": "Automotive Window Tinting",
         "domain": "automotive_repair",
         "description": "Applying window tint film to vehicles including UV protection and privacy film installation.",
         "keywords": ['window tinting', 'tint', 'window film', 'car tinting', 'tint film', 'UV protection', 'privacy film']
@@ -3847,13 +3853,13 @@ SKILL_FAMILIES = {
         "keywords": ['grant writing', 'grant application', 'funding', 'grant management', 'acquittal', 'grant submission', 'funding proposal']
     },
     "governance_compliance": {
-        "name": "Corporate Governance",
+        "name": "Corporate Governance and Compliance",
         "domain": "business_administration",
         "description": "Managing corporate governance including board meetings, regulatory compliance, and company secretarial duties",
         "keywords": ['governance', 'compliance', 'board governance', 'regulatory compliance', 'company secretary', 'corporate governance', 'board papers', 'AGM']
     },
     "credit_control": {
-        "name": "Credit Control",
+        "name": "Credit Control and Debt Collection",
         "domain": "finance_accounting",
         "description": "Managing financial credit and debt collection including debtor follow-up, overdue account recovery, payment terms negotiation, and accounts receivable debt management. Financial debt only.",
         "keywords": ['credit control', 'debt collection', 'debt recovery', 'overdue accounts', 'debtor management', 'financial debt', 'accounts receivable', 'payment collection', 'bad debt']
@@ -3937,7 +3943,7 @@ SKILL_FAMILIES = {
         "keywords": ['foley', 'sound design', 'sound effects', 'SFX', 'foley artist', 'film sound', 'audio post', 'sound design']
     },
     "art_restoration": {
-        "name": "Art Conservation",
+        "name": "Art Conservation and Restoration",
         "domain": "creative_arts",
         "description": "Conserving and restoring fine art including painting restoration, conservation techniques, and art preservation",
         "keywords": ['art restoration', 'conservation', 'art conservation', 'restoration', 'preserving', 'artwork repair', 'painting restoration']
@@ -3955,13 +3961,13 @@ SKILL_FAMILIES = {
         "keywords": ['picture framing', 'framing', 'mounting', 'matting', 'frame making', 'conservation framing', 'art framing']
     },
     "salesforce_crm": {
-        "name": "CRM Development",
+        "name": "Customer Relationship Management Development",
         "domain": "digital_technology",
         "description": "Developing and customising Salesforce CRM including Apex programming, Lightning components, and Salesforce administration.",
         "keywords": ['Salesforce', 'CRM', 'Salesforce development', 'Apex', 'Salesforce admin', 'customer relationship management', 'HubSpot', 'Dynamics 365']
     },
     "sap_erp": {
-        "name": "ERP Implementation",
+        "name": "Enterprise Resource Planning Implementation",
         "domain": "digital_technology",
         "description": "Implementing and customising SAP ERP enterprise software systems including SAP ABAP development, SAP HANA, and SAP module configuration. Enterprise software implementation only.",
         "keywords": ['SAP', 'ERP', 'enterprise resource planning', 'SAP ABAP', 'SAP HANA', 'Oracle ERP', 'SAP Fiori', 'SAP S/4HANA']
@@ -3972,12 +3978,6 @@ SKILL_FAMILIES = {
         "description": "Developing software robots and bots to automate repetitive computer tasks using RPA tools like UiPath, Blue Prism, or Automation Anywhere. Software bot development only.",
         "keywords": ["RPA", "robotic process automation", "UiPath", "Blue Prism", "Automation Anywhere", "software bot", "bot development", "screen scraping", "workflow automation software", "unattended bot", "attended bot"]
     },
-    "low_code_development": {
-        "name": "Low-Code Development",
-        "domain": "digital_technology",
-        "description": "Building applications using low-code platforms like Power Apps, Mendix, OutSystems, or similar visual development tools.",
-        "keywords": ['low-code', 'no-code', 'Power Platform', 'Power Apps', 'Mendix', 'OutSystems', 'citizen developer', 'AppSheet']
-    },
     "api_management": {
         "name": "API Development",
         "domain": "digital_technology",
@@ -3985,25 +3985,25 @@ SKILL_FAMILIES = {
         "keywords": ['API', 'API design', 'API management', 'API gateway', 'REST', 'GraphQL', 'OpenAPI', 'Swagger', 'Postman']
     },
     "mainframe_legacy": {
-        "name": "Mainframe Systems",
+        "name": "Mainframe Systems Programming",
         "domain": "digital_technology",
         "description": "Programming and maintaining mainframe computer systems including COBOL, JCL, CICS, and legacy system support for enterprise IT environments.",
         "keywords": ['mainframe', 'COBOL', 'legacy systems', 'AS/400', 'JCL', 'CICS', 'mainframe programming', 'IBM mainframe']
     },
     "accessibility_testing": {
-        "name": "Accessibility Testing",
+        "name": "ICT Accessibility Testing",
         "domain": "digital_technology",
         "description": "Testing websites and applications for WCAG compliance, screen reader compatibility, and accessibility for users with disabilities.",
         "keywords": ['accessibility', 'accessibility testing', 'WCAG', 'a11y', 'screen reader', 'accessible design', 'Section 508', 'ARIA']
     },
     "mobile_testing": {
-        "name": "Mobile Testing",
+        "name": "Mobile Application Testing",
         "domain": "digital_technology",
         "description": "Testing mobile applications on iOS and Android devices including functional testing, UI testing, and automated test scripts using Appium. Mobile app QA software testing only.",
         "keywords": ['mobile testing', 'app testing', 'iOS testing', 'Android testing', 'mobile QA', 'device testing', 'Appium', 'mobile automation']
     },
     "performance_testing": {
-        "name": "Performance Testing",
+        "name": "ICT Performance Testing",
         "domain": "digital_technology",
         "description": "Load testing, stress testing, and performance benchmarking of software applications using JMeter, Gatling, or k6.",
         "keywords": ['performance testing', 'load testing', 'stress testing', 'JMeter', 'performance', 'scalability testing', 'Gatling', 'k6']
@@ -4021,7 +4021,7 @@ SKILL_FAMILIES = {
         "keywords": ['physical education', 'PE teacher', 'human students', 'school sport', 'HPE', 'fitness education', 'movement skills', 'school fitness']
     },
     "tutoring": {
-        "name": "Tutoring Services",
+        "name": "Private Tutoring Services",
         "domain": "education_training",
         "description": "Providing private tutoring for human school students including homework help, exam preparation, academic coaching, and subject-specific tutoring.",
         "keywords": ['tutoring', 'private tutor', 'human students', 'homework help', 'exam preparation', 'academic coaching', 'school tutoring', 'student tutoring']
@@ -4099,7 +4099,7 @@ SKILL_FAMILIES = {
         "keywords": ['lymphoedema', 'human patients', 'compression therapy', 'manual lymphatic drainage', 'MLD', 'lymphoedema management', 'limb swelling']
     },
     "room_service": {
-        "name": "Room Service",
+        "name": "Hotel Room Service",
         "domain": "hospitality_tourism",
         "description": "Providing hotel room service including order taking, tray service, and in-room dining.",
         "keywords": ['room service', 'in-room dining', 'IRD', 'room service order', 'tray service', 'room delivery']
@@ -4141,13 +4141,13 @@ SKILL_FAMILIES = {
         "keywords": ['CAD', 'CAM', 'AutoCAD', 'SolidWorks', 'CAD/CAM', 'computer-aided design', '3D modelling', 'engineering drawing']
     },
     "heat_treatment": {
-        "name": "Heat Treatment",
+        "name": "Metal Heat Treatment",
         "domain": "manufacturing_engineering",
         "description": "Performing metal heat treatment processes including hardening, tempering, annealing, and case hardening.",
         "keywords": ['heat treatment', 'hardening', 'tempering', 'annealing', 'quenching', 'case hardening', 'heat treating', 'induction hardening']
     },
     "robotic_welding": {
-        "name": "Robotic Welding",
+        "name": "Robotic Welding Operation",
         "domain": "manufacturing_engineering",
         "description": "Operating and programming robotic welding systems for automated welding in manufacturing production lines.",
         "keywords": ['robotic welding', 'welding robot', 'robot programming', 'automated welding', 'robotic cell', 'welding automation']
@@ -4189,7 +4189,7 @@ SKILL_FAMILIES = {
         "keywords": ['K9', 'dog handling', 'security dog', 'detection dog', 'guard dog', 'dog handler', 'canine', 'patrol dog']
     },
     "close_protection": {
-        "name": "Close Protection",
+        "name": "Close Protection Services",
         "domain": "public_safety",
         "description": "Providing close personal protection including bodyguard services, executive protection, and VIP security",
         "keywords": ['close protection', 'bodyguard', 'VIP security', 'executive protection', 'personal protection', 'CPO', 'protective services']
@@ -4221,7 +4221,7 @@ SKILL_FAMILIES = {
     "teeth_whitening": {
         "name": "Teeth Whitening",
         "domain": "retail_services",
-        "description": "Providing cosmetic teeth whitening services in beauty or retail settings using non-clinical whitening systems.",
+        "description": "Providing cosmetic teeth whitening services for human in beauty or retail settings using non-clinical whitening systems.",
         "keywords": ['teeth whitening', 'cosmetic whitening', 'tooth whitening', 'bleaching', 'beauty teeth', 'non-clinical whitening', 'retail whitening']
     },
     "cosmetic_tattooing": {
@@ -4351,7 +4351,7 @@ SKILL_FAMILIES = {
         "keywords": ["riding instructor", "riding lessons", "learn to ride", "riding school", "pony club", "equestrian coach", "recreational riding", "riding teacher", "horse riding lessons", "beginner riding"]
     },
     "smart_metering": {
-        "name": "Smart Metering",
+        "name": "Smart Metering Installation",
         "domain": "utilities_resources",
         "description": "Installing smart meters and advanced metering infrastructure for electricity, gas, and water utilities.",
         "keywords": ['smart meter', 'smart metering', 'AMI', 'advanced metering', 'meter data', 'smart grid', 'remote reading']
@@ -4454,7 +4454,7 @@ SKILL_FAMILIES = {
         "keywords": ["integrated pest management", "IPM", "pest control", "biological control", "pest identification", "pest monitoring", "crop protection", "pest management", "weed control", "disease management"]
     },
     "stakeholder_engagement": {
-        "name": "Stakeholder Engagement",
+        "name": "Stakeholder Engagement Management",
         "domain": "business_administration",
         "description": "Engaging corporate and community stakeholders including stakeholder consultation, relationship management, community engagement planning, and stakeholder communication strategies.",
         "keywords": ['stakeholder engagement', 'stakeholder management', 'consultation', 'community engagement', 'stakeholder communication', 'relationship management', 'stakeholder analysis', 'engagement planning']
@@ -4472,7 +4472,7 @@ SKILL_FAMILIES = {
         "keywords": ["genetics", "breeding", "genetic analysis", "genetic diversity", "embryo transfer", "artificial insemination", "genetic selection", "breeding program", "animal genetics", "plant genetics"]
     },
     "research_ethics": {
-        "name": "Research Ethics",
+        "name": "Research Ethics Management",
         "domain": "science_technical",
         "description": "Managing research ethics including animal ethics, human ethics, ethics applications, 3Rs principles, ethics compliance, and research integrity.",
         "keywords": ["research ethics", "animal ethics", "human ethics", "ethics application", "3Rs", "replacement reduction refinement", "ethics compliance", "research integrity", "ethics committee", "ethics approval"]
@@ -4485,13 +4485,13 @@ SKILL_FAMILIES = {
     },
 
     "solution_architecture": {
-        "name": "Solution Architecture",
+        "name": "IT Solution Architecture",
         "domain": "digital_technology",
         "description": "Designing IT solution architectures including software system design, technology stack selection, integration patterns, and enterprise IT architecture for software projects.",
         "keywords": ["solution architecture", "IT architecture", "software architecture", "system design", "technology stack", "integration architecture", "enterprise architecture", "technical design", "solution design"]
     },
     "systems_analysis": {
-        "name": "Systems Analysis",
+        "name": "IT Systems Analysis",
         "domain": "digital_technology",
         "description": "Analysing IT systems and software requirements including system specifications, technical requirements, software analysis, and IT system documentation.",
         "keywords": ["systems analysis", "systems analyst", "IT analysis", "software requirements", "system specifications", "technical analysis", "IT requirements", "system documentation"]
@@ -4513,5 +4513,5 @@ SKILL_FAMILIES = {
         "domain": "digital_technology",
         "description": "Writing technical documentation for IT and software including user guides, API documentation, system specifications, technical manuals, and knowledge bases",
         "keywords": ["technical writing", "technical documentation", "documentation", "user manual", "API documentation", "knowledge base", "technical writer", "system documentation", "software documentation"]
-    },
+    }
 }
