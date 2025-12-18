@@ -10,8 +10,9 @@ from config.structure import SKILL_DOMAINS, SKILL_FAMILIES
 
 # Project paths
 PROJECT_ROOT = Path(__file__).parent.parent
+USE_ROOT = os.environ.get("USE_ROOT", "false")
 DATA_DIR = PROJECT_ROOT / "data"
-OUTPUT_DIR = PROJECT_ROOT / "output"
+OUTPUT_DIR = PROJECT_ROOT / "output_llm_domain"
 CACHE_DIR = PROJECT_ROOT / "cache"
 
 # Create directories if they don't exist
@@ -403,9 +404,9 @@ EMBEDDING_CONFIG = {
     "model_name": "jinaai--jina-embeddings-v4",
     # "model_name": "Qwen--Qwen3-Embedding-0.6B",
     # "model_name": "sentence-transformers--all-MiniLM-L6-v2",
-    "batch_size": 64,
+    "batch_size": 512,
     "cache_embeddings": True,
-    "normalize_embeddings": False,
+    "normalize_embeddings": True,
     "device": "cuda" if os.environ.get("CUDA_AVAILABLE") else "cuda:1",
     "external_model_dir": os.getenv("EXTERNAL_MODEL_DIR", "/Volumes/jsa_external_prod/external_vols/scratch/Scratch/Ehsan/Models"),
     "model_cache_dir": os.getenv("MODEL_CACHE_DIR", "/root/.cache/huggingface/hub"),
@@ -440,7 +441,7 @@ FAMILY_ASSIGNMENT_CONFIG = {
     "fallback_to_keyword_matching": True,
     "keyword_match_threshold": 3,
     "use_embedding_similarity": True,
-    "embedding_similarity_threshold": 0.7,
+    "embedding_similarity_threshold": 2.8,
     "max_retries": 3,
     # LLM Re-ranking settings (Top-K + LLM selection for better accuracy)
     "use_llm_reranking": os.getenv("USE_LLM_RERANKING", "true") == "true",  # Enable LLM re-ranking of top-K embedding candidates

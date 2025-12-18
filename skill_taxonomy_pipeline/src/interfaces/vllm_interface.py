@@ -137,7 +137,7 @@ class VLLMGenAIInterface:
         elif self.template == 'Llama':
             return f'''<|begin_of_text|><|start_header_id|>system<|end_header_id|>{sys_message}<|eot_id|><|start_header_id|>user<|end_header_id|>{query}<|eot_id|><|start_header_id|>assistant<|end_header_id|>'''
         elif self.template == "GPT":
-            return f'''<|start|>system<|message|>{sys_message}\n\nReasoning: low\n\n# Valid channels: analysis, commentary, final. Channel must be included for every message.<|end|><|start|>user<|message|>{query}<|end|><|start|>assistant'''
+            return f'''<|start|>system<|message|>{sys_message}\n\nReasoning: medium\n\n# Valid channels: analysis, commentary, final. Channel must be included for every message.<|end|><|start|>user<|message|>{query}<|end|><|start|>assistant'''
         else:  # Default Mistral format
             return f'<s> [INST] {sys_message} [/INST]\nUser: {query}\nAssistant: '
     
@@ -253,13 +253,22 @@ class VLLMGenAIInterface:
                 return json.loads(obj_match.group())
             except json.JSONDecodeError:
                 pass
+
+        obj_match = re.findall(r'\{[^{}]*\}', text)
+        if obj_match:
+            try:
+                if len(obj_match) >= 2:
+                    return json.loads(obj_match[1])
+                return json.loads(obj_match[0])
+            except json.JSONDecodeError:
+                pass
         
         # Try parsing the whole text
         try:
             return json.loads(text)
         except json.JSONDecodeError as e:
             logger.warning(f"Failed to parse JSON response: {e}")
-            logger.debug(f"Response was: {text[:500]}...")
+            logger.warning(f"Response was: \n{text}")
             return {}
 
     

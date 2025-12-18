@@ -406,6 +406,7 @@ Respond with JSON only:"""
                             'key': family_key,
                             'name': self.families[family_key].get('name', family_key),
                             'description': self.families[family_key].get('description', ''),
+                            'domain': self.domains.get(self.families[family_key].get('domain', ''), {}).get('name', ''),
                             'similarity': float(top_similarities[i])
                         })
                 
@@ -491,6 +492,7 @@ Respond with JSON only:"""
                             'key': family_key,
                             'name': self.families[family_key].get('name', family_key),
                             'description': self.families[family_key].get('description', ''),
+                            'domain': self.domains.get(self.families[family_key].get('domain', ''), {}).get('name', ''),
                             'similarity': float(top_similarities[i])
                         })
                 
@@ -522,15 +524,32 @@ Respond with JSON only:"""
                 self.assignment_stats['Not assigned'] += 1
         
         if to_be_reranked:
+            to_be_reranked_idx = [idx for idx, _, _, _ in to_be_reranked]
             logger.info(f"Re-ranking {len(to_be_reranked)} skills with LLM...")
             rerank_results = self._rerank_with_llm_batch(to_be_reranked)
-            for (idx, _, _, _), (best_family, confidence) in zip(to_be_reranked, rerank_results):
-                if best_family and confidence >= self.rerank_similarity_threshold:
-                    df.loc[idx, 'assigned_family'] = best_family
-                    df.loc[idx, 'assigned_family_name'] = self.family_names[best_family]
-                    df.loc[idx, 'family_assignment_method'] = 'embedding+llm_rerank'
-                    df.loc[idx, 'family_assignment_confidence'] = confidence
-                    self.assignment_stats['embedding+llm_rerank'] += 1
+            for idx in to_be_reranked_idx:
+                if idx in rerank_results:
+                    best_family, confidence = rerank_results[idx]
+                    if best_family and confidence >= self.rerank_similarity_threshold:
+                        df.loc[idx, 'assigned_family'] = best_family
+                        df.loc[idx, 'assigned_family_name'] = self.family_names[best_family]
+                        df.loc[idx, 'family_assignment_method'] = 'embedding+llm_rerank'
+                        df.loc[idx, 'family_assignment_confidence'] = confidence
+                        self.assignment_stats['embedding+llm_rerank'] += 1
+                    else:
+                        # Fallback to best embedding match
+                        position = df.index.get_loc(idx)
+                        skill_emb = self.skill_embeddings[position].reshape(1, -1)
+                        similarities = self.embedding_interface.similarity(skill_emb, self.family_embeddings)[0]
+                        best_idx = np.argmax(similarities)
+                        best_similarity = similarities[best_idx]
+                        
+                        family_key = self.family_keys[best_idx]
+                        df.loc[idx, 'assigned_family'] = None
+                        df.loc[idx, 'assigned_family_name'] = self.family_names[family_key]
+                        df.loc[idx, 'family_assignment_method'] = 'Not assigned'
+                        df.loc[idx, 'family_assignment_confidence'] = float(best_similarity)
+                        self.assignment_stats['Not assigned'] += 1
                 else:
                     # Fallback to best embedding match
                     position = df.index.get_loc(idx)
@@ -552,45 +571,67 @@ Respond with JSON only:"""
         """Batch re-rank skills with LLM"""
         user_prompts = []
         system_prompt = None
-        results = []
+        results = {}
         for idx, skill_name, skill_desc, candidates in to_be_reranked:
             system_prompt, user_prompt = self.get_prompt(skill_name, skill_desc, candidates)
             user_prompts.append(user_prompt)
-        loop = True
-        counter = 5
-        while loop:
-            loop = False
-            try:
-                responses = self.genai_interface._generate_batch(
-                    user_prompts=user_prompts,
-                    system_prompt=system_prompt
-                )
-                
-                for response, (idx, skill_name, skill_desc, candidates) in zip(responses, to_be_reranked):
-                    response = self.genai_interface._parse_json_response(response)
-                    if response and isinstance(response, dict):
-                        choice = response['choice']
-                        confidence = response['confidence']
-                        
-                        selected = candidates[choice - 1]
-                        final_confidence = (confidence + selected['similarity']) / 2
-                        results.append((selected['key'], final_confidence))
-                    else:
-                        logger.info(f"Response in LLM re-ranking is not a dictionary")
+        
+        try:
+            responses = self.genai_interface._generate_batch(
+                user_prompts=user_prompts,
+                system_prompt=system_prompt
+            )
+            
+            for response, (idx, skill_name, skill_desc, candidates) in zip(responses, to_be_reranked):
+                loop = True
+                counter = 5
+                while loop:
+                    loop = False
+                    try:
+                        response = self.genai_interface._parse_json_response(response)
+                        if response and isinstance(response, dict):
+                            choice = response['choice']
+                            confidence = response['confidence']
+                            
+                            selected = candidates[choice - 1]
+                            final_confidence = (confidence + selected['similarity']) / 2
+                            results[idx] = (selected['key'], final_confidence)
+                        else:
+                            logger.info(f"Response in LLM re-ranking is not a dictionary")
+                            logger.info(f"Response: {response}")
+                            if counter >= 0:
+                                counter -= 1
+                                loop = True
+                                for idx_f, skill_name, skill_desc, candidates in to_be_reranked:
+                                    if idx_f == idx:
+                                        system_prompt, user_prompt = self.get_prompt(skill_name, skill_desc, candidates)
+                                        user_prompts = [user_prompt]
+                                        responses = self.genai_interface._generate_batch(
+                                            user_prompts=user_prompts,
+                                            system_prompt=system_prompt
+                                        )
+                                        response = responses[0]
+                                logger.info(f"Trying {counter} more time ..")
+                    except Exception as e:
+                        logger.error(f"LLM batch re-ranking failed: {e}")
                         logger.info(f"Response: {response}")
-                        
                         if counter >= 0:
                             counter -= 1
                             loop = True
-                        logger.info(f"Trying {counter} more time ..")
-            except Exception as e:
-                logger.error(f"LLM batch re-ranking failed: {e}")
-                logger.info(f"Response: {response}")
-                if counter >= 0:
-                    counter -= 1
-                    loop = True
-                logger.info(f"Trying {counter} more time ..")
-                pass
+                            for idx_f, skill_name, skill_desc, candidates in to_be_reranked:
+                                if idx_f == idx:
+                                    system_prompt, user_prompt = self.get_prompt(skill_name, skill_desc, candidates)
+                                    user_prompts = [user_prompt]
+                                    responses = self.genai_interface._generate_batch(
+                                        user_prompts=user_prompts,
+                                        system_prompt=system_prompt
+                                    )
+                                    response = responses[0]
+                            logger.info(f"Trying {counter} more time ..")
+                        pass
+        except Exception as e:
+            logger.error(f"LLM batch re-ranking totally failed: {e}")
+            raise
         
         return results
     
@@ -616,7 +657,7 @@ Respond with JSON only:"""
 
         # Format candidates
         candidates_text = "\n".join([
-            f"{i+1}. {c['name']}: {c['description']}"
+            f"{i+1}. {c['name']}: {c['description']}. Domain: {c['domain']}"
             for i, c in enumerate(candidates)
         ])
         
@@ -628,7 +669,7 @@ Respond with JSON only:"""
         CANDIDATE FAMILIES:
         {candidates_text}
 
-        Which family (1-{len(candidates)}) is the BEST match? Respond with JSON only: \n\nRespond with valid JSON only:"""
+        Which family (1-{len(candidates)}) is the BEST match? Think carefully and Respond with JSON only: \n\nRespond with valid JSON only:"""
         
         return system_prompt, user_prompt
         

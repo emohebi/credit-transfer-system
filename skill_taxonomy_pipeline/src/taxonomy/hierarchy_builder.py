@@ -659,7 +659,7 @@ class MultiDimensionalTaxonomyBuilder:
                 }
             },
             "statistics": {
-                "total_skills": len(df),
+                "total_skills": int(df['assigned_family'].notna().sum()),
                 "total_families": df['assigned_family'].nunique(),
                 "total_domains": df['assigned_domain'].nunique(),
                 "total_alternative_titles": int(total_alt_titles),

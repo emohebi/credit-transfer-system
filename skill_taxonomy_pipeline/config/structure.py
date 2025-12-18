@@ -2709,7 +2709,7 @@ SKILL_FAMILIES = {
         "keywords": ["concierge", "guest assistance", "guest services", "hotel concierge", "porter", "bell desk"]
     },
     "housekeeping": {
-        "name": "Hotel Housekeeping",
+        "name": "Housekeeping",
         "domain": "hospitality_tourism",
         "description": "Providing hotel housekeeping services in hotels and resorts including guest room cleaning, bed making, bathroom sanitising, and housekeeping standards for hotel guests.",
         "keywords": ['hotel housekeeping', 'room attendant', 'hotel cleaning', 'guest rooms', 'bed making', 'hotel standards', 'resort housekeeping', 'room service']
