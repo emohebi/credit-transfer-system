@@ -155,6 +155,7 @@ Thumbs.db
 
 # Project specific
 data/
+output_*/
 output/
 cache/
 *.log
