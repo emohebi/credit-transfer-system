@@ -163,12 +163,12 @@ class FacetAssigner:
             df_result = self._assign_level_facet(df_result)
         
         # Special handling for LRN facet - use existing context column
-        if 'LRN' in self.facets_to_assign and 'context' in df_result.columns:
-            df_result = self._assign_learning_context_facet(df_result)
+        # if 'LRN' in self.facets_to_assign and 'context' in df_result.columns:
+        #     df_result = self._assign_learning_context_facet(df_result)
         
         # Assign other facets using embedding + LLM
         facets_for_embedding = [f for f in self.facets_to_assign 
-                               if f not in ['LVL', 'LRN'] or f not in df_result.columns]
+                               if f not in ['LVL'] or f not in df_result.columns]
         
         if facets_for_embedding and self.skill_embeddings is not None:
             df_result = self._assign_facets_with_embeddings(df_result, facets_for_embedding)

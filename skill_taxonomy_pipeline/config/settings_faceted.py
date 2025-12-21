@@ -212,10 +212,10 @@ FACET_ASSIGNMENT_CONFIG = {
     "use_genai": True,
     "genai_batch_size": 50,
     "use_llm_reranking": os.getenv("USE_LLM_RERANKING", "true") == "true",
-    "rerank_top_k": 3,
-    "embedding_similarity_threshold": 0.30,
+    "rerank_top_k": 5,
+    "embedding_similarity_threshold": 0.90,
     "multi_value_threshold": 0.25,
-    "max_multi_values": 3,
+    "max_multi_values": 5,
     "max_retries": 3,
     # Facets to assign (order matters - processed in this order)
     "facets_to_assign": [
