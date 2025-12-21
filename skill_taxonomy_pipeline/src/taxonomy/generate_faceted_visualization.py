@@ -228,11 +228,6 @@ body {
 .facet-detail {
     border-left: 1px solid var(--jsa-grey-200);
     padding-left: 20px;
-    position: sticky;
-    top: 20px;
-    align-self: start;
-    max-height: calc(100vh - 40px);
-    overflow-y: auto;
 }
 
 /* Facet Category Cards */
@@ -337,35 +332,40 @@ body {
 .skill-detail-header { margin-bottom: 16px; }
 
 .skill-detail-name {
-    font-size: 1.15rem;
+    font-size: 1.25rem;
     font-weight: 600;
     color: var(--jsa-navy);
+    display: flex;
+    align-items: center;
+    gap: 10px;
     margin-bottom: 8px;
 }
+
+.skill-detail-name i { color: var(--jsa-green); }
 
 .skill-detail-id {
     display: inline-block;
     font-size: 0.75rem;
     color: var(--jsa-grey-500);
     background: var(--jsa-grey-100);
-    padding: 3px 8px;
+    padding: 4px 10px;
     border-radius: var(--radius-sm);
-    font-family: monospace;
+    font-family: 'Monaco', 'Consolas', monospace;
 }
 
 .skill-detail-desc {
     font-size: 0.9rem;
     color: var(--jsa-grey-600);
     line-height: 1.6;
-    margin: 12px 0;
-    padding: 10px;
+    margin: 16px 0;
+    padding: 12px;
     background: var(--jsa-grey-100);
     border-radius: var(--radius-md);
 }
 
 .detail-section {
-    margin-top: 14px;
-    padding-top: 14px;
+    margin-top: 16px;
+    padding-top: 16px;
     border-top: 1px solid var(--jsa-grey-200);
 }
 
@@ -375,7 +375,10 @@ body {
     color: var(--jsa-grey-500);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 /* Facet Badges */
@@ -1158,30 +1161,20 @@ function showSkillDetail(facetId, skillId) {
     let html = `
         <div class="skill-detail-card">
             <div class="skill-detail-header">
-                <div class="skill-detail-name">${skill.name}</div>
+                <div class="skill-detail-name">
+                    <i class="bi bi-mortarboard-fill"></i>
+                    ${skill.name}
+                </div>
                 <span class="skill-detail-id">${skill.id}</span>
             </div>
             
             ${skill.description ? `<div class="skill-detail-desc">${skill.description}</div>` : ''}
     `;
     
-    // Alternative titles - moved up
-    if (skill.alternative_titles?.length > 0) {
-        html += `
-            <div class="detail-section">
-                <div class="detail-section-title">Alternative Titles (${skill.alternative_titles.length})</div>
-                <div class="tag-list">
-                    ${skill.alternative_titles.slice(0, 10).map(t => `<span class="tag tag-alt">${t}</span>`).join('')}
-                    ${skill.alternative_titles.length > 10 ? `<span class="tag tag-more">+${skill.alternative_titles.length - 10} more</span>` : ''}
-                </div>
-            </div>
-        `;
-    }
-    
     // Dimensions section - vertical list
     html += `
         <div class="detail-section">
-            <div class="detail-section-title">Dimensions</div>
+            <div class="detail-section-title"><i class="bi bi-tags"></i> Dimensions</div>
             <div class="dimensions-list">
     `;
     
@@ -1203,18 +1196,14 @@ function showSkillDetail(facetId, skillId) {
         </div>
     `;
     
-    // Related skills
-    if (skill.related_skills?.length > 0) {
+    // Alternative titles
+    if (skill.alternative_titles?.length > 0) {
         html += `
             <div class="detail-section">
-                <div class="detail-section-title">Related Skills (${skill.related_skills.length})</div>
-                <div class="related-skills-list">
-                    ${skill.related_skills.slice(0, 10).map(r => `
-                        <div class="related-skill-item" onclick="navigateToSkill('${facetId}', '${r.skill_id}')">
-                            <span class="related-skill-name">${r.skill_name}</span>
-                            <span class="related-skill-score">${(r.similarity * 100).toFixed(0)}%</span>
-                        </div>
-                    `).join('')}
+                <div class="detail-section-title"><i class="bi bi-card-heading"></i> Alternative Titles (${skill.alternative_titles.length})</div>
+                <div class="tag-list">
+                    ${skill.alternative_titles.slice(0, 10).map(t => `<span class="tag tag-alt">${t}</span>`).join('')}
+                    ${skill.alternative_titles.length > 10 ? `<span class="tag tag-more">+${skill.alternative_titles.length - 10} more</span>` : ''}
                 </div>
             </div>
         `;
@@ -1224,10 +1213,10 @@ function showSkillDetail(facetId, skillId) {
     if (skill.all_related_codes?.length > 0) {
         html += `
             <div class="detail-section">
-                <div class="detail-section-title">Related Codes (${skill.all_related_codes.length})</div>
+                <div class="detail-section-title"><i class="bi bi-upc-scan"></i> Related Codes (${skill.all_related_codes.length})</div>
                 <div class="tag-list">
-                    ${skill.all_related_codes.slice(0, 10).map(c => `<span class="tag tag-code">${c}</span>`).join('')}
-                    ${skill.all_related_codes.length > 10 ? `<span class="tag tag-more">+${skill.all_related_codes.length - 10} more</span>` : ''}
+                    ${skill.all_related_codes.slice(0, 12).map(c => `<span class="tag tag-code">${c}</span>`).join('')}
+                    ${skill.all_related_codes.length > 12 ? `<span class="tag tag-more">+${skill.all_related_codes.length - 12} more</span>` : ''}
                 </div>
             </div>
         `;
@@ -1237,10 +1226,27 @@ function showSkillDetail(facetId, skillId) {
     if (skill.all_related_kw?.length > 0) {
         html += `
             <div class="detail-section">
-                <div class="detail-section-title">Keywords</div>
+                <div class="detail-section-title"><i class="bi bi-key"></i> Related Keywords (${skill.all_related_kw.length})</div>
                 <div class="tag-list">
-                    ${skill.all_related_kw.slice(0, 12).map(k => `<span class="tag tag-keyword">${k}</span>`).join('')}
-                    ${skill.all_related_kw.length > 12 ? `<span class="tag tag-more">+${skill.all_related_kw.length - 12} more</span>` : ''}
+                    ${skill.all_related_kw.slice(0, 15).map(k => `<span class="tag tag-keyword">${k}</span>`).join('')}
+                    ${skill.all_related_kw.length > 15 ? `<span class="tag tag-more">+${skill.all_related_kw.length - 15} more</span>` : ''}
+                </div>
+            </div>
+        `;
+    }
+    
+    // Related skills
+    if (skill.related_skills?.length > 0) {
+        html += `
+            <div class="detail-section">
+                <div class="detail-section-title"><i class="bi bi-link-45deg"></i> Related Skills (${skill.related_skills.length})</div>
+                <div class="related-skills-list">
+                    ${skill.related_skills.slice(0, 10).map(r => `
+                        <div class="related-skill-item" onclick="navigateToSkill('${facetId}', '${r.skill_id}')">
+                            <span class="related-skill-name">${r.skill_name}</span>
+                            <span class="related-skill-score">${(r.similarity * 100).toFixed(0)}%</span>
+                        </div>
+                    `).join('')}
                 </div>
             </div>
         `;
