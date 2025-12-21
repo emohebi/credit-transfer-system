@@ -230,6 +230,25 @@ body {
     padding-left: 20px;
 }
 
+.facet-detail-header {
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--jsa-grey-200);
+}
+
+.facet-detail-header h3 {
+    font-size: 0.9rem;
+    color: var(--jsa-grey-500);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.facet-detail-header h3 i {
+    color: var(--jsa-teal);
+}
+
 /* Facet Category Cards */
 .facet-category {
     background: var(--jsa-grey-100);
@@ -316,7 +335,7 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 300px;
+    height: 200px;
     color: var(--jsa-grey-400);
     text-align: center;
 }
@@ -1024,6 +1043,9 @@ function initializeFacetViews() {
                     </div>
                 </div>
                 <div class="facet-detail">
+                    <div class="facet-detail-header">
+                        <h3><i class="bi bi-info-circle"></i> Skill Details</h3>
+                    </div>
                     <div id="${facetId}Detail" class="detail-placeholder">
                         <i class="bi bi-hand-index"></i>
                         <p>Select a skill to view details</p>
