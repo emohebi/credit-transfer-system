@@ -514,13 +514,207 @@ Respond with valid JSON only:"""
                     value_name = ALL_FACETS.get(facet_id, {}).get('values', {}).get(value, {}).get('name', value)
                     logger.info(f"    {value_name}: {count}")
     
-    def get_faceted_skill_data(self, df: pd.DataFrame) -> List[Dict]:
+    def _compute_related_skills(self, df: pd.DataFrame, embeddings: np.ndarray, 
+                                 top_k: int = 20, similarity_threshold: float = 0.7) -> Dict[Any, List[Dict]]:
+        """
+        Compute related skills for each skill using embeddings + LLM re-ranking.
+        
+        Args:
+            df: DataFrame with skills
+            embeddings: Skill embeddings
+            top_k: Number of top candidates to consider
+            similarity_threshold: Minimum similarity for related skills
+            
+        Returns:
+            Dict mapping skill index to list of related skills
+        """
+        related_skills_map = {}
+        indices = df.index.tolist()
+        
+        # Build skill ID to name mapping
+        skill_id_to_name = {}
+        skill_id_to_idx = {}
+        for idx in indices:
+            skill_id = df.loc[idx, 'skill_id'] if 'skill_id' in df.columns else str(idx)
+            skill_id_to_name[skill_id] = df.loc[idx, 'name']
+            skill_id_to_idx[skill_id] = idx
+        
+        # Compute all pairwise similarities using matrix operation
+        logger.info(f"Computing pairwise similarities for {len(indices)} skills...")
+        all_similarities = self.embedding_interface.similarity(embeddings, embeddings)
+        
+        # Collect items for batch LLM re-ranking
+        to_be_reranked = []
+        
+        for i, idx in enumerate(tqdm(indices, desc="Finding related skills")):
+            position = df.index.get_loc(idx)
+            skill_id = df.loc[idx, 'skill_id'] if 'skill_id' in df.columns else str(idx)
+            skill_name = df.loc[idx, 'name']
+            skill_desc = df.loc[idx, 'description'] if 'description' in df.columns else ''
+            
+            # Get similarities for this skill
+            similarities = all_similarities[position]
+            
+            # Get top-K candidates (excluding self)
+            top_indices = np.argsort(similarities)[-top_k-1:][::-1]
+            
+            candidates = []
+            for top_idx in top_indices:
+                if top_idx == position:  # Skip self
+                    continue
+                
+                sim = similarities[top_idx]
+                if sim >= similarity_threshold:
+                    cand_idx = indices[top_idx]
+                    cand_id = df.loc[cand_idx, 'skill_id'] if 'skill_id' in df.columns else str(cand_idx)
+                    cand_name = df.loc[cand_idx, 'name']
+                    candidates.append({
+                        'skill_id': cand_id,
+                        'skill_name': cand_name,
+                        'similarity': float(sim),
+                        'idx': cand_idx
+                    })
+                
+                if len(candidates) >= top_k:
+                    break
+            
+            # If we have candidates and LLM is available, queue for re-ranking
+            if candidates and self.use_llm_reranking and len(candidates) > 3:
+                to_be_reranked.append({
+                    'idx': idx,
+                    'skill_id': skill_id,
+                    'skill_name': skill_name,
+                    'skill_desc': str(skill_desc)[:200],
+                    'candidates': candidates[:10]  # Limit to top 10 for LLM
+                })
+            elif candidates:
+                # Use embedding similarity directly
+                related_skills_map[idx] = candidates[:10]
+        
+        # Batch LLM re-ranking for related skills
+        if to_be_reranked and self.genai_interface:
+            logger.info(f"LLM re-ranking related skills for {len(to_be_reranked)} skills...")
+            
+            for batch_start in range(0, len(to_be_reranked), self.batch_size):
+                batch_end = min(batch_start + self.batch_size, len(to_be_reranked))
+                batch_items = to_be_reranked[batch_start:batch_end]
+                
+                reranked_results = self._rerank_related_skills_batch(batch_items)
+                
+                for item in batch_items:
+                    idx = item['idx']
+                    if idx in reranked_results:
+                        related_skills_map[idx] = reranked_results[idx]
+                    else:
+                        # Fallback to embedding-based
+                        related_skills_map[idx] = item['candidates'][:10]
+        
+        return related_skills_map
+    
+    def _rerank_related_skills_batch(self, batch_items: List[Dict]) -> Dict[Any, List[Dict]]:
+        """
+        Batch re-rank related skills using LLM to identify truly similar skills.
+        
+        Args:
+            batch_items: List of items with skill info and candidates
+            
+        Returns:
+            Dict mapping skill index to filtered related skills
+        """
+        results = {}
+        
+        system_prompt = """You are an expert in vocational skills analysis.
+Your task is to identify which candidate skills are truly similar or related to the given skill.
+Consider semantic similarity, skill application, and functional overlap.
+
+For each candidate, rate if it is truly related (1) or not related (0).
+You MUST respond with valid JSON only. No additional text."""
+
+        user_prompts = []
+        
+        for item in batch_items:
+            candidates_text = "\n".join([
+                f"{i+1}. {c['skill_name']} (similarity: {c['similarity']:.2f})"
+                for i, c in enumerate(item['candidates'])
+            ])
+            
+            user_prompt = f"""Identify which skills are truly related to the given skill:
+
+SKILL: {item['skill_name']}
+DESCRIPTION: {item['skill_desc']}
+
+CANDIDATE RELATED SKILLS:
+{candidates_text}
+
+For each candidate (1-{len(item['candidates'])}), indicate if it is truly related.
+Respond with JSON: {{"related": [<list of candidate numbers that are truly related>]}}
+
+Respond with valid JSON only:"""
+            
+            user_prompts.append(user_prompt)
+        
+        try:
+            responses = self.genai_interface._generate_batch(
+                user_prompts=user_prompts,
+                system_prompt=system_prompt
+            )
+            
+            for response, item in zip(responses, batch_items):
+                idx = item['idx']
+                try:
+                    parsed = self.genai_interface._parse_json_response(response)
+                    if parsed and isinstance(parsed, dict):
+                        related_indices = parsed.get('related', [])
+                        
+                        filtered_related = []
+                        for rel_idx in related_indices:
+                            if 1 <= rel_idx <= len(item['candidates']):
+                                candidate = item['candidates'][rel_idx - 1]
+                                filtered_related.append({
+                                    'skill_id': candidate['skill_id'],
+                                    'skill_name': candidate['skill_name'],
+                                    'similarity': candidate['similarity']
+                                })
+                        
+                        if filtered_related:
+                            results[idx] = filtered_related
+                        else:
+                            # Keep top 5 by similarity if LLM returns empty
+                            results[idx] = [
+                                {'skill_id': c['skill_id'], 'skill_name': c['skill_name'], 'similarity': c['similarity']}
+                                for c in item['candidates'][:5]
+                            ]
+                            
+                except Exception as e:
+                    logger.debug(f"Failed to parse related skills LLM response: {e}")
+                    # Fallback to embedding-based top 5
+                    results[idx] = [
+                        {'skill_id': c['skill_id'], 'skill_name': c['skill_name'], 'similarity': c['similarity']}
+                        for c in item['candidates'][:5]
+                    ]
+                    
+        except Exception as e:
+            logger.error(f"LLM batch re-ranking for related skills failed: {e}")
+        
+        return results
+    
+    def get_faceted_skill_data(self, df: pd.DataFrame, embeddings: np.ndarray = None) -> List[Dict]:
         """
         Export skills with all facet data for visualization
         
-        Returns list of skill dictionaries with facet values
+        Args:
+            df: DataFrame with facet assignments
+            embeddings: Skill embeddings for related skills calculation
+        
+        Returns list of skill dictionaries with facet values and related skills
         """
         skills = []
+        
+        # Build related skills if embeddings are available
+        related_skills_map = {}
+        if embeddings is not None and self.embedding_interface is not None:
+            logger.info("Computing related skills...")
+            related_skills_map = self._compute_related_skills(df, embeddings)
         
         for idx in df.index:
             skill = {
@@ -536,6 +730,7 @@ Respond with valid JSON only:"""
                 'alternative_titles': df.loc[idx, 'alternative_titles'] if 'alternative_titles' in df.columns else [],
                 'all_related_codes': df.loc[idx, 'all_related_codes'] if 'all_related_codes' in df.columns else [],
                 'all_related_kw': df.loc[idx, 'all_related_kw'] if 'all_related_kw' in df.columns else [],
+                'related_skills': related_skills_map.get(idx, []),
                 'facets': {}
             }
             

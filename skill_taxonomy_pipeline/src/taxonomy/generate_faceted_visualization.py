@@ -213,6 +213,7 @@ body {
     grid-template-columns: 280px 1fr 400px;
     gap: 20px;
     min-height: 550px;
+    position: relative;
 }
 
 .facet-sidebar {
@@ -221,13 +222,17 @@ body {
 }
 
 .facet-main {
-    overflow-y: auto;
-    max-height: 600px;
+    /* No scroll - page scrolls instead */
 }
 
 .facet-detail {
     border-left: 1px solid var(--jsa-grey-200);
     padding-left: 20px;
+    position: sticky;
+    top: 20px;
+    align-self: start;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
 }
 
 /* Facet Category Cards */
@@ -410,6 +415,71 @@ body {
 .tag-code { background: #e8eaf6; color: #3949ab; font-family: monospace; font-size: 0.7rem; }
 .tag-keyword { background: #e0f7fa; color: #00838f; }
 .tag-more { background: var(--jsa-grey-200); color: var(--jsa-grey-500); font-style: italic; }
+
+/* Dimensions List */
+.dimensions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dimension-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--jsa-grey-100);
+}
+
+.dimension-row:last-child {
+    border-bottom: none;
+}
+
+.dimension-label {
+    font-size: 0.8rem;
+    color: var(--jsa-grey-600);
+    font-weight: 500;
+}
+
+/* Related Skills */
+.related-skills-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.related-skill-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    background: var(--jsa-grey-100);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.related-skill-item:hover {
+    background: rgba(0, 131, 143, 0.1);
+}
+
+.related-skill-name {
+    font-size: 0.85rem;
+    color: var(--jsa-grey-700);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.related-skill-score {
+    font-size: 0.7rem;
+    color: var(--jsa-grey-500);
+    background: var(--jsa-white);
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 8px;
+}
 
 /* Search Bar */
 .facet-search {
@@ -1000,18 +1070,11 @@ function loadFacetSkills(facetId, valueCode) {
         return;
     }
     
-    // Render skill cards (lazy load - show first 100)
-    const displaySkills = skills.slice(0, 100);
+    // Render ALL skill cards - page scrolls instead of pane
     let html = '';
     
-    for (const skill of displaySkills) {
+    for (const skill of skills) {
         html += createSkillMiniCard(skill, facetId);
-    }
-    
-    if (skills.length > 100) {
-        html += `<div class="skill-card-mini" style="background: var(--jsa-grey-100); text-align: center;">
-            <p style="color: var(--jsa-grey-500);">+ ${skills.length - 100} more skills</p>
-        </div>`;
     }
     
     grid.innerHTML = html;
@@ -1065,7 +1128,6 @@ function createSkillMiniCard(skill, facetId) {
             <div class="skill-card-mini-name">${skill.name}</div>
             <div class="skill-card-mini-meta">
                 ${skill.level ? `<span class="skill-mini-badge level">L${skill.level}</span>` : ''}
-                ${skill.category ? `<span class="skill-mini-badge category">${formatLabel(skill.category)}</span>` : ''}
             </div>
         </div>
     `;
@@ -1080,6 +1142,19 @@ function showSkillDetail(facetId, skillId) {
     
     selectedSkillId = skillId;
     
+    // Facet name mapping
+    const facetNames = {
+        'NAT': 'Skill Nature',
+        'TRF': 'Transferability',
+        'COG': 'Cognitive Complexity',
+        'CTX': 'Work Context',
+        'FUT': 'Future Readiness',
+        'LRN': 'Learning Context',
+        'DIG': 'Digital Intensity',
+        'IND': 'Industry Domain',
+        'LVL': 'Proficiency Level'
+    };
+    
     let html = `
         <div class="skill-detail-card">
             <div class="skill-detail-header">
@@ -1088,32 +1163,58 @@ function showSkillDetail(facetId, skillId) {
             </div>
             
             ${skill.description ? `<div class="skill-detail-desc">${skill.description}</div>` : ''}
-            
-            <div class="detail-section">
-                <div class="detail-section-title">Facets</div>
-                <div class="facet-badges">
     `;
     
-    // Show all facets
-    for (const [fId, fData] of Object.entries(skill.facets || {})) {
-        if (fData && fData.name) {
-            html += `<span class="facet-badge ${fId}">${fData.name}</span>`;
-        }
-    }
-    
-    html += `
-                </div>
-            </div>
-    `;
-    
-    // Alternative titles
+    // Alternative titles - moved up
     if (skill.alternative_titles?.length > 0) {
         html += `
             <div class="detail-section">
                 <div class="detail-section-title">Alternative Titles (${skill.alternative_titles.length})</div>
                 <div class="tag-list">
-                    ${skill.alternative_titles.slice(0, 8).map(t => `<span class="tag tag-alt">${t}</span>`).join('')}
-                    ${skill.alternative_titles.length > 8 ? `<span class="tag tag-more">+${skill.alternative_titles.length - 8} more</span>` : ''}
+                    ${skill.alternative_titles.slice(0, 10).map(t => `<span class="tag tag-alt">${t}</span>`).join('')}
+                    ${skill.alternative_titles.length > 10 ? `<span class="tag tag-more">+${skill.alternative_titles.length - 10} more</span>` : ''}
+                </div>
+            </div>
+        `;
+    }
+    
+    // Dimensions section - vertical list
+    html += `
+        <div class="detail-section">
+            <div class="detail-section-title">Dimensions</div>
+            <div class="dimensions-list">
+    `;
+    
+    // Show all facets as vertical list
+    for (const [fId, fData] of Object.entries(skill.facets || {})) {
+        if (fData && fData.name) {
+            const facetDisplayName = facetNames[fId] || fId;
+            html += `
+                <div class="dimension-row">
+                    <span class="dimension-label">${facetDisplayName}</span>
+                    <span class="facet-badge ${fId}">${fData.name}</span>
+                </div>
+            `;
+        }
+    }
+    
+    html += `
+            </div>
+        </div>
+    `;
+    
+    // Related skills
+    if (skill.related_skills?.length > 0) {
+        html += `
+            <div class="detail-section">
+                <div class="detail-section-title">Related Skills (${skill.related_skills.length})</div>
+                <div class="related-skills-list">
+                    ${skill.related_skills.slice(0, 10).map(r => `
+                        <div class="related-skill-item" onclick="navigateToSkill('${facetId}', '${r.skill_id}')">
+                            <span class="related-skill-name">${r.skill_name}</span>
+                            <span class="related-skill-score">${(r.similarity * 100).toFixed(0)}%</span>
+                        </div>
+                    `).join('')}
                 </div>
             </div>
         `;
@@ -1147,6 +1248,24 @@ function showSkillDetail(facetId, skillId) {
     
     html += '</div>';
     detailContainer.innerHTML = html;
+}
+
+function navigateToSkill(currentFacetId, skillId) {
+    const skill = skillsIndex.get(skillId);
+    if (skill) {
+        showSkillDetail(currentFacetId, skillId);
+        // Also highlight in grid if visible
+        const grid = document.getElementById(`${currentFacetId}SkillsGrid`);
+        if (grid) {
+            grid.querySelectorAll('.skill-card-mini').forEach(c => {
+                c.classList.remove('selected');
+                if (c.dataset.skillId === skillId) {
+                    c.classList.add('selected');
+                    c.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+        }
+    }
 }
 
 function initializeTableView() {
