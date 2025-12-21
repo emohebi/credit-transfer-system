@@ -213,7 +213,7 @@ body {
     grid-template-columns: 280px 1fr 400px;
     gap: 20px;
     min-height: 550px;
-    position: relative;
+    align-items: start;
 }
 
 .facet-sidebar {
