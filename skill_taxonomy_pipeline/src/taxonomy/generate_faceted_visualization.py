@@ -598,6 +598,147 @@ body {
     text-align: right;
 }
 
+/* Multi-Filter View */
+.filter-view {
+    display: grid;
+    grid-template-columns: 320px 1fr 400px;
+    gap: 20px;
+    min-height: 550px;
+    align-items: start;
+}
+
+.filter-sidebar {
+    border-right: 1px solid var(--jsa-grey-200);
+    padding-right: 20px;
+    align-self: start;
+}
+
+.filter-section {
+    margin-bottom: 16px;
+}
+
+.filter-section-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--jsa-grey-600);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.filter-select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid var(--jsa-grey-200);
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    background: var(--jsa-white);
+    cursor: pointer;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--jsa-teal);
+}
+
+.filter-actions {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--jsa-grey-200);
+    display: flex;
+    gap: 10px;
+}
+
+.filter-btn {
+    flex: 1;
+    padding: 10px 16px;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.filter-btn-apply {
+    background: var(--jsa-teal);
+    color: white;
+    border: none;
+}
+
+.filter-btn-apply:hover {
+    background: #006874;
+}
+
+.filter-btn-clear {
+    background: var(--jsa-white);
+    color: var(--jsa-grey-600);
+    border: 2px solid var(--jsa-grey-300);
+}
+
+.filter-btn-clear:hover {
+    background: var(--jsa-grey-100);
+}
+
+.filter-results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--jsa-grey-200);
+}
+
+.filter-results-count {
+    font-size: 0.9rem;
+    color: var(--jsa-grey-600);
+}
+
+.filter-results-count strong {
+    color: var(--jsa-teal);
+}
+
+.filter-main {
+    /* Skills grid area */
+}
+
+.filter-detail {
+    border-left: 1px solid var(--jsa-grey-200);
+    padding-left: 20px;
+    align-self: start;
+}
+
+.active-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.active-filter-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: rgba(0, 131, 143, 0.1);
+    color: var(--jsa-teal);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.active-filter-tag i {
+    cursor: pointer;
+    opacity: 0.7;
+}
+
+.active-filter-tag i:hover {
+    opacity: 1;
+}
+
 /* Table View */
 .table-controls {
     margin-bottom: 16px;
@@ -825,6 +966,9 @@ BODY_CONTENT = """
             <button class="view-tab" data-view="IND">
                 <i class="bi bi-building"></i> Industry
             </button>
+            <button class="view-tab" data-view="filter">
+                <i class="bi bi-funnel"></i> Multi-Filter
+            </button>
             <button class="view-tab" data-view="table">
                 <i class="bi bi-table"></i> Table
             </button>
@@ -843,6 +987,9 @@ BODY_CONTENT = """
         <div class="view-section facet-view-container" id="FUTView"></div>
         <div class="view-section facet-view-container" id="DIGView"></div>
         <div class="view-section facet-view-container" id="INDView"></div>
+        
+        <!-- Multi-Filter View -->
+        <div class="view-section" id="filterView"></div>
         
         <!-- Table View -->
         <div class="view-section" id="tableView"></div>
@@ -894,6 +1041,7 @@ document.addEventListener('DOMContentLoaded', function() {
         initializeStats();
         initializeOverview();
         initializeFacetViews();
+        initializeFilterView();
         initializeTableView();
         initializeEventListeners();
         
@@ -1097,7 +1245,7 @@ function loadFacetSkills(facetId, valueCode) {
     if (!grid) return;
     
     // Filter skills by facet value
-    const skills = taxonomyData.skills.filter(s => {
+    let skills = taxonomyData.skills.filter(s => {
         const facetData = s.facets?.[facetId];
         if (!facetData) return false;
         const code = facetData.code;
@@ -1105,6 +1253,13 @@ function loadFacetSkills(facetId, valueCode) {
             return code.includes(valueCode);
         }
         return code === valueCode;
+    });
+    
+    // Sort by confidence descending
+    skills.sort((a, b) => {
+        const confA = a.facets?.[facetId]?.confidence || 0;
+        const confB = b.facets?.[facetId]?.confidence || 0;
+        return confB - confA;
     });
     
     if (skills.length === 0) {
@@ -1168,9 +1323,6 @@ function createSkillMiniCard(skill, facetId) {
     return `
         <div class="skill-card-mini" data-skill-id="${skill.id}">
             <div class="skill-card-mini-name">${skill.name}</div>
-            <div class="skill-card-mini-meta">
-                ${skill.level ? `<span class="skill-mini-badge level">L${skill.level}</span>` : ''}
-            </div>
         </div>
     `;
 }
@@ -1318,6 +1470,308 @@ function navigateToSkill(currentFacetId, skillId) {
             });
         }
     }
+}
+
+// Multi-Filter View
+let activeFilters = {};
+
+function initializeFilterView() {
+    const container = document.getElementById('filterView');
+    
+    // Build dropdown options for each facet
+    let filtersHtml = '';
+    const facetIcons = {
+        'NAT': 'bi-bookmark',
+        'TRF': 'bi-arrow-left-right',
+        'COG': 'bi-lightbulb',
+        'CTX': 'bi-briefcase',
+        'FUT': 'bi-robot',
+        'LRN': 'bi-book',
+        'DIG': 'bi-laptop',
+        'IND': 'bi-building',
+        'LVL': 'bi-layers'
+    };
+    
+    for (const [facetId, facetInfo] of Object.entries(taxonomyData.facets || {})) {
+        const icon = facetIcons[facetId] || 'bi-tag';
+        const options = Object.entries(facetInfo.values || {})
+            .map(([code, valueInfo]) => `<option value="${code}">${valueInfo.name}</option>`)
+            .join('');
+        
+        filtersHtml += `
+            <div class="filter-section">
+                <div class="filter-section-title">
+                    <i class="bi ${icon}"></i> ${facetInfo.name}
+                </div>
+                <select class="filter-select" id="filter_${facetId}" data-facet="${facetId}">
+                    <option value="">All</option>
+                    ${options}
+                </select>
+            </div>
+        `;
+    }
+    
+    container.innerHTML = `
+        <div class="filter-view">
+            <div class="filter-sidebar">
+                <h3 style="margin-bottom: 16px; font-size: 1rem; color: var(--jsa-navy);">
+                    <i class="bi bi-funnel"></i> Filter by Dimensions
+                </h3>
+                ${filtersHtml}
+                <div class="filter-actions">
+                    <button class="filter-btn filter-btn-apply" onclick="applyMultiFilters()">
+                        <i class="bi bi-check-lg"></i> Apply
+                    </button>
+                    <button class="filter-btn filter-btn-clear" onclick="clearMultiFilters()">
+                        <i class="bi bi-x-lg"></i> Clear
+                    </button>
+                </div>
+            </div>
+            <div class="filter-main">
+                <div class="filter-results-header">
+                    <div class="filter-results-count">
+                        Showing <strong id="filterResultsCount">0</strong> skills
+                    </div>
+                    <div class="active-filters" id="activeFilterTags"></div>
+                </div>
+                <div id="filterSkillsGrid" class="skills-grid">
+                    <p style="color: var(--jsa-grey-500); padding: 20px;">Select filters and click Apply to view skills</p>
+                </div>
+            </div>
+            <div class="filter-detail">
+                <div class="facet-detail-header">
+                    <h3><i class="bi bi-info-circle"></i> Skill Details</h3>
+                </div>
+                <div id="filterDetail" class="detail-placeholder">
+                    <i class="bi bi-hand-index"></i>
+                    <p>Select a skill to view details</p>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add event listeners for dropdowns
+    container.querySelectorAll('.filter-select').forEach(select => {
+        select.addEventListener('change', updateActiveFilterTags);
+    });
+}
+
+function updateActiveFilterTags() {
+    const tagsContainer = document.getElementById('activeFilterTags');
+    let tagsHtml = '';
+    
+    document.querySelectorAll('.filter-select').forEach(select => {
+        if (select.value) {
+            const facetId = select.dataset.facet;
+            const facetName = taxonomyData.facets[facetId]?.name || facetId;
+            const valueName = select.options[select.selectedIndex].text;
+            tagsHtml += `
+                <span class="active-filter-tag">
+                    ${facetName}: ${valueName}
+                    <i class="bi bi-x" onclick="clearSingleFilter('${facetId}')"></i>
+                </span>
+            `;
+        }
+    });
+    
+    tagsContainer.innerHTML = tagsHtml;
+}
+
+function clearSingleFilter(facetId) {
+    const select = document.getElementById(`filter_${facetId}`);
+    if (select) {
+        select.value = '';
+        updateActiveFilterTags();
+        applyMultiFilters();
+    }
+}
+
+function applyMultiFilters() {
+    activeFilters = {};
+    
+    // Collect all filter values
+    document.querySelectorAll('.filter-select').forEach(select => {
+        if (select.value) {
+            activeFilters[select.dataset.facet] = select.value;
+        }
+    });
+    
+    // Filter skills
+    let filtered = taxonomyData.skills.filter(skill => {
+        for (const [facetId, value] of Object.entries(activeFilters)) {
+            const skillFacet = skill.facets?.[facetId];
+            if (!skillFacet || skillFacet.code !== value) {
+                return false;
+            }
+        }
+        return true;
+    });
+    
+    // Sort by average confidence of selected facets (descending)
+    if (Object.keys(activeFilters).length > 0) {
+        filtered.sort((a, b) => {
+            let confA = 0, confB = 0;
+            let countA = 0, countB = 0;
+            
+            for (const facetId of Object.keys(activeFilters)) {
+                if (a.facets?.[facetId]?.confidence) {
+                    confA += a.facets[facetId].confidence;
+                    countA++;
+                }
+                if (b.facets?.[facetId]?.confidence) {
+                    confB += b.facets[facetId].confidence;
+                    countB++;
+                }
+            }
+            
+            const avgA = countA > 0 ? confA / countA : 0;
+            const avgB = countB > 0 ? confB / countB : 0;
+            return avgB - avgA;  // Descending
+        });
+    }
+    
+    // Render results
+    const grid = document.getElementById('filterSkillsGrid');
+    const countEl = document.getElementById('filterResultsCount');
+    
+    countEl.textContent = filtered.length.toLocaleString();
+    
+    if (filtered.length === 0) {
+        grid.innerHTML = '<p style="color: var(--jsa-grey-500); padding: 20px;">No skills match the selected filters</p>';
+        return;
+    }
+    
+    let html = '';
+    for (const skill of filtered) {
+        // Calculate average confidence for display
+        let totalConf = 0, confCount = 0;
+        for (const facetId of Object.keys(activeFilters)) {
+            if (skill.facets?.[facetId]?.confidence) {
+                totalConf += skill.facets[facetId].confidence;
+                confCount++;
+            }
+        }
+        const avgConf = confCount > 0 ? (totalConf / confCount * 100).toFixed(0) : null;
+        
+        html += `
+            <div class="skill-card-mini" data-skill-id="${skill.id}">
+                <div class="skill-card-mini-name">${skill.name}</div>
+                ${avgConf ? `<div class="skill-card-mini-meta"><span class="skill-mini-badge level">${avgConf}% conf</span></div>` : ''}
+            </div>
+        `;
+    }
+    
+    grid.innerHTML = html;
+    
+    // Add click handlers
+    grid.querySelectorAll('.skill-card-mini').forEach(card => {
+        card.addEventListener('click', () => {
+            grid.querySelectorAll('.skill-card-mini').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            showFilterSkillDetail(card.dataset.skillId);
+        });
+    });
+}
+
+function showFilterSkillDetail(skillId) {
+    const skill = skillsIndex.get(skillId);
+    if (!skill) return;
+    
+    const detailContainer = document.getElementById('filterDetail');
+    if (!detailContainer) return;
+    
+    detailContainer.classList.remove('detail-placeholder');
+    
+    // Facet name mapping
+    const facetNames = {
+        'NAT': 'Skill Nature',
+        'TRF': 'Transferability',
+        'COG': 'Cognitive Complexity',
+        'CTX': 'Work Context',
+        'FUT': 'Future Readiness',
+        'LRN': 'Learning Context',
+        'DIG': 'Digital Intensity',
+        'IND': 'Industry Domain',
+        'LVL': 'Proficiency Level'
+    };
+    
+    let html = `
+        <div class="skill-detail-card">
+            <div class="skill-detail-header">
+                <div class="skill-detail-name">
+                    <i class="bi bi-mortarboard-fill"></i>
+                    ${skill.name}
+                </div>
+                <span class="skill-detail-id">${skill.id}</span>
+            </div>
+            
+            ${skill.description ? `<div class="skill-detail-desc">${skill.description}</div>` : ''}
+    `;
+    
+    // Dimensions section
+    html += `
+        <div class="detail-section">
+            <div class="detail-section-title"><i class="bi bi-tags"></i> Dimensions</div>
+            <div class="dimensions-list">
+    `;
+    
+    for (const [fId, fData] of Object.entries(skill.facets || {})) {
+        if (fData && fData.name) {
+            const facetDisplayName = facetNames[fId] || fId;
+            const confidenceHtml = fData.confidence ? `<span class="facet-confidence">${(fData.confidence * 100).toFixed(0)}%</span>` : '';
+            const isActive = activeFilters[fId] ? 'style="background: rgba(0, 131, 143, 0.1);"' : '';
+            html += `
+                <div class="dimension-row" ${isActive}>
+                    <span class="dimension-label">${facetDisplayName}</span>
+                    <div class="dimension-value">
+                        <span class="facet-badge ${fId}">${fData.name}</span>
+                        ${confidenceHtml}
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    html += `
+            </div>
+        </div>
+    `;
+    
+    // Alternative titles
+    if (skill.alternative_titles?.length > 0) {
+        html += `
+            <div class="detail-section">
+                <div class="detail-section-title"><i class="bi bi-card-heading"></i> Alternative Titles (${skill.alternative_titles.length})</div>
+                <div class="tag-list">
+                    ${skill.alternative_titles.slice(0, 10).map(t => `<span class="tag tag-alt">${t}</span>`).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    html += '</div>';
+    detailContainer.innerHTML = html;
+}
+
+function clearMultiFilters() {
+    document.querySelectorAll('.filter-select').forEach(select => {
+        select.value = '';
+    });
+    activeFilters = {};
+    updateActiveFilterTags();
+    
+    const grid = document.getElementById('filterSkillsGrid');
+    const countEl = document.getElementById('filterResultsCount');
+    
+    countEl.textContent = '0';
+    grid.innerHTML = '<p style="color: var(--jsa-grey-500); padding: 20px;">Select filters and click Apply to view skills</p>';
+    
+    const detailContainer = document.getElementById('filterDetail');
+    detailContainer.classList.add('detail-placeholder');
+    detailContainer.innerHTML = `
+        <i class="bi bi-hand-index"></i>
+        <p>Select a skill to view details</p>
+    `;
 }
 
 function initializeTableView() {
