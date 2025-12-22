@@ -465,6 +465,21 @@ body {
     font-weight: 500;
 }
 
+.dimension-value {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.facet-confidence {
+    font-size: 0.7rem;
+    color: var(--jsa-grey-500);
+    background: var(--jsa-white);
+    padding: 2px 6px;
+    border-radius: 10px;
+    border: 1px solid var(--jsa-grey-200);
+}
+
 /* Related Skills */
 .related-skills-list {
     display: flex;
@@ -1209,10 +1224,14 @@ function showSkillDetail(facetId, skillId) {
     for (const [fId, fData] of Object.entries(skill.facets || {})) {
         if (fData && fData.name) {
             const facetDisplayName = facetNames[fId] || fId;
+            const confidenceHtml = fData.confidence ? `<span class="facet-confidence">${(fData.confidence * 100).toFixed(0)}%</span>` : '';
             html += `
                 <div class="dimension-row">
                     <span class="dimension-label">${facetDisplayName}</span>
-                    <span class="facet-badge ${fId}">${fData.name}</span>
+                    <div class="dimension-value">
+                        <span class="facet-badge ${fId}">${fData.name}</span>
+                        ${confidenceHtml}
+                    </div>
                 </div>
             `;
         }
