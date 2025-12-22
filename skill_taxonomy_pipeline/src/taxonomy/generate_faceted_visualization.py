@@ -219,6 +219,7 @@ body {
 .facet-sidebar {
     border-right: 1px solid var(--jsa-grey-200);
     padding-right: 20px;
+    align-self: start;
 }
 
 .facet-main {
@@ -228,6 +229,7 @@ body {
 .facet-detail {
     border-left: 1px solid var(--jsa-grey-200);
     padding-left: 20px;
+    align-self: start;
 }
 
 .facet-detail-header {
