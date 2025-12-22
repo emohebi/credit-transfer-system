@@ -25,7 +25,7 @@ from pathlib import Path
 import pandas as pd
 
 # Threshold for external data loading
-EXTERNAL_DATA_THRESHOLD = 5000
+EXTERNAL_DATA_THRESHOLD = 0  # Always use external data file for better lazy loading
 
 
 CSS_CONTENT = """
@@ -1014,15 +1014,19 @@ const FACET_COLORS = {
     'LVL': '#3f51b5'
 };
 
-// Initialize
-document.addEventListener('DOMContentLoaded', function() {
+// Initialize - wait for data to be available
+function initializeTaxonomy() {
     try {
         if (typeof TAXONOMY_DATA !== 'undefined') {
             taxonomyData = TAXONOMY_DATA;
         } else if (typeof EMBEDDED_DATA !== 'undefined') {
             taxonomyData = EMBEDDED_DATA;
         } else {
-            throw new Error('No taxonomy data found.');
+            throw new Error('No taxonomy data found. Make sure the data file is in the same directory as the HTML file.');
+        }
+        
+        if (!taxonomyData.skills || taxonomyData.skills.length === 0) {
+            throw new Error('Taxonomy data is empty or invalid.');
         }
         
         // Build index
@@ -1041,6 +1045,29 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('Failed to load taxonomy:', error);
         document.querySelector('.loading-text').textContent = 'Error: ' + error.message;
         document.querySelector('.loading-text').style.color = '#c62828';
+    }
+}
+
+// Check if data is already available or wait for it
+document.addEventListener('DOMContentLoaded', function() {
+    // If TAXONOMY_DATA is defined (external file already loaded), initialize immediately
+    if (typeof TAXONOMY_DATA !== 'undefined' || typeof EMBEDDED_DATA !== 'undefined') {
+        initializeTaxonomy();
+    } else {
+        // Wait a bit for external script to load, then retry
+        let attempts = 0;
+        const maxAttempts = 50;  // 5 seconds max wait
+        const checkInterval = setInterval(function() {
+            attempts++;
+            if (typeof TAXONOMY_DATA !== 'undefined' || typeof EMBEDDED_DATA !== 'undefined') {
+                clearInterval(checkInterval);
+                initializeTaxonomy();
+            } else if (attempts >= maxAttempts) {
+                clearInterval(checkInterval);
+                document.querySelector('.loading-text').textContent = 'Error: Failed to load data file. Make sure the _data.js file is in the same directory.';
+                document.querySelector('.loading-text').style.color = '#c62828';
+            }
+        }, 100);
     }
 });
 
@@ -1980,7 +2007,20 @@ HTML_TEMPLATE_EXTERNAL = """<!DOCTYPE html>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
-    <script src="{DATA_FILE}"></script>
+    <!-- External data file - must be in same directory as this HTML file -->
+    <script>
+        // Store the expected data file name for error messages
+        window.EXPECTED_DATA_FILE = '{DATA_FILE}';
+    </script>
+    <script src="{DATA_FILE}" onerror="handleDataLoadError()"></script>
+    <script>
+        function handleDataLoadError() {{
+            document.querySelector('.loading-text').innerHTML = 
+                'Error: Failed to load data file.<br>' +
+                '<small style="font-size: 0.8rem;">Make sure <strong>' + window.EXPECTED_DATA_FILE + '</strong> is in the same directory as this HTML file.</small>';
+            document.querySelector('.loading-text').style.color = '#c62828';
+        }}
+    </script>
 
     <script>
         {JAVASCRIPT_CONTENT}
@@ -1990,6 +2030,8 @@ HTML_TEMPLATE_EXTERNAL = """<!DOCTYPE html>
 """
 
 
+# Note: This embedded template is kept for reference but not currently used
+# All HTML files now use external data files for better performance
 HTML_TEMPLATE_EMBEDDED = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2028,7 +2070,7 @@ def count_skills(data):
 
 
 def generate_faceted_html(taxonomy_json_path: str, output_html_path: str):
-    """Generate faceted HTML visualization"""
+    """Generate faceted HTML visualization with external data file"""
     
     print(f"Loading faceted taxonomy from: {taxonomy_json_path}")
     with open(taxonomy_json_path, 'r') as f:
@@ -2037,42 +2079,38 @@ def generate_faceted_html(taxonomy_json_path: str, output_html_path: str):
     total_skills = count_skills(taxonomy_data)
     print(f"Taxonomy loaded: {total_skills} skills")
     
-    if total_skills > EXTERNAL_DATA_THRESHOLD:
-        print(f"Large dataset ({total_skills} skills). Using external data file.")
-        
-        data_file = output_html_path.replace('.html', '_data.js')
-        data_file_name = Path(data_file).name
-        
-        with open(data_file, 'w') as f:
-            f.write('// VET Skills Faceted Taxonomy Data\\n')
-            f.write('const TAXONOMY_DATA = ')
-            json.dump(taxonomy_data, f, separators=(',', ':'))
-            f.write(';\\n')
-        
-        print(f"Data saved to: {data_file}")
-        
-        html_content = HTML_TEMPLATE_EXTERNAL.format(
-            CSS_CONTENT=CSS_CONTENT,
-            BODY_CONTENT=BODY_CONTENT,
-            DATA_FILE=data_file_name,
-            JAVASCRIPT_CONTENT=JAVASCRIPT_CONTENT
-        )
-    else:
-        print(f"Small dataset ({total_skills} skills). Embedding data in HTML.")
-        
-        html_content = HTML_TEMPLATE_EMBEDDED.format(
-            CSS_CONTENT=CSS_CONTENT,
-            BODY_CONTENT=BODY_CONTENT,
-            TAXONOMY_DATA=json.dumps(taxonomy_data),
-            JAVASCRIPT_CONTENT=JAVASCRIPT_CONTENT
-        )
+    # Always use external data file for better performance and lazy loading
+    data_file = output_html_path.replace('.html', '_data.js')
+    data_file_name = Path(data_file).name
+    
+    print(f"Creating external data file: {data_file_name}")
+    with open(data_file, 'w') as f:
+        f.write('// VET Skills Faceted Taxonomy Data\n')
+        f.write('// This file is auto-generated - do not edit manually\n')
+        f.write('const TAXONOMY_DATA = ')
+        json.dump(taxonomy_data, f, separators=(',', ':'))
+        f.write(';\n')
+    
+    print(f"Data file created: {data_file}")
+    
+    html_content = HTML_TEMPLATE_EXTERNAL.format(
+        CSS_CONTENT=CSS_CONTENT,
+        BODY_CONTENT=BODY_CONTENT,
+        DATA_FILE=data_file_name,
+        JAVASCRIPT_CONTENT=JAVASCRIPT_CONTENT
+    )
     
     print(f"Writing HTML to: {output_html_path}")
     with open(output_html_path, 'w', encoding='utf-8') as f:
         f.write(html_content)
     
-    print("\\n" + "=" * 60)
+    print("\n" + "=" * 60)
     print("✓ Faceted HTML visualization generated successfully!")
+    print("=" * 60)
+    print(f"\nOutput files:")
+    print(f"  1. {output_html_path}")
+    print(f"  2. {data_file}")
+    print(f"\n⚠️  IMPORTANT: Both files must be in the same directory to work!")
     print("=" * 60)
 
 
