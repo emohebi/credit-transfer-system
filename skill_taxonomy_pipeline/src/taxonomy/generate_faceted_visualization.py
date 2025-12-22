@@ -1165,6 +1165,9 @@ function showSkillDetail(facetId, skillId) {
     const detailContainer = document.getElementById(`${facetId}Detail`);
     if (!detailContainer) return;
     
+    // Remove placeholder styling when showing skill details
+    detailContainer.classList.remove('detail-placeholder');
+    
     selectedSkillId = skillId;
     
     // Facet name mapping
