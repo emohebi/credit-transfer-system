@@ -663,20 +663,11 @@ body {
     gap: 6px;
 }
 
-.filter-btn-apply {
-    background: var(--jsa-teal);
-    color: white;
-    border: none;
-}
-
-.filter-btn-apply:hover {
-    background: #006874;
-}
-
 .filter-btn-clear {
     background: var(--jsa-white);
     color: var(--jsa-grey-600);
     border: 2px solid var(--jsa-grey-300);
+    width: 100%;
 }
 
 .filter-btn-clear:hover {
@@ -1519,11 +1510,8 @@ function initializeFilterView() {
                 </h3>
                 ${filtersHtml}
                 <div class="filter-actions">
-                    <button class="filter-btn filter-btn-apply" onclick="applyMultiFilters()">
-                        <i class="bi bi-check-lg"></i> Apply
-                    </button>
                     <button class="filter-btn filter-btn-clear" onclick="clearMultiFilters()">
-                        <i class="bi bi-x-lg"></i> Clear
+                        <i class="bi bi-x-lg"></i> Clear All Filters
                     </button>
                 </div>
             </div>
@@ -1535,7 +1523,7 @@ function initializeFilterView() {
                     <div class="active-filters" id="activeFilterTags"></div>
                 </div>
                 <div id="filterSkillsGrid" class="skills-grid">
-                    <p style="color: var(--jsa-grey-500); padding: 20px;">Select filters and click Apply to view skills</p>
+                    <p style="color: var(--jsa-grey-500); padding: 20px;">Select filters to view skills</p>
                 </div>
             </div>
             <div class="filter-detail">
@@ -1550,10 +1538,16 @@ function initializeFilterView() {
         </div>
     `;
     
-    // Add event listeners for dropdowns
+    // Add event listeners for dropdowns - filter immediately on change
     container.querySelectorAll('.filter-select').forEach(select => {
-        select.addEventListener('change', updateActiveFilterTags);
+        select.addEventListener('change', () => {
+            updateActiveFilterTags();
+            applyMultiFilters();
+        });
     });
+    
+    // Initialize dropdown counts
+    updateFilterDropdownCounts(taxonomyData.skills);
 }
 
 function updateActiveFilterTags() {
@@ -1630,33 +1624,28 @@ function applyMultiFilters() {
         });
     }
     
+    // Update dropdown counts based on current filter
+    updateFilterDropdownCounts(filtered);
+    
     // Render results
     const grid = document.getElementById('filterSkillsGrid');
     const countEl = document.getElementById('filterResultsCount');
     
     countEl.textContent = filtered.length.toLocaleString();
     
-    if (filtered.length === 0) {
+    if (filtered.length === 0 && Object.keys(activeFilters).length > 0) {
         grid.innerHTML = '<p style="color: var(--jsa-grey-500); padding: 20px;">No skills match the selected filters</p>';
+        return;
+    } else if (Object.keys(activeFilters).length === 0) {
+        grid.innerHTML = '<p style="color: var(--jsa-grey-500); padding: 20px;">Select filters to view skills</p>';
         return;
     }
     
     let html = '';
     for (const skill of filtered) {
-        // Calculate average confidence for display
-        let totalConf = 0, confCount = 0;
-        for (const facetId of Object.keys(activeFilters)) {
-            if (skill.facets?.[facetId]?.confidence) {
-                totalConf += skill.facets[facetId].confidence;
-                confCount++;
-            }
-        }
-        const avgConf = confCount > 0 ? (totalConf / confCount * 100).toFixed(0) : null;
-        
         html += `
             <div class="skill-card-mini" data-skill-id="${skill.id}">
                 <div class="skill-card-mini-name">${skill.name}</div>
-                ${avgConf ? `<div class="skill-card-mini-meta"><span class="skill-mini-badge level">${avgConf}% conf</span></div>` : ''}
             </div>
         `;
     }
@@ -1668,89 +1657,46 @@ function applyMultiFilters() {
         card.addEventListener('click', () => {
             grid.querySelectorAll('.skill-card-mini').forEach(c => c.classList.remove('selected'));
             card.classList.add('selected');
-            showFilterSkillDetail(card.dataset.skillId);
+            showSkillDetail('filter', card.dataset.skillId);
         });
     });
 }
 
-function showFilterSkillDetail(skillId) {
-    const skill = skillsIndex.get(skillId);
-    if (!skill) return;
-    
-    const detailContainer = document.getElementById('filterDetail');
-    if (!detailContainer) return;
-    
-    detailContainer.classList.remove('detail-placeholder');
-    
-    // Facet name mapping
-    const facetNames = {
-        'NAT': 'Skill Nature',
-        'TRF': 'Transferability',
-        'COG': 'Cognitive Complexity',
-        'CTX': 'Work Context',
-        'FUT': 'Future Readiness',
-        'LRN': 'Learning Context',
-        'DIG': 'Digital Intensity',
-        'IND': 'Industry Domain',
-        'LVL': 'Proficiency Level'
-    };
-    
-    let html = `
-        <div class="skill-detail-card">
-            <div class="skill-detail-header">
-                <div class="skill-detail-name">
-                    <i class="bi bi-mortarboard-fill"></i>
-                    ${skill.name}
-                </div>
-                <span class="skill-detail-id">${skill.id}</span>
-            </div>
+function updateFilterDropdownCounts(currentFilteredSkills) {
+    // For each facet dropdown, update option counts based on what would match
+    document.querySelectorAll('.filter-select').forEach(select => {
+        const thisFacetId = select.dataset.facet;
+        
+        // For each option, count how many skills would match if this option were selected
+        Array.from(select.options).forEach(option => {
+            if (option.value === '') {
+                // "All" option - don't add count
+                return;
+            }
             
-            ${skill.description ? `<div class="skill-detail-desc">${skill.description}</div>` : ''}
-    `;
-    
-    // Dimensions section
-    html += `
-        <div class="detail-section">
-            <div class="detail-section-title"><i class="bi bi-tags"></i> Dimensions</div>
-            <div class="dimensions-list">
-    `;
-    
-    for (const [fId, fData] of Object.entries(skill.facets || {})) {
-        if (fData && fData.name) {
-            const facetDisplayName = facetNames[fId] || fId;
-            const confidenceHtml = fData.confidence ? `<span class="facet-confidence">${(fData.confidence * 100).toFixed(0)}%</span>` : '';
-            const isActive = activeFilters[fId] ? 'style="background: rgba(0, 131, 143, 0.1);"' : '';
-            html += `
-                <div class="dimension-row" ${isActive}>
-                    <span class="dimension-label">${facetDisplayName}</span>
-                    <div class="dimension-value">
-                        <span class="facet-badge ${fId}">${fData.name}</span>
-                        ${confidenceHtml}
-                    </div>
-                </div>
-            `;
-        }
-    }
-    
-    html += `
-            </div>
-        </div>
-    `;
-    
-    // Alternative titles
-    if (skill.alternative_titles?.length > 0) {
-        html += `
-            <div class="detail-section">
-                <div class="detail-section-title"><i class="bi bi-card-heading"></i> Alternative Titles (${skill.alternative_titles.length})</div>
-                <div class="tag-list">
-                    ${skill.alternative_titles.slice(0, 10).map(t => `<span class="tag tag-alt">${t}</span>`).join('')}
-                </div>
-            </div>
-        `;
-    }
-    
-    html += '</div>';
-    detailContainer.innerHTML = html;
+            const valueCode = option.value;
+            
+            // Count skills that match current filters + this potential selection
+            const count = taxonomyData.skills.filter(skill => {
+                // Check all active filters except this facet
+                for (const [facetId, value] of Object.entries(activeFilters)) {
+                    if (facetId === thisFacetId) continue;  // Skip this facet
+                    const skillFacet = skill.facets?.[facetId];
+                    if (!skillFacet || skillFacet.code !== value) {
+                        return false;
+                    }
+                }
+                // Check this facet's potential value
+                const skillFacet = skill.facets?.[thisFacetId];
+                return skillFacet && skillFacet.code === valueCode;
+            }).length;
+            
+            // Update option text with count
+            const baseName = option.dataset.baseName || option.text.replace(/\s*\(\d+\)$/, '');
+            option.dataset.baseName = baseName;
+            option.text = `${baseName} (${count})`;
+        });
+    });
 }
 
 function clearMultiFilters() {
@@ -1760,11 +1706,14 @@ function clearMultiFilters() {
     activeFilters = {};
     updateActiveFilterTags();
     
+    // Reset dropdown counts
+    updateFilterDropdownCounts(taxonomyData.skills);
+    
     const grid = document.getElementById('filterSkillsGrid');
     const countEl = document.getElementById('filterResultsCount');
     
     countEl.textContent = '0';
-    grid.innerHTML = '<p style="color: var(--jsa-grey-500); padding: 20px;">Select filters and click Apply to view skills</p>';
+    grid.innerHTML = '<p style="color: var(--jsa-grey-500); padding: 20px;">Select filters to view skills</p>';
     
     const detailContainer = document.getElementById('filterDetail');
     detailContainer.classList.add('detail-placeholder');
