@@ -476,940 +476,782 @@ DIGITAL_INTENSITY_FACET = {
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-#  FACET 8: INDUSTRY DOMAIN (IND) - Industry sectors (multi-value allowed)
+#  FACET 8: ASCED FIELD OF EDUCATION (ASCED) - Australian Standard Classification of Education
+#  Uses 4-digit narrow field codes as primary keys
 # ═══════════════════════════════════════════════════════════════════════════
 
-INDUSTRY_DOMAIN_FACET = {
-    "facet_id": "IND",
-    "facet_name": "Industry Domain",
-    "description": "Industry sectors where this skill is applicable (multiple allowed)",
+ASCED_FIELD_OF_EDUCATION_FACET = {
+    "facet_id": "ASCED",
+    "facet_name": "ASCED Field of Education",
+    "description": "Australian Standard Classification of Education (ASCED) - Field of Education classification at the narrow field (4-digit) level",
+    "standard": "Australian Standard Classification of Education (ASCED) 2001",
+    "reference": "https://www.abs.gov.au/statistics/classifications/australian-standard-classification-education-asced/latest-release",
     "multi_value": True,
     "values": {
+        # ─────────────────────────────────────────────────────────────────────
+        # 01 - Natural and Physical Sciences
+        # ─────────────────────────────────────────────────────────────────────
         "0101": {
-        "code": "0101",
-        "name": "Mathematical Sciences",
-        "description": "Mathematical Sciences disciplines covering key subfields such as Mathematics, and Statistics.",
-        "keywords": [
-            "Mathematical Sciences, n.e.c.",
-            "Mathematics",
-            "Statistics"
-        ],
-        "training_packages": []
+            "code": "0101",
+            "name": "Mathematical Sciences",
+            "broad_field_code": "01",
+            "broad_field_name": "Natural and Physical Sciences",
+            "description": "Mathematics, statistics, operations research, and actuarial science. Includes algebra, calculus, geometry, probability, statistical analysis, and mathematical modeling.",
+            "keywords": ["mathematics", "statistics", "algebra", "calculus", "geometry", "probability", "statistical analysis", 
+                        "mathematical modeling", "operations research", "actuarial", "quantitative analysis", "numerical methods",
+                        "data analysis", "mathematical computation", "applied mathematics"]
         },
         "0103": {
-        "code": "0103",
-        "name": "Physics and Astronomy",
-        "description": "Physics and Astronomy disciplines covering key subfields such as Astronomy, and Physics.",
-        "keywords": [
-            "Astronomy",
-            "Physics"
-        ],
-        "training_packages": []
+            "code": "0103",
+            "name": "Physics and Astronomy",
+            "broad_field_code": "01",
+            "broad_field_name": "Natural and Physical Sciences",
+            "description": "Physics, astrophysics, and astronomy. Includes mechanics, thermodynamics, electromagnetism, optics, quantum physics, and astronomical observation.",
+            "keywords": ["physics", "astronomy", "astrophysics", "mechanics", "thermodynamics", "electromagnetism", "optics",
+                        "quantum", "nuclear", "particle physics", "cosmology", "spectroscopy", "radiation", "acoustics"]
         },
         "0105": {
-        "code": "0105",
-        "name": "Chemical Sciences",
-        "description": "Chemical Sciences disciplines covering key subfields such as Inorganic Chemistry, and Organic Chemistry.",
-        "keywords": [
-            "Chemical Sciences, n.e.c.",
-            "Inorganic Chemistry",
-            "Organic Chemistry"
-        ],
-        "training_packages": []
+            "code": "0105",
+            "name": "Chemical Sciences",
+            "broad_field_code": "01",
+            "broad_field_name": "Natural and Physical Sciences",
+            "description": "Chemistry and chemical sciences. Includes organic, inorganic, analytical, physical chemistry, biochemistry, and materials chemistry.",
+            "keywords": ["chemistry", "chemical", "organic chemistry", "inorganic chemistry", "analytical chemistry", "biochemistry",
+                        "materials chemistry", "polymer", "pharmaceutical chemistry", "laboratory", "compounds", "reactions",
+                        "synthesis", "chromatography", "spectroscopy"]
         },
         "0107": {
-        "code": "0107",
-        "name": "Earth Sciences",
-        "description": "Earth Sciences disciplines covering key subfields such as Atmospheric Sciences, Geochemistry, and Geology.",
-        "keywords": [
-            "Atmospheric Sciences",
-            "Earth Sciences, n.e.c.",
-            "Geochemistry",
-            "Geology",
-            "Geophysics",
-            "Hydrology",
-            "Oceanography",
-            "Soil Science"
-        ],
-        "training_packages": []
+            "code": "0107",
+            "name": "Earth Sciences",
+            "broad_field_code": "01",
+            "broad_field_name": "Natural and Physical Sciences",
+            "description": "Geology, geophysics, geochemistry, oceanography, and atmospheric sciences. Includes soil science, hydrology, and climate science.",
+            "keywords": ["geology", "geophysics", "geochemistry", "oceanography", "atmospheric", "meteorology", "soil science",
+                        "hydrology", "climate", "seismology", "mineralogy", "paleontology", "sedimentology", "earth science"]
         },
         "0109": {
-        "code": "0109",
-        "name": "Biological Sciences",
-        "description": "Biological Sciences disciplines covering key subfields such as Biochemistry and Cell Biology, Botany, and Ecology and Evolution.",
-        "keywords": [
-            "Biochemistry and Cell Biology",
-            "Biological Sciences, n.e.c.",
-            "Botany",
-            "Ecology and Evolution",
-            "Genetics",
-            "Human Biology",
-            "Marine Science",
-            "Microbiology",
-            "Zoology"
-        ],
-        "training_packages": []
+            "code": "0109",
+            "name": "Biological Sciences",
+            "broad_field_code": "01",
+            "broad_field_name": "Natural and Physical Sciences",
+            "description": "Biology, biochemistry, microbiology, genetics, ecology, and zoology. Includes botany, marine biology, biotechnology, and pharmacology.",
+            "keywords": ["biology", "biochemistry", "microbiology", "genetics", "ecology", "zoology", "botany", "marine biology",
+                        "biotechnology", "pharmacology", "molecular biology", "cell biology", "immunology", "virology",
+                        "physiology", "bioinformatics", "laboratory", "specimen", "organism"]
         },
         "0199": {
-        "code": "0199",
-        "name": "Other Natural and Physical Sciences",
-        "description": "Other Natural and Physical Sciences disciplines covering key subfields such as Food Science and Biotechnology, Forensic Science, and Laboratory Technology.",
-        "keywords": [
-            "Food Science and Biotechnology",
-            "Forensic Science",
-            "Laboratory Technology",
-            "Medical Science",
-            "Natural and Physical Sciences, n.e.c.",
-            "Pharmacology"
-        ],
-        "training_packages": []
+            "code": "0199",
+            "name": "Other Natural and Physical Sciences",
+            "broad_field_code": "01",
+            "broad_field_name": "Natural and Physical Sciences",
+            "description": "Natural and physical sciences not elsewhere classified. Includes forensic science, laboratory technology, and interdisciplinary natural sciences.",
+            "keywords": ["forensic science", "laboratory technology", "natural sciences", "scientific research", "laboratory skills",
+                        "scientific methods", "experimental", "research methods", "science technology"]
         },
+        
+        # ─────────────────────────────────────────────────────────────────────
+        # 02 - Information Technology
+        # ─────────────────────────────────────────────────────────────────────
         "0201": {
-        "code": "0201",
-        "name": "Computer Science",
-        "description": "Computer Science disciplines covering key subfields such as Algorithms, Artificial Intelligence, and Compiler Construction.",
-        "keywords": [
-            "Algorithms",
-            "Artificial Intelligence",
-            "Compiler Construction",
-            "Computational Theory",
-            "Computer Graphics",
-            "Computer Science, n.e.c.",
-            "Data Structures",
-            "Formal Language Theory",
-            "Networks and Communications",
-            "Operating Systems",
-            "Programming"
-        ],
-        "training_packages": []
+            "code": "0201",
+            "name": "Computer Science",
+            "broad_field_code": "02",
+            "broad_field_name": "Information Technology",
+            "description": "Computer science, programming, software engineering, and computer systems. Includes algorithms, data structures, artificial intelligence, and computer architecture.",
+            "keywords": ["computer science", "programming", "software engineering", "algorithms", "data structures", "coding",
+                        "software development", "artificial intelligence", "machine learning", "computer architecture",
+                        "operating systems", "compilers", "python", "java", "javascript", "C++", "developer"]
         },
         "0203": {
-        "code": "0203",
-        "name": "Information Systems",
-        "description": "Information Systems disciplines covering key subfields such as Conceptual Modelling, Database Management, and Decision Support Systems.",
-        "keywords": [
-            "Conceptual Modelling",
-            "Database Management",
-            "Decision Support Systems",
-            "Information Systems, n.e.c.",
-            "Systems Analysis and Design"
-        ],
-        "training_packages": []
+            "code": "0203",
+            "name": "Information Systems",
+            "broad_field_code": "02",
+            "broad_field_name": "Information Technology",
+            "description": "Information systems, database management, systems analysis, and IT management. Includes business systems, enterprise architecture, and data management.",
+            "keywords": ["information systems", "database", "systems analysis", "IT management", "business systems", "SQL",
+                        "enterprise architecture", "data management", "systems administration", "network administration",
+                        "IT support", "helpdesk", "systems integration", "ERP", "CRM", "business intelligence"]
         },
         "0299": {
-        "code": "0299",
-        "name": "Other Information Technology",
-        "description": "Other Information Technology disciplines covering key subfields such as .",
-        "keywords": [
-            "Information Technology, n.e.c.",
-            "Security Science"
-        ],
-        "training_packages": []
+            "code": "0299",
+            "name": "Other Information Technology",
+            "broad_field_code": "02",
+            "broad_field_name": "Information Technology",
+            "description": "Information technology not elsewhere classified. Includes cybersecurity, networking, cloud computing, and emerging technologies.",
+            "keywords": ["cybersecurity", "networking", "cloud computing", "IT security", "network security", "penetration testing",
+                        "digital forensics", "IT infrastructure", "DevOps", "web development", "mobile development",
+                        "blockchain", "IoT", "internet of things"]
         },
+        
+        # ─────────────────────────────────────────────────────────────────────
+        # 03 - Engineering and Related Technologies
+        # ─────────────────────────────────────────────────────────────────────
         "0301": {
-        "code": "0301",
-        "name": "Manufacturing Engineering and Technology",
-        "description": "Manufacturing Engineering and Technology disciplines covering key subfields such as Cabinet Making, Footwear Making, and Furniture Polishing.",
-        "keywords": [
-            "Cabinet Making",
-            "Footwear Making",
-            "Furniture Polishing",
-            "Furniture Upholstery and Renovation",
-            "Garment Making",
-            "Manufacturing Engineering",
-            "Manufacturing Engineering and Technology, n.e.c.",
-            "Printing",
-            "Textile Making",
-            "Wood Machining and Turning"
-        ],
-        "training_packages": []
+            "code": "0301",
+            "name": "Manufacturing Engineering and Technology",
+            "broad_field_code": "03",
+            "broad_field_name": "Engineering and Related Technologies",
+            "description": "Manufacturing engineering, industrial technology, and production systems. Includes CNC machining, fabrication, welding, and manufacturing processes.",
+            "keywords": ["manufacturing", "CNC", "machining", "fabrication", "welding", "sheet metal", "tool making",
+                        "die making", "production", "industrial technology", "CAD/CAM", "precision engineering",
+                        "metalwork", "turning", "milling", "grinding", "casting", "forging"]
         },
         "0303": {
-        "code": "0303",
-        "name": "Process and Resources Engineering",
-        "description": "Process and Resources Engineering disciplines covering key subfields such as Chemical Engineering, Food Processing Technology, and Materials Engineering.",
-        "keywords": [
-            "Chemical Engineering",
-            "Food Processing Technology",
-            "Materials Engineering",
-            "Mining Engineering",
-            "Process and Resources Engineering, n.e.c."
-        ],
-        "training_packages": []
+            "code": "0303",
+            "name": "Process and Resources Engineering",
+            "broad_field_code": "03",
+            "broad_field_name": "Engineering and Related Technologies",
+            "description": "Chemical engineering, petroleum engineering, mining engineering, and materials engineering. Includes process control and resource extraction.",
+            "keywords": ["chemical engineering", "petroleum", "mining engineering", "materials engineering", "process control",
+                        "resource extraction", "oil and gas", "refinery", "metallurgy", "minerals processing",
+                        "pipeline", "drilling", "extraction", "smelting"]
         },
         "0305": {
-        "code": "0305",
-        "name": "Automotive Engineering and Technology",
-        "description": "Automotive Engineering and Technology disciplines covering key subfields such as Automotive Body Construction, Automotive Electrics and Electronics, and Automotive Engineering.",
-        "keywords": [
-            "Automotive Body Construction",
-            "Automotive Electrics and Electronics",
-            "Automotive Engineering",
-            "Automotive Engineering and Technology, n.e.c.",
-            "Automotive Vehicle Operations",
-            "Automotive Vehicle Refinishing",
-            "Panel Beating",
-            "Upholstery and Vehicle Trimming",
-            "Vehicle Mechanics"
-        ],
-        "training_packages": []
+            "code": "0305",
+            "name": "Automotive Engineering and Technology",
+            "broad_field_code": "03",
+            "broad_field_name": "Engineering and Related Technologies",
+            "description": "Automotive engineering, vehicle mechanics, and automotive technology. Includes light vehicle, heavy vehicle, motorcycle, and marine mechanics.",
+            "keywords": ["automotive", "vehicle", "mechanic", "car", "truck", "motorcycle", "diesel", "engine",
+                        "transmission", "brake", "suspension", "electrical systems", "diagnostic", "service technician",
+                        "auto electrician", "panel beating", "spray painting", "heavy vehicle"]
         },
         "0307": {
-        "code": "0307",
-        "name": "Mechanical and Industrial Engineering and Technology",
-        "description": "Mechanical and Industrial Engineering and Technology disciplines covering key subfields such as Boilermaking and Welding, Industrial Engineering, and Mechanical Engineering.",
-        "keywords": [
-            "Boilermaking and Welding",
-            "Industrial Engineering",
-            "Mechanical Engineering",
-            "Mechanical and Industrial Engineering and Technology, n.e.c.",
-            "Metal Casting and Patternmaking",
-            "Metal Fitting, Turning and Machining",
-            "Plant and Machine Operations",
-            "Precision Metalworking",
-            "Sheetmetal Working",
-            "Toolmaking"
-        ],
-        "training_packages": []
+            "code": "0307",
+            "name": "Mechanical and Industrial Engineering and Technology",
+            "broad_field_code": "03",
+            "broad_field_name": "Engineering and Related Technologies",
+            "description": "Mechanical engineering, industrial engineering, and maintenance engineering. Includes HVAC, refrigeration, and plant maintenance.",
+            "keywords": ["mechanical engineering", "industrial engineering", "maintenance", "HVAC", "refrigeration",
+                        "air conditioning", "plant maintenance", "hydraulics", "pneumatics", "pumps", "compressors",
+                        "industrial maintenance", "fitter", "machinist", "millwright", "mechanical systems"]
         },
         "0309": {
-        "code": "0309",
-        "name": "Civil Engineering",
-        "description": "Civil Engineering disciplines covering key subfields such as Building Services Engineering, Construction Engineering, and Geotechnical Engineering.",
-        "keywords": [
-            "Building Services Engineering",
-            "Civil Engineering, n.e.c.",
-            "Construction Engineering",
-            "Geotechnical Engineering",
-            "Ocean Engineering",
-            "Structural Engineering",
-            "Transport Engineering",
-            "Water and Sanitary Engineering"
-        ],
-        "training_packages": []
+            "code": "0309",
+            "name": "Civil Engineering",
+            "broad_field_code": "03",
+            "broad_field_name": "Engineering and Related Technologies",
+            "description": "Civil engineering, structural engineering, and construction engineering. Includes roads, bridges, dams, and infrastructure development.",
+            "keywords": ["civil engineering", "structural engineering", "construction engineering", "roads", "bridges", "dams",
+                        "infrastructure", "concrete", "steel structures", "geotechnical", "water resources",
+                        "transportation engineering", "surveying", "construction management"]
         },
         "0311": {
-        "code": "0311",
-        "name": "Geomatic Engineering",
-        "description": "Geomatic Engineering disciplines covering key subfields such as Mapping Science, and Surveying.",
-        "keywords": [
-            "Geomatic Engineering, n.e.c.",
-            "Mapping Science",
-            "Surveying"
-        ],
-        "training_packages": []
+            "code": "0311",
+            "name": "Geomatic Engineering",
+            "broad_field_code": "03",
+            "broad_field_name": "Engineering and Related Technologies",
+            "description": "Surveying, mapping, cartography, and geographic information systems. Includes land surveying, cadastral surveying, and spatial science.",
+            "keywords": ["surveying", "mapping", "cartography", "GIS", "geographic information systems", "land surveying",
+                        "cadastral", "spatial science", "remote sensing", "photogrammetry", "GPS", "geodesy",
+                        "topographic", "survey drafting"]
         },
         "0313": {
-        "code": "0313",
-        "name": "Electrical and Electronic Engineering and Technology",
-        "description": "Electrical and Electronic Engineering and Technology disciplines covering key subfields such as Communications Equipment Installation and Maintenance and Communications Technologies.",
-        "keywords": [
-            "Communications Equipment Installation and Maintenance",
-            "Communications Technologies",
-            "Computer Engineering",
-            "Electrical Engineering",
-            "Electrical Fitting, Electrical Mechanics",
-            "Electrical and Electronic Engineering and Technology, n.e.c.",
-            "Electronic Engineering",
-            "Electronic Equipment Servicing",
-            "Powerline Installation and Maintenance",
-            "Refrigeration and Air Conditioning Mechanics"
-        ],
-        "training_packages": []
+            "code": "0313",
+            "name": "Electrical and Electronic Engineering and Technology",
+            "broad_field_code": "03",
+            "broad_field_name": "Engineering and Related Technologies",
+            "description": "Electrical engineering, electronics, telecommunications, and computer engineering. Includes power systems, instrumentation, and control systems.",
+            "keywords": ["electrical engineering", "electronics", "telecommunications", "power systems", "instrumentation",
+                        "control systems", "electrician", "electrical installation", "wiring", "switchboard",
+                        "PLC", "automation", "robotics", "electronic repair", "circuit", "microcontroller"]
         },
         "0315": {
-        "code": "0315",
-        "name": "Aerospace Engineering and Technology",
-        "description": "Aerospace Engineering and Technology disciplines covering key subfields such as Aerospace Engineering, Air Traffic Control, and Aircraft Maintenance Engineering.",
-        "keywords": [
-            "Aerospace Engineering",
-            "Aerospace Engineering and Technology, n.e.c.",
-            "Air Traffic Control",
-            "Aircraft Maintenance Engineering",
-            "Aircraft Operation"
-        ],
-        "training_packages": []
+            "code": "0315",
+            "name": "Aerospace Engineering and Technology",
+            "broad_field_code": "03",
+            "broad_field_name": "Engineering and Related Technologies",
+            "description": "Aerospace engineering, aircraft maintenance, and aviation technology. Includes avionics, aircraft structures, and propulsion systems.",
+            "keywords": ["aerospace", "aircraft", "aviation", "avionics", "aircraft maintenance", "propulsion",
+                        "aeronautics", "flight systems", "aircraft structures", "composites", "aerospace manufacturing",
+                        "drone", "UAV", "helicopter", "jet engine"]
         },
         "0317": {
-        "code": "0317",
-        "name": "Maritime Engineering and Technology",
-        "description": "Maritime Engineering and Technology disciplines covering key subfields such as Marine Construction, Marine Craft Operation, and Maritime Engineering.",
-        "keywords": [
-            "Marine Construction",
-            "Marine Craft Operation",
-            "Maritime Engineering",
-            "Maritime Engineering and Technology, n.e.c."
-        ],
-        "training_packages": []
+            "code": "0317",
+            "name": "Maritime Engineering and Technology",
+            "broad_field_code": "03",
+            "broad_field_name": "Engineering and Related Technologies",
+            "description": "Marine engineering, naval architecture, and maritime technology. Includes ship operations, marine mechanics, and offshore systems.",
+            "keywords": ["marine engineering", "naval architecture", "maritime", "ship", "vessel", "marine mechanics",
+                        "offshore", "boat building", "marine systems", "deck operations", "marine diesel",
+                        "port operations", "maritime logistics"]
         },
         "0399": {
-        "code": "0399",
-        "name": "Other Engineering and Related Technologies",
-        "description": "Other Engineering and Related Technologies disciplines covering key subfields such as Biomedical Engineering, Cleaning, and Environmental Engineering.",
-        "keywords": [
-            "Biomedical Engineering",
-            "Cleaning",
-            "Engineering and Related Technologies, n.e.c.",
-            "Environmental Engineering",
-            "Fire Technology",
-            "Rail Operations"
-        ],
-        "training_packages": []
+            "code": "0399",
+            "name": "Other Engineering and Related Technologies",
+            "broad_field_code": "03",
+            "broad_field_name": "Engineering and Related Technologies",
+            "description": "Engineering and technology not elsewhere classified. Includes biomedical engineering, environmental engineering, and emerging engineering fields.",
+            "keywords": ["biomedical engineering", "environmental engineering", "fire engineering", "safety engineering",
+                        "systems engineering", "engineering management", "quality engineering", "renewable energy",
+                        "sustainable engineering", "engineering technology"]
         },
+        
+        # ─────────────────────────────────────────────────────────────────────
+        # 04 - Architecture and Building
+        # ─────────────────────────────────────────────────────────────────────
         "0401": {
-        "code": "0401",
-        "name": "Architecture and Urban Environment",
-        "description": "Architecture and Urban Environment disciplines covering key subfields such as Architecture, Interior and Environmental Design, and Landscape Architecture.",
-        "keywords": [
-            "Architecture",
-            "Architecture and Urban Environment, n.e.c.",
-            "Interior and Environmental Design",
-            "Landscape Architecture",
-            "Urban Design and Regional Planning"
-        ],
-        "training_packages": []
+            "code": "0401",
+            "name": "Architecture and Urban Environment",
+            "broad_field_code": "04",
+            "broad_field_name": "Architecture and Building",
+            "description": "Architecture, landscape architecture, urban design, and interior architecture. Includes building design, environmental design, and town planning.",
+            "keywords": ["architecture", "landscape architecture", "urban design", "interior architecture", "building design",
+                        "environmental design", "town planning", "urban planning", "architectural drafting",
+                        "sustainable design", "heritage conservation", "landscape design", "CAD"]
         },
         "0403": {
-        "code": "0403",
-        "name": "Building",
-        "description": "Building disciplines covering key subfields such as Bricklaying and Stonemasonry, Building Construction Economics, and Building Construction Management.",
-        "keywords": [
-            "Bricklaying and Stonemasonry",
-            "Building Construction Economics",
-            "Building Construction Management",
-            "Building Science and Technology",
-            "Building Surveying",
-            "Building, n.e.c.",
-            "Carpentry and Joinery",
-            "Ceiling, Wall and Floor Fixing",
-            "Floor Coverings",
-            "Furnishing Installation",
-            "Glazing",
-            "Painting, Decorating and Sign Writing",
-            "Plastering",
-            "Plumbing",
-            "Roof Fixing",
-            "Scaffolding and Rigging"
-        ],
-        "training_packages": []
+            "code": "0403",
+            "name": "Building",
+            "broad_field_code": "04",
+            "broad_field_name": "Architecture and Building",
+            "description": "Building and construction trades. Includes carpentry, plumbing, bricklaying, plastering, painting, tiling, and construction management.",
+            "keywords": ["building", "construction", "carpentry", "joinery", "plumbing", "gasfitting", "bricklaying",
+                        "plastering", "painting", "decorating", "tiling", "roofing", "glazing", "scaffolding",
+                        "concreting", "formwork", "flooring", "ceiling fixing", "wall and floor tiling",
+                        "building inspection", "site supervision", "construction management"]
         },
+        
+        # ─────────────────────────────────────────────────────────────────────
+        # 05 - Agriculture, Environmental and Related Studies
+        # ─────────────────────────────────────────────────────────────────────
         "0501": {
-        "code": "0501",
-        "name": "Agriculture",
-        "description": "Agriculture disciplines covering key subfields such as Agricultural Science, Animal Husbandry, and Wool Science.",
-        "keywords": [
-            "Agricultural Science",
-            "Agriculture, n.e.c.",
-            "Animal Husbandry",
-            "Wool Science"
-        ],
-        "training_packages": []
+            "code": "0501",
+            "name": "Agriculture",
+            "broad_field_code": "05",
+            "broad_field_name": "Agriculture, Environmental and Related Studies",
+            "description": "Agriculture, farming, animal husbandry, and agricultural science. Includes crop production, livestock management, and agricultural technology.",
+            "keywords": ["agriculture", "farming", "animal husbandry", "livestock", "crop production", "agronomy",
+                        "dairy farming", "beef cattle", "sheep", "poultry", "pig farming", "grain",
+                        "irrigation", "agricultural machinery", "farm management", "agricultural science"]
         },
         "0503": {
-        "code": "0503",
-        "name": "Horticulture and Viticulture",
-        "description": "Horticulture and Viticulture disciplines covering key subfields such as Horticulture, and Viticulture.",
-        "keywords": [
-            "Horticulture",
-            "Viticulture"
-        ],
-        "training_packages": []
+            "code": "0503",
+            "name": "Horticulture and Viticulture",
+            "broad_field_code": "05",
+            "broad_field_name": "Agriculture, Environmental and Related Studies",
+            "description": "Horticulture, viticulture, floristry, and turf management. Includes nursery, landscaping, parks and gardens, and wine production.",
+            "keywords": ["horticulture", "viticulture", "floristry", "turf management", "nursery", "landscaping",
+                        "parks and gardens", "wine production", "arboriculture", "greenkeeping", "garden design",
+                        "plant propagation", "pest management", "permaculture", "pruning", "irrigation"]
         },
         "0505": {
-        "code": "0505",
-        "name": "Forestry Studies",
-        "description": "Forestry Studies disciplines covering key subfields such as . Emphasises theory, practice, and industry-relevant applications.",
-        "keywords": [
-            "Forestry Studies"
-        ],
-        "training_packages": []
+            "code": "0505",
+            "name": "Forestry Studies",
+            "broad_field_code": "05",
+            "broad_field_name": "Agriculture, Environmental and Related Studies",
+            "description": "Forestry, forest management, and timber production. Includes silviculture, forest harvesting, and forest conservation.",
+            "keywords": ["forestry", "forest management", "timber", "silviculture", "forest harvesting", "logging",
+                        "sawmilling", "wood processing", "forest conservation", "plantation", "tree felling",
+                        "chainsaw", "forest operations"]
         },
         "0507": {
-        "code": "0507",
-        "name": "Fisheries Studies",
-        "description": "Fisheries Studies disciplines covering key subfields such as . Emphasises theory, practice, and industry-relevant applications.",
-        "keywords": [
-            "Aquaculture",
-            "Fisheries Studies, n.e.c."
-        ],
-        "training_packages": []
+            "code": "0507",
+            "name": "Fisheries Studies",
+            "broad_field_code": "05",
+            "broad_field_name": "Agriculture, Environmental and Related Studies",
+            "description": "Fisheries, aquaculture, and seafood industry. Includes fish farming, commercial fishing, and seafood processing.",
+            "keywords": ["fisheries", "aquaculture", "seafood", "fish farming", "commercial fishing", "seafood processing",
+                        "oyster farming", "prawn farming", "marine aquaculture", "hatchery", "fish health",
+                        "fishing operations", "deck hand"]
         },
         "0509": {
-        "code": "0509",
-        "name": "Environmental Studies",
-        "description": "Environmental Studies disciplines covering key subfields such as . Emphasises theory, practice, and industry-relevant applications.",
-        "keywords": [
-            "Environmental Studies, n.e.c.",
-            "Land, Parks and Wildlife Management"
-        ],
-        "training_packages": []
+            "code": "0509",
+            "name": "Environmental Studies",
+            "broad_field_code": "05",
+            "broad_field_name": "Agriculture, Environmental and Related Studies",
+            "description": "Environmental science, conservation, land management, and sustainability. Includes natural resource management and environmental protection.",
+            "keywords": ["environmental", "conservation", "land management", "sustainability", "natural resource management",
+                        "environmental protection", "ecology", "wildlife management", "park ranger", "land care",
+                        "environmental monitoring", "waste management", "recycling", "renewable energy", "carbon"]
         },
         "0599": {
-        "code": "0599",
-        "name": "Other Agriculture, Environmental and Related Studies",
-        "description": "Other Agriculture, Environmental and Related Studies disciplines covering key subfields such as .",
-        "keywords": [
-            "Agriculture, Environmental and Related Studies, n.e.c.",
-            "Pest and Weed Control"
-        ],
-        "training_packages": []
+            "code": "0599",
+            "name": "Other Agriculture, Environmental and Related Studies",
+            "broad_field_code": "05",
+            "broad_field_name": "Agriculture, Environmental and Related Studies",
+            "description": "Agriculture and environmental studies not elsewhere classified. Includes pest control, animal control, and rural operations.",
+            "keywords": ["pest control", "animal control", "rural operations", "agricultural support", "stock handling",
+                        "woolclassing", "shearing", "fencing", "rural skills", "agricultural contracting"]
         },
+        
+        # ─────────────────────────────────────────────────────────────────────
+        # 06 - Health
+        # ─────────────────────────────────────────────────────────────────────
         "0601": {
-        "code": "0601",
-        "name": "Medical Studies",
-        "description": "Medical Studies disciplines covering key subfields such as Anaesthesiology, General Medicine, and General Practice.",
-        "keywords": [
-            "Anaesthesiology",
-            "General Medicine",
-            "General Practice",
-            "Internal Medicine",
-            "Medical Studies, n.e.c.",
-            "Obstetrics and Gynaecology",
-            "Paediatrics",
-            "Pathology",
-            "Psychiatry",
-            "Radiology",
-            "Surgery"
-        ],
-        "training_packages": []
+            "code": "0601",
+            "name": "Medical Studies",
+            "broad_field_code": "06",
+            "broad_field_name": "Health",
+            "description": "Medicine, surgery, and medical sciences. Includes general medicine, pathology, medical imaging, and specialist medical fields.",
+            "keywords": ["medicine", "medical", "surgery", "pathology", "medical imaging", "radiology", "anaesthesia",
+                        "emergency medicine", "general practice", "pediatrics", "psychiatry", "cardiology",
+                        "oncology", "clinical", "diagnosis", "treatment"]
         },
         "0603": {
-        "code": "0603",
-        "name": "Nursing",
-        "description": "Nursing disciplines covering key subfields such as Aged Care Nursing, Community Nursing, and Critical Care Nursing.",
-        "keywords": [
-            "Aged Care Nursing",
-            "Community Nursing",
-            "Critical Care Nursing",
-            "General Nursing",
-            "Mental Health Nursing",
-            "Midwifery",
-            "Mothercraft Nursing and Family and Child Health Nursing",
-            "Nursing, n.e.c.",
-            "Palliative Care Nursing"
-        ],
-        "training_packages": []
+            "code": "0603",
+            "name": "Nursing",
+            "broad_field_code": "06",
+            "broad_field_name": "Health",
+            "description": "Nursing, midwifery, and nursing practice. Includes registered nursing, enrolled nursing, and specialist nursing fields.",
+            "keywords": ["nursing", "nurse", "midwifery", "enrolled nursing", "registered nurse", "patient care",
+                        "clinical nursing", "aged care nursing", "mental health nursing", "community nursing",
+                        "nursing assessment", "medication administration", "wound care"]
         },
         "0605": {
-        "code": "0605",
-        "name": "Pharmacy",
-        "description": "Pharmacy disciplines covering key subfields such as . Emphasises theory, practice, and industry-relevant applications.",
-        "keywords": [
-            "Pharmacy"
-        ],
-        "training_packages": []
+            "code": "0605",
+            "name": "Pharmacy",
+            "broad_field_code": "06",
+            "broad_field_name": "Health",
+            "description": "Pharmacy and pharmaceutical science. Includes community pharmacy, hospital pharmacy, and pharmaceutical manufacturing.",
+            "keywords": ["pharmacy", "pharmaceutical", "pharmacist", "dispensing", "medication", "drug",
+                        "pharmaceutical manufacturing", "compounding", "pharmacy assistant", "prescription"]
         },
         "0607": {
-        "code": "0607",
-        "name": "Dental Studies",
-        "description": "Dental Studies disciplines covering key subfields such as Dental Assisting, Dental Technology, and Dentistry.",
-        "keywords": [
-            "Dental Assisting",
-            "Dental Studies, n.e.c.",
-            "Dental Technology",
-            "Dentistry"
-        ],
-        "training_packages": []
+            "code": "0607",
+            "name": "Dental Studies",
+            "broad_field_code": "06",
+            "broad_field_name": "Health",
+            "description": "Dentistry, dental technology, and oral health. Includes dental assisting, dental hygiene, and dental prosthetics.",
+            "keywords": ["dental", "dentistry", "oral health", "dental assistant", "dental hygienist", "dental technician",
+                        "dental prosthetics", "orthodontics", "periodontics", "dental surgery", "teeth", "oral care"]
         },
         "0609": {
-        "code": "0609",
-        "name": "Optical Science",
-        "description": "Optical Science disciplines covering key subfields such as Optical Technology, and Optometry.",
-        "keywords": [
-            "Optical Science, n.e.c.",
-            "Optical Technology",
-            "Optometry"
-        ],
-        "training_packages": []
+            "code": "0609",
+            "name": "Optical Science",
+            "broad_field_code": "06",
+            "broad_field_name": "Health",
+            "description": "Optometry, optical dispensing, and optical science. Includes eye care, vision testing, and spectacle making.",
+            "keywords": ["optometry", "optical", "optician", "dispensing optician", "eye care", "vision",
+                        "spectacles", "glasses", "contact lenses", "optical dispensing", "eye examination"]
         },
         "0611": {
-        "code": "0611",
-        "name": "Veterinary Studies",
-        "description": "Veterinary Studies disciplines covering key subfields such as Veterinary Assisting, and Veterinary Science.",
-        "keywords": [
-            "Veterinary Assisting",
-            "Veterinary Science",
-            "Veterinary Studies, n.e.c."
-        ],
-        "training_packages": []
+            "code": "0611",
+            "name": "Veterinary Studies",
+            "broad_field_code": "06",
+            "broad_field_name": "Health",
+            "description": "Veterinary science and animal health. Includes veterinary nursing, animal care, and veterinary technology.",
+            "keywords": ["veterinary", "vet", "animal health", "veterinary nursing", "animal care", "vet nurse",
+                        "animal surgery", "animal medicine", "pet care", "livestock health", "animal handling",
+                        "animal welfare", "dog", "cat", "horse", "equine"]
         },
         "0613": {
-        "code": "0613",
-        "name": "Public Health",
-        "description": "Public Health disciplines covering key subfields such as Community Health, Environmental Health, and Epidemiology.",
-        "keywords": [
-            "Community Health",
-            "Environmental Health",
-            "Epidemiology",
-            "Health Promotion",
-            "Indigenous Health",
-            "Occupational Health and Safety",
-            "Public Health, n.e.c."
-        ],
-        "training_packages": []
+            "code": "0613",
+            "name": "Public Health",
+            "broad_field_code": "06",
+            "broad_field_name": "Health",
+            "description": "Public health, epidemiology, and health promotion. Includes occupational health, indigenous health, and community health.",
+            "keywords": ["public health", "epidemiology", "health promotion", "occupational health", "indigenous health",
+                        "community health", "health policy", "disease prevention", "health education",
+                        "population health", "health services", "health administration"]
         },
         "0615": {
-        "code": "0615",
-        "name": "Radiography",
-        "description": "Radiography disciplines covering key subfields such as . Emphasises theory, practice, and industry-relevant applications.",
-        "keywords": [
-            "Radiography"
-        ],
-        "training_packages": []
+            "code": "0615",
+            "name": "Radiography",
+            "broad_field_code": "06",
+            "broad_field_name": "Health",
+            "description": "Radiography, medical imaging, and radiation therapy. Includes diagnostic imaging, ultrasound, and nuclear medicine.",
+            "keywords": ["radiography", "medical imaging", "radiation therapy", "X-ray", "CT scan", "MRI",
+                        "ultrasound", "nuclear medicine", "sonography", "diagnostic imaging", "radiographer"]
         },
         "0617": {
-        "code": "0617",
-        "name": "Rehabilitation Therapies",
-        "description": "Rehabilitation Therapies disciplines covering key subfields such as Audiology, Chiropractic and Osteopathy, and Massage Therapy.",
-        "keywords": [
-            "Audiology",
-            "Chiropractic and Osteopathy",
-            "Massage Therapy",
-            "Occupational Therapy",
-            "Physiotherapy",
-            "Podiatry",
-            "Rehabilitation Therapies, n.e.c.",
-            "Speech Pathology"
-        ],
-        "training_packages": []
+            "code": "0617",
+            "name": "Rehabilitation Therapies",
+            "broad_field_code": "06",
+            "broad_field_name": "Health",
+            "description": "Physiotherapy, occupational therapy, speech pathology, and rehabilitation. Includes exercise physiology and chiropractic.",
+            "keywords": ["physiotherapy", "occupational therapy", "speech pathology", "rehabilitation", "exercise physiology",
+                        "chiropractic", "podiatry", "orthotics", "prosthetics", "physical therapy", "therapy assistant",
+                        "mobility", "functional assessment", "therapeutic exercise"]
         },
         "0619": {
-        "code": "0619",
-        "name": "Complementary Therapies",
-        "description": "Complementary Therapies disciplines covering key subfields such as Acupuncture, Naturopathy, and Traditional Chinese Medicine.",
-        "keywords": [
-            "Acupuncture",
-            "Complementary Therapies, n.e.c.",
-            "Naturopathy",
-            "Traditional Chinese Medicine"
-        ],
-        "training_packages": []
+            "code": "0619",
+            "name": "Complementary Therapies",
+            "broad_field_code": "06",
+            "broad_field_name": "Health",
+            "description": "Complementary and alternative medicine. Includes massage therapy, naturopathy, acupuncture, and traditional Chinese medicine.",
+            "keywords": ["complementary therapy", "massage therapy", "naturopathy", "acupuncture", "traditional Chinese medicine",
+                        "aromatherapy", "reflexology", "remedial massage", "herbal medicine", "homeopathy",
+                        "myotherapy", "Bowen therapy", "kinesiology"]
         },
         "0699": {
-        "code": "0699",
-        "name": "Other Health",
-        "description": "Other Health disciplines covering key subfields such as First Aid, Human Movement, and Nutrition and Dietetics.",
-        "keywords": [
-            "First Aid",
-            "Health, n.e.c.",
-            "Human Movement",
-            "Nutrition and Dietetics",
-            "Paramedical Studies"
-        ],
-        "training_packages": []
+            "code": "0699",
+            "name": "Other Health",
+            "broad_field_code": "06",
+            "broad_field_name": "Health",
+            "description": "Health fields not elsewhere classified. Includes nutrition, first aid, ambulance/paramedic, and health support services.",
+            "keywords": ["nutrition", "dietetics", "first aid", "paramedic", "ambulance", "health support",
+                        "patient transport", "sterilisation", "health assistant", "pathology collection",
+                        "medical administration", "health information", "allied health assistant"]
         },
+        
+        # ─────────────────────────────────────────────────────────────────────
+        # 07 - Education
+        # ─────────────────────────────────────────────────────────────────────
         "0701": {
-        "code": "0701",
-        "name": "Teacher Education",
-        "description": "Teacher Education disciplines covering key subfields such as English as a Second Language Teaching and Nursing Education Teacher Training.",
-        "keywords": [
-            "English as a Second Language Teaching",
-            "Nursing Education Teacher Training",
-            "Teacher Education, n.e.c.",
-            "Teacher Education: Early Childhood",
-            "Teacher Education: Higher Education",
-            "Teacher Education: Primary",
-            "Teacher Education: Secondary",
-            "Teacher Education: Special Education",
-            "Teacher Education: Vocational Education and Training",
-            "Teacher-Librarianship"
-        ],
-        "training_packages": []
+            "code": "0701",
+            "name": "Teacher Education",
+            "broad_field_code": "07",
+            "broad_field_name": "Education",
+            "description": "Teacher education and teacher training. Includes early childhood, primary, secondary, and vocational teacher education.",
+            "keywords": ["teacher education", "teacher training", "early childhood teacher", "primary teacher",
+                        "secondary teacher", "vocational teacher", "teacher aide", "education assistant",
+                        "special education teacher", "TESOL", "teaching methods", "pedagogy"]
         },
         "0703": {
-        "code": "0703",
-        "name": "Curriculum and Education Studies",
-        "description": "Curriculum and Education Studies disciplines covering key subfields such as Curriculum Studies, and Education Studies.",
-        "keywords": [
-            "Curriculum Studies",
-            "Education Studies"
-        ],
-        "training_packages": []
+            "code": "0703",
+            "name": "Curriculum and Education Studies",
+            "broad_field_code": "07",
+            "broad_field_name": "Education",
+            "description": "Curriculum studies, educational theory, and education research. Includes instructional design and educational leadership.",
+            "keywords": ["curriculum", "education studies", "educational theory", "education research", "instructional design",
+                        "educational leadership", "assessment", "learning theory", "educational psychology",
+                        "education policy", "curriculum development"]
         },
         "0799": {
-        "code": "0799",
-        "name": "Other Education",
-        "description": "Other Education disciplines spanning core studies and related applied fields.",
-        "keywords": [
-            "Education, n.e.c."
-        ],
-        "training_packages": []
+            "code": "0799",
+            "name": "Other Education",
+            "broad_field_code": "07",
+            "broad_field_name": "Education",
+            "description": "Education not elsewhere classified. Includes training and assessment, education support, and education administration.",
+            "keywords": ["training and assessment", "education support", "education administration", "trainer",
+                        "assessor", "training delivery", "learning facilitation", "workplace training",
+                        "education coordinator", "school administration"]
         },
+        
+        # ─────────────────────────────────────────────────────────────────────
+        # 08 - Management and Commerce
+        # ─────────────────────────────────────────────────────────────────────
         "0801": {
-        "code": "0801",
-        "name": "Accounting",
-        "description": "Accounting disciplines covering key subfields such as . Emphasises theory, practice, and industry-relevant applications.",
-        "keywords": [
-            "Accounting"
-        ],
-        "training_packages": []
+            "code": "0801",
+            "name": "Accounting",
+            "broad_field_code": "08",
+            "broad_field_name": "Management and Commerce",
+            "description": "Accounting, auditing, and taxation. Includes financial accounting, management accounting, bookkeeping, and forensic accounting.",
+            "keywords": ["accounting", "auditing", "taxation", "bookkeeping", "financial accounting", "management accounting",
+                        "payroll", "accounts payable", "accounts receivable", "BAS", "GST", "tax return",
+                        "financial reporting", "MYOB", "Xero", "QuickBooks"]
         },
         "0803": {
-        "code": "0803",
-        "name": "Business and Management",
-        "description": "Business and Management disciplines covering key subfields such as Business Management, Farm Management and Agribusiness, and Hospitality Management.",
-        "keywords": [
-            "Business Management",
-            "Business and Management, n.e.c.",
-            "Farm Management and Agribusiness",
-            "Hospitality Management",
-            "Human Resource Management",
-            "Industrial Relations",
-            "International Business",
-            "Organisation Management",
-            "Personal Management Training",
-            "Project Management",
-            "Public and Health Care Administration",
-            "Quality Management",
-            "Tourism Management"
-        ],
-        "training_packages": []
+            "code": "0803",
+            "name": "Business and Management",
+            "broad_field_code": "08",
+            "broad_field_name": "Management and Commerce",
+            "description": "Business administration, management, and human resource management. Includes project management, operations, and strategic management.",
+            "keywords": ["business", "management", "business administration", "human resources", "project management",
+                        "operations management", "strategic management", "leadership", "organisational development",
+                        "change management", "business planning", "entrepreneurship", "small business"]
         },
         "0805": {
-        "code": "0805",
-        "name": "Sales and Marketing",
-        "description": "Sales and Marketing disciplines covering key subfields such as Advertising, Marketing, and Public Relations.",
-        "keywords": [
-            "Advertising",
-            "Marketing",
-            "Public Relations",
-            "Real Estate",
-            "Sales",
-            "Sales and Marketing, n.e.c."
-        ],
-        "training_packages": []
+            "code": "0805",
+            "name": "Sales and Marketing",
+            "broad_field_code": "08",
+            "broad_field_name": "Management and Commerce",
+            "description": "Sales, marketing, advertising, and public relations. Includes digital marketing, market research, and retail management.",
+            "keywords": ["sales", "marketing", "advertising", "public relations", "digital marketing", "market research",
+                        "retail management", "merchandising", "brand management", "customer service",
+                        "social media marketing", "e-commerce", "telemarketing", "sales management"]
         },
         "0807": {
-        "code": "0807",
-        "name": "Tourism",
-        "description": "Tourism disciplines covering key subfields such as . Emphasises theory, practice, and industry-relevant applications.",
-        "keywords": [
-            "Tourism"
-        ],
-        "training_packages": []
+            "code": "0807",
+            "name": "Tourism",
+            "broad_field_code": "08",
+            "broad_field_name": "Management and Commerce",
+            "description": "Tourism management, travel services, and hospitality management. Includes tour guiding, event management, and destination marketing.",
+            "keywords": ["tourism", "travel", "hospitality management", "tour guiding", "event management",
+                        "destination marketing", "travel agent", "tourism marketing", "hotel management",
+                        "visitor services", "ecotourism", "adventure tourism"]
         },
         "0809": {
-        "code": "0809",
-        "name": "Office Studies",
-        "description": "Office Studies disciplines covering key subfields such as Keyboard Skills, Practical Computing Skills, and Secretarial and Clerical Studies.",
-        "keywords": [
-            "Keyboard Skills",
-            "Office Studies, n.e.c.",
-            "Practical Computing Skills",
-            "Secretarial and Clerical Studies"
-        ],
-        "training_packages": []
+            "code": "0809",
+            "name": "Office Studies",
+            "broad_field_code": "08",
+            "broad_field_name": "Management and Commerce",
+            "description": "Office administration, secretarial studies, and administrative support. Includes reception, data entry, and records management.",
+            "keywords": ["office administration", "secretarial", "administrative", "reception", "data entry",
+                        "records management", "executive assistant", "personal assistant", "word processing",
+                        "office management", "filing", "scheduling", "correspondence"]
         },
         "0811": {
-        "code": "0811",
-        "name": "Banking, Finance and Related Fields",
-        "description": "Banking, Finance and Related Fields disciplines covering key subfields such as Banking and Finance and Insurance and Actuarial Studies.",
-        "keywords": [
-            "Banking and Finance",
-            "Banking, Finance and Related Fields, n.e.c.",
-            "Insurance and Actuarial Studies",
-            "Investment and Securities"
-        ],
-        "training_packages": []
+            "code": "0811",
+            "name": "Banking, Finance and Related Fields",
+            "broad_field_code": "08",
+            "broad_field_name": "Management and Commerce",
+            "description": "Banking, finance, financial planning, and insurance. Includes investment, credit, and financial services.",
+            "keywords": ["banking", "finance", "financial planning", "insurance", "investment", "credit",
+                        "financial services", "mortgage broking", "superannuation", "wealth management",
+                        "financial advice", "lending", "risk management", "compliance"]
         },
         "0899": {
-        "code": "0899",
-        "name": "Other Management and Commerce",
-        "description": "Other Management and Commerce disciplines covering key subfields such as Purchasing, Warehousing and Distribution, and Valuation.",
-        "keywords": [
-            "Management and Commerce, n.e.c.",
-            "Purchasing, Warehousing and Distribution",
-            "Valuation"
-        ],
-        "training_packages": []
+            "code": "0899",
+            "name": "Other Management and Commerce",
+            "broad_field_code": "08",
+            "broad_field_name": "Management and Commerce",
+            "description": "Management and commerce not elsewhere classified. Includes purchasing, logistics, and quality management.",
+            "keywords": ["purchasing", "logistics", "supply chain", "quality management", "warehousing",
+                        "inventory management", "procurement", "contract management", "import/export",
+                        "freight", "distribution", "materials handling"]
         },
+        
+        # ─────────────────────────────────────────────────────────────────────
+        # 09 - Society and Culture
+        # ─────────────────────────────────────────────────────────────────────
         "0901": {
-        "code": "0901",
-        "name": "Political Science and Policy Studies",
-        "description": "Political Science and Policy Studies disciplines covering key subfields such as Policy Studies, and Political Science.",
-        "keywords": [
-            "Policy Studies",
-            "Political Science"
-        ],
-        "training_packages": []
+            "code": "0901",
+            "name": "Political Science and Policy Studies",
+            "broad_field_code": "09",
+            "broad_field_name": "Society and Culture",
+            "description": "Political science, policy studies, and public administration. Includes government, international relations, and public policy.",
+            "keywords": ["political science", "policy studies", "public administration", "government",
+                        "international relations", "public policy", "governance", "policy analysis",
+                        "political theory", "diplomacy"]
         },
         "0903": {
-        "code": "0903",
-        "name": "Studies in Human Society",
-        "description": "Studies in Human Society disciplines covering key subfields such as Anthropology, Archaeology, and Gender Specific Studies.",
-        "keywords": [
-            "Anthropology",
-            "Archaeology",
-            "Gender Specific Studies",
-            "History",
-            "Human Geography",
-            "Indigenous Studies",
-            "Sociology",
-            "Studies in Human Society, n.e.c."
-        ],
-        "training_packages": []
+            "code": "0903",
+            "name": "Studies in Human Society",
+            "broad_field_code": "09",
+            "broad_field_name": "Society and Culture",
+            "description": "Sociology, anthropology, history, and human geography. Includes cultural studies, indigenous studies, and gender studies.",
+            "keywords": ["sociology", "anthropology", "history", "human geography", "cultural studies",
+                        "indigenous studies", "gender studies", "archaeology", "heritage", "social research",
+                        "demography", "criminology"]
         },
         "0905": {
-        "code": "0905",
-        "name": "Human Welfare Studies and Services",
-        "description": "Human Welfare Studies and Services disciplines covering key subfields such as Care for the Aged and Care for the Disabled.",
-        "keywords": [
-            "Care for the Aged",
-            "Care for the Disabled",
-            "Children's Services",
-            "Counselling",
-            "Human Welfare Studies and Services, n.e.c.",
-            "Residential Client Care",
-            "Social Work",
-            "Welfare Studies",
-            "Youth Work"
-        ],
-        "training_packages": []
+            "code": "0905",
+            "name": "Human Welfare Studies and Services",
+            "broad_field_code": "09",
+            "broad_field_name": "Society and Culture",
+            "description": "Social work, welfare, and community services. Includes aged care, disability services, child protection, and youth work.",
+            "keywords": ["social work", "welfare", "community services", "aged care", "disability services",
+                        "child protection", "youth work", "case management", "family services", "homelessness",
+                        "mental health support", "counselling", "support worker", "carer"]
         },
         "0907": {
-        "code": "0907",
-        "name": "Behavioural Science",
-        "description": "Behavioural Science disciplines covering key subfields such as . Emphasises theory, practice, and industry-relevant applications.",
-        "keywords": [
-            "Behavioural Science, n.e.c.",
-            "Psychology"
-        ],
-        "training_packages": []
+            "code": "0907",
+            "name": "Behavioural Science",
+            "broad_field_code": "09",
+            "broad_field_name": "Society and Culture",
+            "description": "Psychology, cognitive science, and behavioural studies. Includes counselling psychology, clinical psychology, and behavioural analysis.",
+            "keywords": ["psychology", "behavioural science", "cognitive science", "counselling psychology",
+                        "clinical psychology", "behavioural analysis", "psychotherapy", "mental health",
+                        "neuropsychology", "developmental psychology"]
         },
         "0909": {
-        "code": "0909",
-        "name": "Law",
-        "description": "Law disciplines covering key subfields such as Business and Commercial Law, Constitutional Law, and Criminal Law.",
-        "keywords": [
-            "Business and Commercial Law",
-            "Constitutional Law",
-            "Criminal Law",
-            "Family Law",
-            "International Law",
-            "Law, n.e.c.",
-            "Legal Practice",
-            "Taxation Law"
-        ],
-        "training_packages": []
+            "code": "0909",
+            "name": "Law",
+            "broad_field_code": "09",
+            "broad_field_name": "Society and Culture",
+            "description": "Legal studies, law, and legal practice. Includes commercial law, criminal law, family law, and legal support.",
+            "keywords": ["law", "legal", "lawyer", "solicitor", "barrister", "legal practice", "commercial law",
+                        "criminal law", "family law", "property law", "legal assistant", "paralegal",
+                        "conveyancing", "litigation", "legal secretary"]
         },
         "0911": {
-        "code": "0911",
-        "name": "Justice and Law Enforcement",
-        "description": "Justice and Law Enforcement disciplines covering key subfields such as Justice Administration, Legal Studies, and Police Studies.",
-        "keywords": [
-            "Justice Administration",
-            "Justice and Law Enforcement, n.e.c.",
-            "Legal Studies",
-            "Police Studies"
-        ],
-        "training_packages": []
+            "code": "0911",
+            "name": "Justice and Law Enforcement",
+            "broad_field_code": "09",
+            "broad_field_name": "Society and Culture",
+            "description": "Justice administration, law enforcement, and corrections. Includes policing, security, and criminology.",
+            "keywords": ["justice", "law enforcement", "police", "corrections", "security", "criminology",
+                        "protective services", "investigation", "border protection", "customs",
+                        "court administration", "probation", "parole", "security officer", "crowd control"]
         },
         "0913": {
-        "code": "0913",
-        "name": "Librarianship, Information Management and Curatorial Studies",
-        "description": "Librarianship, Information Management and Curatorial Studies disciplines covering key subfields such as Curatorial Studies, and Librarianship and Information Management.",
-        "keywords": [
-            "Curatorial Studies",
-            "Librarianship and Information Management"
-        ],
-        "training_packages": []
+            "code": "0913",
+            "name": "Librarianship, Information Management and Curatorial Studies",
+            "broad_field_code": "09",
+            "broad_field_name": "Society and Culture",
+            "description": "Library and information science, records management, and museum studies. Includes archives, gallery curation, and information management.",
+            "keywords": ["library", "librarianship", "information management", "records management", "museum",
+                        "gallery", "archives", "curation", "cataloguing", "collection management",
+                        "preservation", "digital preservation", "information services"]
         },
         "0915": {
-        "code": "0915",
-        "name": "Language and Literature",
-        "description": "Language and Literature disciplines covering key subfields such as Australian Indigenous Languages, Eastern Asian Languages, and Eastern European Languages.",
-        "keywords": [
-            "Australian Indigenous Languages",
-            "Eastern Asian Languages",
-            "Eastern European Languages",
-            "English Language",
-            "Language and Literature, n.e.c.",
-            "Linguistics",
-            "Literature",
-            "Northern European Languages",
-            "Southeast Asian Languages",
-            "Southern Asian Languages",
-            "Southern European Languages",
-            "Southwest Asian and North African Languages",
-            "Translating and Interpreting"
-        ],
-        "training_packages": []
+            "code": "0915",
+            "name": "Language and Literature",
+            "broad_field_code": "09",
+            "broad_field_name": "Society and Culture",
+            "description": "Languages, linguistics, and literature. Includes English, foreign languages, translation, and interpreting.",
+            "keywords": ["language", "linguistics", "literature", "English", "foreign language", "translation",
+                        "interpreting", "TESOL", "LOTE", "creative writing", "editing", "publishing",
+                        "Auslan", "sign language", "professional writing"]
         },
         "0917": {
-        "code": "0917",
-        "name": "Philosophy and Religious Studies",
-        "description": "Philosophy and Religious Studies disciplines covering key subfields such as Philosophy, and Religious Studies.",
-        "keywords": [
-            "Philosophy",
-            "Religious Studies"
-        ],
-        "training_packages": []
+            "code": "0917",
+            "name": "Philosophy and Religious Studies",
+            "broad_field_code": "09",
+            "broad_field_name": "Society and Culture",
+            "description": "Philosophy, religious studies, and theology. Includes ethics, comparative religion, and ministry studies.",
+            "keywords": ["philosophy", "religious studies", "theology", "ethics", "comparative religion",
+                        "ministry", "pastoral care", "chaplaincy", "divinity", "spiritual care"]
         },
         "0919": {
-        "code": "0919",
-        "name": "Economics and Econometrics",
-        "description": "Economics and Econometrics disciplines covering key subfields such as Econometrics, and Economics.",
-        "keywords": [
-            "Econometrics",
-            "Economics"
-        ],
-        "training_packages": []
+            "code": "0919",
+            "name": "Economics and Econometrics",
+            "broad_field_code": "09",
+            "broad_field_name": "Society and Culture",
+            "description": "Economics, econometrics, and economic analysis. Includes microeconomics, macroeconomics, and economic policy.",
+            "keywords": ["economics", "econometrics", "economic analysis", "microeconomics", "macroeconomics",
+                        "economic policy", "economic modelling", "economic research", "economic forecasting"]
         },
         "0921": {
-        "code": "0921",
-        "name": "Sport and Recreation",
-        "description": "Sport and Recreation disciplines covering key subfields such as Sport and Recreation Activities, and Sports Coaching, Officiating and Instruction.",
-        "keywords": [
-            "Sport and Recreation Activities",
-            "Sport and Recreation, n.e.c.",
-            "Sports Coaching, Officiating and Instruction"
-        ],
-        "training_packages": []
+            "code": "0921",
+            "name": "Sport and Recreation",
+            "broad_field_code": "09",
+            "broad_field_name": "Society and Culture",
+            "description": "Sport, recreation, and fitness. Includes coaching, sports management, fitness instruction, and outdoor recreation.",
+            "keywords": ["sport", "recreation", "fitness", "coaching", "sports management", "personal training",
+                        "fitness instruction", "outdoor recreation", "aquatics", "gym", "sports development",
+                        "exercise", "athletics", "swimming", "sports officiating"]
         },
         "0999": {
-        "code": "0999",
-        "name": "Other Society and Culture",
-        "description": "Other Society and Culture disciplines covering key subfields such as Criminology, Family and Consumer Studies, and Security Services.",
-        "keywords": [
-            "Criminology",
-            "Family and Consumer Studies",
-            "Security Services",
-            "Society and Culture, n.e.c."
-        ],
-        "training_packages": []
+            "code": "0999",
+            "name": "Other Society and Culture",
+            "broad_field_code": "09",
+            "broad_field_name": "Society and Culture",
+            "description": "Society and culture not elsewhere classified. Includes funeral services, celebrancy, and family history research.",
+            "keywords": ["funeral services", "celebrant", "family history", "genealogy", "community development",
+                        "volunteer management", "advocacy", "social enterprise"]
         },
+        
+        # ─────────────────────────────────────────────────────────────────────
+        # 10 - Creative Arts
+        # ─────────────────────────────────────────────────────────────────────
         "1001": {
-        "code": "1001",
-        "name": "Performing Arts",
-        "description": "Performing Arts disciplines covering key subfields such as Dance, Drama and Theatre Studies, and Music.",
-        "keywords": [
-            "Dance",
-            "Drama and Theatre Studies",
-            "Music",
-            "Performing Arts, n.e.c."
-        ],
-        "training_packages": []
+            "code": "1001",
+            "name": "Performing Arts",
+            "broad_field_code": "10",
+            "broad_field_name": "Creative Arts",
+            "description": "Music, dance, drama, and performance. Includes theatre production, music production, and circus arts.",
+            "keywords": ["performing arts", "music", "dance", "drama", "theatre", "acting", "singing",
+                        "musical instrument", "stage", "performance", "circus", "choreography",
+                        "music production", "sound production", "stage management"]
         },
         "1003": {
-        "code": "1003",
-        "name": "Visual Arts and Crafts",
-        "description": "Visual Arts and Crafts disciplines covering key subfields such as Crafts, Fine Arts, and Floristry.",
-        "keywords": [
-            "Crafts",
-            "Fine Arts",
-            "Floristry",
-            "Jewellery Making",
-            "Photography",
-            "Visual Arts and Crafts, n.e.c."
-        ],
-        "training_packages": []
+            "code": "1003",
+            "name": "Visual Arts and Crafts",
+            "broad_field_code": "10",
+            "broad_field_name": "Creative Arts",
+            "description": "Visual arts, fine arts, and crafts. Includes painting, sculpture, ceramics, photography, and textile arts.",
+            "keywords": ["visual arts", "fine arts", "painting", "sculpture", "ceramics", "photography",
+                        "textile arts", "printmaking", "jewellery", "glass", "woodwork", "leatherwork",
+                        "illustration", "drawing", "art history"]
         },
         "1005": {
-        "code": "1005",
-        "name": "Graphic and Design Studies",
-        "description": "Graphic and Design Studies disciplines covering key subfields such as Fashion Design, Graphic Arts and Design Studies, and Textile Design.",
-        "keywords": [
-            "Fashion Design",
-            "Graphic Arts and Design Studies",
-            "Graphic and Design Studies, n.e.c.",
-            "Textile Design"
-        ],
-        "training_packages": []
+            "code": "1005",
+            "name": "Graphic and Design Studies",
+            "broad_field_code": "10",
+            "broad_field_name": "Creative Arts",
+            "description": "Graphic design, industrial design, fashion design, and interior design. Includes web design and multimedia.",
+            "keywords": ["graphic design", "industrial design", "fashion design", "interior design", "web design",
+                        "multimedia", "visual communication", "digital design", "UX design", "UI design",
+                        "product design", "signage", "packaging design", "branding"]
         },
         "1007": {
-        "code": "1007",
-        "name": "Communication and Media Studies",
-        "description": "Communication and Media Studies disciplines covering key subfields such as Audio Visual Studies, Journalism, and Verbal Communication.",
-        "keywords": [
-            "Audio Visual Studies",
-            "Communication and Media Studies, n.e.c.",
-            "Journalism",
-            "Verbal Communication",
-            "Written Communication"
-        ],
-        "training_packages": []
+            "code": "1007",
+            "name": "Communication and Media Studies",
+            "broad_field_code": "10",
+            "broad_field_name": "Creative Arts",
+            "description": "Media, journalism, film, and communication studies. Includes broadcasting, advertising, and digital media.",
+            "keywords": ["media", "journalism", "film", "communication", "broadcasting", "television", "radio",
+                        "advertising", "digital media", "video production", "screen production", "animation",
+                        "audio production", "podcasting", "content creation"]
         },
         "1099": {
-        "code": "1099",
-        "name": "Other Creative Arts",
-        "description": "Other Creative Arts disciplines spanning core studies and related applied fields.",
-        "keywords": [
-            "Creative Arts, n.e.c."
-        ],
-        "training_packages": []
+            "code": "1099",
+            "name": "Other Creative Arts",
+            "broad_field_code": "10",
+            "broad_field_name": "Creative Arts",
+            "description": "Creative arts not elsewhere classified. Includes games design, creative writing, and arts management.",
+            "keywords": ["games design", "creative writing", "arts management", "curation", "cultural management",
+                        "creative industries", "entertainment", "digital arts", "interactive media"]
         },
+        
+        # ─────────────────────────────────────────────────────────────────────
+        # 11 - Food, Hospitality and Personal Services
+        # ─────────────────────────────────────────────────────────────────────
         "1101": {
-        "code": "1101",
-        "name": "Food and Hospitality",
-        "description": "Food and Hospitality disciplines covering key subfields such as Baking and Pastrymaking, Butchery, and Cookery.",
-        "keywords": [
-            "Baking and Pastrymaking",
-            "Butchery",
-            "Cookery",
-            "Food Hygiene",
-            "Food and Beverage Service",
-            "Food and Hospitality, n.e.c.",
-            "Hospitality"
-        ],
-        "training_packages": []
+            "code": "1101",
+            "name": "Food and Hospitality",
+            "broad_field_code": "11",
+            "broad_field_name": "Food, Hospitality and Personal Services",
+            "description": "Food preparation, cookery, hospitality, and food service. Includes commercial cookery, patisserie, and bar service.",
+            "keywords": ["food", "hospitality", "cookery", "chef", "commercial cookery", "patisserie", "baking",
+                        "butchery", "food service", "bar service", "barista", "catering", "food safety",
+                        "kitchen operations", "food preparation", "restaurant", "cafe", "events"]
         },
         "1103": {
-        "code": "1103",
-        "name": "Personal Services",
-        "description": "Personal Services disciplines covering key subfields such as Beauty Therapy, and Hairdressing.",
-        "keywords": [
-            "Beauty Therapy",
-            "Hairdressing",
-            "Personal Services, n.e.c."
-        ],
-        "training_packages": []
+            "code": "1103",
+            "name": "Personal Services",
+            "broad_field_code": "11",
+            "broad_field_name": "Food, Hospitality and Personal Services",
+            "description": "Personal services including hairdressing, beauty, and other personal care. Includes barbering, makeup, and beauty therapy.",
+            "keywords": ["hairdressing", "beauty", "barbering", "makeup", "beauty therapy", "nail technology",
+                        "skin care", "salon", "spa", "waxing", "tanning", "eyelash", "cosmetics",
+                        "hair styling", "colour", "cut", "blow dry", "personal grooming"]
         },
+        
+        # ─────────────────────────────────────────────────────────────────────
+        # 12 - Mixed Field Programmes
+        # ─────────────────────────────────────────────────────────────────────
         "1201": {
-        "code": "1201",
-        "name": "General Education Programmes",
-        "description": "General Education Programmes disciplines covering key subfields such as General Primary and Secondary Education Programmes and Learning Skills Programmes.",
-        "keywords": [
-            "General Education Programmes, n.e.c.",
-            "General Primary and Secondary Education Programmes",
-            "Learning Skills Programmes",
-            "Literacy and Numeracy Programmes"
-        ],
-        "training_packages": []
+            "code": "1201",
+            "name": "General Education Programmes",
+            "broad_field_code": "12",
+            "broad_field_name": "Mixed Field Programmes",
+            "description": "General education and preparatory programmes. Includes adult literacy, numeracy, and general studies.",
+            "keywords": ["general education", "literacy", "numeracy", "adult education", "foundation skills",
+                        "basic education", "preparatory", "bridging", "access programmes", "general studies"]
         },
         "1203": {
-        "code": "1203",
-        "name": "Social Skills Programmes",
-        "description": "Social Skills Programmes disciplines covering key subfields such as Parental Education Programmes and Social and Interpersonal Skills Programmes.",
-        "keywords": [
-            "Parental Education Programmes",
-            "Social Skills Programmes, n.e.c.",
-            "Social and Interpersonal Skills Programmes",
-            "Survival Skills Programmes"
-        ],
-        "training_packages": []
+            "code": "1203",
+            "name": "Social Skills Programmes",
+            "broad_field_code": "12",
+            "broad_field_name": "Mixed Field Programmes",
+            "description": "Social skills development and life skills programmes. Includes communication skills and interpersonal development.",
+            "keywords": ["social skills", "life skills", "communication skills", "interpersonal skills",
+                        "personal development", "self-management", "teamwork", "conflict resolution",
+                        "emotional intelligence", "cultural awareness"]
         },
         "1205": {
-        "code": "1205",
-        "name": "Employment Skills Programmes",
-        "description": "Employment Skills Programmes disciplines covering key subfields such as Career Development Programmes, Job Search Skills Programmes, and Work Practices Programmes.",
-        "keywords": [
-            "Career Development Programmes",
-            "Employment Skills Programmes, n.e.c.",
-            "Job Search Skills Programmes",
-            "Work Practices Programmes"
-        ],
-        "training_packages": []
+            "code": "1205",
+            "name": "Employment Skills Programmes",
+            "broad_field_code": "12",
+            "broad_field_name": "Mixed Field Programmes",
+            "description": "Employment preparation and career development. Includes work readiness, job seeking, and career planning.",
+            "keywords": ["employment skills", "work readiness", "job seeking", "career development", "career planning",
+                        "resume writing", "interview skills", "workplace skills", "employability",
+                        "work experience", "transition to work"]
         },
         "1299": {
-        "code": "1299",
-        "name": "Other Mixed Field Programmes",
-        "description": "Other Mixed Field Programmes disciplines spanning core studies and related applied fields.",
-        "keywords": [
-            "Mixed Field Programmes, n.e.c."
-        ],
-        "training_packages": []
+            "code": "1299",
+            "name": "Other Mixed Field Programmes",
+            "broad_field_code": "12",
+            "broad_field_name": "Mixed Field Programmes",
+            "description": "Mixed field programmes not elsewhere classified. Includes interdisciplinary studies and combined programmes.",
+            "keywords": ["mixed field", "interdisciplinary", "combined programmes", "multi-disciplinary",
+                        "integrated studies", "cross-disciplinary"]
         }
     }
+}
+
+# Legacy alias for backward compatibility
+INDUSTRY_DOMAIN_FACET = ASCED_FIELD_OF_EDUCATION_FACET
+
+# Broad field lookup for convenience
+ASCED_BROAD_FIELDS = {
+    "01": "Natural and Physical Sciences",
+    "02": "Information Technology",
+    "03": "Engineering and Related Technologies",
+    "04": "Architecture and Building",
+    "05": "Agriculture, Environmental and Related Studies",
+    "06": "Health",
+    "07": "Education",
+    "08": "Management and Commerce",
+    "09": "Society and Culture",
+    "10": "Creative Arts",
+    "11": "Food, Hospitality and Personal Services",
+    "12": "Mixed Field Programmes"
 }
 
 
@@ -1501,18 +1343,21 @@ ALL_FACETS = {
     "FUT": FUTURE_READINESS_FACET,
     "LRN": LEARNING_CONTEXT_FACET,
     "DIG": DIGITAL_INTENSITY_FACET,
-    "IND": INDUSTRY_DOMAIN_FACET,
+    "ASCED": ASCED_FIELD_OF_EDUCATION_FACET,
     "LVL": PROFICIENCY_LEVEL_FACET,
 }
 
+# Legacy alias - map IND to ASCED for backward compatibility
+ALL_FACETS["IND"] = ASCED_FIELD_OF_EDUCATION_FACET
+
 # Facets that allow multiple values
-MULTI_VALUE_FACETS = ["IND"]
+MULTI_VALUE_FACETS = ["ASCED", "IND"]
 
 # Facets with ordered/hierarchical values
 ORDERED_FACETS = ["COG", "DIG", "LVL"]
 
 # Priority order for assignment (most important first)
-FACET_PRIORITY = ["NAT", "TRF", "COG", "CTX", "FUT", "LRN", "DIG", "IND", "LVL"]
+FACET_PRIORITY = ["NAT", "TRF", "COG", "CTX", "FUT", "LRN", "DIG", "ASCED", "LVL"]
 
 
 def get_facet_values_list(facet_id: str) -> list:
@@ -1531,9 +1376,11 @@ def get_facet_text_for_embedding(facet_id: str, value_code: str) -> str:
         value.get("description", "")
     ]
     
-    # keywords = value.get("keywords", [])
-    # if keywords:
-    #     text_parts.append(" ".join(keywords[:15]))
+    # Add keywords for ASCED facet
+    if facet_id in ["ASCED", "IND"]:
+        keywords = value.get("keywords", [])
+        if keywords:
+            text_parts.append(" ".join(keywords[:15]))
     
     return ". ".join([p for p in text_parts if p])
 
@@ -1542,7 +1389,84 @@ def get_all_facet_embeddings_texts() -> dict:
     """Get all facet values as texts for embedding precomputation"""
     result = {}
     for facet_id, facet in ALL_FACETS.items():
+        # Skip the legacy IND alias to avoid duplication
+        if facet_id == "IND":
+            continue
         result[facet_id] = {}
         for value_code in facet.get("values", {}).keys():
             result[facet_id][value_code] = get_facet_text_for_embedding(facet_id, value_code)
     return result
+
+
+def get_asced_narrow_field_info(narrow_field_code: str) -> dict:
+    """
+    Get information about a specific ASCED narrow field code.
+    
+    Args:
+        narrow_field_code: 4-digit ASCED narrow field code (e.g., "0101")
+        
+    Returns:
+        Dictionary with narrow field information including parent broad field
+    """
+    # 4-digit codes are now primary keys in ASCED_FIELD_OF_EDUCATION_FACET
+    if narrow_field_code in ASCED_FIELD_OF_EDUCATION_FACET["values"]:
+        field = ASCED_FIELD_OF_EDUCATION_FACET["values"][narrow_field_code]
+        return {
+            "narrow_field_code": narrow_field_code,
+            "narrow_field_name": field["name"],
+            "broad_field_code": field.get("broad_field_code", narrow_field_code[:2]),
+            "broad_field_name": field.get("broad_field_name", ""),
+            "description": field.get("description", ""),
+            "keywords": field.get("keywords", [])
+        }
+    
+    return {}
+
+
+def get_asced_broad_field_name(code: str) -> str:
+    """
+    Get the broad field name for an ASCED code (2-digit or 4-digit).
+    
+    Args:
+        code: ASCED code (2-digit broad field or 4-digit narrow field)
+        
+    Returns:
+        Broad field name
+    """
+    broad_code = code[:2] if len(code) >= 2 else code
+    return ASCED_BROAD_FIELDS.get(broad_code, "Unknown")
+
+
+def get_asced_codes_for_broad_field(broad_field_code: str) -> list:
+    """
+    Get all 4-digit narrow field codes under a broad field.
+    
+    Args:
+        broad_field_code: 2-digit ASCED broad field code (e.g., "01")
+        
+    Returns:
+        List of 4-digit narrow field codes
+    """
+    return [
+        code for code in ASCED_FIELD_OF_EDUCATION_FACET["values"].keys()
+        if code.startswith(broad_field_code)
+    ]
+
+
+def map_legacy_industry_code_to_asced(legacy_code: str) -> str:
+    """
+    Validate and return an ASCED narrow field code.
+    
+    Args:
+        legacy_code: ASCED code (should be 4-digit narrow field code)
+        
+    Returns:
+        The code if valid, or empty string if not found
+    """
+    if legacy_code in ASCED_FIELD_OF_EDUCATION_FACET["values"]:
+        return legacy_code
+    # Handle 2-digit codes by returning first narrow field
+    if len(legacy_code) == 2:
+        matching_codes = get_asced_codes_for_broad_field(legacy_code)
+        return matching_codes[0] if matching_codes else ""
+    return ""

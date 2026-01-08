@@ -1,6 +1,6 @@
 """
 Enhanced Configuration settings for multi-dimensional faceted skill taxonomy pipeline
-Implements faceted taxonomy with multiple independent dimensions
+Implements faceted taxonomy with multiple independent dimensions including ASCED
 """
 import os
 from pathlib import Path
@@ -205,7 +205,8 @@ DEDUP_CONFIG = {
 }
 
 # ============================================================================
-# FACET ASSIGNMENT SETTINGS (Replaces Family/Domain Assignment)
+# FACET ASSIGNMENT SETTINGS
+# Now uses ASCED (Australian Standard Classification of Education) instead of IND
 # ============================================================================
 
 FACET_ASSIGNMENT_CONFIG = {
@@ -218,16 +219,17 @@ FACET_ASSIGNMENT_CONFIG = {
     "max_multi_values": 5,
     "max_retries": 3,
     # Facets to assign (order matters - processed in this order)
+    # Note: ASCED replaces IND (Industry Domain) for ASCED Field of Education
     "facets_to_assign": [
-        "NAT",  # Skill Nature
-        "TRF",  # Transferability
-        "COG",  # Cognitive Complexity
-        "CTX",  # Work Context
-        "FUT",  # Future Readiness
-        "LRN",  # Learning Context (from existing 'context' field)
-        "DIG",  # Digital Intensity
-        "IND",  # Industry Domain (multi-value)
-        "LVL",  # Proficiency Level (from existing 'level' field)
+        "NAT",    # Skill Nature
+        "TRF",    # Transferability
+        "COG",    # Cognitive Complexity
+        "CTX",    # Work Context
+        "FUT",    # Future Readiness
+        "LRN",    # Learning Context (from existing 'context' field)
+        "DIG",    # Digital Intensity
+        "ASCED",  # ASCED Field of Education (multi-value) - replaces IND
+        "LVL",    # Proficiency Level (from existing 'level' field)
     ],
 }
 
@@ -408,4 +410,5 @@ logger.info("=" * 60)
 logger.info(f"Facets: {len(ALL_FACETS)}")
 logger.info(f"Facets to assign: {FACET_ASSIGNMENT_CONFIG['facets_to_assign']}")
 logger.info(f"Training Packages: {len(TRAINING_PACKAGES)}")
+logger.info(f"ASCED Classification: Australian Standard Classification of Education 2001")
 logger.info("=" * 60)

@@ -3,7 +3,7 @@ Enhanced Prompt Manager using Chain-of-Thought for Human Capability Extraction
 """
 
 from typing import Dict, List, Optional, Tuple, Any
-from models.enums import StudyLevel, SkillLevel
+from src.models.enum import StudyLevel, SkillLevel
 import json
 
 
