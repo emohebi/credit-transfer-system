@@ -188,9 +188,13 @@ class FacetAssigner:
         }
         
         level_names = {
-            "LVL.1": "Foundation", "LVL.2": "Developing", "LVL.3": "Competent",
-            "LVL.4": "Proficient", "LVL.5": "Advanced", "LVL.6": "Expert",
-            "LVL.7": "Master"
+            "LVL.1": "FOLLOW", 
+            "LVL.2": "ASSIST", 
+            "LVL.3": "APPLY",
+            "LVL.4": "ENABLE", 
+            "LVL.5": "ENSURE ADVISE", 
+            "LVL.6": "INITIATE INFLUENCE",
+            "LVL.7": "SET STRATEGY"
         }
         
         for idx in df.index:
@@ -401,7 +405,6 @@ You MUST respond with valid JSON only. No additional text, explanation, or markd
 
 SKILL: {item['skill_name']}
 DESCRIPTION: {item['skill_desc']}
-ORIGINAL CATEGORY: {item['skill_category']}
 
 CANDIDATE {facet_name.upper()} CATEGORIES:
 {candidates_text}
@@ -409,7 +412,7 @@ CANDIDATE {facet_name.upper()} CATEGORIES:
 Which category (1-{len(item['candidates'])}) is the BEST match? Think carefully and respond with JSON only:
 {{"choice": <number>, "confidence": <0.0-1.0>}}
 
-Respond with valid JSON only:"""
+Respond with valid JSON only:""" # ORIGINAL CATEGORY: {item['skill_category']}
 
         return system_prompt, user_prompt
     

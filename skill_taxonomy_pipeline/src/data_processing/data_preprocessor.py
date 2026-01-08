@@ -323,12 +323,13 @@ class SkillDataPreprocessor:
         df = df.drop_duplicates(subset=['skill_id'], keep='first')
         
         # Step 2: Aggregate keywords and codes for name+level duplicates
-        if df.duplicated(subset=['name', 'level', 'context', 'category'], keep=False).any():
-            df = self._aggregate_duplicates_by_column(df, ['name', 'level', 'context', 'category'])
-            logger.info(f"Aggregated keywords and codes for name+level+context+category duplicates")
+        subset=['name']#, 'level', 'context', 'category']
+        if df.duplicated(subset=subset, keep=False).any():
+            df = self._aggregate_duplicates_by_column(df, subset)
+            logger.info(f"Aggregated keywords and codes for {'+'.join(subset)} duplicates")
         
         # Remove name+level duplicates, keeping first occurrence
-        df = df.drop_duplicates(subset=['name', 'level', 'context', 'category'], keep='first')
+        df = df.drop_duplicates(subset=subset, keep='first')
         
         removed_count = initial_count - len(df)
         if removed_count > 0:

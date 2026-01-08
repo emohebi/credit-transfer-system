@@ -85,8 +85,8 @@ class FacetedTaxonomyPipeline:
         
         # Initialize components
         self.preprocessor = SkillDataPreprocessor(self.config)
-        self.embedding_manager = EmbeddingManager(self.config)
         self.deduplicator = SimilarityDeduplicator(self.config)
+        self.embedding_manager = EmbeddingManager(self.config)
         
         # Initialize GenAI interface
         self.genai_interface = None
@@ -237,7 +237,7 @@ class FacetedTaxonomyPipeline:
             logger.info("\n[Step 6/6] Generating outputs...")
             
             # Get faceted skill data for visualization
-            skills_data = self.facet_assigner.get_faceted_skill_data(df_faceted)
+            skills_data = self.facet_assigner.get_faceted_skill_data(df_faceted, embeddings_unique)
             
             # Generate statistics
             statistics = self._generate_statistics(df_faceted, skills_data)

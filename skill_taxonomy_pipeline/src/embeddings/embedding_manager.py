@@ -759,8 +759,8 @@ class SimilarityDeduplicator:
                 
                 # Update combined text
                 unique_df.loc[master_idx, 'combined_text'] = (
-                    unique_df.loc[master_idx, 'name'] + '. ' +
-                    best_description
+                    unique_df.loc[master_idx, 'name']# + '. ' +
+                    # best_description
                 )
                 
                 # Ensure alternative titles are preserved and complete

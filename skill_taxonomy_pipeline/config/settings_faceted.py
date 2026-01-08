@@ -194,7 +194,7 @@ EMBEDDING_CONFIG = {
 # ============================================================================
 
 DEDUP_CONFIG = {
-    "similarity_threshold": 0.9,
+    "similarity_threshold": 0.85,
     **MATCH_THRESHOLDS,
     "use_faiss": False,
     "faiss_index_type": "IVF1024,Flat",
@@ -368,11 +368,11 @@ def get_config_profile(profile: str = "balanced") -> Dict[str, Any]:
             "partial_threshold": 0.78,
         },
         "balanced": {
-            "semantic_weight": 0.80,
-            "level_weight": 0.10,
-            "context_weight": 0.10,
-            "direct_match_threshold": 0.95,
-            "partial_threshold": 0.90,
+            "semantic_weight": 1.0,
+            "level_weight": 0.0,
+            "context_weight": 0.0,
+            "direct_match_threshold": 0.85,
+            "partial_threshold": 0.85,
         },
         "context_sensitive": {
             "semantic_weight": 0.50,
