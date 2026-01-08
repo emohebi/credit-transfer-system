@@ -11,7 +11,7 @@ Views:
 - Cognitive Complexity View
 - Work Context View
 - Future Readiness View
-- Industry Domain View
+- ASCED Field of Education View (updated from Industry Domain)
 - Digital Intensity View
 - Table/Export View
 
@@ -284,6 +284,18 @@ body {
 
 .facet-category-desc { font-size: 0.8rem; color: var(--jsa-grey-600); }
 
+/* ASCED Badge styling */
+.asced-code {
+    display: inline-block;
+    background: #e3f2fd;
+    color: #1565c0;
+    font-family: monospace;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-right: 6px;
+}
+
 /* Skill Cards in Grid */
 .skills-grid {
     display: grid;
@@ -422,6 +434,7 @@ body {
 .facet-badge.FUT { background: #fce4ec; color: #c2185b; }
 .facet-badge.LRN { background: #e0f7fa; color: #00695c; }
 .facet-badge.DIG { background: #ede7f6; color: #512da8; }
+.facet-badge.ASCED { background: #fff8e1; color: #ff8f00; }
 .facet-badge.IND { background: #fff8e1; color: #ff8f00; }
 .facet-badge.LVL { background: #e8eaf6; color: #3f51b5; }
 
@@ -896,7 +909,7 @@ BODY_CONTENT = """
             </div>
             <div>
                 <h1>VET Skills Faceted Explorer</h1>
-                <p>Multi-dimensional taxonomy of vocational skills</p>
+                <p>Multi-dimensional taxonomy of vocational skills with ASCED classification</p>
             </div>
         </div>
     </div>
@@ -954,8 +967,8 @@ BODY_CONTENT = """
             <button class="view-tab" data-view="DIG">
                 <i class="bi bi-laptop"></i> Digital
             </button>
-            <button class="view-tab" data-view="IND">
-                <i class="bi bi-building"></i> Industry
+            <button class="view-tab" data-view="ASCED">
+                <i class="bi bi-mortarboard"></i> ASCED Field
             </button>
             <button class="view-tab" data-view="filter">
                 <i class="bi bi-funnel"></i> Multi-Filter
@@ -977,7 +990,7 @@ BODY_CONTENT = """
         <div class="view-section facet-view-container" id="CTXView"></div>
         <div class="view-section facet-view-container" id="FUTView"></div>
         <div class="view-section facet-view-container" id="DIGView"></div>
-        <div class="view-section facet-view-container" id="INDView"></div>
+        <div class="view-section facet-view-container" id="ASCEDView"></div>
         
         <!-- Multi-Filter View -->
         <div class="view-section" id="filterView"></div>
@@ -1010,8 +1023,23 @@ const FACET_COLORS = {
     'FUT': '#c2185b',
     'LRN': '#00695c',
     'DIG': '#512da8',
+    'ASCED': '#ff8f00',
     'IND': '#ff8f00',
     'LVL': '#3f51b5'
+};
+
+// Facet display names
+const FACET_DISPLAY_NAMES = {
+    'NAT': 'Skill Nature',
+    'TRF': 'Transferability',
+    'COG': 'Cognitive Complexity',
+    'CTX': 'Work Context',
+    'FUT': 'Future Readiness',
+    'LRN': 'Learning Context',
+    'DIG': 'Digital Intensity',
+    'ASCED': 'ASCED Field of Education',
+    'IND': 'ASCED Field of Education',
+    'LVL': 'Proficiency Level'
 };
 
 // Initialize - wait for data to be available
@@ -1033,6 +1061,9 @@ function initializeTaxonomy() {
         taxonomyData.skills.forEach(skill => skillsIndex.set(skill.id, skill));
         filteredData = [...taxonomyData.skills];
         
+        // Normalize facet names - handle both IND and ASCED
+        normalizeFacetData();
+        
         initializeStats();
         initializeOverview();
         initializeFacetViews();
@@ -1046,6 +1077,32 @@ function initializeTaxonomy() {
         document.querySelector('.loading-text').textContent = 'Error: ' + error.message;
         document.querySelector('.loading-text').style.color = '#c62828';
     }
+}
+
+// Normalize facet data to handle both IND and ASCED
+function normalizeFacetData() {
+    // If we have IND facet but not ASCED, copy IND to ASCED
+    if (taxonomyData.facets && taxonomyData.facets.IND && !taxonomyData.facets.ASCED) {
+        taxonomyData.facets.ASCED = {
+            ...taxonomyData.facets.IND,
+            name: 'ASCED Field of Education',
+            description: 'Australian Standard Classification of Education (ASCED) - Field of Education classification'
+        };
+    }
+    
+    // Normalize skill facet data
+    taxonomyData.skills.forEach(skill => {
+        if (skill.facets) {
+            // If skill has IND but not ASCED, copy it
+            if (skill.facets.IND && !skill.facets.ASCED) {
+                skill.facets.ASCED = {...skill.facets.IND};
+            }
+            // If skill has ASCED but not IND, copy for backward compatibility
+            if (skill.facets.ASCED && !skill.facets.IND) {
+                skill.facets.IND = {...skill.facets.ASCED};
+            }
+        }
+    });
 }
 
 // Check if data is already available or wait for it
@@ -1091,9 +1148,10 @@ function initializeOverview() {
         html += '<div class="overview-card"><h3><i class="bi bi-check-circle"></i> Facet Coverage</h3>';
         for (const [facetId, data] of Object.entries(stats.facet_coverage)) {
             const pct = (data.coverage * 100).toFixed(1);
+            const displayName = FACET_DISPLAY_NAMES[facetId] || data.name || facetId;
             html += `
                 <div class="chart-bar">
-                    <span class="chart-bar-label">${data.name}</span>
+                    <span class="chart-bar-label">${displayName}</span>
                     <div class="chart-bar-track">
                         <div class="chart-bar-fill" style="width: ${pct}%; background: ${FACET_COLORS[facetId] || '#00838f'}"></div>
                     </div>
@@ -1143,13 +1201,15 @@ function initializeOverview() {
     }
     
     // Top facet values for key facets
-    const keyFacets = ['NAT', 'TRF', 'FUT'];
+    const keyFacets = ['NAT', 'TRF', 'FUT', 'ASCED'];
     for (const facetId of keyFacets) {
-        if (stats.facet_distributions && stats.facet_distributions[facetId]) {
-            const facetInfo = taxonomyData.facets[facetId];
-            html += `<div class="overview-card"><h3><i class="bi bi-diagram-3"></i> ${facetInfo?.name || facetId}</h3>`;
-            const total = Object.values(stats.facet_distributions[facetId]).reduce((a, b) => a + b, 0);
-            for (const [code, count] of Object.entries(stats.facet_distributions[facetId]).slice(0, 6)) {
+        const distKey = facetId === 'ASCED' ? (stats.facet_distributions?.ASCED ? 'ASCED' : 'IND') : facetId;
+        if (stats.facet_distributions && stats.facet_distributions[distKey]) {
+            const facetInfo = taxonomyData.facets[facetId] || taxonomyData.facets.IND;
+            const displayName = FACET_DISPLAY_NAMES[facetId] || facetInfo?.name || facetId;
+            html += `<div class="overview-card"><h3><i class="bi bi-diagram-3"></i> ${displayName}</h3>`;
+            const total = Object.values(stats.facet_distributions[distKey]).reduce((a, b) => a + b, 0);
+            for (const [code, count] of Object.entries(stats.facet_distributions[distKey]).slice(0, 6)) {
                 const valueName = facetInfo?.values?.[code]?.name || code;
                 const pct = ((count / total) * 100).toFixed(1);
                 html += `
@@ -1171,19 +1231,25 @@ function initializeOverview() {
 }
 
 function initializeFacetViews() {
-    const facetIds = ['NAT', 'TRF', 'COG', 'CTX', 'FUT', 'DIG', 'IND'];
+    const facetIds = ['NAT', 'TRF', 'COG', 'CTX', 'FUT', 'DIG', 'ASCED'];
     
     for (const facetId of facetIds) {
         const container = document.getElementById(`${facetId}View`);
         if (!container) continue;
         
-        const facetInfo = taxonomyData.facets[facetId];
+        // Try to get facet info, falling back to IND for ASCED
+        let facetInfo = taxonomyData.facets[facetId];
+        if (!facetInfo && facetId === 'ASCED') {
+            facetInfo = taxonomyData.facets.IND;
+        }
         if (!facetInfo) continue;
         
         // Count skills per facet value
         const valueCounts = {};
+        const skillFacetKey = facetId === 'ASCED' ? (taxonomyData.skills[0]?.facets?.ASCED ? 'ASCED' : 'IND') : facetId;
+        
         for (const skill of taxonomyData.skills) {
-            const facetData = skill.facets?.[facetId];
+            const facetData = skill.facets?.[skillFacetKey];
             if (facetData) {
                 const code = facetData.code;
                 if (Array.isArray(code)) {
@@ -1193,6 +1259,8 @@ function initializeFacetViews() {
                 }
             }
         }
+        
+        const displayName = FACET_DISPLAY_NAMES[facetId] || facetInfo.facet_name || facetId;
         
         let html = `
             <div class="facet-view">
@@ -1206,10 +1274,11 @@ function initializeFacetViews() {
         // Create category cards
         for (const [code, valueInfo] of Object.entries(facetInfo.values)) {
             const count = valueCounts[code] || 0;
+            const ascedCode = facetId === 'ASCED' ? `<span class="asced-code">${code}</span>` : '';
             html += `
                 <div class="facet-category" data-facet="${facetId}" data-value="${code}">
                     <div class="facet-category-header">
-                        <span class="facet-category-name">${valueInfo.name}</span>
+                        <span class="facet-category-name">${ascedCode}${valueInfo.name}</span>
                         <span class="facet-category-count">${count}</span>
                     </div>
                     <div class="facet-category-desc">${(valueInfo.description || '').substring(0, 80)}${valueInfo.description?.length > 80 ? '...' : ''}</div>
@@ -1262,9 +1331,12 @@ function loadFacetSkills(facetId, valueCode) {
     const grid = document.getElementById(`${facetId}SkillsGrid`);
     if (!grid) return;
     
+    // Handle ASCED/IND interchangeably
+    const skillFacetKey = facetId === 'ASCED' ? (taxonomyData.skills[0]?.facets?.ASCED ? 'ASCED' : 'IND') : facetId;
+    
     // Filter skills by facet value
     let skills = taxonomyData.skills.filter(s => {
-        const facetData = s.facets?.[facetId];
+        const facetData = s.facets?.[skillFacetKey];
         if (!facetData) return false;
         const code = facetData.code;
         if (Array.isArray(code)) {
@@ -1275,8 +1347,8 @@ function loadFacetSkills(facetId, valueCode) {
     
     // Sort by confidence descending
     skills.sort((a, b) => {
-        const confA = a.facets?.[facetId]?.confidence || 0;
-        const confB = b.facets?.[facetId]?.confidence || 0;
+        const confA = a.facets?.[skillFacetKey]?.confidence || 0;
+        const confB = b.facets?.[skillFacetKey]?.confidence || 0;
         return confB - confA;
     });
     
@@ -1357,19 +1429,6 @@ function showSkillDetail(facetId, skillId) {
     
     selectedSkillId = skillId;
     
-    // Facet name mapping
-    const facetNames = {
-        'NAT': 'Skill Nature',
-        'TRF': 'Transferability',
-        'COG': 'Cognitive Complexity',
-        'CTX': 'Work Context',
-        'FUT': 'Future Readiness',
-        'LRN': 'Learning Context',
-        'DIG': 'Digital Intensity',
-        'IND': 'Industry Domain',
-        'LVL': 'Proficiency Level'
-    };
-    
     let html = `
         <div class="skill-detail-card">
             <div class="skill-detail-header">
@@ -1393,13 +1452,17 @@ function showSkillDetail(facetId, skillId) {
     // Show all facets as vertical list
     for (const [fId, fData] of Object.entries(skill.facets || {})) {
         if (fData && fData.name) {
-            const facetDisplayName = facetNames[fId] || fId;
+            // Skip IND if ASCED is present (avoid duplication)
+            if (fId === 'IND' && skill.facets.ASCED) continue;
+            
+            const facetDisplayName = FACET_DISPLAY_NAMES[fId] || fId;
             const confidenceHtml = fData.confidence ? `<span class="facet-confidence">${(fData.confidence * 100).toFixed(0)}%</span>` : '';
+            const badgeClass = fId === 'IND' ? 'ASCED' : fId;
             html += `
                 <div class="dimension-row">
                     <span class="dimension-label">${facetDisplayName}</span>
                     <div class="dimension-value">
-                        <span class="facet-badge ${fId}">${fData.name}</span>
+                        <span class="facet-badge ${badgeClass}">${fData.name}</span>
                         ${confidenceHtml}
                     </div>
                 </div>
@@ -1506,12 +1569,17 @@ function initializeFilterView() {
         'FUT': 'bi-robot',
         'LRN': 'bi-book',
         'DIG': 'bi-laptop',
-        'IND': 'bi-building',
+        'ASCED': 'bi-mortarboard',
+        'IND': 'bi-mortarboard',
         'LVL': 'bi-layers'
     };
     
     for (const [facetId, facetInfo] of Object.entries(taxonomyData.facets || {})) {
+        // Skip IND if ASCED is present
+        if (facetId === 'IND' && taxonomyData.facets.ASCED) continue;
+        
         const icon = facetIcons[facetId] || 'bi-tag';
+        const displayName = FACET_DISPLAY_NAMES[facetId] || facetInfo.name || facetId;
         const options = Object.entries(facetInfo.values || {})
             .map(([code, valueInfo]) => `<option value="${code}">${valueInfo.name}</option>`)
             .join('');
@@ -1519,7 +1587,7 @@ function initializeFilterView() {
         filtersHtml += `
             <div class="filter-section">
                 <div class="filter-section-title">
-                    <i class="bi ${icon}"></i> ${facetInfo.name}
+                    <i class="bi ${icon}"></i> ${displayName}
                 </div>
                 <select class="filter-select" id="filter_${facetId}" data-facet="${facetId}">
                     <option value="">All</option>
@@ -1584,7 +1652,7 @@ function updateActiveFilterTags() {
     document.querySelectorAll('.filter-select').forEach(select => {
         if (select.value) {
             const facetId = select.dataset.facet;
-            const facetName = taxonomyData.facets[facetId]?.name || facetId;
+            const facetName = FACET_DISPLAY_NAMES[facetId] || taxonomyData.facets[facetId]?.name || facetId;
             const valueName = select.options[select.selectedIndex].text;
             tagsHtml += `
                 <span class="active-filter-tag">
@@ -1620,7 +1688,15 @@ function applyMultiFilters() {
     // Filter skills
     let filtered = taxonomyData.skills.filter(skill => {
         for (const [facetId, value] of Object.entries(activeFilters)) {
-            const skillFacet = skill.facets?.[facetId];
+            // Handle ASCED/IND interchangeably
+            let skillFacetKey = facetId;
+            if (facetId === 'ASCED' && !skill.facets?.ASCED && skill.facets?.IND) {
+                skillFacetKey = 'IND';
+            } else if (facetId === 'IND' && !skill.facets?.IND && skill.facets?.ASCED) {
+                skillFacetKey = 'ASCED';
+            }
+            
+            const skillFacet = skill.facets?.[skillFacetKey];
             if (!skillFacet || skillFacet.code !== value) {
                 return false;
             }
@@ -1635,12 +1711,15 @@ function applyMultiFilters() {
             let countA = 0, countB = 0;
             
             for (const facetId of Object.keys(activeFilters)) {
-                if (a.facets?.[facetId]?.confidence) {
-                    confA += a.facets[facetId].confidence;
+                const facetKeyA = (facetId === 'ASCED' && !a.facets?.ASCED) ? 'IND' : facetId;
+                const facetKeyB = (facetId === 'ASCED' && !b.facets?.ASCED) ? 'IND' : facetId;
+                
+                if (a.facets?.[facetKeyA]?.confidence) {
+                    confA += a.facets[facetKeyA].confidence;
                     countA++;
                 }
-                if (b.facets?.[facetId]?.confidence) {
-                    confB += b.facets[facetId].confidence;
+                if (b.facets?.[facetKeyB]?.confidence) {
+                    confB += b.facets[facetKeyB].confidence;
                     countB++;
                 }
             }
@@ -1708,18 +1787,29 @@ function updateFilterDropdownCounts(currentFilteredSkills) {
                 // Check all active filters except this facet
                 for (const [facetId, value] of Object.entries(activeFilters)) {
                     if (facetId === thisFacetId) continue;  // Skip this facet
-                    const skillFacet = skill.facets?.[facetId];
+                    
+                    let skillFacetKey = facetId;
+                    if (facetId === 'ASCED' && !skill.facets?.ASCED && skill.facets?.IND) {
+                        skillFacetKey = 'IND';
+                    }
+                    
+                    const skillFacet = skill.facets?.[skillFacetKey];
                     if (!skillFacet || skillFacet.code !== value) {
                         return false;
                     }
                 }
                 // Check this facet's potential value
-                const skillFacet = skill.facets?.[thisFacetId];
+                let skillFacetKey = thisFacetId;
+                if (thisFacetId === 'ASCED' && !skill.facets?.ASCED && skill.facets?.IND) {
+                    skillFacetKey = 'IND';
+                }
+                
+                const skillFacet = skill.facets?.[skillFacetKey];
                 return skillFacet && skillFacet.code === valueCode;
             }).length;
             
             // Update option text with count
-            const baseName = option.dataset.baseName || option.text.replace(/\s*\(\d+\)$/, '');
+            const baseName = option.dataset.baseName || option.text.replace(/\\s*\\(\\d+\\)$/, '');
             option.dataset.baseName = baseName;
             option.text = `${baseName} (${count})`;
         });
@@ -1753,10 +1843,13 @@ function clearMultiFilters() {
 function initializeTableView() {
     const container = document.getElementById('tableView');
     
-    // Build filter options
-    const facetOptions = Object.entries(taxonomyData.facets || {}).map(([id, info]) => 
-        `<option value="${id}">${info.name}</option>`
-    ).join('');
+    // Build filter options - handle ASCED/IND
+    const facetOptions = Object.entries(taxonomyData.facets || {})
+        .filter(([id]) => !(id === 'IND' && taxonomyData.facets.ASCED))
+        .map(([id, info]) => {
+            const displayName = FACET_DISPLAY_NAMES[id] || info.name || id;
+            return `<option value="${id}">${displayName}</option>`;
+        }).join('');
     
     container.innerHTML = `
         <div class="table-controls">
@@ -1790,7 +1883,7 @@ function initializeTableView() {
                         <th>Nature</th>
                         <th>Transferability</th>
                         <th>Cognitive</th>
-                        <th>Future</th>
+                        <th>ASCED Field</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
@@ -1844,7 +1937,12 @@ function applyTableFilters() {
         
         // Facet filter
         if (facetId && facetValue) {
-            const facetData = s.facets?.[facetId];
+            let skillFacetKey = facetId;
+            if (facetId === 'ASCED' && !s.facets?.ASCED && s.facets?.IND) {
+                skillFacetKey = 'IND';
+            }
+            
+            const facetData = s.facets?.[skillFacetKey];
             if (!facetData) return false;
             const code = facetData.code;
             if (Array.isArray(code)) {
@@ -1869,18 +1967,21 @@ function renderTable() {
     const end = start + pageSize;
     const pageData = filteredData.slice(start, end);
     
-    tbody.innerHTML = pageData.map(s => `
-        <tr>
-            <td style="font-family: monospace; font-size: 0.8rem;">${s.id || '-'}</td>
-            <td title="${s.name}">${s.name}</td>
-            <td>${formatLabel(s.category) || '-'}</td>
-            <td>${s.level || '-'}</td>
-            <td>${s.facets?.NAT?.name || '-'}</td>
-            <td>${s.facets?.TRF?.name || '-'}</td>
-            <td>${s.facets?.COG?.name || '-'}</td>
-            <td>${s.facets?.FUT?.name || '-'}</td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = pageData.map(s => {
+        const ascedField = s.facets?.ASCED?.name || s.facets?.IND?.name || '-';
+        return `
+            <tr>
+                <td style="font-family: monospace; font-size: 0.8rem;">${s.id || '-'}</td>
+                <td title="${s.name}">${s.name}</td>
+                <td>${formatLabel(s.category) || '-'}</td>
+                <td>${s.level || '-'}</td>
+                <td>${s.facets?.NAT?.name || '-'}</td>
+                <td>${s.facets?.TRF?.name || '-'}</td>
+                <td>${s.facets?.COG?.name || '-'}</td>
+                <td>${ascedField}</td>
+            </tr>
+        `;
+    }).join('');
     
     renderPagination();
 }
@@ -1951,7 +2052,8 @@ function exportToExcel() {
         'Future Readiness': s.facets?.FUT?.name || '',
         'Learning Context': s.facets?.LRN?.name || '',
         'Digital Intensity': s.facets?.DIG?.name || '',
-        'Industry Domains': s.facets?.IND?.name || '',
+        'ASCED Field of Education': s.facets?.ASCED?.name || s.facets?.IND?.name || '',
+        'ASCED Code': s.facets?.ASCED?.code || s.facets?.IND?.code || '',
         'Proficiency Level': s.facets?.LVL?.name || '',
         'Primary Code': s.code || '',
         'Alternative Titles': (s.alternative_titles || []).join('; '),
@@ -1966,11 +2068,11 @@ function exportToExcel() {
 }
 
 function exportToCSV() {
-    const headers = ['ID', 'Name', 'Category', 'Level', 'Nature', 'Transferability', 'Cognitive', 'Future', 'Code'];
+    const headers = ['ID', 'Name', 'Category', 'Level', 'Nature', 'Transferability', 'Cognitive', 'ASCED Field', 'Code'];
     const rows = taxonomyData.skills.map(s => [
         s.id, s.name, s.category || '', s.level || '',
         s.facets?.NAT?.name || '', s.facets?.TRF?.name || '',
-        s.facets?.COG?.name || '', s.facets?.FUT?.name || '', s.code || ''
+        s.facets?.COG?.name || '', s.facets?.ASCED?.name || s.facets?.IND?.name || '', s.code || ''
     ].map(v => `"${String(v || '').replace(/"/g, '""')}"`).join(','));
     
     const csv = [headers.join(','), ...rows].join('\\n');
@@ -2030,40 +2132,6 @@ HTML_TEMPLATE_EXTERNAL = """<!DOCTYPE html>
 """
 
 
-# Note: This embedded template is kept for reference but not currently used
-# All HTML files now use external data files for better performance
-HTML_TEMPLATE_EMBEDDED = """<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VET Skills Faceted Explorer | Jobs and Skills Australia</title>
-    
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <style>
-        {CSS_CONTENT}
-    </style>
-</head>
-<body>
-    {BODY_CONTENT}
-
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-    <script>
-        const EMBEDDED_DATA = {TAXONOMY_DATA};
-        
-        {JAVASCRIPT_CONTENT}
-    </script>
-</body>
-</html>
-"""
-
-
 def count_skills(data):
     """Count total skills"""
     return len(data.get('skills', []))
@@ -2087,6 +2155,7 @@ def generate_faceted_html(taxonomy_json_path: str, output_html_path: str):
     with open(data_file, 'w') as f:
         f.write('// VET Skills Faceted Taxonomy Data\n')
         f.write('// This file is auto-generated - do not edit manually\n')
+        f.write('// Classification: ASCED (Australian Standard Classification of Education)\n')
         f.write('const TAXONOMY_DATA = ')
         json.dump(taxonomy_data, f, separators=(',', ':'))
         f.write(';\n')
