@@ -1,0 +1,1670 @@
+2022 ANZSCO 	Description	Effective to date
+100000	MANAGERS		
+110000	Chief Executives, General Managers and Legislators		
+111000	Chief Executives, General Managers and Legislators		
+111100	Chief Executives and Managing Directors		
+111111	Chief Executive or Managing Director		
+111200	General Managers		
+111211	Corporate General Manager		
+111212	Defence Force Senior Officer		
+111300	Legislators		
+111311	Local Government Legislator		
+111312	Member of Parliament		
+111399	Legislators nec		
+120000	Farmers and Farm Managers		
+121000	Farmers and Farm Managers		
+121100	Aquaculture Farmers		
+121111	Aquaculture Farmer		
+121200	Crop Farmers	2022-04-21	
+121211	Cotton Grower	2022-04-21	
+121212	Flower Grower	2022-04-21	
+121213	Fruit or Nut Grower	2022-04-21	
+121214	Grain, Oilseed or Pasture Grower	2022-04-21	
+121215	Grape Grower	2022-04-21	
+121216	Mixed Crop Farmer	2022-04-21	
+121217	Sugar Cane Grower	2022-04-21	
+121218	Turf Grower	2022-04-21	
+121221	Vegetable Grower	2022-04-21	
+121299	Crop Farmers nec	2022-04-21	
+121300	Livestock Farmers		
+121311	Apiarist		
+121312	Beef Cattle Farmer		
+121313	Dairy Cattle Farmer		
+121314	Deer Farmer		
+121315	Goat Farmer		
+121316	Horse Breeder		
+121317	Mixed Livestock Farmer	2022-04-21	
+121318	Pig Farmer		
+121321	Poultry Farmer		
+121322	Sheep Farmer		
+121323	Mixed Cattle and Sheep Farmer		
+121399	Livestock Farmers nec		
+121400	Mixed Crop and Livestock Farmers	2022-04-21	
+121411	Mixed Crop and Livestock Farmer	2022-04-21	
+121500	Broadacre Crop Growers		
+121511	Cotton Grower		
+121512	Grain, Oilseed, Pulse or Pasture Grower / Field Crop Grower		
+121513	Sugar Cane Grower		
+121599	Broadacre Crop Growers nec		
+121600	Horticultural Crop Growers		
+121611	Flower Grower		
+121612	Fruit Grower		
+121613	Nut Grower		
+121614	Production Nursery Grower		
+121615	Turf Grower		
+121616	Vegetable Grower (Aus) / Market Gardener (NZ)		
+121617	Wine Grape Grower		
+121699	Horticultural Crop Growers nec		
+121700	Mixed Production Farmers		
+121711	Broadacre Crop and Livestock Farmer		
+121799	Mixed Production Farmers nec		
+130000	Specialist Managers		
+131000	Advertising, Public Relations and Sales Managers		
+131100	Advertising, Public Relations and Sales Managers		
+131111	Advertising and Public Relations Manager	2011-12-31	
+131112	Sales and Marketing Manager		
+131113	Advertising Manager		
+131114	Public Relations Manager		
+132000	Business Administration Managers		
+132100	Corporate Services Managers		
+132111	Corporate Services Manager		
+132200	Finance Managers		
+132211	Finance Manager		
+132300	Human Resource Managers		
+132311	Human Resource Manager		
+132400	Policy and Planning Managers		
+132411	Policy and Planning Manager		
+132500	Research and Development Managers		
+132511	Research and Development Manager		
+133000	Construction, Distribution and Production Managers		
+133100	Construction Managers		
+133111	Construction Project Manager		
+133112	Project Builder		
+133200	Engineering Managers		
+133211	Engineering Manager		
+133300	Importers, Exporters and Wholesalers		
+133311	Importer or Exporter		
+133312	Wholesaler		
+133400	Manufacturers		
+133411	Manufacturer		
+133500	Production Managers		
+133511	Production Manager (Forestry)		
+133512	Production Manager (Manufacturing)		
+133513	Production Manager (Mining)		
+133600	Supply, Distribution and Procurement Managers		
+133611	Supply and Distribution Manager		
+133612	Procurement Manager		
+134000	Education, Health and Welfare Services Managers		
+134100	Child Care Centre Managers		
+134111	Child Care Centre Manager		
+134200	Health and Welfare Services Managers		
+134211	Medical Administrator		
+134212	Nursing Clinical Director		
+134213	Primary Health Organisation Manager		
+134214	Welfare Centre Manager		
+134299	Health and Welfare Services Managers nec		
+134300	School Principals		
+134311	School Principal		
+134400	Other Education Managers		
+134411	Faculty Head		
+134412	Regional Education Manager		
+134499	Education Managers nec		
+135000	ICT Managers		
+135100	ICT Managers		
+135111	Chief Information Officer		
+135112	ICT Project Manager		
+135199	ICT Managers nec		
+139000	Miscellaneous Specialist Managers		
+139100	Commissioned Officers (Management)		
+139111	Commissioned Defence Force Officer		
+139112	Commissioned Fire Officer		
+139113	Commissioned Police Officer		
+139200	Senior Non-commissioned Defence Force Members		
+139211	Senior Non-commissioned Defence Force Member		
+139900	Other Specialist Managers		
+139911	Arts Administrator or Manager		
+139912	Environmental Manager		
+139913	Laboratory Manager		
+139914	Quality Assurance Manager	2023-04-21	
+139915	Sports Administrator		
+139916	Quality Assurance Manager		
+139917	Regulatory Affairs Manager		
+139999	Specialist Managers nec		
+140000	Hospitality, Retail and Service Managers		
+141000	Accommodation and Hospitality Managers		
+141100	Cafe and Restaurant Managers		
+141111	Cafe or Restaurant Manager		
+141200	Caravan Park and Camping Ground Managers		
+141211	Caravan Park and Camping Ground Manager		
+141300	Hotel and Motel Managers		
+141311	Hotel or Motel Manager		
+141400	Licensed Club Managers		
+141411	Licensed Club Manager		
+141900	Other Accommodation and Hospitality Managers		
+141911	Bed and Breakfast Operator		
+141912	Retirement Village Manager		
+141999	Accommodation and Hospitality Managers nec		
+142000	Retail Managers		
+142100	Retail Managers		
+142111	Retail Manager (General)		
+142112	Antique Dealer		
+142113	Betting Agency Manager		
+142114	Hair or Beauty Salon Manager		
+142115	Post Office Manager		
+142116	Travel Agency Manager		
+149000	Miscellaneous Hospitality, Retail and Service Managers		
+149100	Amusement, Fitness and Sports Centre Managers		
+149111	Amusement Centre Manager		
+149112	Fitness Centre Manager		
+149113	Sports Centre Manager		
+149200	Call or Contact Centre and Customer Service Managers		
+149211	Call or Contact Centre Manager		
+149212	Customer Service Manager		
+149300	Conference and Event Organisers		
+149311	Conference and Event Organiser		
+149400	Transport Services Managers		
+149411	Fleet Manager		
+149412	Railway Station Manager		
+149413	Transport Company Manager		
+149900	Other Hospitality, Retail and Service Managers		
+149911	Boarding Kennel or Cattery Operator		
+149912	Cinema or Theatre Manager		
+149913	Facilities Manager		
+149914	Financial Institution Branch Manager		
+149915	Equipment Hire Manager		
+149999	Hospitality, Retail and Service Managers nec		
+200000	PROFESSIONALS		
+210000	Arts and Media Professionals		
+211000	Arts Professionals		
+211100	Actors, Dancers and Other Entertainers		
+211111	Actor		
+211112	Dancer or Choreographer		
+211113	Entertainer or Variety Artist		
+211199	Actors, Dancers and Other Entertainers nec		
+211200	Music Professionals		
+211211	Composer		
+211212	Music Director		
+211213	Musician (Instrumental)		
+211214	Singer		
+211299	Music Professionals nec		
+211300	Photographers		
+211311	Photographer		
+211400	Visual Arts and Crafts Professionals		
+211411	Painter (Visual Arts)		
+211412	Potter or Ceramic Artist		
+211413	Sculptor		
+211499	Visual Arts and Crafts Professionals nec		
+212000	Media Professionals		
+212100	Artistic Directors, and Media Producers and Presenters		
+212111	Artistic Director		
+212112	Media Producer (excluding Video)		
+212113	Radio Presenter		
+212114	Television Presenter		
+212200	Authors, and Book and Script Editors		
+212211	Author		
+212212	Book or Script Editor		
+212300	Film, Television, Radio and Stage Directors		
+212311	Art Director (Film, Television or Stage)		
+212312	Director (Film, Television, Radio or Stage)		
+212313	Director of Photography		
+212314	Film and Video Editor		
+212315	Program Director (Television or Radio)		
+212316	Stage Manager		
+212317	Technical Director		
+212318	Video Producer		
+212399	Film, Television, Radio and Stage Directors nec		
+212400	Journalists and Other Writers		
+212411	Copywriter		
+212412	Newspaper or Periodical Editor		
+212413	Print Journalist		
+212414	Radio Journalist		
+212415	Technical Writer		
+212416	Television Journalist		
+212499	Journalists and Other Writers nec		
+220000	Business, Human Resource and Marketing Professionals		
+221000	Accountants, Auditors and Company Secretaries		
+221100	Accountants		
+221111	Accountant (General)		
+221112	Management Accountant		
+221113	Taxation Accountant		
+221200	Auditors, Company Secretaries and Corporate Treasurers		
+221211	Company Secretary		
+221212	Corporate Treasurer		
+221213	External Auditor		
+221214	Internal Auditor		
+222000	Financial Brokers and Dealers, and Investment Advisers		
+222100	Financial Brokers		
+222111	Commodities Trader		
+222112	Finance Broker		
+222113	Insurance Broker		
+222199	Financial Brokers nec		
+222200	Financial Dealers		
+222211	Financial Market Dealer		
+222212	Futures Trader		
+222213	Stockbroking Dealer		
+222299	Financial Dealers nec		
+222300	Financial Investment Advisers and Managers		
+222311	Financial Investment Adviser		
+222312	Financial Investment Manager		
+223000	Human Resource and Training Professionals		
+223100	Human Resource Professionals		
+223111	Human Resource Adviser		
+223112	Recruitment Consultant		
+223113	Workplace Relations Adviser		
+223200	ICT Trainers	2022-04-21	
+223211	ICT Trainer	2022-04-21	
+223300	Training and Development Professionals		
+223311	Training and Development Professional		
+224000	Information and Organisation Professionals		
+224100	Mathematical Science Professionals		
+224111	Actuary		
+224112	Mathematician		
+224113	Statistician	2023-04-21	
+224114	Data Analyst		
+224115	Data Scientist		
+224116	Statistician		
+224200	Archivists, Curators and Records Managers		
+224211	Archivist		
+224212	Gallery or Museum Curator		
+224213	Health Information Manager		
+224214	Records Manager		
+224300	Economists		
+224311	Economist		
+224400	Intelligence and Policy Analysts		
+224411	Intelligence Officer		
+224412	Policy Analyst		
+224500	Land Economists and Valuers		
+224511	Land Economist		
+224512	Valuer		
+224600	Librarians		
+224611	Librarian		
+224700	Management and Organisation Analysts		
+224711	Management Consultant	2023-04-21	
+224712	Organisation and Methods Analyst		
+224713	Management Consultant		
+224714	Supply Chain Analyst		
+224900	Other Information and Organisation Professionals		
+224911	Electorate Officer		
+224912	Liaison Officer		
+224913	Migration Agent		
+224914	Patents Examiner		
+224999	Information and Organisation Professionals nec		
+225000	Sales, Marketing and Public Relations Professionals		
+225100	Advertising and Marketing Professionals		
+225111	Advertising Specialist		
+225112	Market Research Analyst		
+225113	Marketing Specialist		
+225114	Content Creator (Marketing)		
+225115	Digital Marketing Analyst		
+225200	ICT Sales Professionals		
+225211	ICT Account Manager		
+225212	ICT Business Development Manager		
+225213	ICT Sales Representative		
+225300	Public Relations Professionals		
+225311	Public Relations Professional		
+225400	Technical Sales Representatives		
+225411	Sales Representative (Industrial Products)		
+225412	Sales Representative (Medical and Pharmaceutical Products)		
+225499	Technical Sales Representatives nec		
+230000	Design, Engineering, Science and Transport Professionals		
+231000	Air and Marine Transport Professionals		
+231100	Air Transport Professionals		
+231111	Aeroplane Pilot		
+231112	Air Traffic Controller		
+231113	Flying Instructor		
+231114	Helicopter Pilot		
+231199	Air Transport Professionals nec		
+231200	Marine Transport Professionals		
+231211	Master Fisher		
+231212	Ship's Engineer		
+231213	Ship's Master		
+231214	Ship's Officer		
+231215	Marine Surveyor		
+231299	Marine Transport Professionals nec		
+232000	Architects, Designers, Planners and Surveyors		
+232100	Architects and Landscape Architects		
+232111	Architect		
+232112	Landscape Architect		
+232200	Surveyors and Spatial Scientists		
+232211	Cartographer	2011-12-31	
+232212	Surveyor		
+232213	Cartographer		
+232214	Other Spatial Scientist		
+232300	Fashion, Industrial and Jewellery Designers		
+232311	Fashion Designer		
+232312	Industrial Designer		
+232313	Jewellery Designer		
+232400	Graphic and Web Designers, and Illustrators		
+232411	Graphic Designer		
+232412	Illustrator		
+232413	Multimedia Designer		
+232414	Web Designer		
+232500	Interior Designers		
+232511	Interior Designer		
+232600	Urban and Regional Planners		
+232611	Urban and Regional Planner		
+233000	Engineering Professionals		
+233100	Chemical and Materials Engineers		
+233111	Chemical Engineer		
+233112	Materials Engineer		
+233200	Civil Engineering Professionals		
+233211	Civil Engineer		
+233212	Geotechnical Engineer		
+233213	Quantity Surveyor		
+233214	Structural Engineer		
+233215	Transport Engineer		
+233300	Electrical Engineers		
+233311	Electrical Engineer		
+233400	Electronics Engineers		
+233411	Electronics Engineer		
+233500	Industrial, Mechanical and Production Engineers		
+233511	Industrial Engineer		
+233512	Mechanical Engineer		
+233513	Production or Plant Engineer		
+233600	Mining Engineers		
+233611	Mining Engineer (excluding Petroleum)		
+233612	Petroleum Engineer		
+233900	Other Engineering Professionals		
+233911	Aeronautical Engineer		
+233912	Agricultural Engineer		
+233913	Biomedical Engineer		
+233914	Engineering Technologist		
+233915	Environmental Engineer		
+233916	Naval Architect		
+233999	Engineering Professionals nec		
+234000	Natural and Physical Science Professionals		
+234100	Agricultural, Fisheries and Forestry Scientists		
+234111	Agricultural Consultant		
+234112	Agricultural Scientist	2022-04-21	
+234113	Forester / Forest Scientist		
+234114	Agricultural Research Scientist		
+234115	Agronomist		
+234116	Aquaculture or Fisheries Scientist		
+234200	Chemists, and Food and Wine Scientists		
+234211	Chemist		
+234212	Food Technologist		
+234213	Wine Maker		
+234300	Environmental Scientists		
+234311	Conservation Officer		
+234312	Environmental Consultant		
+234313	Environmental Research Scientist		
+234314	Park Ranger		
+234399	Environmental Scientists nec		
+234400	Geologists, Geophysicists and Hydrogeologists		
+234411	Geologist		
+234412	Geophysicist		
+234413	Hydrogeologist		
+234500	Life Scientists		
+234511	Life Scientist (General)		
+234512	Anatomist or Physiologist	2013-12-31	
+234513	Biochemist		
+234514	Biotechnologist		
+234515	Botanist		
+234516	Marine Biologist		
+234517	Microbiologist		
+234518	Zoologist	2022-04-21	
+234521	Entomologist		
+234522	Zoologist		
+234599	Life Scientists nec		
+234600	Medical Scientists		
+234611	Medical Laboratory Scientist		
+234612	Respiratory Scientist		
+234700	Veterinarians		
+234711	Veterinarian		
+234900	Other Natural and Physical Science Professionals		
+234911	Conservator		
+234912	Metallurgist		
+234913	Meteorologist		
+234914	Physicist		
+234915	Excercise Physiologist		
+234999	Natural and Physical Science Professionals nec		
+240000	Education Professionals		
+241000	School Teachers		
+241100	Early Childhood (Pre-primary School) Teachers		
+241111	Early Childhood (Pre-primary School) Teacher		
+241112	Kaiako Kohanga Reo (Maori Language Nest Teacher)		
+241200	Primary School Teachers		
+241211	Kaiako Kura Kaupapa Maori (Maori-medium Primary School Teacher)		
+241212	Pouako Kura Kaupapa Maori (Maori-medium Primary School Senior Teacher)		
+241213	Primary School Teacher		
+241300	Middle School Teachers		
+241311	Middle School Teacher		
+241400	Secondary School Teachers		
+241411	Secondary School Teacher		
+241500	Special Education Teachers		
+241511	Special Needs Teacher		
+241512	Teacher of the Hearing Impaired		
+241513	Teacher of the Sight Impaired		
+241599	Special Education Teachers nec		
+242000	Tertiary Education Teachers		
+242100	University Lecturers and Tutors		
+242111	University Lecturer		
+242112	University Tutor		
+242200	Vocational Education Teachers		
+242211	Vocational Education Teacher		
+249000	Miscellaneous Education Professionals		
+249100	Education Advisers and Reviewers		
+249111	Education Adviser		
+249112	Education Reviewer		
+249200	Private Tutors and Teachers		
+249211	Art Teacher (Private Tuition)		
+249212	Dance Teacher (Private Tuition)		
+249213	Drama Teacher (Private Tuition)		
+249214	Music Teacher (Private Tuition)		
+249299	Private Tutors and Teachers nec		
+249300	Teachers of English to Speakers of Other Languages		
+249311	Teacher of English to Speakers of Other Languages		
+250000	Health Professionals		
+251000	Health Diagnostic and Promotion Professionals		
+251100	Nutrition Professionals		
+251111	Dietitian		
+251112	Nutritionist		
+251200	Medical Imaging Professionals		
+251211	Medical Diagnostic Radiographer		
+251212	Medical Radiation Therapist		
+251213	Nuclear Medicine Technologist		
+251214	Sonographer		
+251300	Occupational and Environmental Health Professionals		
+251311	Environmental Health Officer		
+251312	Occupational Health and Safety Adviser		
+251400	Optometrists and Orthoptists		
+251411	Optometrist		
+251412	Orthoptist		
+251500	Pharmacists		
+251511	Hospital Pharmacist		
+251512	Industrial Pharmacist		
+251513	Retail Pharmacist		
+251900	Other Health Diagnostic and Promotion Professionals		
+251911	Health Promotion Officer		
+251912	Orthotist or Prosthetist		
+251999	Health Diagnostic and Promotion Professionals nec		
+252000	Health Therapy Professionals		
+252100	Chiropractors and Osteopaths		
+252111	Chiropractor		
+252112	Osteopath		
+252200	Complementary Health Therapists		
+252211	Acupuncturist		
+252212	Homoeopath		
+252213	Naturopath		
+252214	Traditional Chinese Medicine Practitioner		
+252215	Traditional Maori Health Practitioner		
+252299	Complementary Health Therapists nec		
+252300	Dental Practitioners		
+252311	Dental Specialist		
+252312	Dentist		
+252400	Occupational Therapists		
+252411	Occupational Therapist		
+252500	Physiotherapists		
+252511	Physiotherapist		
+252600	Podiatrists		
+252611	Podiatrist		
+252700	Audiologists and Speech Pathologists or Therapists		
+252711	Audiologist		
+252712	Speech Pathologist		
+253000	Medical Practitioners		
+253100	General Practitioners and Resident Medical Officers		
+253111	General Practitioner		
+253112	Resident Medical Officer		
+253200	Anaesthetists		
+253211	Anaesthetist		
+253300	Specialist Physicians		
+253311	Specialist Physician (General Medicine)		
+253312	Cardiologist		
+253313	Clinical Haematologist		
+253314	Medical Oncologist		
+253315	Endocrinologist		
+253316	Gastroenterologist		
+253317	Intensive Care Specialist		
+253318	Neurologist		
+253321	Paediatrician		
+253322	Renal Medicine Specialist		
+253323	Rheumatologist		
+253324	Thoracic Medicine Specialist		
+253399	Specialist Physicians nec		
+253400	Psychiatrists		
+253411	Psychiatrist		
+253500	Surgeons		
+253511	Surgeon (General)		
+253512	Cardiothoracic Surgeon		
+253513	Neurosurgeon		
+253514	Orthopaedic Surgeon		
+253515	Otorhinolaryngologist		
+253516	Paediatric Surgeon		
+253517	Plastic and Reconstructive Surgeon		
+253518	Urologist		
+253521	Vascular Surgeon		
+253900	Other Medical Practitioners		
+253911	Dermatologist		
+253912	Emergency Medicine Specialist		
+253913	Obstetrician and Gynaecologist		
+253914	Ophthalmologist		
+253915	Pathologist		
+253916	Radiologist	2011-12-31	
+253917	Diagnostic and Interventional Radiologist		
+253918	Radiation Oncologist		
+253999	Medical Practitioners nec		
+254000	Midwifery and Nursing Professionals		
+254100	Midwives		
+254111	Midwife		
+254200	Nurse Educators and Researchers		
+254211	Nurse Educator		
+254212	Nurse Researcher		
+254300	Nurse Managers		
+254311	Nurse Manager		
+254400	Registered Nurses		
+254411	Nurse Practitioner		
+254412	Registered Nurse (Aged Care)		
+254413	Registered Nurse (Child and Family Health)		
+254414	Registered Nurse (Community Health)		
+254415	Registered Nurse (Critical Care and Emergency)		
+254416	Registered Nurse (Developmental Disability)		
+254417	Registered Nurse (Disability and Rehabilitation)		
+254418	Registered Nurse (Medical)		
+254421	Registered Nurse (Medical Practice)		
+254422	Registered Nurse (Mental Health)		
+254423	Registered Nurse (Perioperative)		
+254424	Registered Nurse (Surgical)		
+254425	Registered Nurse (Paediatrics)		
+254499	Registered Nurses nec		
+260000	ICT Professionals		
+261000	Business and Systems Analysts, and Programmers		
+261100	ICT Business and Systems Analysts		
+261111	ICT Business Analyst		
+261112	Systems Analyst		
+261113	User Experience Designer		
+261200	Multimedia Specialists and Web Developers		
+261211	Multimedia Specialist		
+261212	Web Developer		
+261300	Software and Applications Programmers		
+261311	Analyst Programmer		
+261312	Developer Programmer		
+261313	Software Engineer		
+261314	Software Tester		
+261315	Cyber Security Engineer		
+261316	DevOps Engineer		
+261317	Penetration Tester		
+261399	Software and Applications Programmers nec		
+262000	Database and Systems Administrators, and ICT Security Specialists		
+262100	Database and Systems Administrators, and ICT Security Specialists		
+262111	Database Administrator		
+262112	ICT Security Specialist	2022-04-21	
+262113	Systems Administrator		
+262114	Cyber Governance Risk and Compliance Specialist		
+262115	Cyber Security Advice and Assessment Specialist		
+262116	Cyber Security Analyst		
+262117	Cyber Security Architect		
+262118	Cyber Security Operations Coordinator		
+263000	ICT Network and Support Professionals		
+263100	Computer Network Professionals		
+263111	Computer Network and Systems Engineer		
+263112	Network Administrator		
+263113	Network Analyst		
+263200	ICT Support and Test Engineers		
+263211	ICT Quality Assurance Engineer		
+263212	ICT Support Engineer		
+263213	ICT Systems Test Engineer		
+263299	ICT Support and Test Engineers nec		
+263300	Telecommunications Engineering Professionals		
+263311	Telecommunications Engineer		
+263312	Telecommunications Network Engineer		
+270000	Legal, Social and Welfare Professionals		
+271000	Legal Professionals		
+271100	Barristers		
+271111	Barrister		
+271200	Judicial and Other Legal Professionals		
+271211	Judge		
+271212	Magistrate		
+271213	Tribunal Member		
+271214	Intellectual Property Lawyer		
+271299	Judicial and Other Legal Professionals nec		
+271300	Solicitors		
+271311	Solicitor		
+272000	Social and Welfare Professionals		
+272100	Counsellors		
+272111	Careers Counsellor		
+272112	Drug and Alcohol Counsellor		
+272113	Family and Marriage Counsellor		
+272114	Rehabilitation Counsellor		
+272115	Student Counsellor		
+272199	Counsellors nec		
+272200	Ministers of Religion		
+272211	Minister of Religion		
+272300	Psychologists		
+272311	Clinical Psychologist		
+272312	Educational Psychologist		
+272313	Organisational Psychologist		
+272314	Psychotherapist		
+272399	Psychologists nec		
+272400	Social Professionals		
+272411	Historian		
+272412	Interpreter		
+272413	Translator		
+272414	Archeologist		
+272499	Social Professionals nec		
+272500	Social Workers		
+272511	Social Worker		
+272600	Welfare, Recreation and Community Arts Workers		
+272611	Community Arts Worker		
+272612	Recreation Officer		
+272613	Welfare Worker		
+300000	TECHNICIANS AND TRADES WORKERS		
+310000	Engineering, ICT and Science Technicians		
+311000	Agricultural, Medical and Science Technicians		
+311100	Agricultural, Agritech and Aquaculture Technicians		
+311111	Agricultural Technician		2022-04-21		
+311112	Agricultural and Agritech Technician		
+311113	Animal Husbandry Technician		
+311114	Aquaculture or Fisheries Technician		
+311115	Irrigation Designer		
+311200	Medical Technicians		
+311211	Anaesthetic Technician		
+311212	Cardiac Technician		
+311213	Medical Laboratory Technician		
+311214	Operating Theatre Technician		
+311215	Pharmacy Technician		
+311216	Pathology Collector (Aus), Phlebotomist (NZ)		
+311217	Respiratory Technician		
+311299	Medical Technicians nec		
+311300	Primary Products Assurance and Inspection Officers		
+311311	Fisheries Officer		
+311312	Meat Inspector		
+311313	Biosecurity Officer		
+311314	Primary Products Quality Assurance Officer		
+311399	Primary Products Assurance and Inspection Officers nec		
+311400	Science Technicians		
+311411	Chemistry Technician		
+311412	Earth Science Technician		
+311413	Life Science Technician		
+311414	School Laboratory Technician		
+311415	Hydrographer		
+311499	Science Technicians nec		
+312000	Building and Engineering Technicians		
+312100	Architectural, Building and Surveying Technicians		
+312111	Architectural Draftsperson		
+312112	Building Associate		
+312113	Building Inspector		
+312114	Construction Estimator		
+312115	Plumbing Inspector		
+312116	Surveying or Spatial Science Technician		
+312199	Architectural, Building and Surveying Techn nec		
+312200	Civil Engineering Draftspersons and Technicians		
+312211	Civil Engineering Draftsperson		
+312212	Civil Engineering Technician		
+312300	Electrical Engineering Draftspersons and Technicians		
+312311	Electrical Engineering Draftsperson		
+312312	Electrical Engineering Technician		
+312400	Electronic Engineering Draftspersons and Technicians		
+312411	Electronic Engineering Draftsperson		
+312412	Electronic Engineering Technician		
+312500	Mechanical Engineering Draftspersons and Technicians		
+312511	Mechanical Engineering Draftsperson		
+312512	Mechanical Engineering Technician		
+312600	Safety Inspectors		
+312611	Safety Inspector		
+312900	Other Building and Engineering Technicians		
+312911	Maintenance Planner		
+312912	Metallurgical or Materials Technician		
+312913	Mine Deputy		
+312914	Other Draftsperson		
+312999	Building and Engineering Technicians nec		
+313000	ICT and Telecommunications Technicians		
+313100	ICT Support Technicians		
+313111	Hardware Technician		
+313112	ICT Customer Support Officer		
+313113	Web Administrator		
+313199	ICT Support Technicians nec		
+313200	Telecommunications Technical Specialists		
+313211	Radiocommunications Technician		
+313212	Telecommunications Field Engineer		
+313213	Telecommunications Network Planner		
+313214	Telecommunications Technical Officer or Technologist		
+320000	Automotive and Engineering Trades Workers		
+321000	Automotive Electricians and Mechanics		
+321100	Automotive Electricians		
+321111	Automotive Electrician		
+321200	Motor Mechanics		
+321211	Motor Mechanic (General)		
+321212	Diesel Motor Mechanic		
+321213	Motorcycle Mechanic		
+321214	Small Engine Mechanic		
+322000	Fabrication Engineering Trades Workers		
+322100	Metal Casting, Forging and Finishing Trades Workers		
+322111	Blacksmith		
+322112	Electroplater		
+322113	Farrier		
+322114	Metal Casting Trades Worker		
+322115	Metal Polisher		
+322200	Sheetmetal Workers		
+322211	Sheetmetal Worker		
+322300	Structural Steel and Welding Trades Workers		
+322311	Metal Fabricator		
+322312	Pressure Welder		
+322313	Welder (First Class)		
+323000	Mechanical Engineering Trades Workers		
+323100	Aircraft Maintenance Engineers		
+323111	Aircraft Maintenance Engineer (Avionics)		
+323112	Aircraft Maintenance Engineer (Mechanical)		
+323113	Aircraft Maintenance Engineer (Structures)		
+323200	Metal Fitters and Machinists		
+323211	Fitter (General)		
+323212	Fitter and Turner		
+323213	Fitter-Welder		
+323214	Metal Machinist (First Class)		
+323215	Textile, Clothing and Footwear Mechanic		
+323299	Metal Fitters and Machinists nec		
+323300	Precision Metal Trades Workers		
+323311	Engraver		
+323312	Gunsmith		
+323313	Locksmith		
+323314	Precision Instrument Maker and Repairer		
+323315	Saw Doctor		
+323316	Watch and Clock Maker and Repairer		
+323400	Toolmakers and Engineering Patternmakers		
+323411	Engineering Patternmaker		
+323412	Toolmaker		
+324000	Panelbeaters, and Vehicle Body Builders, Trimmers and Painters		
+324100	Panelbeaters		
+324111	Panelbeater		
+324200	Vehicle Body Builders and Trimmers		
+324211	Vehicle Body Builder		
+324212	Vehicle Trimmer		
+324300	Vehicle Painters		
+324311	Vehicle Painter		
+330000	Construction Trades Workers		
+331000	Bricklayers, and Carpenters and Joiners		
+331100	Bricklayers and Stonemasons		
+331111	Bricklayer		
+331112	Stonemason		
+331200	Carpenters and Joiners		
+331211	Carpenter and Joiner		
+331212	Carpenter		
+331213	Joiner		
+332000	Floor Finishers and Painters		
+332100	Floor Finishers		
+332111	Floor Finisher		
+332200	Painter		
+332211	Painter		
+333000	Glaziers, Plasterers and Tilers		
+333100	Glaziers		
+333111	Glazier		
+333200	Plasterers and Renderers		
+333211	Plasterer (Wall and Ceiling)		
+333212	Renderer (Solid Plaster)		
+333300	Roof Tilers		
+333311	Roof Tiler		
+333400	Wall and Floor Tilers		
+333411	Wall and Floor Tiler		
+334000	Plumbers		
+334100	Plumbers		
+334111	Plumber (General)	2023-04-21	
+334112	Airconditioning and Mechanical Services Plumber		
+334113	Drainer		
+334114	Gasfitter		
+334115	Roof Plumber		
+334116	Plumber (General)		
+334117	Fire Protection Plumber		
+340000	Electrotechnology and Telecommunications Trades Workers		
+341000	Electricians		
+341100	Electricians		
+341111	Electrician (General)		
+341112	Electrician (Special Class)		
+341113	Lift Mechanic		
+342000	Electronics and Telecommunications Trades Workers		
+342100	Airconditioning and Refrigeration Mechanics		
+342111	Airconditioning and Refrigeration Mechanic		
+342200	Electrical Distribution Trades Workers		
+342211	Electrical Linesworker		
+342212	Technical Cable Jointer		
+342300	Electronics Trades Workers		
+342311	Business Machine Mechanic		
+342312	Communications Operator		
+342313	Electronic Equipment Trades Worker		
+342314	Electronic Instrument Trades Worker (General)		
+342315	Electronic Instrument Trades Worker (Special Class)		
+342400	Telecommunications Trades Workers		
+342411	Cabler (Data and Telecommunications)		
+342412	Telecommunications Cable Jointer		
+342413	Telecommunications Linesworker		
+342414	Telecommunications Technician		
+350000	Food Trades Workers		
+351000	Food Trades Workers		
+351100	Bakers and Pastrycooks		
+351111	Baker		
+351112	Pastrycook		
+351200	Butchers and Smallgoods Makers		
+351211	Butcher or Smallgoods Maker		
+351300	Chefs		
+351311	Chef		
+351400	Cooks		
+351411	Cook		
+360000	Skilled Animal, Agricultural and Horticultural Workers		
+361000	Animal Attendants and Trainers, and Veterinary Nurses		
+361100	Animal Attendants and Trainers		
+361111	Dog Handler or Trainer		
+361112	Horse Trainer		
+361113	Pet Groomer		
+361114	Zookeeper		
+361115	Kennel Hand		
+361116	Track Rider		
+361199	Animal Attendants and Trainers nec		
+361200	Shearers	2022-04-21	
+361211	Shearer	2022-04-21	
+361300	Veterinary Nurses		
+361311	Veterinary Nurse		
+362000	Horticultural Trades Workers		
+362100	Florists		
+362111	Florist		
+362200	Gardeners	2022-04-21	
+362211	Gardener (General)	2022-04-21	
+362212	Arborist	2022-04-21	
+362213	Landscape Gardener	2022-04-21	
+362300	Sports Turf Managers and Trades Workers		
+362311	Greenkeeper	2022-04-21	
+362312	Sports Turf Manager		
+362313	Sports Turf Trades Worker		
+362400	Nurserypersons		
+362411	Nurseryperson		
+362500	Arboriculture Workers		
+362511	Arborist		
+362512	Tree Worker		
+362600	Gardeners (General)		
+362611	Gardener (General)		
+362700	Landscape Gardeners and Irrigation Technicians		
+362711	Landscape Gardener		
+362712	Irrigation Technician		
+363000	Primary Production Supervisors and Specialists		
+363100	Senior Aquaculture, Crop and Forestry Workers		
+363111	Aquaculture Supervisor		
+363112	Fishing Leading Hand		
+363113	Forestry Operations Supervisor		
+363114	Horticultural Supervisor or Specialist		
+363115	Senior Broadacre Crop and Livestock Farm Worker		
+363116	Senior Broadacre Crop Farm Worker		
+363117	Vineyard Supervisor		
+363199	Senior Aquaculture, Crop and Forestry Workers nec		
+363200	Senior Livestock Farm Workers		
+363211	Senior Beef Cattle Station Worker		
+363212	Senior Cattle and Sheep Farm Worker		
+363213	Senior Dairy Cattle Farm Worker		
+363214	Senior Piggery Stockperson		
+363215	Senior Sheep Farm Worker		
+363299	Senior Livestock Farm Workers nec		
+363300	Shearers and Wool Classers		
+363311	Shearer		
+363312	Wool Classer		
+390000	Other Technicians and Trades Workers		
+391000	Hairdressers		
+391100	Hairdressers		
+391111	Hairdresser		
+392000	Printing Trades Workers		
+392100	Print Finishers and Screen Printers		
+392111	Print Finishers		
+392112	Screen Printer		
+392200	Graphic Pre-press Trades Workers		
+392211	Graphic Pre-press Trades Worker		
+392300	Printers		
+392311	Printing Machinist		
+392312	Small Offset Printer		
+393000	Textile, Clothing and Footwear Trades Workers		
+393100	Canvas and Leather Goods Makers		
+393111	Canvas Goods Fabricator		
+393112	Leather Goods Maker		
+393113	Sail Maker		
+393114	Shoemaker		
+393200	Clothing Trades Workers		
+393211	Apparel Cutter		
+393212	Clothing Patternmaker		
+393213	Dressmaker or Tailor		
+393299	Clothing Trades Workers nec		
+393300	Upholsterers		
+393311	Upholsterer		
+394000	Wood Trades Workers		
+394100	Cabinet and Furniture Makers		
+394111	Cabinetmaker	2023-04-21	
+394112	Cabinet Maker		
+394113	Furniture Maker		
+394200	Wood Machinists and Other Wood Trades Workers		
+394211	Furniture Finisher		
+394212	Picture Framer		
+394213	Wood Machinist		
+394214	Wood Turner		
+394299	Wood Machinists and Other Wood Trades Workers nec		
+399000	Miscellaneous Technicians and Trades Workers		
+399100	Boat Builders and Shipwrights		
+399111	Boat Builder and Repairer		
+399112	Shipwright		
+399200	Chemical, Gas, Petroleum and Power Generation Plant Operators		
+399211	Chemical Plant Operator		
+399212	Gas or Petroleum Operator		
+399213	Power Generation Plant Operator		
+399300	Gallery, Library and Museum Technicians		
+399311	Gallery or Museum Technician		
+399312	Library Technician		
+399400	Jewellers		
+399411	Jeweller		
+399500	Performing Arts Technicians		
+399511	Broadcast Transmitter Operator		
+399512	Camera Operator (Film, Television or Video)		
+399513	Light Technician		
+399514	Make Up Artist		
+399515	Musical Instrument Maker or Repairer		
+399516	Sound Technician		
+399517	Television Equipment Operator		
+399599	Performing Arts Technicians nec		
+399600	Signwriters		
+399611	Signwriter		
+399900	Other Miscellaneous Technicians and Trades Workers		
+399911	Diver		
+399912	Interior Decorator		
+399913	Optical Dispenser		
+399914	Optical Mechanic		
+399915	Photographer's Assistant		
+399916	Plastics Technician		
+399917	Wool Classer	2022-04-21	
+399918	Fire Protection Equipment Technician		
+399999	Technicians and Trades Workers nec		
+400000	COMMUNITY AND PERSONAL SERVICE WORKERS		
+410000	Health and Welfare Support Workers		
+411000	Health and Welfare Support Workers		
+411100	Ambulance Officers and Paramedics		
+411111	Ambulance Officer		
+411112	Intensive Care Ambulance Paramedic		
+411200	Dental Hygienists, Technicians and Therapists		
+411211	Dental Hygienist		
+411212	Dental Prosthetist		
+411213	Dental Technician		
+411214	Dental Therapist		
+411300	Diversional Therapists		
+411311	Diversional Therapist		
+411400	Enrolled and Mothercraft Nurses		
+411411	Enrolled Nurse		
+411412	Mothercraft Nurse		
+411500	Indigenous Health Workers		
+411511	Aboriginal and Torres Strait Islander Health Worker		
+411512	Kaiawhina (Hauora) (Maori Health Assistant)		
+411600	Massage Therapists		
+411611	Massage Therapist		
+411700	Welfare Support Workers		
+411711	Community Worker		
+411712	Disabilities Services Officer		
+411713	Family Support Worker		
+411714	Parole or Probation Officer		
+411715	Residential Care Officer		
+411716	Youth Worker		
+420000	Carers and Aides		
+421000	Child Carers		
+421100	Child Carers		
+421111	Child Care Worker		
+421112	Family Day Care Worker		
+421113	Nanny		
+421114	Out of School Hours Care Worker		
+422000	Education Aides		
+422100	Education Aides		
+422111	Aboriginal and Torres Strait Islander Education Worker		
+422112	Integration Aide		
+422113	Kaiawhina Kohanga Reo (Maori Language Nest Assistant)		
+422114	Kaiawhina Kura Kaupapa Maori (Maori-medium School Assistant)		
+422115	Preschool Aide		
+422116	Teachers' Aide		
+423000	Personal Carers and Assistants		
+423100	Aged and Disabled Carers		
+423111	Aged or Disabled Carer		
+423200	Dental Assistants		
+423211	Dental Assistant		
+423300	Nursing Support and Personal Care Workers		
+423311	Hospital Orderly		
+423312	Nursing Support Worker		
+423313	Personal Care Assistant		
+423314	Therapy Aide		
+423400	Special Care Workers		
+423411	Child or Youth Residential Care Assistant		
+423412	Hostel Parent		
+423413	Refuge Worker		
+430000	Hospitality Workers		
+431000	Hospitality Workers		
+431100	Bar Attendants and Baristas		
+431111	Bar Attendant		
+431112	Barista		
+431200	Cafe Workers		
+431211	Cafe Worker		
+431300	Gaming Workers		
+431311	Gaming Worker		
+431400	Hotel Service Managers		
+431411	Hotel Service Manager		
+431500	Waiters		
+431511	Waiter		
+431900	Other Hospitality Workers		
+431911	Bar Useful or Busser		
+431912	Doorperson or Luggage Porter		
+431999	Hospitality Workers nec		
+440000	Protective Service Workers		
+441000	Defence Force Members, Fire Fighters and Police		
+441100	Defence Force Members - Other Ranks		
+441111	Defence Force Member - Other Ranks		
+441200	Fire and Emergency Workers		
+441211	Emergency Service Worker		
+441212	Fire Fighter		
+441300	Police		
+441311	Detective		
+441312	Police Officer		
+442000	Prison and Security Officers		
+442100	Prison Officers		
+442111	Prison Officer		
+442200	Security Officers and Guards		
+442211	Alarm, Security or Surveillance Monitor		
+442212	Armoured Car Escort		
+442213	Crowd Controller		
+442214	Private Investigator		
+442215	Retail Loss Prevention Officer		
+442216	Security Consultant		
+442217	Security Officer		
+442299	Security Officers and Guards nec		
+450000	Sports and Personal Service Workers		
+451000	Personal Service and Travel Workers		
+451100	Beauty Therapists		
+451111	Beauty Therapist		
+451200	Driving Instructors		
+451211	Driving Instructor		
+451300	Funeral Workers		
+451311	Funeral Director		
+451399	Funeral Workers nec		
+451400	Gallery, Museum and Tour Guides		
+451411	Gallery or Museum Guide		
+451412	Tour Guide		
+451500	Personal Care Consultants		
+451511	Natural Remedy Consultant		
+451512	Weight Loss Consultant		
+451513	Herbalist (Western)		
+451600	Tourism and Travel Advisers		
+451611	Tourist Information Officer		
+451612	Travel Consultant		
+451700	Travel Attendants		
+451711	Flight Attendant		
+451799	Travel Attendants nec		
+451800	Other Personal Service Workers		
+451811	Civil Celebrant		
+451812	Hair or Beauty Salon Assistant		
+451813	Sex Worker or Escort		
+451814	Body Artist		
+451815	First Aid Trainer		
+451816	Religious Assistant		
+451899	Personal Service Workers nec		
+452000	Sports and Fitness Workers		
+452100	Fitness Instructors		
+452111	Fitness Instructor		
+452200	Outdoor Adventure Guides		
+452211	Bungy Jump Master		
+452212	Fishing Guide		
+452213	Hunting Guide		
+452214	Mountain or Glacier Guide		
+452215	Outdoor Adventure Instructor		
+452216	Trekking Guide		
+452217	Whitewater Rafting Guide		
+452299	Outdoor Adventure Guides nec		
+452300	Sports Coaches, Instructors and Officials		
+452311	Diving Instructor (Open Water)		
+452312	Gymnastics Coach or Instructor		
+452313	Horse Riding Coach or Instructor		
+452314	Snowsport Instructor		
+452315	Swimming Coach or Instructor		
+452316	Tennis Coach		
+452317	Other Sports Coach or Instructor		
+452318	Dog or Horse Racing Official		
+452321	Sports Development Officer		
+452322	Sports Umpire		
+452323	Other Sports Official		
+452400	Sportspersons		
+452411	Footballer		
+452412	Golfer		
+452413	Jockey		
+452414	Lifeguard		
+452499	Sportspersons nec		
+500000	CLERICAL AND ADMINISTRATIVE WORKERS		
+510000	Office Managers and Program Administrators		
+511000	Contract, Program and Project Administrators		
+511100	Contract, Program and Project Administrators		
+511111	Contract Administrator		
+511112	Program or Project Administrator		
+512000	Office and Practice Managers		
+512100	Office Managers		
+512111	Office Manager		
+512200	Practice Managers		
+512211	Health Practice Manager		
+512299	Practice Managers nec		
+520000	Personal Assistants and Secretaries		
+521000	Personal Assistants and Secretaries		
+521100	Personal Assistants		
+521111	Personal Assistant		
+521200	Secretaries		
+521211	Secretary (General)		
+521212	Legal Secretary		
+530000	General Clerical Workers		
+531000	General Clerks		
+531100	General Clerks		
+531111	General Clerk		
+532000	Keyboard Operators		
+532100	Keyboard Operators		
+532111	Data Entry Operator		
+532112	Machine Shorthand Reporter		
+532113	Word Processing Operator		
+540000	Inquiry Clerks and Receptionists		
+541000	Call or Contact Centre Information Clerks		
+541100	Call or Contact Centre Workers		
+541111	Call or Contact Centre Team Leader		
+541112	Call or Contact Centre Operator		
+541200	Information Officers		
+541211	Information Officer		
+542000	Receptionists		
+542100	Receptionists		
+542111	Receptionist (General)		
+542112	Admissions Clerk		
+542113	Hotel or Motel Receptionist		
+542114	Medical Receptionist		
+550000	Numerical Clerks		
+551000	Accounting Clerks and Bookkeepers		
+551100	Accounting Clerks		
+551111	Accounts Clerk		
+551112	Cost Clerk		
+551200	Bookkeepers		
+551211	Bookkeeper		
+551300	Payroll Clerks		
+551311	Payroll Clerk		
+552000	Financial and Insurance Clerks		
+552100	Bank Workers		
+552111	Bank Worker		
+552200	Credit and Loans Officers (Aus), Finance Clerks (NZ)		
+552211	Credit and Loans Officer (Aus), Finance Clerk (NZ)		
+552300	Insurance, Money Market and Statistical Clerks		
+552311	Bookmaker		
+552312	Insurance Consultant		
+552313	Money Market Clerk		
+552314	Statistical Clerk		
+560000	Clerical and Office Support Workers		
+561000	Clerical and Office Support Workers		
+561100	Betting Clerks		
+561111	Betting Agency Counter Clerk		
+561112	Bookmaker's Clerk		
+561113	Telephone Betting Clerk		
+561199	Betting Clerks nec		
+561200	Couriers and Postal Deliverers		
+561211	Courier		
+561212	Postal Delivery Officer		
+561300	Filing and Registry Clerks		
+561311	Filing or Registry Clerk		
+561400	Mail Sorters		
+561411	Mail Clerk		
+561412	Postal Sorting Officer		
+561500	Survey Interviewers		
+561511	Survey Interviewer		
+561600	Switchboard Operators		
+561611	Switchboard Operator		
+561900	Other Clerical and Office Support Workers		
+561911	Classified Advertising Clerk		
+561912	Meter Reader		
+561913	Parking Inspector		
+561999	Clerical and Office Support Workers nec		
+590000	Other Clerical and Administrative Workers		
+591000	Logistics Clerks		
+591100	Purchasing and Supply Logistics Clerks		
+591111	Order Clerk	2011-12-31	
+591112	Production Clerk		
+591113	Purchasing Officer		
+591114	Sales Clerk	2011-12-31	
+591115	Stock Clerk		
+591116	Warehouse Administrator		
+591117	Order Clerk		
+591200	Transport and Despatch Clerks		
+591211	Despatching and Receiving Clerk		
+591212	Import-Export Clerk		
+599000	Miscellaneous Clerical and Administrative Workers		
+599100	Conveyancers and Legal Executives		
+599111	Conveyancer		
+599112	Legal Executive		
+599200	Court and Legal Clerks		
+599211	Clerk of Court		
+599212	Court Bailiff or Sheriff		
+599213	Court Orderly		
+599214	Law Clerk		
+599215	Trust Officer		
+599300	Debt Collectors		
+599311	Debt Collector		
+599400	Human Resource Clerks		
+599411	Human Resources Clerk		
+599500	Inspectors and Regulatory Officers		
+599511	Customs Officer		
+599512	Immigration Officer		
+599513	Motor Vehicle Licence Examiner		
+599514	Invasive Pest, Weed and Disease Inspector		
+599515	Social Security Assessor		
+599516	Taxation Inspector		
+599517	Train Examiner		
+599518	Transport Operations Inspector		
+599521	Water Inspector		
+599599	Inspectors and Regulatory Officers nec		
+599600	Insurance Investigators, Loss Adjusters and Risk Surveyors		
+599611	Insurance Investigator		
+599612	Insurance Loss Adjuster		
+599613	Insurance Risk Surveyor		
+599700	Library Assistants		
+599711	Library Assistant		
+599900	Other Miscellaneous Clerical and Administrative Workers		
+599911	Coding Clerk	2011-12-31	
+599912	Production Assistant (Film, Television, Radio or Stage)		
+599913	Proof Reader		
+599914	Radio Despatcher		
+599915	Clinical Coder		
+599916	Facilities Administrator		
+599999	Clerical and Administrative Workers nec		
+600000	SALES WORKERS		
+610000	Sales Representatives and Agents		
+611000	Insurance Agents and Sales Representatives		
+611100	Auctioneers, and Stock and Station Agents		
+611111	Auctioneer		
+611112	Stock and Station Agent		
+611200	Insurance Agents		
+611211	Insurance Agent		
+611300	Sales Representatives		
+611311	Sales Representative (Building and Plumbing Supplies)		
+611312	Sales Representative (Business Services)		
+611313	Sales Representative (Motor Vehicle Parts and Accessories)		
+611314	Sales Representative (Personal and Household Goods)		
+611399	Sales Representatives nec		
+612000	Real Estate Sales Agents		
+612100	Real Estate Sales Agents		
+612111	Business Broker		
+612112	Property Manager		
+612113	Real Estate Agency Principal		
+612114	Real Estate Agent		
+612115	Real Estate Representative		
+620000	Sales Assistants and Salespersons		
+621000	Sales Assistants and Salespersons		
+621100	Sales Assistants (General)		
+621111	Sales Assistant (General)		
+621200	ICT Sales Assistants		
+621211	ICT Sales Assistant		
+621300	Motor Vehicle and Vehicle Parts Salespersons		
+621311	Motor Vehicle or Caravan Salesperson		
+621312	Motor Vehicle Parts Interpreter		
+621400	Pharmacy Sales Assistants		
+621411	Pharmacy Sales Assistant		
+621500	Retail Supervisors		
+621511	Retail Supervisor		
+621600	Service Station Attendants		
+621611	Service Station Attendant		
+621700	Street Vendors and Related Salespersons		
+621711	Cash Van Salesperson		
+621712	Door-to-door Salesperson		
+621713	Street Vendor		
+621900	Other Sales Assistants and Salespersons		
+621911	Materials Recycler		
+621912	Rental Salesperson		
+621999	Sales Assistants and Salespersons nec		
+630000	Sales Support Workers		
+631000	Checkout Operators and Office Cashiers		
+631100	Checkout Operators and Office Cashiers		
+631111	Checkout Operator		
+631112	Office Cashier		
+639000	Miscellaneous Sales Support Workers		
+639100	Models and Sales Demonstrators		
+639111	Model		
+639112	Sales Demonstrator		
+639200	Retail and Wool Buyers		
+639211	Retail Buyer		
+639212	Wool Buyer		
+639300	Telemarketers		
+639311	Telemarketer		
+639400	Ticket Salespersons		
+639411	Ticket Seller		
+639412	Transport Conductor		
+639500	Visual Merchandisers		
+639511	Visual Merchandiser		
+639900	Other Sales Support Workers		
+639911	Other Sales Support Worker		
+700000	MACHINERY OPERATORS AND DRIVERS		
+710000	Machine and Stationary Plant Operators		
+711000	Machine Operators		
+711100	Clay, Concrete, Glass and Stone Processing Machine Operators)		
+711111	Clay Products Machine Operator		
+711112	Concrete Products Machine Operator		
+711113	Glass Production Machine Operator		
+711114	Stone Processing Machine Operator		
+711199	Clay, Concrete, Glass and Stone Processing Machine Operators nec		
+711200	Industrial Spraypainters		
+711211	Industrial Spraypainter		
+711300	Paper and Wood Processing Machine Operators		
+711311	Paper Products Machine Operator		
+711312	Wood Processing Machine Operator	2011-12-31	
+711313	Sawmilling Operator		
+711314	Other Wood Processing Machine Operator		
+711400	Photographic Developers and Printers		
+711411	Photographic Developer and Printer		
+711500	Plastics and Rubber Production Machine Operators		
+711511	Plastic Cablemaking Machine Operator		
+711512	Plastic Compounding and Reclamation Machine Operator		
+711513	Plastics Fabricator or Welder		
+711514	Plastics Production Machine Operator (General)		
+711515	Reinforced Plastic and Composite Production Worker		
+711516	Rubber Production Machine Operator		
+711599	Plastics and Rubber Production Machine Operators nec		
+711600	Sewing Machinists		
+711611	Sewing Machinist		
+711700	Textile and Footwear Production Machine Operators		
+711711	Footwear Production Machine Operator		
+711712	Hide and Skin Processing Machine Operator		
+711713	Knitting Machine Operator		
+711714	Textile Dyeing and Finishing Machine Operator		
+711715	Weaving Machine Operator		
+711716	Yarn Carding and Spinning Machine Operator		
+711799	Textile and Footwear Production Machine Operators		
+711900	Other Machine Operators		
+711911	Chemical Production Machine Operator		
+711912	Motion Picture Projectionist		
+711913	Sand Blaster		
+711914	Sterilisation Technician		
+711999	Machine Operators nec		
+712000	Stationary Plant Operators		
+712100	Crane, Hoist and Lift Operators		
+712111	Crane, Hoist or Lift Operator		
+712200	Drillers, Miners and Shot Firers		
+712211	Driller		
+712212	Miner		
+712213	Shot Firer		
+712300	Engineering Production Workers		
+712311	Engineering Production Worker		
+712900	Other Stationary Plant Operators		
+712911	Boiler or Engine Operator		
+712912	Bulk Materials Handling Plant Operator		
+712913	Cement Production Plant Operator		
+712914	Concrete Batching Plant Operator		
+712915	Concrete Pump Operator		
+712916	Paper and Pulp Mill Operator		
+712917	Railway Signal Operator		
+712918	Train Controller		
+712921	Waste Water or Water Plant Operator		
+712922	Weighbridge Operator		
+712999	Stationary Plant Operators nec		
+720000	Mobile Plant Operators		
+721000	Mobile Plant Operators		
+721100	Agricultural, Forestry and Horticultural Plant Operators		
+721111	Agricultural and Horticultural Mobile Plant Operator		
+721112	Logging Plant Operator		
+721200	Earthmoving Plant Operators		
+721211	Earthmoving Plant Operator (General)		
+721212	Backhoe Operator		
+721213	Bulldozer Operator		
+721214	Excavator Operator		
+721215	Grader Operator		
+721216	Loader Operator		
+721300	Forklift Drivers		
+721311	Forklift Driver		
+721900	Other Mobile Plant Operators		
+721911	Aircraft Baggage Handler and Airline Ground Crew		
+721912	Linemarker		
+721913	Paving Plant Operator		
+721914	Railway Track Plant Operator		
+721915	Road Roller Operator		
+721916	Streetsweeper Operator		
+721999	Mobile Plant Operators nec		
+730000	Road and Rail Drivers		
+731000	Automobile, Bus and Rail Drivers		
+731100	Automobile Drivers		
+731111	Chauffeur		
+731112	Taxi Driver		
+731199	Automobile Drivers nec		
+731200	Bus and Coach Drivers		
+731211	Bus Driver		
+731212	Charter and Tour Bus Driver		
+731213	Passenger Coach Driver		
+731300	Train and Tram Drivers		
+731311	Train Driver		
+731312	Tram Driver		
+732000	Delivery Drivers		
+732100	Delivery Drivers		
+732111	Delivery Driver		
+733000	Truck Drivers		
+733100	Truck Drivers		
+733111	Truck Driver (General)		
+733112	Aircraft Refueller		
+733113	Furniture Removalist		
+733114	Tanker Driver		
+733115	Tow Truck Driver		
+740000	Storepersons		
+741000	Storepersons		
+741100	Storepersons		
+741111	Storeperson		
+800000	LABOURERS		
+810000	Cleaners and Laundry Workers		
+811000	Cleaners and Laundry Workers		
+811100	Car Detailers		
+811111	Car Detailer		
+811200	Commercial Cleaners		
+811211	Commercial Cleaner		
+811300	Domestic Cleaners		
+811311	Domestic Cleaner		
+811400	Housekeepers		
+811411	Commercial Housekeeper		
+811412	Domestic Housekeeper		
+811500	Laundry Workers		
+811511	Laundry Worker (General)		
+811512	Drycleaner		
+811513	Ironer or Presser		
+811600	Other Cleaners		
+811611	Carpet Cleaner		
+811612	Window Cleaner		
+811699	Cleaners nec		
+820000	Construction and Mining Labourers		
+821000	Construction and Mining Labourers		
+821100	Building and Plumbing Labourers		
+821111	Builder's Labourer		
+821112	Drainage, Sewerage and Stormwater Labourer		
+821113	Earthmoving Labourer		
+821114	Plumber's Assistant		
+821200	Concreters		
+821211	Concreter		
+821300	Fencers		
+821311	Fencer		
+821400	Insulation and Home Improvement Installers		
+821411	Building Insulation Installer		
+821412	Home Improvement Installer		
+821500	Paving and Surfacing Labourers		
+821511	Paving and Surfacing Labourer		
+821600	Railway Track Workers		
+821611	Railway Track Worker		
+821700	Structural Steel Construction Workers		
+821711	Construction Rigger		
+821712	Scaffolder		
+821713	Steel Fixer		
+821714	Structural Steel Erector		
+821900	Other Construction and Mining Labourers		
+821911	Crane Chaser		
+821912	Driller's Assistant		
+821913	Lagger		
+821914	Mining Support Worker		
+821915	Surveyor's Assistant		
+830000	Factory Process Workers		
+831000	Food Process Workers		
+831100	Food and Drink Factory Workers		
+831111	Baking Factory Worker		
+831112	Brewery Worker		
+831113	Confectionery Maker		
+831114	Dairy Products Maker		
+831115	Fruit and Vegetable Factory Worker		
+831116	Grain Mill Worker		
+831117	Sugar Mill Worker		
+831118	Winery Cellar Hand		
+831199	Food and Drink Factory Workers nec		
+831200	Meat Boners and Slicers, and Slaughterers		
+831211	Meat Boner and Slicer		
+831212	Slaughterer		
+831300	Meat, Poultry and Seafood Process Workers		
+831311	Meat Process Worker		
+831312	Poultry Process Worker		
+831313	Seafood Process Worker		
+832000	Packers and Product Assemblers		
+832100	Packers		
+832111	Chocolate Packer		
+832112	Container Filler		
+832113	Fruit and Vegetable Packer		
+832114	Meat Packer		
+832115	Seafood Packer		
+832199	Packers nec		
+832200	Product Assemblers		
+832211	Product Assembler		
+839000	Miscellaneous Factory Process Workers		
+839100	Metal Engineering Process Workers		
+839111	Metal Engineering Process Worker		
+839200	Plastics and Rubber Factory Workers		
+839211	Plastics Factory Worker		
+839212	Rubber Factory Worker		
+839300	Product Quality Controllers		
+839311	Product Examiner		
+839312	Product Grader		
+839313	Product Tester		
+839400	Timber and Wood Process Workers		
+839411	Paper and Pulp Mill Worker		
+839412	Sawmill or Timber Yard Worker		
+839413	Wood and Wood Products Factory Worker		
+839900	Other Factory Process Workers		
+839911	Cement and Concrete Plant Worker		
+839912	Chemical Plant Worker		
+839913	Clay Processing Factory Worker		
+839914	Fabric and Textile Factory Worker		
+839915	Footwear Factory Worker		
+839916	Glass Processing Worker		
+839917	Hide and Skin Processing Worker		
+839918	Recycling Worker		
+839999	Factory Process Workers nec		
+840000	Farm, Forestry and Garden Workers		
+841000	Farm, Forestry and Garden Workers	2022-04-21	
+841100	Aquaculture Workers	2022-04-21	
+841111	Aquaculture Worker	2022-04-21	
+841200	Crop Farm Workers	2022-04-21	
+841211	Fruit or Nut Farm Worker	2022-04-21	
+841212	Fruit or Nut Picker	2022-04-21	
+841213	Grain, Oilseed or Pasture Farm Worker	2022-04-21	
+841214	Vegetable Farm Worker	2022-04-21	
+841215	Vegetable Picker	2022-04-21	
+841216	Vineyard Worker	2022-04-21	
+841217	Mushroom Picker	2022-04-21	
+841299	Crop Farm Workers nec	2022-04-21	
+841300	Forestry and Logging Workers	2022-04-21	
+841311	Forestry Worker	2022-04-21	
+841312	Logging Assistant	2022-04-21	
+841313	Tree Faller	2022-04-21	
+841400	Garden and Nursery Labourers	2022-04-21	
+841411	Garden Labourer	2022-04-21	
+841412	Horticultural Nursery Assistant	2022-04-21	
+841500	Livestock Farm Workers	2022-04-21	
+841511	Beef Cattle Farm Worker	2022-04-21	
+841512	Dairy Cattle Farm Worker	2022-04-21	
+841513	Mixed Livestock Farm Worker	2022-04-21	
+841514	Poultry Farm Worker	2022-04-21	
+841515	Sheep Farm Worker	2022-04-21	
+841516	Stablehand	2022-04-21	
+841517	Wool Handler	2022-04-21	
+841599	Livestock Farm Workers nec	2022-04-21	
+841600	Mixed Crop and Livestock Farm Workers	2022-04-21	
+841611	Mixed Crop and Livestock Farm Worker	2022-04-21	
+841900	Other Farm, Forestry and Garden Workers	2022-04-21	
+841911	Hunter-Trapper	2022-04-21	
+841912	Pest or Weed Controller	2011-12-31	
+841913	Pest Controller	2022-04-21	
+841999	Farm, Forestry and Garden Workers nec	2022-04-21	
+842000	Farm Workers		
+842100	Aquaculture Workers		
+842111	Aquaculture Worker		
+842200	Crop Farm Workers		
+842211	Cotton Farm Worker		
+842212	Fruit Farm Worker		
+842213	Fruit Picker		
+842214	Grain, Oilseed, Pulse or Pasture Grower Farm Worker (Aus) / Field Farm Worker (NZ)		
+842215	Mushroom Picker		
+842216	Nut Farm Worker		
+842217	Sugar Cane Farm Worker		
+842218	Vegetable Farm Worker (Aus) / Market Garden Worker (NZ)		
+842221	Vegetable Picker		
+842222	Vineyard Worker		
+842299	Crop Farm Workers nec		
+842300	Livestock Farm Workers		
+842311	Beef Cattle Farm Worker		
+842312	Cattle and Sheep Farm Worker		
+842313	Dairy Cattle Farm Worker		
+842314	Livestock Husbandry Worker		
+842315	Piggery Farm Worker		
+842316	Poultry Farm Worker		
+842317	Sheep Farm Worker		
+842318	Stablehand		
+842321	Wool Handler		
+842399	Livestock Farm Workers nec		
+842400	Mixed Production Farm Workers		
+842411	Broadacre Crop and Livestock Farm Worker		
+842499	Mixed Production Farm Workers nec		
+843000	Forestry and Garden Workers		
+843100	Forestry and Logging Workers		
+843111	Forestry Worker		
+843112	Logging Assistant		
+843113	Tree Faller		
+843200	Garden Labourers		
+843211	Garden Labourer		
+843300	Horticultural Nursery Assistants		
+843311	Horticultural Nursery Assistant		
+843400	Pest Control Technicians		
+843411	Pest Control Technician		
+843900	Other Forestry and Garden Workers		
+843911	Hunter-Trapper		
+843912	Irrigation Assistant		
+843999	Forestry and Garden Workers nec		
+850000	Food Preparation Assistants		
+851000	Food Preparation Assistants		
+851100	Fast Food Cooks		
+851111	Fast Food Cook		
+851200	Food Trades Assistants		
+851211	Pastrycook's Assistant		
+851299	Food Trades Assistants nec		
+851300	Kitchenhands		
+851311	Kitchenhand		
+890000	Other Labourers		
+891000	Freight Handlers and Shelf Fillers		
+891100	Freight and Furniture Handlers		
+891111	Freight Handler (Rail or Road)		
+891112	Truck Driver's Offsider		
+891113	Waterside Worker		
+891200	Shelf Fillers		
+891211	Shelf Filler		
+899000	Miscellaneous Labourers		
+899100	Caretakers		
+899111	Caretaker		
+899200	Deck and Fishing Hands		
+899211	Deck Hand		
+899212	Fishing Hand		
+899300	Handypersons		
+899311	Handyperson		
+899400	Motor Vehicle Parts and Accessories Fitters		
+899411	Motor Vehicle Parts and Accessories Fitter (General)		
+899412	Autoglazier		
+899413	Exhaust and Muffler Repairer		
+899414	Radiator Repairer		
+899415	Tyre Fitter		
+899500	Printing Assistants and Table Workers		
+899511	Printer's Assistant		
+899512	Printing Table Worker		
+899600	Recycling and Rubbish Collectors		
+899611	Recycling or Rubbish Collector		
+899700	Vending Machine Attendants		
+899711	Vending Machine Attendant		
+899900	Other Miscellaneous Labourers		
+899911	Bicycle Mechanic		
+899912	Car Park Attendant		
+899913	Crossing Supervisor		
+899914	Electrical or Telecommunications Trades Assistant		
+899915	Leaflet or Newspaper Deliverer		
+899916	Mechanic's Assistant		
+899917	Railways Assistant		
+899918	Sign Erector		
+899921	Ticket Collector or Usher		
+899922	Trolley Collector		
+899923	Road Traffic Controller		
+899999	Labourers nec		
+GEN19 	General education - not occupationally specific		
+GEN20 	Non-industry specific training		
+NONVET	Non-VET course - no occupational outcome
