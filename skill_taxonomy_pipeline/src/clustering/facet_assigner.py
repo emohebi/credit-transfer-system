@@ -449,7 +449,7 @@ Respond with valid JSON only:""" # ORIGINAL CATEGORY: {item['skill_category']}
                             
                             if 1 <= choice <= len(item['candidates']):
                                 selected = item['candidates'][choice - 1]
-                                final_confidence = (confidence + selected['similarity']) / 2
+                                final_confidence = confidence# selected['similarity']# (confidence + selected['similarity']) / 2
                                 results[idx] = (selected['code'], final_confidence)
                                 break
                             else:
@@ -571,9 +571,11 @@ Respond with valid JSON only:""" # ORIGINAL CATEGORY: {item['skill_category']}
                     cand_idx = indices[top_idx]
                     cand_id = df.loc[cand_idx, 'skill_id'] if 'skill_id' in df.columns else str(cand_idx)
                     cand_name = df.loc[cand_idx, 'name']
+                    cand_desc = df.loc[cand_idx, 'description']
                     candidates.append({
                         'skill_id': cand_id,
                         'skill_name': cand_name,
+                        'skill_desc': str(cand_desc),
                         'similarity': float(sim),
                         'idx': cand_idx
                     })
@@ -587,7 +589,7 @@ Respond with valid JSON only:""" # ORIGINAL CATEGORY: {item['skill_category']}
                     'idx': idx,
                     'skill_id': skill_id,
                     'skill_name': skill_name,
-                    'skill_desc': str(skill_desc)[:200],
+                    'skill_desc': str(skill_desc),
                     'candidates': candidates[:10]  # Limit to top 10 for LLM
                 })
             elif candidates:
@@ -637,7 +639,7 @@ You MUST respond with valid JSON only. No additional text."""
         
         for item in batch_items:
             candidates_text = "\n".join([
-                f"{i+1}. {c['skill_name']} (similarity: {c['similarity']:.2f})"
+                f"{i+1}. {c['skill_name']}: {c['skill_desc']}"
                 for i, c in enumerate(item['candidates'])
             ])
             
@@ -717,7 +719,7 @@ Respond with valid JSON only:"""
         related_skills_map = {}
         if embeddings is not None and self.embedding_interface is not None:
             logger.info("Computing related skills...")
-            related_skills_map = self._compute_related_skills(df, embeddings)
+            related_skills_map = self._compute_related_skills(df, embeddings, similarity_threshold = self.embedding_threshold)
         
         for idx in df.index:
             skill = {

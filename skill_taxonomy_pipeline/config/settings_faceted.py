@@ -213,7 +213,7 @@ FACET_ASSIGNMENT_CONFIG = {
     "use_genai": True,
     "genai_batch_size": 50,
     "use_llm_reranking": os.getenv("USE_LLM_RERANKING", "true") == "true",
-    "rerank_top_k": 5,
+    "rerank_top_k": 20,
     "embedding_similarity_threshold": 0.90,
     "multi_value_threshold": 0.25,
     "max_multi_values": 5,
@@ -277,7 +277,7 @@ LLM_CONFIG = {
 }
 
 # ============================================================================
-# MODEL CONFIGURATIONS
+# MODEL CONFIGURATIONS "737fa5c46f0262ceba4a462ffa1c5bcf01da416f"
 # ============================================================================
 
 EMBEDDING_MODELS = {

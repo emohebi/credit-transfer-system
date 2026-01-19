@@ -11,94 +11,201 @@ enabling flexible querying and multiple views of the same skill set.
 # ═══════════════════════════════════════════════════════════════════════════
 
 SKILL_NATURE_FACET = {
-    "facet_id": "NAT",
-    "facet_name": "Skill Nature",
-    "description": "Classifies the fundamental type of competency",
-    "values": {
-        "NAT.TEC": {
-            "code": "NAT.TEC",
-            "name": "Technical/Procedural",
-            "description": "Industry-specific procedural and practical skills involving tools, equipment, or technical processes",
-            "keywords": ["operate", "install", "maintain", "repair", "build", "construct", "configure", "calibrate", 
-                        "assemble", "fabricate", "weld", "machine", "program", "code", "develop", "test",
-                        "equipment", "machinery", "tools", "systems", "hardware", "software", "technical"],
-            "subcategories": {
-                "NAT.TEC.TRD": "Trade/Craft skills",
-                "NAT.TEC.OPR": "Equipment/Machine operation",
-                "NAT.TEC.DIG": "Digital/Software tools",
-                "NAT.TEC.SCI": "Scientific/Technical procedures"
-            }
-        },
-        "NAT.COG": {
-            "code": "NAT.COG",
-            "name": "Cognitive/Analytical",
-            "description": "Thinking, reasoning, problem-solving and analytical capabilities",
-            "keywords": ["analyse", "analyze", "evaluate", "assess", "interpret", "synthesise", "synthesize",
-                        "problem-solving", "critical thinking", "decision", "judgement", "judgment", "reason",
-                        "diagnose", "troubleshoot", "investigate", "research", "plan", "design", "strategise"],
-            "subcategories": {
-                "NAT.COG.ANA": "Analytical thinking",
-                "NAT.COG.PRB": "Problem solving",
-                "NAT.COG.DEC": "Decision making",
-                "NAT.COG.CRE": "Creative/Innovative thinking"
-            }
-        },
-        "NAT.SOC": {
-            "code": "NAT.SOC",
-            "name": "Social/Interpersonal",
-            "description": "Working with others, communication, and relationship management",
-            "keywords": ["communicate", "collaborate", "team", "lead", "mentor", "coach", "negotiate",
-                        "customer", "client", "stakeholder", "present", "facilitate", "mediate",
-                        "counsel", "support", "assist", "serve", "interact", "relationship"],
-            "subcategories": {
-                "NAT.SOC.COM": "Communication",
-                "NAT.SOC.COL": "Collaboration/Teamwork",
-                "NAT.SOC.LDR": "Leadership/Influence",
-                "NAT.SOC.SRV": "Service/Customer orientation"
-            }
-        },
-        "NAT.SLF": {
-            "code": "NAT.SLF",
-            "name": "Self-Management",
-            "description": "Managing oneself, personal effectiveness, and professional conduct",
-            "keywords": ["organise", "organize", "prioritise", "prioritize", "manage time", "adapt",
-                        "initiative", "self-directed", "autonomous", "resilient", "flexible",
-                        "learn", "develop", "improve", "reflect", "goal", "professional"],
-            "subcategories": {
-                "NAT.SLF.ORG": "Organisation/Planning",
-                "NAT.SLF.ADP": "Adaptability/Flexibility",
-                "NAT.SLF.INI": "Initiative/Enterprise",
-                "NAT.SLF.LRN": "Learning agility"
-            }
-        },
-        "NAT.FND": {
-            "code": "NAT.FND",
-            "name": "Foundational/Core",
-            "description": "Basic foundational capabilities including literacy, numeracy, and digital basics",
-            "keywords": ["read", "write", "calculate", "measure", "count", "literacy", "numeracy",
-                        "digital", "computer", "basic", "fundamental", "core", "essential",
-                        "comprehend", "interpret text", "document"],
-            "subcategories": {
-                "NAT.FND.LIT": "Literacy",
-                "NAT.FND.NUM": "Numeracy",
-                "NAT.FND.DFL": "Digital fluency"
-            }
-        },
-        "NAT.REG": {
-            "code": "NAT.REG",
-            "name": "Regulatory/Compliance",
-            "description": "Safety, ethics, quality, and regulatory compliance",
-            "keywords": ["safety", "WHS", "OHS", "compliance", "regulation", "standard", "quality",
-                        "audit", "inspect", "ethics", "legal", "policy", "procedure", "protocol",
-                        "risk", "hazard", "environment", "sustainable"],
-            "subcategories": {
-                "NAT.REG.WHS": "Work health & safety",
-                "NAT.REG.ETH": "Ethics & professional conduct",
-                "NAT.REG.QUA": "Quality assurance",
-                "NAT.REG.ENV": "Environmental compliance"
-            }
-        }
+  "facet_id": "NAT",
+  "facet_name": "Skill Nature",
+  "description": "Defines the underlying nature of skills, grouping them by core competency type.",
+  "values": {
+    "NAT.TEC": {
+      "code": "NAT.TEC",
+      "name": "Technical/Procedural",
+      "description": "Practical, industry-specific skills for operating tools, equipment, and technical systems.",
+      "keywords": [
+        "operate",
+        "install",
+        "maintain",
+        "repair",
+        "build",
+        "construct",
+        "configure",
+        "calibrate",
+        "assemble",
+        "fabricate",
+        "weld",
+        "machine",
+        "program",
+        "code",
+        "develop",
+        "test",
+        "equipment",
+        "machinery",
+        "tools",
+        "systems",
+        "hardware",
+        "software",
+        "technical"
+      ],
+      "subcategories": {
+        "NAT.TEC.TRD": "Trade/Craft skills",
+        "NAT.TEC.OPR": "Equipment/Machine operation",
+        "NAT.TEC.DIG": "Digital/Software tools",
+        "NAT.TEC.SCI": "Scientific/Technical procedures"
+      }
+    },
+    "NAT.COG": {
+      "code": "NAT.COG",
+      "name": "Cognitive/Analytical",
+      "description": "Skills for analysis, reasoning, problem-solving, and informed decision-making.",
+      "keywords": [
+        "analyse",
+        "analyze",
+        "evaluate",
+        "assess",
+        "interpret",
+        "synthesise",
+        "synthesize",
+        "problem-solving",
+        "critical thinking",
+        "decision",
+        "judgement",
+        "judgment",
+        "reason",
+        "diagnose",
+        "troubleshoot",
+        "investigate",
+        "research",
+        "plan",
+        "design",
+        "strategise"
+      ],
+      "subcategories": {
+        "NAT.COG.ANA": "Analytical thinking",
+        "NAT.COG.PRB": "Problem solving",
+        "NAT.COG.DEC": "Decision making",
+        "NAT.COG.CRE": "Creative/Innovative thinking"
+      }
+    },
+    "NAT.SOC": {
+      "code": "NAT.SOC",
+      "name": "Social/Interpersonal",
+      "description": "Skills for collaboration, communication, and managing interpersonal relationships.",
+      "keywords": [
+        "communicate",
+        "collaborate",
+        "team",
+        "lead",
+        "mentor",
+        "coach",
+        "negotiate",
+        "customer",
+        "client",
+        "stakeholder",
+        "present",
+        "facilitate",
+        "mediate",
+        "counsel",
+        "support",
+        "assist",
+        "serve",
+        "interact",
+        "relationship"
+      ],
+      "subcategories": {
+        "NAT.SOC.COM": "Communication",
+        "NAT.SOC.COL": "Collaboration/Teamwork",
+        "NAT.SOC.LDR": "Leadership/Influence",
+        "NAT.SOC.SRV": "Service/Customer orientation"
+      }
+    },
+    "NAT.SLF": {
+      "code": "NAT.SLF",
+      "name": "Self-Management",
+      "description": "Capabilities for self-organisation, adaptability, and maintaining professional conduct.",
+      "keywords": [
+        "organise",
+        "organize",
+        "prioritise",
+        "prioritize",
+        "manage time",
+        "adapt",
+        "initiative",
+        "self-directed",
+        "autonomous",
+        "resilient",
+        "flexible",
+        "learn",
+        "develop",
+        "improve",
+        "reflect",
+        "goal",
+        "professional"
+      ],
+      "subcategories": {
+        "NAT.SLF.ORG": "Organisation/Planning",
+        "NAT.SLF.ADP": "Adaptability/Flexibility",
+        "NAT.SLF.INI": "Initiative/Enterprise",
+        "NAT.SLF.LRN": "Learning agility"
+      }
+    },
+    "NAT.FND": {
+      "code": "NAT.FND",
+      "name": "Foundational/Core",
+      "description": "Essential skills in literacy, numeracy, and basic digital fluency.",
+      "keywords": [
+        "read",
+        "write",
+        "calculate",
+        "measure",
+        "count",
+        "literacy",
+        "numeracy",
+        "digital",
+        "computer",
+        "basic",
+        "fundamental",
+        "core",
+        "essential",
+        "comprehend",
+        "interpret text",
+        "document"
+      ],
+      "subcategories": {
+        "NAT.FND.LIT": "Literacy",
+        "NAT.FND.NUM": "Numeracy",
+        "NAT.FND.DFL": "Digital fluency"
+      }
+    },
+    "NAT.REG": {
+      "code": "NAT.REG",
+      "name": "Regulatory/Compliance",
+      "description": "Skills ensuring safety, ethical practice, and compliance with standards and regulations.",
+      "keywords": [
+        "safety",
+        "WHS",
+        "OHS",
+        "compliance",
+        "regulation",
+        "standard",
+        "quality",
+        "audit",
+        "inspect",
+        "ethics",
+        "legal",
+        "policy",
+        "procedure",
+        "protocol",
+        "risk",
+        "hazard",
+        "environment",
+        "sustainable"
+      ],
+      "subcategories": {
+        "NAT.REG.WHS": "Work health & safety",
+        "NAT.REG.ETH": "Ethics & professional conduct",
+        "NAT.REG.QUA": "Quality assurance",
+        "NAT.REG.ENV": "Environmental compliance"
+      }
     }
+  }
 }
 
 
@@ -161,71 +268,201 @@ TRANSFERABILITY_FACET = {
 #  FACET 3: COGNITIVE COMPLEXITY (COG) - Bloom's Taxonomy inspired
 # ═══════════════════════════════════════════════════════════════════════════
 
-COGNITIVE_COMPLEXITY_FACET = {
-    "facet_id": "COG",
-    "facet_name": "Cognitive Complexity",
-    "description": "Level of cognitive processing required (based on Bloom's Taxonomy)",
-    "values": {
-        "COG.REM": {
-            "code": "COG.REM",
-            "name": "Remember",
-            "level": 1,
-            "description": "Recall facts, terms, basic concepts, and procedures",
-            "keywords": ["recall", "recognise", "recognize", "identify", "list", "name", "define",
-                        "describe", "state", "locate", "find", "memorise", "memorize"],
-            "verbs": ["define", "duplicate", "list", "memorize", "recall", "repeat", "state"]
-        },
-        "COG.UND": {
-            "code": "COG.UND",
-            "name": "Understand",
-            "level": 2,
-            "description": "Explain ideas or concepts, interpret meaning",
-            "keywords": ["explain", "interpret", "summarise", "summarize", "classify", "compare",
-                        "contrast", "discuss", "distinguish", "paraphrase", "predict"],
-            "verbs": ["classify", "describe", "discuss", "explain", "identify", "locate", "recognize",
-                      "report", "select", "translate"]
-        },
-        "COG.APP": {
-            "code": "COG.APP",
-            "name": "Apply",
-            "level": 3,
-            "description": "Use information in standard situations, execute procedures",
-            "keywords": ["apply", "use", "implement", "execute", "perform", "carry out", "demonstrate",
-                        "operate", "practice", "schedule", "sketch", "solve"],
-            "verbs": ["execute", "implement", "solve", "use", "demonstrate", "interpret", "operate",
-                      "schedule", "sketch"]
-        },
-        "COG.ANA": {
-            "code": "COG.ANA",
-            "name": "Analyse",
-            "level": 4,
-            "description": "Break down information, diagnose, troubleshoot, draw connections",
-            "keywords": ["analyse", "analyze", "diagnose", "troubleshoot", "examine", "investigate",
-                        "differentiate", "organise", "organize", "attribute", "deconstruct", "outline"],
-            "verbs": ["differentiate", "organize", "relate", "compare", "contrast", "distinguish",
-                      "examine", "experiment", "question", "test"]
-        },
-        "COG.EVA": {
-            "code": "COG.EVA",
-            "name": "Evaluate",
-            "level": 5,
-            "description": "Assess, judge, audit, critique, make decisions based on criteria",
-            "keywords": ["evaluate", "assess", "judge", "audit", "critique", "justify", "appraise",
-                        "argue", "defend", "select", "support", "value", "review", "recommend"],
-            "verbs": ["appraise", "argue", "defend", "judge", "select", "support", "value", "critique",
-                      "weigh"]
-        },
-        "COG.CRE": {
-            "code": "COG.CRE",
-            "name": "Create",
-            "level": 6,
-            "description": "Design, innovate, develop new solutions, produce original work",
-            "keywords": ["create", "design", "develop", "innovate", "produce", "construct", "generate",
-                        "plan", "compose", "formulate", "invent", "devise", "assemble", "author"],
-            "verbs": ["design", "assemble", "construct", "conjecture", "develop", "formulate",
-                      "author", "investigate"]
-        }
+COGNITIVE_COMPLEXITY_FACET ={
+  "facet_id": "COG",
+  "facet_name": "Cognitive Complexity",
+  "description": "Indicates the depth of cognitive processing required, aligned with Bloom’s Taxonomy.",
+  "values": {
+    "COG.REM": {
+      "code": "COG.REM",
+      "name": "Remember",
+      "level": 1,
+      "description": "Ability to recall and recognize facts, terms, and basic concepts.",
+      "keywords": [
+        "recall",
+        "recognise",
+        "recognize",
+        "identify",
+        "list",
+        "name",
+        "define",
+        "describe",
+        "state",
+        "locate",
+        "find",
+        "memorise",
+        "memorize"
+      ],
+      "verbs": [
+        "define",
+        "duplicate",
+        "list",
+        "memorize",
+        "recall",
+        "repeat",
+        "state"
+      ]
+    },
+    "COG.UND": {
+      "code": "COG.UND",
+      "name": "Understand",
+      "level": 2,
+      "description": "Ability to explain, interpret, and demonstrate understanding of concepts.",
+      "keywords": [
+        "explain",
+        "interpret",
+        "summarise",
+        "summarize",
+        "classify",
+        "compare",
+        "contrast",
+        "discuss",
+        "distinguish",
+        "paraphrase",
+        "predict"
+      ],
+      "verbs": [
+        "classify",
+        "describe",
+        "discuss",
+        "explain",
+        "identify",
+        "locate",
+        "recognize",
+        "report",
+        "select",
+        "translate"
+      ]
+    },
+    "COG.APP": {
+      "code": "COG.APP",
+      "name": "Apply",
+      "level": 3,
+      "description": "Ability to apply knowledge and execute procedures in familiar contexts.",
+      "keywords": [
+        "apply",
+        "use",
+        "implement",
+        "execute",
+        "perform",
+        "carry out",
+        "demonstrate",
+        "operate",
+        "practice",
+        "schedule",
+        "sketch",
+        "solve"
+      ],
+      "verbs": [
+        "execute",
+        "implement",
+        "solve",
+        "use",
+        "demonstrate",
+        "interpret",
+        "operate",
+        "schedule",
+        "sketch"
+      ]
+    },
+    "COG.ANA": {
+      "code": "COG.ANA",
+      "name": "Analyse",
+      "level": 4,
+      "description": "Ability to analyze information, identify relationships, and diagnose issues.",
+      "keywords": [
+        "analyse",
+        "analyze",
+        "diagnose",
+        "troubleshoot",
+        "examine",
+        "investigate",
+        "differentiate",
+        "organise",
+        "organize",
+        "attribute",
+        "deconstruct",
+        "outline"
+      ],
+      "verbs": [
+        "differentiate",
+        "organize",
+        "relate",
+        "compare",
+        "contrast",
+        "distinguish",
+        "examine",
+        "experiment",
+        "question",
+        "test"
+      ]
+    },
+    "COG.EVA": {
+      "code": "COG.EVA",
+      "name": "Evaluate",
+      "level": 5,
+      "description": "Ability to evaluate, critique, and make judgments using defined criteria.",
+      "keywords": [
+        "evaluate",
+        "assess",
+        "judge",
+        "audit",
+        "critique",
+        "justify",
+        "appraise",
+        "argue",
+        "defend",
+        "select",
+        "support",
+        "value",
+        "review",
+        "recommend"
+      ],
+      "verbs": [
+        "appraise",
+        "argue",
+        "defend",
+        "judge",
+        "select",
+        "support",
+        "value",
+        "critique",
+        "weigh"
+      ]
+    },
+    "COG.CRE": {
+      "code": "COG.CRE",
+      "name": "Create",
+      "level": 6,
+      "description": "Ability to create, design, and develop innovative solutions or original work.",
+      "keywords": [
+        "create",
+        "design",
+        "develop",
+        "innovate",
+        "produce",
+        "construct",
+        "generate",
+        "plan",
+        "compose",
+        "formulate",
+        "invent",
+        "devise",
+        "assemble",
+        "author"
+      ],
+      "verbs": [
+        "design",
+        "assemble",
+        "construct",
+        "conjecture",
+        "develop",
+        "formulate",
+        "author",
+        "investigate"
+      ]
     }
+  }
 }
 
 
@@ -234,75 +471,143 @@ COGNITIVE_COMPLEXITY_FACET = {
 # ═══════════════════════════════════════════════════════════════════════════
 
 WORK_CONTEXT_FACET = {
-    "facet_id": "CTX",
-    "facet_name": "Work Context",
-    "description": "Primary type of work activity the skill involves",
-    "values": {
-        "CTX.INF": {
-            "code": "CTX.INF",
-            "name": "Information Activities",
-            "description": "Working with data, information, and knowledge",
-            "keywords": ["data", "information", "document", "record", "report", "research", "analyse",
-                        "analyze", "process", "interpret", "compile", "database", "spreadsheet"],
-            "subcategories": {
-                "CTX.INF.GAT": "Gathering information",
-                "CTX.INF.PRC": "Processing information",
-                "CTX.INF.ANA": "Analysing information",
-                "CTX.INF.DOC": "Documenting/Recording"
-            }
-        },
-        "CTX.PEO": {
-            "code": "CTX.PEO",
-            "name": "People Activities",
-            "description": "Working with and through people",
-            "keywords": ["customer", "client", "patient", "student", "team", "staff", "supervise",
-                        "train", "mentor", "coach", "counsel", "serve", "assist", "communicate"],
-            "subcategories": {
-                "CTX.PEO.SRV": "Serving/Assisting",
-                "CTX.PEO.TEA": "Teaching/Training",
-                "CTX.PEO.SUP": "Supervising/Managing",
-                "CTX.PEO.NEG": "Negotiating/Influencing"
-            }
-        },
-        "CTX.THG": {
-            "code": "CTX.THG",
-            "name": "Things/Physical Activities",
-            "description": "Working with physical objects, equipment, and materials",
-            "keywords": ["equipment", "machinery", "tool", "material", "build", "construct", "repair",
-                        "maintain", "operate", "handle", "install", "assemble", "physical", "manual"],
-            "subcategories": {
-                "CTX.THG.OPR": "Operating equipment",
-                "CTX.THG.BLD": "Building/Constructing",
-                "CTX.THG.REP": "Repairing/Maintaining",
-                "CTX.THG.HND": "Handling materials"
-            }
-        },
-        "CTX.SYS": {
-            "code": "CTX.SYS",
-            "name": "Systems Activities",
-            "description": "Working with processes, systems, and organizational elements",
-            "keywords": ["system", "process", "plan", "schedule", "coordinate", "monitor", "control",
-                        "optimise", "optimize", "improve", "manage", "organize", "organise", "workflow"],
-            "subcategories": {
-                "CTX.SYS.PLN": "Planning/Scheduling",
-                "CTX.SYS.CRD": "Coordinating",
-                "CTX.SYS.MON": "Monitoring/Controlling",
-                "CTX.SYS.OPT": "Optimising/Improving"
-            }
-        },
-        "CTX.IDE": {
-            "code": "CTX.IDE",
-            "name": "Ideas/Creative Activities",
-            "description": "Working with concepts, designs, and creative outputs",
-            "keywords": ["design", "create", "innovate", "concept", "idea", "creative", "artistic",
-                        "develop", "invent", "compose", "write", "produce", "strategy"],
-            "subcategories": {
-                "CTX.IDE.DSN": "Designing",
-                "CTX.IDE.INN": "Innovating",
-                "CTX.IDE.STR": "Strategising"
-            }
-        }
+  "facet_id": "CTX",
+  "facet_name": "Work Context",
+  "description": "Defines the main work activity context in which the skill is applied.",
+  "values": {
+    "CTX.INF": {
+      "code": "CTX.INF",
+      "name": "Information Activities",
+      "description": "Activities focused on gathering, processing, and analyzing data and information.",
+      "keywords": [
+        "data",
+        "information",
+        "document",
+        "record",
+        "report",
+        "research",
+        "analyse",
+        "analyze",
+        "process",
+        "interpret",
+        "compile",
+        "database",
+        "spreadsheet"
+      ],
+      "subcategories": {
+        "CTX.INF.GAT": "Gathering information",
+        "CTX.INF.PRC": "Processing information",
+        "CTX.INF.ANA": "Analysing information",
+        "CTX.INF.DOC": "Documenting/Recording"
+      }
+    },
+    "CTX.PEO": {
+      "code": "CTX.PEO",
+      "name": "People Activities",
+      "description": "Activities involving interaction, collaboration, and support for individuals or groups.",
+      "keywords": [
+        "customer",
+        "client",
+        "patient",
+        "student",
+        "team",
+        "staff",
+        "supervise",
+        "train",
+        "mentor",
+        "coach",
+        "counsel",
+        "serve",
+        "assist",
+        "communicate"
+      ],
+      "subcategories": {
+        "CTX.PEO.SRV": "Serving/Assisting",
+        "CTX.PEO.TEA": "Teaching/Training",
+        "CTX.PEO.SUP": "Supervising/Managing",
+        "CTX.PEO.NEG": "Negotiating/Influencing"
+      }
+    },
+    "CTX.THG": {
+      "code": "CTX.THG",
+      "name": "Things/Physical Activities",
+      "description": "Activities involving handling, operating, or constructing physical objects and equipment.",
+      "keywords": [
+        "equipment",
+        "machinery",
+        "tool",
+        "material",
+        "build",
+        "construct",
+        "repair",
+        "maintain",
+        "operate",
+        "handle",
+        "install",
+        "assemble",
+        "physical",
+        "manual"
+      ],
+      "subcategories": {
+        "CTX.THG.OPR": "Operating equipment",
+        "CTX.THG.BLD": "Building/Constructing",
+        "CTX.THG.REP": "Repairing/Maintaining",
+        "CTX.THG.HND": "Handling materials"
+      }
+    },
+    "CTX.SYS": {
+      "code": "CTX.SYS",
+      "name": "Systems Activities",
+      "description": "Activities focused on managing, optimizing, and coordinating systems and workflows.",
+      "keywords": [
+        "system",
+        "process",
+        "plan",
+        "schedule",
+        "coordinate",
+        "monitor",
+        "control",
+        "optimise",
+        "optimize",
+        "improve",
+        "manage",
+        "organize",
+        "organise",
+        "workflow"
+      ],
+      "subcategories": {
+        "CTX.SYS.PLN": "Planning/Scheduling",
+        "CTX.SYS.CRD": "Coordinating",
+        "CTX.SYS.MON": "Monitoring/Controlling",
+        "CTX.SYS.OPT": "Optimising/Improving"
+      }
+    },
+    "CTX.IDE": {
+      "code": "CTX.IDE",
+      "name": "Ideas/Creative Activities",
+      "description": "Activities involving conceptual thinking, design, and creative innovation.",
+      "keywords": [
+        "design",
+        "create",
+        "innovate",
+        "concept",
+        "idea",
+        "creative",
+        "artistic",
+        "develop",
+        "invent",
+        "compose",
+        "write",
+        "produce",
+        "strategy"
+      ],
+      "subcategories": {
+        "CTX.IDE.DSN": "Designing",
+        "CTX.IDE.INN": "Innovating",
+        "CTX.IDE.STR": "Strategising"
+      }
     }
+  }
 }
 
 
@@ -311,58 +616,117 @@ WORK_CONTEXT_FACET = {
 # ═══════════════════════════════════════════════════════════════════════════
 
 FUTURE_READINESS_FACET = {
-    "facet_id": "FUT",
-    "facet_name": "Future Readiness",
-    "description": "Relationship with automation/AI and future labor market demand",
-    "values": {
-        "FUT.HUM": {
-            "code": "FUT.HUM",
-            "name": "Uniquely Human",
-            "score": 4,
-            "description": "Skills that are difficult to automate, requiring human judgment, empathy, or creativity",
-            "keywords": ["empathy", "emotional intelligence", "creativity", "innovation", "leadership",
-                        "negotiation", "complex problem", "ethical", "judgment", "intuition", "care",
-                        "relationship", "trust", "mentoring", "coaching", "counselling"],
-            "trend": "High demand, hard to automate"
-        },
-        "FUT.COL": {
-            "code": "FUT.COL",
-            "name": "Human-AI Collaborative",
-            "score": 3,
-            "description": "Skills enhanced by AI tools, requiring human oversight and collaboration",
-            "keywords": ["AI-assisted", "data-driven", "augmented", "hybrid", "oversight", "validate",
-                        "interpret results", "prompt", "supervise AI", "human-in-the-loop"],
-            "trend": "Growing demand, AI-augmented"
-        },
-        "FUT.AUG": {
-            "code": "FUT.AUG",
-            "name": "AI-Augmentable",
-            "score": 2,
-            "description": "Skills where AI can significantly assist but human input remains valuable",
-            "keywords": ["software", "analysis", "reporting", "documentation", "research", "translation",
-                        "content", "design", "coding", "programming"],
-            "trend": "Stable, AI-enhanced productivity"
-        },
-        "FUT.AUT": {
-            "code": "FUT.AUT",
-            "name": "Automatable",
-            "score": 1,
-            "description": "Routine procedural tasks susceptible to automation",
-            "keywords": ["routine", "repetitive", "manual data", "basic entry", "standard procedure",
-                        "simple calculation", "filing", "sorting", "copying", "transcription"],
-            "trend": "Declining demand, automation risk"
-        },
-        "FUT.EMG": {
-            "code": "FUT.EMG",
-            "name": "Emerging",
-            "score": 5,
-            "description": "New skill areas driven by emerging technologies and trends",
-            "keywords": ["AI", "machine learning", "cybersecurity", "blockchain", "quantum", "IoT",
-                        "renewable", "sustainability", "circular economy", "green", "EV", "battery",
-                        "cloud", "data science", "automation engineering"],
-            "trend": "Rapid growth, emerging demand"
-        }
+  "facet_id": "FUT",
+  "facet_name": "Future Readiness",
+  "description": "Indicates a skill’s resilience to automation and its future demand trajectory.",
+  "values": {
+    "FUT.HUM": {
+      "code": "FUT.HUM",
+      "name": "Uniquely Human",
+      "score": 4,
+      "description": "Skills requiring human judgment, empathy, and creativity, resistant to automation.",
+      "keywords": [
+        "empathy",
+        "emotional intelligence",
+        "creativity",
+        "innovation",
+        "leadership",
+        "negotiation",
+        "complex problem",
+        "ethical",
+        "judgment",
+        "intuition",
+        "care",
+        "relationship",
+        "trust",
+        "mentoring",
+        "coaching",
+        "counselling"
+      ],
+      "trend": "High demand, hard to automate"
+    },
+    "FUT.COL": {
+      "code": "FUT.COL",
+      "name": "Human-AI Collaborative",
+      "score": 3,
+      "description": "Skills augmented by AI, requiring human oversight and collaborative input.",
+      "keywords": [
+        "AI-assisted",
+        "data-driven",
+        "augmented",
+        "hybrid",
+        "oversight",
+        "validate",
+        "interpret results",
+        "prompt",
+        "supervise AI",
+        "human-in-the-loop"
+      ],
+      "trend": "Growing demand, AI-augmented"
+    },
+    "FUT.AUG": {
+      "code": "FUT.AUG",
+      "name": "AI-Augmentable",
+      "score": 2,
+      "description": "Skills where AI boosts efficiency but human expertise remains essential.",
+      "keywords": [
+        "software",
+        "analysis",
+        "reporting",
+        "documentation",
+        "research",
+        "translation",
+        "content",
+        "design",
+        "coding",
+        "programming"
+      ],
+      "trend": "Stable, AI-enhanced productivity"
+    },
+    "FUT.AUT": {
+      "code": "FUT.AUT",
+      "name": "Automatable",
+      "score": 1,
+      "description": "Routine tasks highly susceptible to automation and declining in demand.",
+      "keywords": [
+        "routine",
+        "repetitive",
+        "manual data",
+        "basic entry",
+        "standard procedure",
+        "simple calculation",
+        "filing",
+        "sorting",
+        "copying",
+        "transcription"
+      ],
+      "trend": "Declining demand, automation risk"
+    },
+    "FUT.EMG": {
+      "code": "FUT.EMG",
+      "name": "Emerging",
+      "score": 5,
+      "description": "Skills in rapidly growing areas driven by emerging technologies and innovation.",
+      "keywords": [
+        "AI",
+        "machine learning",
+        "cybersecurity",
+        "blockchain",
+        "quantum",
+        "IoT",
+        "renewable",
+        "sustainability",
+        "circular economy",
+        "green",
+        "EV",
+        "battery",
+        "cloud",
+        "data science",
+        "automation engineering"
+      ],
+      "trend": "Rapid growth, emerging demand"
     }
+  }
 }
 
 
@@ -371,51 +735,101 @@ FUTURE_READINESS_FACET = {
 # ═══════════════════════════════════════════════════════════════════════════
 
 LEARNING_CONTEXT_FACET = {
-    "facet_id": "LRN",
-    "facet_name": "Learning Context",
-    "description": "Primary context in which the skill is typically developed",
-    "values": {
-        "LRN.THE": {
-            "code": "LRN.THE",
-            "name": "Theoretical/Academic",
-            "description": "Primarily conceptual learning in classroom/academic settings",
-            "keywords": ["theory", "concept", "principle", "academic", "classroom", "lecture",
-                        "study", "knowledge", "understand", "learn", "course"],
-            "environment": "Classroom, lecture, online learning"
-        },
-        "LRN.PRA": {
-            "code": "LRN.PRA",
-            "name": "Practical/Hands-on",
-            "description": "Hands-on application in workshops, labs, or simulated environments",
-            "keywords": ["practical", "hands-on", "workshop", "lab", "laboratory", "demonstration",
-                        "practice", "simulation", "exercise", "drill", "training"],
-            "environment": "Workshop, laboratory, training facility"
-        },
-        "LRN.WRK": {
-            "code": "LRN.WRK",
-            "name": "Workplace/On-the-Job",
-            "description": "Skills developed directly through workplace experience",
-            "keywords": ["workplace", "on-the-job", "apprenticeship", "traineeship", "work placement",
-                        "internship", "experience", "real-world", "industry", "actual"],
-            "environment": "Actual workplace, apprenticeship"
-        },
-        "LRN.HYB": {
-            "code": "LRN.HYB",
-            "name": "Hybrid/Blended",
-            "description": "Combination of theoretical knowledge and practical application",
-            "keywords": ["blended", "hybrid", "integrated", "combined", "mixed", "work-integrated",
-                        "dual", "theory and practice"],
-            "environment": "Mixed classroom and workplace"
-        },
-        "LRN.DIG": {
-            "code": "LRN.DIG",
-            "name": "Digital/Self-Paced",
-            "description": "Primarily developed through digital platforms and self-directed learning",
-            "keywords": ["online", "e-learning", "digital", "self-paced", "virtual", "remote",
-                        "distance", "MOOC", "tutorial", "video"],
-            "environment": "Online, virtual platforms"
-        }
+  "facet_id": "LRN",
+  "facet_name": "Learning Context",
+  "description": "Defines the typical environment or approach for developing the skill.",
+  "values": {
+    "LRN.THE": {
+      "code": "LRN.THE",
+      "name": "Theoretical/Academic",
+      "description": "Learning focused on theoretical concepts in academic or classroom settings.",
+      "keywords": [
+        "theory",
+        "concept",
+        "principle",
+        "academic",
+        "classroom",
+        "lecture",
+        "study",
+        "knowledge",
+        "understand",
+        "learn",
+        "course"
+      ],
+      "environment": "Classroom, lecture, online learning"
+    },
+    "LRN.PRA": {
+      "code": "LRN.PRA",
+      "name": "Practical/Hands-on",
+      "description": "Learning through hands-on practice in workshops, labs, or simulated environments.",
+      "keywords": [
+        "practical",
+        "hands-on",
+        "workshop",
+        "lab",
+        "laboratory",
+        "demonstration",
+        "practice",
+        "simulation",
+        "exercise",
+        "drill",
+        "training"
+      ],
+      "environment": "Workshop, laboratory, training facility"
+    },
+    "LRN.WRK": {
+      "code": "LRN.WRK",
+      "name": "Workplace/On-the-Job",
+      "description": "Learning through real-world workplace experience and practical application.",
+      "keywords": [
+        "workplace",
+        "on-the-job",
+        "apprenticeship",
+        "traineeship",
+        "work placement",
+        "internship",
+        "experience",
+        "real-world",
+        "industry",
+        "actual"
+      ],
+      "environment": "Actual workplace, apprenticeship"
+    },
+    "LRN.HYB": {
+      "code": "LRN.HYB",
+      "name": "Hybrid/Blended",
+      "description": "Learning combining theoretical instruction with practical application.",
+      "keywords": [
+        "blended",
+        "hybrid",
+        "integrated",
+        "combined",
+        "mixed",
+        "work-integrated",
+        "dual",
+        "theory and practice"
+      ],
+      "environment": "Mixed classroom and workplace"
+    },
+    "LRN.DIG": {
+      "code": "LRN.DIG",
+      "name": "Digital/Self-Paced",
+      "description": "Learning via digital platforms and self-paced, independent study.",
+      "keywords": [
+        "online",
+        "e-learning",
+        "digital",
+        "self-paced",
+        "virtual",
+        "remote",
+        "distance",
+        "MOOC",
+        "tutorial",
+        "video"
+      ],
+      "environment": "Online, virtual platforms"
     }
+  }
 }
 
 
@@ -424,54 +838,94 @@ LEARNING_CONTEXT_FACET = {
 # ═══════════════════════════════════════════════════════════════════════════
 
 DIGITAL_INTENSITY_FACET = {
-    "facet_id": "DIG",
-    "facet_name": "Digital Intensity",
-    "description": "Level of digital tool and technology usage required",
-    "values": {
-        "DIG.MIN": {
-            "code": "DIG.MIN",
-            "name": "Minimal Digital",
-            "level": 0,
-            "description": "Primarily manual/physical tasks with negligible digital tool usage",
-            "keywords": ["manual", "physical", "hands-on", "traditional", "non-digital"],
-            "percentage": "0-10% digital"
-        },
-        "DIG.LOW": {
-            "code": "DIG.LOW",
-            "name": "Low Digital",
-            "level": 1,
-            "description": "Basic digital literacy, simple tool usage",
-            "keywords": ["email", "basic computer", "POS", "simple software", "word processing"],
-            "percentage": "11-30% digital"
-        },
-        "DIG.MED": {
-            "code": "DIG.MED",
-            "name": "Medium Digital",
-            "level": 2,
-            "description": "Regular use of specialized software and digital platforms",
-            "keywords": ["software", "application", "system", "platform", "database", "spreadsheet",
-                        "industry software", "CAD", "CRM", "ERP"],
-            "percentage": "31-60% digital"
-        },
-        "DIG.HIG": {
-            "code": "DIG.HIG",
-            "name": "High Digital",
-            "level": 3,
-            "description": "Advanced digital skills, complex software, data manipulation",
-            "keywords": ["programming", "coding", "data analytics", "digital design", "system admin",
-                        "database management", "network", "development", "automation"],
-            "percentage": "61-85% digital"
-        },
-        "DIG.ADV": {
-            "code": "DIG.ADV",
-            "name": "Advanced Digital",
-            "level": 4,
-            "description": "Cutting-edge technology, AI/ML, emerging tech",
-            "keywords": ["AI", "machine learning", "cloud architecture", "cybersecurity", "IoT",
-                        "blockchain", "data science", "DevOps", "full-stack"],
-            "percentage": "86-100% digital"
-        }
+  "facet_id": "DIG",
+  "facet_name": "Digital Intensity",
+  "description": "Indicates the extent of digital technology use required for the skill.",
+  "values": {
+    "DIG.MIN": {
+      "code": "DIG.MIN",
+      "name": "Minimal Digital",
+      "level": 0,
+      "description": "Tasks are mostly manual or physical with minimal digital involvement.",
+      "keywords": [
+        "manual",
+        "physical",
+        "hands-on",
+        "traditional",
+        "non-digital"
+      ],
+      "percentage": "0-10% digital"
+    },
+    "DIG.LOW": {
+      "code": "DIG.LOW",
+      "name": "Low Digital",
+      "level": 1,
+      "description": "Basic digital literacy and use of simple tools or applications.",
+      "keywords": [
+        "email",
+        "basic computer",
+        "POS",
+        "simple software",
+        "word processing"
+      ],
+      "percentage": "11-30% digital"
+    },
+    "DIG.MED": {
+      "code": "DIG.MED",
+      "name": "Medium Digital",
+      "level": 2,
+      "description": "Frequent use of specialized software and digital platforms for work tasks.",
+      "keywords": [
+        "software",
+        "application",
+        "system",
+        "platform",
+        "database",
+        "spreadsheet",
+        "industry software",
+        "CAD",
+        "CRM",
+        "ERP"
+      ],
+      "percentage": "31-60% digital"
+    },
+    "DIG.HIG": {
+      "code": "DIG.HIG",
+      "name": "High Digital",
+      "level": 3,
+      "description": "Advanced digital skills involving complex software and data management.",
+      "keywords": [
+        "programming",
+        "coding",
+        "data analytics",
+        "digital design",
+        "system admin",
+        "database management",
+        "network",
+        "development",
+        "automation"
+      ],
+      "percentage": "61-85% digital"
+    },
+    "DIG.ADV": {
+      "code": "DIG.ADV",
+      "name": "Advanced Digital",
+      "level": 4,
+      "description": "Expertise in cutting-edge technologies such as AI, ML, and emerging digital tools.",
+      "keywords": [
+        "AI",
+        "machine learning",
+        "cloud architecture",
+        "cybersecurity",
+        "IoT",
+        "blockchain",
+        "data science",
+        "DevOps",
+        "full-stack"
+      ],
+      "percentage": "86-100% digital"
     }
+  }
 }
 
 
