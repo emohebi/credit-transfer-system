@@ -451,7 +451,24 @@ body {
 
 .tag-alt { background: var(--jsa-grey-100); color: var(--jsa-grey-600); }
 .tag-code { background: #e8eaf6; color: #3949ab; font-family: monospace; font-size: 0.7rem; }
+.tag-code.tag-primary { background: #c5cae9; color: #1a237e; font-weight: 600; }
 .tag-keyword { background: #e0f7fa; color: #00838f; }
+
+/* Primary code with code name display */
+.primary-code-display {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.code-name-label {
+    font-size: 0.85rem;
+    color: var(--jsa-grey-700);
+    padding: 4px 8px;
+    background: var(--jsa-grey-100);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--jsa-teal);
+}
 .tag-qual { background: #e8f5e9; color: #2e7d32; }
 .tag-occ { background: #fff3e0; color: #e65100; }
 .tag-more { background: var(--jsa-grey-200); color: var(--jsa-grey-500); font-style: italic; }
@@ -773,6 +790,12 @@ body {
     opacity: 1;
 }
 
+/* Filter option count badge */
+.filter-option-count {
+    color: var(--jsa-grey-500);
+    font-size: 0.85em;
+}
+
 /* Table View */
 .table-controls {
     margin-bottom: 16px;
@@ -972,6 +995,11 @@ BODY_CONTENT = """
         <div class="stat-label">Unit Codes</div>
     </div>
     <div class="stat-card">
+        <i class="bi bi-tag"></i>
+        <div class="stat-value" id="totalCodeNames">-</div>
+        <div class="stat-label">Code Names</div>
+    </div>
+    <div class="stat-card">
         <i class="bi bi-card-heading"></i>
         <div class="stat-value" id="totalAltTitles">-</div>
         <div class="stat-label">Alt. Titles</div>
@@ -1093,6 +1121,9 @@ const FACET_DISPLAY_NAMES = {
     'OCC': 'Occupations (ANZSCO)'
 };
 
+// Store original facet counts for filter view
+let originalFacetCounts = {};
+
 // Initialize - wait for data to be available
 function initializeTaxonomy() {
     try {
@@ -1117,6 +1148,9 @@ function initializeTaxonomy() {
         
         // Build qualification/occupation lookup maps
         buildQualOccMaps();
+        
+        // Build original facet counts
+        buildOriginalFacetCounts();
         
         initializeStats();
         initializeOverview();
@@ -1178,6 +1212,42 @@ function buildQualOccMaps() {
     });
 }
 
+function buildOriginalFacetCounts() {
+    originalFacetCounts = {};
+    
+    // Count for standard facets
+    for (const facetId of Object.keys(taxonomyData.facets || {})) {
+        if (facetId === 'QUAL' || facetId === 'OCC') continue;
+        
+        originalFacetCounts[facetId] = {};
+        const skillFacetKey = facetId === 'ASCED' ? (taxonomyData.skills[0]?.facets?.ASCED ? 'ASCED' : 'IND') : facetId;
+        
+        for (const skill of taxonomyData.skills) {
+            const facetData = skill.facets?.[skillFacetKey];
+            if (facetData) {
+                const code = facetData.code;
+                if (Array.isArray(code)) {
+                    code.forEach(c => { originalFacetCounts[facetId][c] = (originalFacetCounts[facetId][c] || 0) + 1; });
+                } else {
+                    originalFacetCounts[facetId][code] = (originalFacetCounts[facetId][code] || 0) + 1;
+                }
+            }
+        }
+    }
+    
+    // Count for QUAL
+    originalFacetCounts['QUAL'] = {};
+    for (const [code, skillIds] of Object.entries(qualificationSkillsMap)) {
+        originalFacetCounts['QUAL'][code] = skillIds.length;
+    }
+    
+    // Count for OCC
+    originalFacetCounts['OCC'] = {};
+    for (const [code, skillIds] of Object.entries(occupationSkillsMap)) {
+        originalFacetCounts['OCC'][code] = skillIds.length;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof TAXONOMY_DATA !== 'undefined' || typeof EMBEDDED_DATA !== 'undefined') {
         initializeTaxonomy();
@@ -1206,6 +1276,10 @@ function initializeStats() {
     document.getElementById('totalAltTitles').textContent = (stats.total_alternative_titles || 0).toLocaleString();
     document.getElementById('totalQualifications').textContent = (stats.total_qualifications || Object.keys(qualificationSkillsMap).length).toLocaleString();
     document.getElementById('totalOccupations').textContent = (stats.total_occupations || Object.keys(occupationSkillsMap).length).toLocaleString();
+    
+    // Count skills with code names
+    const skillsWithCodeNames = stats.skills_with_code_names || taxonomyData.skills.filter(s => s.code_name && s.code_name.trim() !== '').length;
+    document.getElementById('totalCodeNames').textContent = skillsWithCodeNames.toLocaleString();
 }
 
 function initializeOverview() {
@@ -1688,6 +1762,51 @@ function showSkillDetail(facetId, skillId) {
     
     html += `</div></div>`;
     
+    // Primary code with code name
+    if (skill.code) {
+        const codeNameHtml = skill.code_name ? `<span class="code-name-label">${skill.code_name}</span>` : '';
+        html += `
+            <div class="detail-section">
+                <div class="detail-section-title"><i class="bi bi-upc"></i> Primary Code</div>
+                <div class="primary-code-display">
+                    <span class="tag tag-code tag-primary">${skill.code}</span>
+                    ${codeNameHtml}
+                </div>
+            </div>
+        `;
+    }
+    
+    // Related codes (excluding primary code)
+    const relatedCodes = (skill.all_related_codes || []).filter(c => c !== skill.code);
+    if (relatedCodes.length > 0) {
+        html += `
+            <div class="detail-section">
+                <div class="detail-section-title"><i class="bi bi-upc-scan"></i> Related Codes (${relatedCodes.length})</div>
+                <div class="tag-list">
+                    ${relatedCodes.slice(0, 10).map(c => `<span class="tag tag-code">${c}</span>`).join('')}
+                    ${relatedCodes.length > 10 ? `<span class="tag tag-more">+${relatedCodes.length - 10} more</span>` : ''}
+                </div>
+            </div>
+        `;
+    }
+    
+    // Related skills
+    if (skill.related_skills?.length > 0) {
+        html += `
+            <div class="detail-section">
+                <div class="detail-section-title"><i class="bi bi-link-45deg"></i> Related Skills (${skill.related_skills.length})</div>
+                <div class="related-skills-list">
+                    ${skill.related_skills.slice(0, 8).map(r => `
+                        <div class="related-skill-item" onclick="navigateToSkill('${facetId}', '${r.skill_id}')">
+                            <span class="related-skill-name">${r.skill_name}</span>
+                            <span class="related-skill-score">${(r.similarity * 100).toFixed(0)}%</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
     // Qualifications section
     if (skill.qualifications?.length > 0) {
         html += `
@@ -1722,36 +1841,6 @@ function showSkillDetail(facetId, skillId) {
                 <div class="tag-list">
                     ${skill.alternative_titles.slice(0, 8).map(t => `<span class="tag tag-alt">${t}</span>`).join('')}
                     ${skill.alternative_titles.length > 8 ? `<span class="tag tag-more">+${skill.alternative_titles.length - 8} more</span>` : ''}
-                </div>
-            </div>
-        `;
-    }
-    
-    // Related codes
-    if (skill.all_related_codes?.length > 0) {
-        html += `
-            <div class="detail-section">
-                <div class="detail-section-title"><i class="bi bi-upc-scan"></i> Related Codes (${skill.all_related_codes.length})</div>
-                <div class="tag-list">
-                    ${skill.all_related_codes.slice(0, 10).map(c => `<span class="tag tag-code">${c}</span>`).join('')}
-                    ${skill.all_related_codes.length > 10 ? `<span class="tag tag-more">+${skill.all_related_codes.length - 10} more</span>` : ''}
-                </div>
-            </div>
-        `;
-    }
-    
-    // Related skills
-    if (skill.related_skills?.length > 0) {
-        html += `
-            <div class="detail-section">
-                <div class="detail-section-title"><i class="bi bi-link-45deg"></i> Related Skills (${skill.related_skills.length})</div>
-                <div class="related-skills-list">
-                    ${skill.related_skills.slice(0, 8).map(r => `
-                        <div class="related-skill-item" onclick="navigateToSkill('${facetId}', '${r.skill_id}')">
-                            <span class="related-skill-name">${r.skill_name}</span>
-                            <span class="related-skill-score">${(r.similarity * 100).toFixed(0)}%</span>
-                        </div>
-                    `).join('')}
                 </div>
             </div>
         `;
@@ -1800,7 +1889,10 @@ function initializeFilterView() {
         const icon = facetIcons[facetId] || 'bi-tag';
         const displayName = FACET_DISPLAY_NAMES[facetId] || facetInfo.name || facetId;
         const options = Object.entries(facetInfo.values || {})
-            .map(([code, valueInfo]) => `<option value="${code}">${valueInfo.name}</option>`)
+            .map(([code, valueInfo]) => {
+                const count = originalFacetCounts[facetId]?.[code] || 0;
+                return `<option value="${code}" data-original-count="${count}">${valueInfo.name} (${count})</option>`;
+            })
             .join('');
         
         filtersHtml += `
@@ -1819,7 +1911,10 @@ function initializeFilterView() {
         const qualOptions = Object.entries(taxonomyData.facets.QUAL.values || {})
             .sort((a, b) => (qualificationSkillsMap[b[0]]?.length || 0) - (qualificationSkillsMap[a[0]]?.length || 0))
             .slice(0, 100)
-            .map(([code, valueInfo]) => `<option value="${code}">${valueInfo.name}</option>`)
+            .map(([code, valueInfo]) => {
+                const count = originalFacetCounts['QUAL']?.[code] || 0;
+                return `<option value="${code}" data-original-count="${count}">${valueInfo.name} (${count})</option>`;
+            })
             .join('');
         
         filtersHtml += `
@@ -1838,7 +1933,10 @@ function initializeFilterView() {
         const occOptions = Object.entries(taxonomyData.facets.OCC.values || {})
             .sort((a, b) => (occupationSkillsMap[b[0]]?.length || 0) - (occupationSkillsMap[a[0]]?.length || 0))
             .slice(0, 100)
-            .map(([code, valueInfo]) => `<option value="${code}">${valueInfo.name}</option>`)
+            .map(([code, valueInfo]) => {
+                const count = originalFacetCounts['OCC']?.[code] || 0;
+                return `<option value="${code}" data-original-count="${count}">${valueInfo.name} (${count})</option>`;
+            })
             .join('');
         
         filtersHtml += `
@@ -1888,6 +1986,7 @@ function initializeFilterView() {
         select.addEventListener('change', () => {
             updateActiveFilterTags();
             applyMultiFilters();
+            updateFilterCounts();
         });
     });
 }
@@ -1900,7 +1999,9 @@ function updateActiveFilterTags() {
         if (select.value) {
             const facetId = select.dataset.facet;
             const facetName = FACET_DISPLAY_NAMES[facetId] || facetId;
-            const valueName = select.options[select.selectedIndex].text;
+            const selectedOption = select.options[select.selectedIndex];
+            // Extract just the name without the count
+            const valueName = selectedOption.text.replace(/\\s*\\(\\d+\\)$/, '');
             tagsHtml += `
                 <span class="active-filter-tag">
                     ${facetName}: ${valueName.substring(0, 20)}${valueName.length > 20 ? '...' : ''}
@@ -1919,10 +2020,11 @@ function clearSingleFilter(facetId) {
         select.value = '';
         updateActiveFilterTags();
         applyMultiFilters();
+        updateFilterCounts();
     }
 }
 
-function applyMultiFilters() {
+function getFilteredSkills() {
     activeFilters = {};
     
     document.querySelectorAll('.filter-select').forEach(select => {
@@ -1931,7 +2033,7 @@ function applyMultiFilters() {
         }
     });
     
-    let filtered = taxonomyData.skills.filter(skill => {
+    return taxonomyData.skills.filter(skill => {
         for (const [facetId, value] of Object.entries(activeFilters)) {
             // Handle QUAL filter (array field)
             if (facetId === 'QUAL') {
@@ -1960,6 +2062,103 @@ function applyMultiFilters() {
         }
         return true;
     });
+}
+
+function updateFilterCounts() {
+    // Get current filtered skills based on active filters
+    const currentFilters = {};
+    document.querySelectorAll('.filter-select').forEach(select => {
+        if (select.value) {
+            currentFilters[select.dataset.facet] = select.value;
+        }
+    });
+    
+    // For each filter dropdown, calculate counts for each option
+    // based on what would be shown if that option were selected
+    // (keeping other filters as they are)
+    document.querySelectorAll('.filter-select').forEach(select => {
+        const thisFacetId = select.dataset.facet;
+        
+        // Build filters excluding this facet
+        const otherFilters = {...currentFilters};
+        delete otherFilters[thisFacetId];
+        
+        // Get skills that match all other filters
+        const baseSkills = taxonomyData.skills.filter(skill => {
+            for (const [facetId, value] of Object.entries(otherFilters)) {
+                if (facetId === 'QUAL') {
+                    const quals = skill.qualifications || [];
+                    if (!quals.some(q => q.code === value)) return false;
+                    continue;
+                }
+                if (facetId === 'OCC') {
+                    const occs = skill.occupations || [];
+                    if (!occs.some(o => o.code === value)) return false;
+                    continue;
+                }
+                let skillFacetKey = facetId;
+                if (facetId === 'ASCED' && !skill.facets?.ASCED && skill.facets?.IND) {
+                    skillFacetKey = 'IND';
+                }
+                const skillFacet = skill.facets?.[skillFacetKey];
+                if (!skillFacet || skillFacet.code !== value) {
+                    return false;
+                }
+            }
+            return true;
+        });
+        
+        // Now count how many of baseSkills match each option in this dropdown
+        const optionCounts = {};
+        
+        baseSkills.forEach(skill => {
+            if (thisFacetId === 'QUAL') {
+                (skill.qualifications || []).forEach(q => {
+                    optionCounts[q.code] = (optionCounts[q.code] || 0) + 1;
+                });
+            } else if (thisFacetId === 'OCC') {
+                (skill.occupations || []).forEach(o => {
+                    optionCounts[o.code] = (optionCounts[o.code] || 0) + 1;
+                });
+            } else {
+                let skillFacetKey = thisFacetId;
+                if (thisFacetId === 'ASCED' && !skill.facets?.ASCED && skill.facets?.IND) {
+                    skillFacetKey = 'IND';
+                }
+                const facetData = skill.facets?.[skillFacetKey];
+                if (facetData) {
+                    const code = facetData.code;
+                    if (Array.isArray(code)) {
+                        code.forEach(c => { optionCounts[c] = (optionCounts[c] || 0) + 1; });
+                    } else {
+                        optionCounts[code] = (optionCounts[code] || 0) + 1;
+                    }
+                }
+            }
+        });
+        
+        // Update option text with new counts
+        Array.from(select.options).forEach(option => {
+            if (option.value === '') return; // Skip "All" option
+            
+            const code = option.value;
+            const count = optionCounts[code] || 0;
+            const originalCount = option.dataset.originalCount || count;
+            
+            // Extract original name (remove old count if present)
+            let name = option.text.replace(/\\s*\\(\\d+\\)$/, '');
+            
+            // Update with new count
+            option.text = `${name} (${count})`;
+            
+            // Disable options with 0 count (optional - remove if you want to keep them enabled)
+            // option.disabled = count === 0;
+        });
+    });
+}
+
+function applyMultiFilters() {
+    const filtered = getFilteredSkills();
     
     const grid = document.getElementById('filterSkillsGrid');
     const countEl = document.getElementById('filterResultsCount');
@@ -2008,6 +2207,17 @@ function clearMultiFilters() {
     const detailContainer = document.getElementById('filterDetail');
     detailContainer.classList.add('detail-placeholder');
     detailContainer.innerHTML = '<i class="bi bi-hand-index"></i><p>Select a skill to view details</p>';
+    
+    // Reset counts to original
+    document.querySelectorAll('.filter-select').forEach(select => {
+        Array.from(select.options).forEach(option => {
+            if (option.value === '') return;
+            const code = option.value;
+            const originalCount = option.dataset.originalCount || 0;
+            let name = option.text.replace(/\\s*\\(\\d+\\)$/, '');
+            option.text = `${name} (${originalCount})`;
+        });
+    });
 }
 
 function initializeTableView() {
@@ -2047,6 +2257,8 @@ function initializeTableView() {
                     <tr>
                         <th>ID</th>
                         <th>Skill Name</th>
+                        <th>Primary Code</th>
+                        <th>Code Name</th>
                         <th>Level</th>
                         <th>Nature</th>
                         <th>ASCED</th>
@@ -2142,10 +2354,14 @@ function renderTable() {
         const ascedField = s.facets?.ASCED?.name || s.facets?.IND?.name || '-';
         const qualCount = (s.qualifications || []).length;
         const occCount = (s.occupations || []).length;
+        const primaryCode = s.code || '-';
+        const codeName = s.code_name || '-';
         return `
             <tr>
                 <td style="font-family: monospace; font-size: 0.75rem;">${s.id || '-'}</td>
                 <td title="${s.name}">${s.name}</td>
+                <td style="font-family: monospace; font-size: 0.75rem;">${primaryCode}</td>
+                <td title="${codeName}">${codeName.substring(0, 25)}${codeName.length > 25 ? '...' : ''}</td>
                 <td>${s.level || '-'}</td>
                 <td>${s.facets?.NAT?.name || '-'}</td>
                 <td title="${ascedField}">${ascedField.substring(0, 20)}${ascedField.length > 20 ? '...' : ''}</td>
@@ -2215,6 +2431,8 @@ function exportToExcel() {
         'Description': s.description || '',
         'Category': s.category || '',
         'Level': s.level || '',
+        'Primary Code': s.code || '',
+        'Code Name': s.code_name || '',
         'Skill Nature': s.facets?.NAT?.name || '',
         'Transferability': s.facets?.TRF?.name || '',
         'Cognitive Complexity': s.facets?.COG?.name || '',
@@ -2228,9 +2446,8 @@ function exportToExcel() {
         'Occupation Count': (s.occupations || []).length,
         'Occupation Codes': (s.occupations || []).map(o => o.code).join('; '),
         'Occupation Titles': (s.occupations || []).map(o => o.title).join('; '),
-        'Primary Code': s.code || '',
         'Alternative Titles': (s.alternative_titles || []).join('; '),
-        'All Related Codes': (s.all_related_codes || []).join('; ')
+        'All Related Codes': (s.all_related_codes || []).filter(c => c !== s.code).join('; ')
     }));
     
     const ws = XLSX.utils.json_to_sheet(exportData);
@@ -2240,9 +2457,9 @@ function exportToExcel() {
 }
 
 function exportToCSV() {
-    const headers = ['ID', 'Name', 'Level', 'Nature', 'ASCED', 'Qual Count', 'Occ Count'];
+    const headers = ['ID', 'Name', 'Primary Code', 'Code Name', 'Level', 'Nature', 'ASCED', 'Qual Count', 'Occ Count'];
     const rows = taxonomyData.skills.map(s => [
-        s.id, s.name, s.level || '',
+        s.id, s.name, s.code || '', s.code_name || '', s.level || '',
         s.facets?.NAT?.name || '', s.facets?.ASCED?.name || s.facets?.IND?.name || '',
         (s.qualifications || []).length, (s.occupations || []).length
     ].map(v => `"${String(v || '').replace(/"/g, '""')}"`).join(','));

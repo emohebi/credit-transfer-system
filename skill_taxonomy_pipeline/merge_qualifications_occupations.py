@@ -7,6 +7,7 @@ with the existing taxonomy.json file.
 
 Excel file columns:
 - code: unit code (maps to skill's 'code' or 'all_related_codes')
+- code_name: name/title of the unit code
 - qualification_code: qualification code
 - qualification_title: title of the qualification
 - anzsco_code: occupation code (ANZSCO)
@@ -46,6 +47,7 @@ class QualificationOccupationMerger:
         # Lookup dictionaries for fast access
         self.code_to_qualifications = defaultdict(list)  # code -> list of {code, title}
         self.code_to_occupations = defaultdict(list)     # code -> list of {code, title}
+        self.code_to_code_name = {}                      # code -> code_name
         self.qualification_to_occupations = defaultdict(list)  # qual_code -> list of {code, title}
         
         # Unique sets for facet building
@@ -57,6 +59,7 @@ class QualificationOccupationMerger:
             'total_skills': 0,
             'skills_with_qualifications': 0,
             'skills_with_occupations': 0,
+            'skills_with_code_names': 0,
             'total_qualifications': 0,
             'total_occupations': 0,
             'total_relationships': 0
@@ -94,9 +97,21 @@ class QualificationOccupationMerger:
         if missing_columns:
             raise ValueError(f"Missing required columns: {missing_columns}")
         
+        # Check for optional code_name column
+        has_code_name = 'code_name' in self.relationships_df.columns
+        if has_code_name:
+            logger.info("Found 'code_name' column in relationships file")
+        else:
+            logger.warning("'code_name' column not found in relationships file - will be skipped")
+        
         # Clean data
         self.relationships_df = self.relationships_df.dropna(subset=['code'])
         self.relationships_df['code'] = self.relationships_df['code'].astype(str).str.strip()
+        
+        # Handle code_name if present
+        if has_code_name:
+            self.relationships_df['code_name'] = self.relationships_df['code_name'].fillna('').astype(str).str.strip()
+        
         self.relationships_df['qualification_code'] = self.relationships_df['qualification_code'].fillna('').astype(str).str.strip()
         self.relationships_df['qualification_title'] = self.relationships_df['qualification_title'].fillna('').astype(str).str.strip()
         self.relationships_df['anzsco_code'] = self.relationships_df['anzsco_code'].fillna('').astype(str).str.strip()
@@ -111,12 +126,20 @@ class QualificationOccupationMerger:
         """Build lookup tables for fast code-to-qualification/occupation mapping"""
         logger.info("Building lookup tables...")
         
+        has_code_name = 'code_name' in self.relationships_df.columns
+        
         for _, row in self.relationships_df.iterrows():
             code = row['code']
             qual_code = row['qualification_code']
             qual_title = row['qualification_title']
             occ_code = row['anzsco_code']
             occ_title = row['anzsco_title']
+            
+            # Build code -> code_name mapping
+            if has_code_name:
+                code_name = row['code_name']
+                if code_name and code not in self.code_to_code_name:
+                    self.code_to_code_name[code] = code_name
             
             # Build code -> qualifications mapping
             if qual_code and qual_title:
@@ -149,6 +172,7 @@ class QualificationOccupationMerger:
         
         logger.info(f"Built lookup tables:")
         logger.info(f"  - Unique unit codes: {len(self.code_to_qualifications)}")
+        logger.info(f"  - Unique code names: {len(self.code_to_code_name)}")
         logger.info(f"  - Unique qualifications: {self.stats['total_qualifications']}")
         logger.info(f"  - Unique occupations: {self.stats['total_occupations']}")
     
@@ -195,6 +219,13 @@ class QualificationOccupationMerger:
         
         return list(occupations.values())
     
+    def get_code_name_for_skill(self, skill: Dict) -> str:
+        """Get the code name for a skill's primary code"""
+        primary_code = skill.get('code')
+        if primary_code:
+            return self.code_to_code_name.get(str(primary_code).strip(), '')
+        return ''
+    
     def merge(self) -> Dict:
         """Merge qualifications and occupations into the taxonomy"""
         logger.info("Merging qualifications and occupations with taxonomy...")
@@ -204,6 +235,14 @@ class QualificationOccupationMerger:
         
         # Process each skill
         for skill in self.taxonomy_data.get('skills', []):
+            # Get code name for this skill
+            code_name = self.get_code_name_for_skill(skill)
+            if code_name:
+                skill['code_name'] = code_name
+                self.stats['skills_with_code_names'] += 1
+            else:
+                skill['code_name'] = ''
+            
             # Get qualifications for this skill
             qualifications = self.get_qualifications_for_skill(skill)
             if qualifications:
@@ -283,6 +322,7 @@ class QualificationOccupationMerger:
         stats['total_occupations'] = self.stats['total_occupations']
         stats['skills_with_qualifications'] = self.stats['skills_with_qualifications']
         stats['skills_with_occupations'] = self.stats['skills_with_occupations']
+        stats['skills_with_code_names'] = self.stats['skills_with_code_names']
         
         # Add facet coverage for QUAL and OCC
         if 'facet_coverage' not in stats:
@@ -335,8 +375,11 @@ class QualificationOccupationMerger:
         logger.info("=" * 60)
         logger.info(f"Total skills: {self.stats['total_skills']}")
         logger.info(f"Total relationships loaded: {self.stats['total_relationships']}")
+        logger.info(f"Unique code names: {len(self.code_to_code_name)}")
         logger.info(f"Unique qualifications: {self.stats['total_qualifications']}")
         logger.info(f"Unique occupations: {self.stats['total_occupations']}")
+        logger.info(f"Skills with code names: {self.stats['skills_with_code_names']} "
+                   f"({100*self.stats['skills_with_code_names']/self.stats['total_skills']:.1f}%)")
         logger.info(f"Skills with qualifications: {self.stats['skills_with_qualifications']} "
                    f"({100*self.stats['skills_with_qualifications']/self.stats['total_skills']:.1f}%)")
         logger.info(f"Skills with occupations: {self.stats['skills_with_occupations']} "
@@ -369,6 +412,7 @@ class QualificationOccupationMerger:
                     'context': skill.get('context', ''),
                     'confidence': skill.get('confidence', ''),
                     'code': skill.get('code', ''),
+                    'code_name': skill.get('code_name', ''),
                 }
                 
                 # Add facets
@@ -394,9 +438,9 @@ class QualificationOccupationMerger:
                 alternative_titles = skill.get('alternative_titles', []) if isinstance(skill.get('alternative_titles', []), list) else []
                 all_related_codes = skill.get('all_related_codes', []) if isinstance(skill.get('all_related_codes', []), list) else []
                 all_related_kw = skill.get('all_related_kw', []) if isinstance(skill.get('all_related_kw', []), list) else []
-                row['alternative_titles'] = alternative_titles
-                row['all_related_codes'] = all_related_codes
-                row['all_related_keywords'] = all_related_kw
+                row['alternative_titles'] = '; '.join(alternative_titles) if alternative_titles else ''
+                row['all_related_codes'] = '; '.join(all_related_codes) if all_related_codes else ''
+                row['all_related_keywords'] = '; '.join(all_related_kw) if all_related_kw else ''
                 
                 rows.append(row)
             
