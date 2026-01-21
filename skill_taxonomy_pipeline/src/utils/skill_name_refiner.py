@@ -27,52 +27,65 @@ logger = logging.getLogger(__name__)
 
 # System prompt used for all refinement requests
 REFINEMENT_SYSTEM_PROMPT = """You are an expert skill taxonomist specializing in vocational education and training (VET).
-Your task is to refine a skill name to make it more accurate, domain-specific, and descriptive based on its description.
+Your task is to refine a skill name to make it more accurate, domain-specific, and descriptive based on its description AND the VET Unit of Competency context.
 
 ## Your Expertise:
-- Deep knowledge of Australian VET sector terminology
+- Deep knowledge of Australian VET sector terminology and Training Packages
 - Understanding of industry-specific jargon and professional terminology
 - Expertise in creating clear, searchable, standardized skill names
 - Knowledge of ESCO, O*NET, SFIA, and other skills frameworks
 
+## CRITICAL: Using Unit Title for Context
+
+The VET Unit Title provides essential domain context. A generic skill name MUST be refined using this context:
+
+### Examples:
+| Original Skill | Unit Title | Refined Skill |
+|----------------|------------|---------------|
+| Equipment Cleaning Procedure | Carry out food preparation and service on an aircraft | Aircraft Galley Equipment Cleaning |
+| Customer Communication | Provide responsible service of alcohol | RSA Customer Interaction |
+| Safety Procedures | Work safely at heights | Height Safety Protocol Implementation |
+| Data Entry | Process financial transactions | Financial Transaction Data Entry |
+| Behaviour Analysis | Handle companion animals | Canine Behaviour Assessment |
+| Risk Assessment | Conduct underground mining operations | Underground Mining Hazard Assessment |
+
 ## Refinement Principles:
 
-### 1. CONTEXT SPECIFICITY
-Transform generic skills into domain-specific versions:
-- "Behaviour Analysis" + dog behavior context → "Canine Behaviour Assessment"
-- "Data Entry" + medical records context → "Medical Records Data Entry"
-- "Communication" + client consultation context → "Client Consultation Communication"
+### 1. CONTEXT FROM UNIT TITLE (Most Important!)
+The Unit Title tells you the INDUSTRY and WORK CONTEXT. Use it to transform generic skills:
+- "Equipment Cleaning" + aircraft food service → "Aircraft Galley Equipment Cleaning"
+- "Communication Skills" + aged care context → "Aged Care Client Communication"
+- "Documentation" + construction context → "Construction Site Documentation"
 
 ### 2. ACTION + DOMAIN + OBJECT Pattern
 Structure refined names as: [Action/Process] + [Domain/Context] + [Object/Outcome]
-- "Reading" + body language of dogs → "Canine Body Language Interpretation"
-- "Analysis" + financial data → "Financial Data Analysis"
-- "Management" + project timelines → "Project Timeline Management"
+- Generic "Cleaning" + aircraft catering → "Aircraft Catering Equipment Sanitisation"
+- Generic "Assessment" + child care → "Early Childhood Development Assessment"
 
 ### 3. OPTIMAL LENGTH: 2-5 WORDS
-- Too short loses context: "Analysis" ❌
-- Too long becomes unwieldy: "Comprehensive Multi-stakeholder Financial Data Analysis and Reporting" ❌
-- Just right: "Financial Data Analysis" ✓ or "Multi-stakeholder Communication" ✓
+- Too short loses context: "Cleaning" ❌
+- Too long becomes unwieldy: "Comprehensive Aircraft Food Service Equipment Cleaning and Sanitisation Procedure" ❌
+- Just right: "Aircraft Galley Equipment Cleaning" ✓
 
 ### 4. PROFESSIONAL TERMINOLOGY
-Use industry-standard terms that professionals would recognize:
-- "Dog body language reading" → "Canine Behaviour Assessment" 
-- "Looking at numbers" → "Quantitative Data Analysis"
-- "Talking to customers" → "Customer Relationship Management"
+Use industry-standard terms from the relevant sector:
+- Aviation: galley, cabin, in-flight, aircraft
+- Healthcare: patient, clinical, therapeutic, allied health
+- Construction: site, structural, building, civil
+- Hospitality: service, guest, front-of-house, back-of-house
 
 ### 5. WHEN TO KEEP ORIGINAL
-Keep the original name if:
-- It's already specific and accurate
-- The description doesn't provide additional context
-- The original follows best practices
-- Changing it would make it less clear
+Keep the original name ONLY if:
+- It's already specific to the unit context
+- Adding unit context would make it redundant
+- The original is an industry-standard term
 
 ## Critical Rules:
-1. NEVER make up context not present in the description
-2. ALWAYS preserve the core meaning of the original skill
+1. ALWAYS use the Unit Title to determine the domain/industry context
+2. Transform generic skills into domain-specific versions
 3. Names must be searchable and match industry terminology
-4. Avoid unnecessary jargon or overly technical terms
-5. Ensure the refined name is unambiguous
+4. Preserve the core meaning while adding specificity
+5. Ensure the refined name would be recognizable to industry professionals
 
 You MUST respond with valid JSON only. No additional text or explanation."""
 
@@ -118,32 +131,34 @@ class SkillNameRefiner:
         Generate a user prompt for a single skill refinement.
         
         Args:
-            skill: Dictionary with 'name', 'description', and optionally 'category'
+            skill: Dictionary with 'name', 'description', 'unit_title', and optionally 'category'
             
         Returns:
             User prompt string for this skill
         """
         name = skill.get('name', '')
         description = skill.get('description', '')[:500]  # Truncate long descriptions
+        unit_title = skill.get('unit_title', '')
         category = skill.get('category', '')
         
-        user_prompt = f"""Refine the following skill name based on its description.
+        user_prompt = f"""Refine the following skill name based on its description and VET Unit context.
 
 ## Skill Information:
-- Current Name: {name}
-- Description: {description}
+- Current Skill Name: {name}
+- Skill Description: {description}
+- VET Unit Title: {unit_title}
 - Category: {category}
 
 ## Instructions:
-1. Analyze the description to understand the actual capability
-2. Determine if the current name accurately represents the skill
-3. If refinement needed: create a more specific, domain-appropriate name (2-5 words)
-4. If already optimal: keep the original name
+1. Use the VET Unit Title to understand the INDUSTRY and WORK CONTEXT
+2. Analyze how the skill description relates to that context
+3. Create a domain-specific skill name that reflects both the skill AND the unit context
+4. Aim for 2-5 words that industry professionals would recognize
 5. Provide confidence score (0.0-1.0) for your refinement
 
 ## Output Format:
 Return ONLY a JSON object (no markdown, no explanation):
-{{"original_name": "{name}", "refined_name": "your refined name here", "refinement_reason": "Brief explanation", "confidence": 0.85, "changed": true}}
+{{"original_name": "{name}", "refined_name": "your domain-specific refined name", "refinement_reason": "Brief explanation of how unit context informed the refinement", "confidence": 0.85, "changed": true}}
 
 Rules for `changed` field:
 - true: if the refined name is different from original
@@ -295,6 +310,7 @@ Return ONLY the JSON object:"""
                                  df: pd.DataFrame,
                                  name_column: str = 'name',
                                  description_column: str = 'description',
+                                 unit_title_column: str = 'unit_title',
                                  category_column: str = 'category') -> pd.DataFrame:
         """
         Refine skill names for an entire DataFrame.
@@ -303,6 +319,7 @@ Return ONLY the JSON object:"""
             df: DataFrame containing skills
             name_column: Column name for skill names
             description_column: Column name for descriptions
+            unit_title_column: Column name for VET unit titles (provides domain context)
             category_column: Column name for categories
             
         Returns:
@@ -311,6 +328,13 @@ Return ONLY the JSON object:"""
         logger.info(f"Starting skill name refinement for {len(df)} skills")
         logger.info(f"Batch size: {self.batch_size} (one prompt per skill)")
         
+        # Check for unit_title column
+        has_unit_title = unit_title_column in df.columns
+        if has_unit_title:
+            logger.info(f"Using unit title column '{unit_title_column}' for domain context")
+        else:
+            logger.warning(f"No unit title column '{unit_title_column}' found - refinements may be less context-aware")
+        
         # Prepare skills for processing
         all_skills = []
         for idx in df.index:
@@ -318,6 +342,7 @@ Return ONLY the JSON object:"""
                 'index': idx,
                 'name': str(df.loc[idx, name_column]) if name_column in df.columns else '',
                 'description': str(df.loc[idx, description_column]) if description_column in df.columns else '',
+                'unit_title': str(df.loc[idx, unit_title_column]) if has_unit_title else '',
                 'category': str(df.loc[idx, category_column]) if category_column in df.columns else ''
             }
             all_skills.append(skill)
@@ -447,6 +472,14 @@ def run_skill_name_refinement(
     # Determine column names
     name_col = 'name' if 'name' in df.columns else 'skill_name'
     desc_col = 'description' if 'description' in df.columns else 'skill_description'
+    
+    # Try to find unit title column (provides crucial domain context)
+    unit_title_col = None
+    for col_name in ['unit_title', 'unit_name', 'unit', 'competency_title', 'uoc_title']:
+        if col_name in df.columns:
+            unit_title_col = col_name
+            break
+    
     cat_col = 'category' if 'category' in df.columns else None
     
     # Run refinement
@@ -454,6 +487,7 @@ def run_skill_name_refinement(
         df,
         name_column=name_col,
         description_column=desc_col,
+        unit_title_column=unit_title_col if unit_title_col else 'unit_title',
         category_column=cat_col if cat_col else 'category'
     )
     
@@ -481,7 +515,7 @@ if __name__ == "__main__":
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     
     parser = argparse.ArgumentParser(
-        description="Refine skill names based on descriptions using LLM"
+        description="Refine skill names based on descriptions and VET unit context using LLM"
     )
     
     parser.add_argument(
@@ -500,6 +534,12 @@ if __name__ == "__main__":
         type=int,
         default=20,
         help="Batch size for LLM processing (default: 20)"
+    )
+    
+    parser.add_argument(
+        "--unit-title-column",
+        default=None,
+        help="Column name containing VET unit titles for context (auto-detected if not specified)"
     )
     
     parser.add_argument(
@@ -531,7 +571,9 @@ if __name__ == "__main__":
         CONFIG = {}
     
     CONFIG['batch_size'] = args.batch_size
-    CONFIG['backed_type'] = args.backend
+    CONFIG['backend_type'] = args.backend
+    if args.unit_title_column:
+        CONFIG['unit_title_column'] = args.unit_title_column
     
     # Determine output file
     if args.output:
