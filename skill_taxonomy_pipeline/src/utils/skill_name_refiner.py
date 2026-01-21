@@ -33,28 +33,34 @@ Many skill names are vague because they don't specify the subject/object:
 - "Client Consultation" - consultation about WHAT?
 - "Equipment Cleaning" - WHAT equipment?
 - "Risk Assessment" - assessing WHAT risks?
-- "Documentation" - documenting WHAT?
 
 ## THE SOLUTION:
 Use the Unit Title to understand what the skill is actually about, then make the skill name specific.
 
-## EXAMPLES:
+## CRITICAL RULE - CHECK FIRST:
+If the skill name ALREADY contains a word related to the unit title, it is ALREADY SPECIFIC. Do NOT add more context.
 
-| Original Skill | Unit Title | What is it about? | Refined Skill |
-|----------------|------------|-------------------|---------------|
-| Client Consultation | Groom cats of different breeds | Consultation about cat grooming needs | Cat Grooming Consultation |
-| Equipment Cleaning | Carry out food service on aircraft | Cleaning galley/catering equipment | Galley Equipment Cleaning |
-| Risk Assessment | Conduct underground mining | Assessing ground/ventilation risks | Ground Stability Assessment |
-| Safety Procedures | Work at heights | Procedures for fall protection | Fall Protection Procedures |
-| Documentation | Process insurance claims | Documenting claim details | Claims Documentation |
-| Data Entry | Manage patient records | Entering patient data | Patient Data Entry |
-| Communication | Provide aged care services | Communicating with elderly clients | Elderly Client Communication |
+Examples of ALREADY SPECIFIC (keep unchanged):
+| Skill Name | Unit Title | Decision |
+|------------|------------|----------|
+| Grooming Risk Assessment | Groom cats of different breeds | KEEP - already has "Grooming" |
+| Welding Safety Procedures | Perform welding operations | KEEP - already has "Welding" |
+| Patient Communication | Provide nursing care | KEEP - already has "Patient" |
+| Food Equipment Cleaning | Prepare food items | KEEP - already has "Food" |
 
-## RULES:
-1. Identify what SUBJECT/OBJECT the vague skill refers to (from unit title)
-2. Add that subject/object to make the skill name specific
-3. Keep it short: 2-4 words
-4. If the skill name is already specific, keep it unchanged
+Examples of VAGUE (needs refinement):
+| Skill Name | Unit Title | Refined |
+|------------|------------|---------|
+| Risk Assessment | Groom cats of different breeds | Grooming Risk Assessment |
+| Safety Procedures | Perform welding operations | Welding Safety Procedures |
+| Communication | Provide nursing care | Patient Communication |
+| Equipment Cleaning | Prepare food items | Food Equipment Cleaning |
+| Client Consultation | Groom cats of different breeds | Cat Grooming Consultation |
+
+## DECISION PROCESS:
+1. Does skill name already contain a word related to unit title? → KEEP UNCHANGED
+2. Is skill name completely generic? → Add subject/object from unit title
+3. Keep result to 2-4 words
 
 ## Output: Return ONLY valid JSON, no explanation."""
 
@@ -112,13 +118,13 @@ class SkillNameRefiner:
         user_prompt = f"""## Skill:
 - Name: {name}
 - Unit Title: {unit_title}
-- Description: {description}
 
 ## Task:
-The skill name may be vague. Use the Unit Title to identify WHAT it's about:
-- "{name}" is about WHAT? (Look at Unit Title: "{unit_title}")
-- Make the skill name specific by adding the subject/object
-- Keep it to 2-4 words
+1. FIRST CHECK: Does "{name}" already contain a word related to "{unit_title}"?
+   - If YES → Keep unchanged (already specific)
+   - If NO → Add the subject/object to make it specific
+
+2. Keep result to 2-4 words
 
 ## Output (JSON only):
 {{"original_name": "{name}", "refined_name": "...", "changed": true/false, "confidence": 0.0-1.0}}"""
