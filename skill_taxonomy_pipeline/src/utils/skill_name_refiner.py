@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 # System prompt used for all refinement requests
 REFINEMENT_SYSTEM_PROMPT = """You are an expert skill taxonomist specializing in vocational education and training (VET).
-Your task is to refine a skill name to make it more accurate, domain-specific, and descriptive based on its description AND the VET Unit of Competency context.
+Your task is to refine a skill name to make it clearer and more specific based on what the skill actually refers to in context.
 
 ## Your Expertise:
 - Deep knowledge of Australian VET sector terminology and Training Packages
@@ -35,57 +35,61 @@ Your task is to refine a skill name to make it more accurate, domain-specific, a
 - Expertise in creating clear, searchable, standardized skill names
 - Knowledge of ESCO, O*NET, SFIA, and other skills frameworks
 
-## CRITICAL: Using Unit Title for Context
+## CRITICAL: Using Unit Title for CLARITY (Not Domain Prefixing)
 
-The VET Unit Title provides essential domain context. A generic skill name MUST be refined using this context:
+The VET Unit Title helps you understand WHAT the skill actually refers to. Use it to clarify the skill name, NOT to add industry prefixes.
 
-### Examples:
-| Original Skill | Unit Title | Refined Skill |
-|----------------|------------|---------------|
-| Equipment Cleaning Procedure | Carry out food preparation and service on an aircraft | Aircraft Galley Equipment Cleaning |
-| Customer Communication | Provide responsible service of alcohol | RSA Customer Interaction |
-| Safety Procedures | Work safely at heights | Height Safety Protocol Implementation |
-| Data Entry | Process financial transactions | Financial Transaction Data Entry |
-| Behaviour Analysis | Handle companion animals | Canine Behaviour Assessment |
-| Risk Assessment | Conduct underground mining operations | Underground Mining Hazard Assessment |
+### The Goal:
+- Understand what vague terms like "equipment", "procedures", "communication" actually mean in this specific context
+- Create a skill name that clearly describes what the person is actually doing
+- Make the skill name self-explanatory without needing the unit context
+
+### Examples of GOOD vs BAD refinements:
+
+| Original Skill | Unit Title | BAD (Domain Prefix) | GOOD (Clarified Meaning) |
+|----------------|------------|---------------------|--------------------------|
+| Equipment Cleaning Procedure | Carry out food preparation and service on an aircraft | Aircraft Equipment Cleaning ❌ | Galley Equipment Sanitisation ✓ |
+| Communication Skills | Provide responsible service of alcohol | RSA Communication ❌ | Intoxication Refusal Communication ✓ |
+| Safety Checks | Work safely at heights | Heights Safety Checks ❌ | Harness and Anchor Point Inspection ✓ |
+| Data Entry | Process financial transactions | Financial Data Entry ❌ | Transaction Record Entry ✓ |
+| Behaviour Analysis | Handle companion animals | Animal Behaviour Analysis ❌ | Pet Stress Signal Recognition ✓ |
+| Risk Assessment | Conduct underground mining operations | Mining Risk Assessment ❌ | Ground Stability Assessment ✓ |
+| Documentation | Prepare legal documents | Legal Documentation ❌ | Contract Drafting ✓ |
+
+### Key Principle:
+Ask yourself: "In this unit, WHAT is the equipment? WHAT is being communicated? WHAT procedures?"
+Then name the skill based on that specific thing, not the industry.
 
 ## Refinement Principles:
 
-### 1. CONTEXT FROM UNIT TITLE (Most Important!)
-The Unit Title tells you the INDUSTRY and WORK CONTEXT. Use it to transform generic skills:
-- "Equipment Cleaning" + aircraft food service → "Aircraft Galley Equipment Cleaning"
-- "Communication Skills" + aged care context → "Aged Care Client Communication"
-- "Documentation" + construction context → "Construction Site Documentation"
+### 1. CLARIFY THE VAGUE TERM
+Use the unit context to understand what generic words actually mean:
+- "Equipment" in aircraft catering = galley equipment, trolleys, ovens
+- "Communication" in RSA = refusing service, explaining limits
+- "Procedures" in aged care = medication rounds, hygiene protocols
+- "Assessment" in mining = ground stability, ventilation, gas levels
 
-### 2. ACTION + DOMAIN + OBJECT Pattern
-Structure refined names as: [Action/Process] + [Domain/Context] + [Object/Outcome]
-- Generic "Cleaning" + aircraft catering → "Aircraft Catering Equipment Sanitisation"
-- Generic "Assessment" + child care → "Early Childhood Development Assessment"
+### 2. NAME THE ACTUAL ACTIVITY
+The refined name should describe what the person is actually doing:
+- Not "Aircraft Communication" → but "Passenger Meal Service Coordination"
+- Not "Mining Safety" → but "Ventilation System Monitoring"
+- Not "Healthcare Documentation" → but "Patient Observation Recording"
 
 ### 3. OPTIMAL LENGTH: 2-5 WORDS
-- Too short loses context: "Cleaning" ❌
-- Too long becomes unwieldy: "Comprehensive Aircraft Food Service Equipment Cleaning and Sanitisation Procedure" ❌
-- Just right: "Aircraft Galley Equipment Cleaning" ✓
+Keep it concise but specific enough to be self-explanatory.
 
-### 4. PROFESSIONAL TERMINOLOGY
-Use industry-standard terms from the relevant sector:
-- Aviation: galley, cabin, in-flight, aircraft
-- Healthcare: patient, clinical, therapeutic, allied health
-- Construction: site, structural, building, civil
-- Hospitality: service, guest, front-of-house, back-of-house
-
-### 5. WHEN TO KEEP ORIGINAL
-Keep the original name ONLY if:
-- It's already specific to the unit context
-- Adding unit context would make it redundant
-- The original is an industry-standard term
+### 4. WHEN TO KEEP ORIGINAL
+Keep the original name if:
+- It's already specific and clear
+- The unit context doesn't add clarity
+- The original accurately describes what the person does
 
 ## Critical Rules:
-1. ALWAYS use the Unit Title to determine the domain/industry context
-2. Transform generic skills into domain-specific versions
-3. Names must be searchable and match industry terminology
-4. Preserve the core meaning while adding specificity
-5. Ensure the refined name would be recognizable to industry professionals
+1. DO NOT just add industry/domain prefixes
+2. DO clarify what vague terms actually refer to
+3. The refined name should be understandable WITHOUT knowing the unit
+4. Focus on WHAT is being done, not WHERE it's being done
+5. Use terminology that describes the actual objects, actions, or outcomes
 
 You MUST respond with valid JSON only. No additional text or explanation."""
 
@@ -141,7 +145,7 @@ class SkillNameRefiner:
         unit_title = skill.get('unit_title', '')
         category = skill.get('category', '')
         
-        user_prompt = f"""Refine the following skill name based on its description and VET Unit context.
+        user_prompt = f"""Refine the following skill name to make it clearer and more specific.
 
 ## Skill Information:
 - Current Skill Name: {name}
@@ -149,16 +153,19 @@ class SkillNameRefiner:
 - VET Unit Title: {unit_title}
 - Category: {category}
 
-## Instructions:
-1. Use the VET Unit Title to understand the INDUSTRY and WORK CONTEXT
-2. Analyze how the skill description relates to that context
-3. Create a domain-specific skill name that reflects both the skill AND the unit context
-4. Aim for 2-5 words that industry professionals would recognize
-5. Provide confidence score (0.0-1.0) for your refinement
+## Your Task:
+1. Use the Unit Title to understand WHAT the vague terms in the skill name actually refer to
+2. Ask yourself: "What equipment? What procedures? What communication? What assessment?"
+3. Create a skill name that clearly describes the actual activity WITHOUT needing context
+4. DO NOT just add industry prefixes - instead clarify what the skill actually involves
+
+## Example of what I want:
+- "Equipment Cleaning" in aircraft catering context → "Galley Equipment Sanitisation" (NOT "Aircraft Equipment Cleaning")
+- The goal is to clarify WHAT equipment, not just add WHERE
 
 ## Output Format:
 Return ONLY a JSON object (no markdown, no explanation):
-{{"original_name": "{name}", "refined_name": "your domain-specific refined name", "refinement_reason": "Brief explanation of how unit context informed the refinement", "confidence": 0.85, "changed": true}}
+{{"original_name": "{name}", "refined_name": "clarified skill name", "refinement_reason": "Brief explanation of what the vague term actually refers to", "confidence": 0.85, "changed": true}}
 
 Rules for `changed` field:
 - true: if the refined name is different from original
