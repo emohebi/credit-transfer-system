@@ -26,41 +26,46 @@ logger = logging.getLogger(__name__)
 
 
 # System prompt used for all refinement requests
-REFINEMENT_SYSTEM_PROMPT = """You are an expert skill taxonomist. Your task is to make vague skill names more specific by clarifying WHAT the skill is about.
+REFINEMENT_SYSTEM_PROMPT = """You are an expert skill taxonomist. Your task is to make vague skill names more specific by adding the OBJECT/SUBJECT.
 
 ## THE PROBLEM:
-Many skill names are vague because they don't specify the subject/object:
+Skill names are vague when they don't specify the OBJECT or SUBJECT:
 - "Client Consultation" - consultation about WHAT?
 - "Equipment Cleaning" - WHAT equipment?
-- "Risk Assessment" - assessing WHAT risks?
+- "Training Progress Monitoring" - training of WHAT?
+- "Risk Assessment" - assessing risks of WHAT?
 
 ## THE SOLUTION:
-Use the Unit Title to understand what the skill is actually about, then make the skill name specific.
+Use the Unit Title to identify the OBJECT/SUBJECT, then add it to the skill name.
 
-## CRITICAL RULE - CHECK FIRST:
-If the skill name ALREADY contains a word related to the unit title, it is ALREADY SPECIFIC. Do NOT add more context.
+## KEY DISTINCTION - OBJECT/SUBJECT CHECK:
 
-Examples of ALREADY SPECIFIC (keep unchanged):
-| Skill Name | Unit Title | Decision |
-|------------|------------|----------|
-| Grooming Risk Assessment | Groom cats of different breeds | KEEP - already has "Grooming" |
-| Welding Safety Procedures | Perform welding operations | KEEP - already has "Welding" |
-| Patient Communication | Provide nursing care | KEEP - already has "Patient" |
-| Food Equipment Cleaning | Prepare food items | KEEP - already has "Food" |
+| Skill Name | Unit Title | Has object? | Action |
+|------------|------------|-------------|--------|
+| Training Progress Monitoring | Train assistance dogs | NO - training of what? | → Dog Training Progress Monitoring |
+| Dog Training Progress Monitoring | Train assistance dogs | YES - has "dog" | KEEP unchanged |
+| Risk Assessment | Groom cats | NO - risk of what? | → Grooming Risk Assessment |
+| Grooming Risk Assessment | Groom cats | YES - has "grooming" | KEEP unchanged |
+| Equipment Cleaning | Food service on aircraft | NO - what equipment? | → Galley Equipment Cleaning |
+| Galley Equipment Cleaning | Food service on aircraft | YES - has "galley" | KEEP unchanged |
+| Client Consultation | Groom cats | NO - consultation about what? | → Cat Grooming Consultation |
 
-Examples of VAGUE (needs refinement):
-| Skill Name | Unit Title | Refined |
-|------------|------------|---------|
-| Risk Assessment | Groom cats of different breeds | Grooming Risk Assessment |
-| Safety Procedures | Perform welding operations | Welding Safety Procedures |
-| Communication | Provide nursing care | Patient Communication |
-| Equipment Cleaning | Prepare food items | Food Equipment Cleaning |
-| Client Consultation | Groom cats of different breeds | Cat Grooming Consultation |
+## MORE EXAMPLES:
 
-## DECISION PROCESS:
-1. Does skill name already contain a word related to unit title? → KEEP UNCHANGED
-2. Is skill name completely generic? → Add subject/object from unit title
-3. Keep result to 2-4 words
+| Vague Skill | Unit Title | Main Object | Refined |
+|-------------|------------|-------------|---------|
+| Progress Monitoring | Train assistance dogs | dogs | Dog Training Progress Monitoring |
+| Behaviour Assessment | Handle companion animals | animals | Animal Behaviour Assessment |
+| Safety Procedures | Work at heights | fall/heights | Fall Protection Procedures |
+| Documentation | Process insurance claims | claims | Claims Documentation |
+| Communication Skills | Provide aged care | elderly | Elderly Client Communication |
+| Handler Instruction | Train assistance dogs | handlers/dogs | Handler Training Instruction |
+
+## DECISION:
+1. Identify the main OBJECT/SUBJECT from the unit title
+2. Does the skill name already contain this object? → KEEP unchanged
+3. Is the object missing? → Add it to make the skill specific
+4. Keep result to 2-5 words
 
 ## Output: Return ONLY valid JSON, no explanation."""
 
@@ -112,19 +117,20 @@ class SkillNameRefiner:
             User prompt string for this skill
         """
         name = skill.get('name', '')
-        description = skill.get('description', '')[:300]  # Truncate long descriptions
         unit_title = skill.get('unit_title', '')
         
         user_prompt = f"""## Skill:
 - Name: {name}
 - Unit Title: {unit_title}
 
-## Task:
-1. FIRST CHECK: Does "{name}" already contain a word related to "{unit_title}"?
-   - If YES → Keep unchanged (already specific)
-   - If NO → Add the subject/object to make it specific
+## Question:
+Does "{name}" specify the OBJECT/SUBJECT (what/who is being acted upon)?
 
-2. Keep result to 2-4 words
+Look at the unit title "{unit_title}" - what is the main object/subject?
+- If "{name}" is missing this object → Add it
+- If "{name}" already has it → Keep unchanged
+
+Keep to 2-5 words.
 
 ## Output (JSON only):
 {{"original_name": "{name}", "refined_name": "...", "changed": true/false, "confidence": 0.0-1.0}}"""
