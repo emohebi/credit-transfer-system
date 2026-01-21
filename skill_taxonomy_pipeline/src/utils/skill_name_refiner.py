@@ -26,72 +26,37 @@ logger = logging.getLogger(__name__)
 
 
 # System prompt used for all refinement requests
-REFINEMENT_SYSTEM_PROMPT = """You are an expert skill taxonomist specializing in vocational education and training (VET).
-Your task is to refine a skill name to make it clearer and more specific based on what the skill actually refers to in context.
+REFINEMENT_SYSTEM_PROMPT = """You are an expert skill taxonomist. Your task is to make vague skill names more specific by clarifying WHAT the skill is about.
 
-## Your Expertise:
-- Deep knowledge of Australian VET sector terminology and Training Packages
-- Understanding of industry-specific jargon and professional terminology
-- Expertise in creating clear, searchable, standardized skill names
-- Knowledge of ESCO, O*NET, SFIA, and other skills frameworks
+## THE PROBLEM:
+Many skill names are vague because they don't specify the subject/object:
+- "Client Consultation" - consultation about WHAT?
+- "Equipment Cleaning" - WHAT equipment?
+- "Risk Assessment" - assessing WHAT risks?
+- "Documentation" - documenting WHAT?
 
-## CRITICAL: Using Unit Title for CLARITY (Not Domain Prefixing)
+## THE SOLUTION:
+Use the Unit Title to understand what the skill is actually about, then make the skill name specific.
 
-The VET Unit Title helps you understand WHAT the skill actually refers to. Use it to clarify the skill name, NOT to add industry prefixes.
+## EXAMPLES:
 
-### The Goal:
-- Understand what vague terms like "equipment", "procedures", "communication" actually mean in this specific context
-- Create a skill name that clearly describes what the person is actually doing
-- Make the skill name self-explanatory without needing the unit context
+| Original Skill | Unit Title | What is it about? | Refined Skill |
+|----------------|------------|-------------------|---------------|
+| Client Consultation | Groom cats of different breeds | Consultation about cat grooming needs | Cat Grooming Consultation |
+| Equipment Cleaning | Carry out food service on aircraft | Cleaning galley/catering equipment | Galley Equipment Cleaning |
+| Risk Assessment | Conduct underground mining | Assessing ground/ventilation risks | Ground Stability Assessment |
+| Safety Procedures | Work at heights | Procedures for fall protection | Fall Protection Procedures |
+| Documentation | Process insurance claims | Documenting claim details | Claims Documentation |
+| Data Entry | Manage patient records | Entering patient data | Patient Data Entry |
+| Communication | Provide aged care services | Communicating with elderly clients | Elderly Client Communication |
 
-### Examples of GOOD vs BAD refinements:
+## RULES:
+1. Identify what SUBJECT/OBJECT the vague skill refers to (from unit title)
+2. Add that subject/object to make the skill name specific
+3. Keep it short: 2-4 words
+4. If the skill name is already specific, keep it unchanged
 
-| Original Skill | Unit Title | BAD (Domain Prefix) | GOOD (Clarified Meaning) |
-|----------------|------------|---------------------|--------------------------|
-| Equipment Cleaning Procedure | Carry out food preparation and service on an aircraft | Aircraft Equipment Cleaning ❌ | Galley Equipment Sanitisation ✓ |
-| Communication Skills | Provide responsible service of alcohol | RSA Communication ❌ | Intoxication Refusal Communication ✓ |
-| Safety Checks | Work safely at heights | Heights Safety Checks ❌ | Harness and Anchor Point Inspection ✓ |
-| Data Entry | Process financial transactions | Financial Data Entry ❌ | Transaction Record Entry ✓ |
-| Behaviour Analysis | Handle companion animals | Animal Behaviour Analysis ❌ | Pet Stress Signal Recognition ✓ |
-| Risk Assessment | Conduct underground mining operations | Mining Risk Assessment ❌ | Ground Stability Assessment ✓ |
-| Documentation | Prepare legal documents | Legal Documentation ❌ | Contract Drafting ✓ |
-
-### Key Principle:
-Ask yourself: "In this unit, WHAT is the equipment? WHAT is being communicated? WHAT procedures?"
-Then name the skill based on that specific thing, not the industry.
-
-## Refinement Principles:
-
-### 1. CLARIFY THE VAGUE TERM
-Use the unit context to understand what generic words actually mean:
-- "Equipment" in aircraft catering = galley equipment, trolleys, ovens
-- "Communication" in RSA = refusing service, explaining limits
-- "Procedures" in aged care = medication rounds, hygiene protocols
-- "Assessment" in mining = ground stability, ventilation, gas levels
-
-### 2. NAME THE ACTUAL ACTIVITY
-The refined name should describe what the person is actually doing:
-- Not "Aircraft Communication" → but "Passenger Meal Service Coordination"
-- Not "Mining Safety" → but "Ventilation System Monitoring"
-- Not "Healthcare Documentation" → but "Patient Observation Recording"
-
-### 3. OPTIMAL LENGTH: 2-5 WORDS
-Keep it concise but specific enough to be self-explanatory.
-
-### 4. WHEN TO KEEP ORIGINAL
-Keep the original name if:
-- It's already specific and clear
-- The unit context doesn't add clarity
-- The original accurately describes what the person does
-
-## Critical Rules:
-1. DO NOT just add industry/domain prefixes
-2. DO clarify what vague terms actually refer to
-3. The refined name should be understandable WITHOUT knowing the unit
-4. Focus on WHAT is being done, not WHERE it's being done
-5. Use terminology that describes the actual objects, actions, or outcomes
-
-You MUST respond with valid JSON only. No additional text or explanation."""
+## Output: Return ONLY valid JSON, no explanation."""
 
 
 class SkillNameRefiner:
@@ -141,37 +106,22 @@ class SkillNameRefiner:
             User prompt string for this skill
         """
         name = skill.get('name', '')
-        description = skill.get('description', '')[:500]  # Truncate long descriptions
+        description = skill.get('description', '')[:300]  # Truncate long descriptions
         unit_title = skill.get('unit_title', '')
-        category = skill.get('category', '')
         
-        user_prompt = f"""Refine the following skill name to make it clearer and more specific.
+        user_prompt = f"""## Skill:
+- Name: {name}
+- Unit Title: {unit_title}
+- Description: {description}
 
-## Skill Information:
-- Current Skill Name: {name}
-- Skill Description: {description}
-- VET Unit Title: {unit_title}
-- Category: {category}
+## Task:
+The skill name may be vague. Use the Unit Title to identify WHAT it's about:
+- "{name}" is about WHAT? (Look at Unit Title: "{unit_title}")
+- Make the skill name specific by adding the subject/object
+- Keep it to 2-4 words
 
-## Your Task:
-1. Use the Unit Title to understand WHAT the vague terms in the skill name actually refer to
-2. Ask yourself: "What equipment? What procedures? What communication? What assessment?"
-3. Create a skill name that clearly describes the actual activity WITHOUT needing context
-4. DO NOT just add industry prefixes - instead clarify what the skill actually involves
-
-## Example of what I want:
-- "Equipment Cleaning" in aircraft catering context → "Galley Equipment Sanitisation" (NOT "Aircraft Equipment Cleaning")
-- The goal is to clarify WHAT equipment, not just add WHERE
-
-## Output Format:
-Return ONLY a JSON object (no markdown, no explanation):
-{{"original_name": "{name}", "refined_name": "clarified skill name", "refinement_reason": "Brief explanation of what the vague term actually refers to", "confidence": 0.85, "changed": true}}
-
-Rules for `changed` field:
-- true: if the refined name is different from original
-- false: if keeping the original name (refined_name should equal original_name)
-
-Return ONLY the JSON object:"""
+## Output (JSON only):
+{{"original_name": "{name}", "refined_name": "...", "changed": true/false, "confidence": 0.0-1.0}}"""
 
         return user_prompt
     
@@ -190,7 +140,6 @@ Return ONLY the JSON object:"""
             return {
                 'original_name': original_name,
                 'refined_name': original_name,
-                'refinement_reason': 'No response from LLM',
                 'confidence': 0.0,
                 'changed': False
             }
@@ -212,6 +161,11 @@ Return ONLY the JSON object:"""
             # Try direct parse
             result = json.loads(text)
             if isinstance(result, dict):
+                # Ensure required fields exist
+                result.setdefault('original_name', original_name)
+                result.setdefault('refined_name', original_name)
+                result.setdefault('changed', False)
+                result.setdefault('confidence', 0.0)
                 return result
         except json.JSONDecodeError:
             pass
@@ -222,16 +176,19 @@ Return ONLY the JSON object:"""
             try:
                 result = json.loads(obj_match.group())
                 if isinstance(result, dict):
+                    result.setdefault('original_name', original_name)
+                    result.setdefault('refined_name', original_name)
+                    result.setdefault('changed', False)
+                    result.setdefault('confidence', 0.0)
                     return result
             except json.JSONDecodeError:
                 pass
         
-        # Fallback
+        # Fallback - keep original
         logger.warning(f"Failed to parse refinement response for '{original_name}'")
         return {
             'original_name': original_name,
             'refined_name': original_name,
-            'refinement_reason': 'Failed to parse response',
             'confidence': 0.0,
             'changed': False
         }
@@ -284,7 +241,6 @@ Return ONLY the JSON object:"""
                 if refined_name and len(refined_name) >= 3:
                     skill_copy['org_name'] = skill['name']
                     skill_copy['name'] = refined_name
-                    skill_copy['refinement_reason'] = refinement.get('refinement_reason', '')
                     skill_copy['refinement_confidence'] = refinement.get('confidence', 0.0)
                     skill_copy['name_changed'] = changed and refined_name.lower() != skill['name'].lower()
                     
@@ -295,7 +251,6 @@ Return ONLY the JSON object:"""
                 else:
                     skill_copy['org_name'] = skill['name']
                     skill_copy['name_changed'] = False
-                    skill_copy['refinement_reason'] = ''
                     skill_copy['refinement_confidence'] = 0.0
                     self.stats['unchanged'] += 1
                 
@@ -311,7 +266,7 @@ Return ONLY the JSON object:"""
             
             # Return original skills with org_name
             return [{**s, 'org_name': s['name'], 'name_changed': False, 
-                    'refinement_reason': '', 'refinement_confidence': 0.0} for s in skills]
+                    'refinement_confidence': 0.0} for s in skills]
     
     def refine_skills_dataframe(self, 
                                  df: pd.DataFrame,
@@ -373,7 +328,7 @@ Return ONLY the JSON object:"""
                     if attempt == self.max_retries - 1:
                         # Final fallback - keep original names
                         refined_batch = [{**s, 'org_name': s['name'], 'name_changed': False,
-                                         'refinement_reason': '', 'refinement_confidence': 0.0} for s in batch]
+                                         'refinement_confidence': 0.0} for s in batch]
             
             refined_skills.extend(refined_batch)
         
@@ -383,7 +338,6 @@ Return ONLY the JSON object:"""
         # Add new columns
         df_result['org_name'] = df_result[name_column]
         df_result['name_changed'] = False
-        df_result['refinement_reason'] = ''
         df_result['refinement_confidence'] = 0.0
         
         # Apply refinements
@@ -393,7 +347,6 @@ Return ONLY the JSON object:"""
                 df_result.loc[idx, name_column] = refined_skill.get('name', df_result.loc[idx, name_column])
                 df_result.loc[idx, 'org_name'] = refined_skill.get('org_name', df_result.loc[idx, 'org_name'])
                 df_result.loc[idx, 'name_changed'] = refined_skill.get('name_changed', False)
-                df_result.loc[idx, 'refinement_reason'] = refined_skill.get('refinement_reason', '')
                 df_result.loc[idx, 'refinement_confidence'] = refined_skill.get('refinement_confidence', 0.0)
         
         # Log statistics
