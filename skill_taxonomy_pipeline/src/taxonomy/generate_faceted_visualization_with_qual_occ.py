@@ -897,6 +897,229 @@ body {
 .page-btn.active { background: var(--jsa-teal); color: white; border-color: var(--jsa-teal); }
 .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* Hierarchy Tree View */
+.hierarchy-view {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 20px;
+    min-height: 550px;
+    align-items: start;
+}
+
+.hierarchy-main {
+    overflow-x: auto;
+}
+
+.hierarchy-controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--jsa-grey-200);
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.hierarchy-controls .btn-custom {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+}
+
+.hierarchy-search {
+    flex: 1;
+    min-width: 200px;
+}
+
+.hierarchy-search input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid var(--jsa-grey-200);
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+}
+
+.hierarchy-search input:focus {
+    outline: none;
+    border-color: var(--jsa-teal);
+}
+
+.hierarchy-stats {
+    font-size: 0.8rem;
+    color: var(--jsa-grey-500);
+    padding: 4px 12px;
+    background: var(--jsa-grey-100);
+    border-radius: var(--radius-md);
+}
+
+.tree-container {
+    padding: 16px;
+    background: var(--jsa-grey-100);
+    border-radius: var(--radius-lg);
+    min-height: 500px;
+    max-height: 700px;
+    overflow-y: auto;
+}
+
+.tree-node {
+    margin-left: 0;
+    user-select: none;
+}
+
+.tree-node-content {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    margin: 2px 0;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    background: var(--jsa-white);
+    border: 1px solid var(--jsa-grey-200);
+}
+
+.tree-node-content:hover {
+    background: rgba(0, 131, 143, 0.08);
+    border-color: var(--jsa-teal-light);
+}
+
+.tree-node-content.selected {
+    background: rgba(0, 131, 143, 0.15);
+    border-color: var(--jsa-teal);
+}
+
+.tree-toggle {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+    color: var(--jsa-grey-500);
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.tree-toggle.expanded {
+    transform: rotate(90deg);
+}
+
+.tree-toggle.empty {
+    visibility: hidden;
+}
+
+.tree-icon {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    margin-right: 10px;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.tree-icon.level-0 { background: linear-gradient(135deg, #ff8f00, #ffb300); color: white; }
+.tree-icon.level-1 { background: linear-gradient(135deg, #e65100, #ff6d00); color: white; }
+.tree-icon.level-2 { background: linear-gradient(135deg, #2e7d32, #43a047); color: white; }
+.tree-icon.level-3 { background: linear-gradient(135deg, #3f51b5, #5c6bc0); color: white; }
+.tree-icon.level-4 { background: linear-gradient(135deg, #00838f, #00acc1); color: white; }
+
+.tree-label {
+    flex: 1;
+    font-size: 0.85rem;
+    color: var(--jsa-grey-800);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tree-label.level-0 { font-weight: 600; font-size: 0.95rem; }
+.tree-label.level-1 { font-weight: 600; }
+.tree-label.level-2 { font-weight: 500; }
+.tree-label.level-3 { font-weight: 500; }
+.tree-label.level-4 { font-weight: 400; color: var(--jsa-grey-700); }
+
+.tree-count {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+.tree-count.level-0 { background: #fff3e0; color: #e65100; }
+.tree-count.level-1 { background: #fbe9e7; color: #d84315; }
+.tree-count.level-2 { background: #e8f5e9; color: #2e7d32; }
+.tree-count.level-3 { background: #e8eaf6; color: #3f51b5; }
+.tree-count.level-4 { background: #e0f7fa; color: #00838f; }
+
+.tree-children {
+    margin-left: 28px;
+    padding-left: 16px;
+    border-left: 2px solid var(--jsa-grey-200);
+    display: none;
+}
+
+.tree-children.expanded {
+    display: block;
+}
+
+.tree-node.highlight > .tree-node-content {
+    background: #fff8e1;
+    border-color: #ffc107;
+    animation: highlight-pulse 1s ease-in-out;
+}
+
+@keyframes highlight-pulse {
+    0%, 100% { box-shadow: none; }
+    50% { box-shadow: 0 0 12px rgba(255, 193, 7, 0.5); }
+}
+
+.tree-level-indicator {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--jsa-white);
+    border-radius: var(--radius-md);
+    margin-bottom: 16px;
+    border: 1px solid var(--jsa-grey-200);
+    flex-wrap: wrap;
+}
+
+.tree-level-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: var(--jsa-grey-600);
+}
+
+.tree-level-badge i {
+    font-size: 0.6rem;
+}
+
+.tree-level-badge .level-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+}
+
+.tree-level-badge .level-dot.l0 { background: linear-gradient(135deg, #ff8f00, #ffb300); }
+.tree-level-badge .level-dot.l1 { background: linear-gradient(135deg, #e65100, #ff6d00); }
+.tree-level-badge .level-dot.l2 { background: linear-gradient(135deg, #2e7d32, #43a047); }
+.tree-level-badge .level-dot.l3 { background: linear-gradient(135deg, #3f51b5, #5c6bc0); }
+.tree-level-badge .level-dot.l4 { background: linear-gradient(135deg, #00838f, #00acc1); }
+
+.hierarchy-detail {
+    border-left: 1px solid var(--jsa-grey-200);
+    padding-left: 20px;
+    align-self: start;
+    position: sticky;
+    top: 20px;
+}
+
 /* Loading */
 .loading-overlay {
     position: fixed;
@@ -1039,6 +1262,9 @@ BODY_CONTENT = """
             <button class="view-tab" data-view="OCC">
                 <i class="bi bi-person-badge"></i> Occupations
             </button>
+            <button class="view-tab" data-view="hierarchy">
+                <i class="bi bi-diagram-3"></i> Hierarchy
+            </button>
             <button class="view-tab" data-view="filter">
                 <i class="bi bi-funnel"></i> Filter
             </button>
@@ -1065,6 +1291,9 @@ BODY_CONTENT = """
         
         <!-- Multi-Filter View -->
         <div class="view-section" id="filterView"></div>
+        
+        <!-- Hierarchy View -->
+        <div class="view-section" id="hierarchyView"></div>
         
         <!-- Table View -->
         <div class="view-section" id="tableView"></div>
@@ -1157,6 +1386,7 @@ function initializeTaxonomy() {
         initializeFacetViews();
         initializeQualOccViews();
         initializeFilterView();
+        initializeHierarchyView();
         initializeTableView();
         initializeEventListeners();
         
@@ -1762,6 +1992,45 @@ function showSkillDetail(facetId, skillId) {
     
     html += `</div></div>`;
     
+    // Qualifications section
+    if (skill.qualifications?.length > 0) {
+        html += `
+            <div class="detail-section">
+                <div class="detail-section-title"><i class="bi bi-award"></i> Qualifications (${skill.qualifications.length})</div>
+                <div class="tag-list">
+                    ${skill.qualifications.slice(0, 8).map(q => `<span class="tag tag-qual" title="${q.title}"><span class="qual-code">${q.code}</span>${q.title.substring(0, 30)}${q.title.length > 30 ? '...' : ''}</span>`).join('')}
+                    ${skill.qualifications.length > 8 ? `<span class="tag tag-more">+${skill.qualifications.length - 8} more</span>` : ''}
+                </div>
+            </div>
+        `;
+    }
+    
+    // Occupations section
+    if (skill.occupations?.length > 0) {
+        html += `
+            <div class="detail-section">
+                <div class="detail-section-title"><i class="bi bi-person-badge"></i> Occupations (${skill.occupations.length})</div>
+                <div class="tag-list">
+                    ${skill.occupations.slice(0, 8).map(o => `<span class="tag tag-occ" title="${o.title}"><span class="occ-code">${o.code}</span>${o.title.substring(0, 30)}${o.title.length > 30 ? '...' : ''}</span>`).join('')}
+                    ${skill.occupations.length > 8 ? `<span class="tag tag-more">+${skill.occupations.length - 8} more</span>` : ''}
+                </div>
+            </div>
+        `;
+    }
+    
+    // Alternative titles
+    if (skill.alternative_titles?.length > 0) {
+        html += `
+            <div class="detail-section">
+                <div class="detail-section-title"><i class="bi bi-card-heading"></i> Alternative Titles (${skill.alternative_titles.length})</div>
+                <div class="tag-list">
+                    ${skill.alternative_titles.slice(0, 8).map(t => `<span class="tag tag-alt">${t}</span>`).join('')}
+                    ${skill.alternative_titles.length > 8 ? `<span class="tag tag-more">+${skill.alternative_titles.length - 8} more</span>` : ''}
+                </div>
+            </div>
+        `;
+    }
+    
     // Primary code with code name
     if (skill.code) {
         const codeNameHtml = skill.code_name ? `<span class="code-name-label">${skill.code_name}</span>` : '';
@@ -1802,45 +2071,6 @@ function showSkillDetail(facetId, skillId) {
                             <span class="related-skill-score">${(r.similarity * 100).toFixed(0)}%</span>
                         </div>
                     `).join('')}
-                </div>
-            </div>
-        `;
-    }
-    
-    // Qualifications section
-    if (skill.qualifications?.length > 0) {
-        html += `
-            <div class="detail-section">
-                <div class="detail-section-title"><i class="bi bi-award"></i> Qualifications (${skill.qualifications.length})</div>
-                <div class="tag-list">
-                    ${skill.qualifications.slice(0, 8).map(q => `<span class="tag tag-qual" title="${q.title}"><span class="qual-code">${q.code}</span>${q.title.substring(0, 30)}${q.title.length > 30 ? '...' : ''}</span>`).join('')}
-                    ${skill.qualifications.length > 8 ? `<span class="tag tag-more">+${skill.qualifications.length - 8} more</span>` : ''}
-                </div>
-            </div>
-        `;
-    }
-    
-    // Occupations section
-    if (skill.occupations?.length > 0) {
-        html += `
-            <div class="detail-section">
-                <div class="detail-section-title"><i class="bi bi-person-badge"></i> Occupations (${skill.occupations.length})</div>
-                <div class="tag-list">
-                    ${skill.occupations.slice(0, 8).map(o => `<span class="tag tag-occ" title="${o.title}"><span class="occ-code">${o.code}</span>${o.title.substring(0, 30)}${o.title.length > 30 ? '...' : ''}</span>`).join('')}
-                    ${skill.occupations.length > 8 ? `<span class="tag tag-more">+${skill.occupations.length - 8} more</span>` : ''}
-                </div>
-            </div>
-        `;
-    }
-    
-    // Alternative titles
-    if (skill.alternative_titles?.length > 0) {
-        html += `
-            <div class="detail-section">
-                <div class="detail-section-title"><i class="bi bi-card-heading"></i> Alternative Titles (${skill.alternative_titles.length})</div>
-                <div class="tag-list">
-                    ${skill.alternative_titles.slice(0, 8).map(t => `<span class="tag tag-alt">${t}</span>`).join('')}
-                    ${skill.alternative_titles.length > 8 ? `<span class="tag tag-more">+${skill.alternative_titles.length - 8} more</span>` : ''}
                 </div>
             </div>
         `;
@@ -2220,6 +2450,339 @@ function clearMultiFilters() {
     });
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+//  HIERARCHY TREE VIEW
+// ═══════════════════════════════════════════════════════════════════════════
+
+let hierarchyData = null;
+let expandedNodes = new Set();
+
+function initializeHierarchyView() {
+    const container = document.getElementById('hierarchyView');
+    
+    container.innerHTML = `
+        <div class="hierarchy-view">
+            <div class="hierarchy-main">
+                <div class="hierarchy-controls">
+                    <button class="btn-custom btn-outline" onclick="expandAllNodes()">
+                        <i class="bi bi-arrows-expand"></i> Expand All
+                    </button>
+                    <button class="btn-custom btn-outline" onclick="collapseAllNodes()">
+                        <i class="bi bi-arrows-collapse"></i> Collapse All
+                    </button>
+                    <div class="hierarchy-search">
+                        <input type="text" id="hierarchySearch" placeholder="Search skills in tree...">
+                    </div>
+                    <div class="hierarchy-stats" id="hierarchyStats">
+                        Loading...
+                    </div>
+                </div>
+                <div class="tree-level-indicator">
+                    <div class="tree-level-badge">
+                        <span class="level-dot l0"></span> ASCED Field
+                    </div>
+                    <i class="bi bi-chevron-right"></i>
+                    <div class="tree-level-badge">
+                        <span class="level-dot l1"></span> Skill Nature
+                    </div>
+                    <i class="bi bi-chevron-right"></i>
+                    <div class="tree-level-badge">
+                        <span class="level-dot l2"></span> Work Context
+                    </div>
+                    <i class="bi bi-chevron-right"></i>
+                    <div class="tree-level-badge">
+                        <span class="level-dot l3"></span> Proficiency Level
+                    </div>
+                    <i class="bi bi-chevron-right"></i>
+                    <div class="tree-level-badge">
+                        <span class="level-dot l4"></span> Skills
+                    </div>
+                </div>
+                <div class="tree-container" id="treeContainer">
+                    <p style="color: var(--jsa-grey-500); padding: 20px;">Building hierarchy...</p>
+                </div>
+            </div>
+            <div class="hierarchy-detail">
+                <div class="facet-detail-header">
+                    <h3><i class="bi bi-info-circle"></i> Skill Details</h3>
+                </div>
+                <div id="hierarchyDetail" class="detail-placeholder">
+                    <i class="bi bi-diagram-3"></i>
+                    <p>Select a skill from the tree to view details</p>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Build hierarchy data
+    buildHierarchyData();
+    
+    // Render tree
+    renderHierarchyTree();
+    
+    // Setup search
+    document.getElementById('hierarchySearch')?.addEventListener('input', (e) => {
+        searchHierarchy(e.target.value);
+    });
+}
+
+function buildHierarchyData() {
+    hierarchyData = {};
+    
+    // Group skills by ASCED -> NAT -> CTX -> LVL
+    for (const skill of taxonomyData.skills) {
+        const asced = skill.facets?.ASCED?.code || skill.facets?.IND?.code || 'UNKNOWN';
+        const ascedName = skill.facets?.ASCED?.name || skill.facets?.IND?.name || 'Unclassified';
+        const nat = skill.facets?.NAT?.code || 'UNKNOWN';
+        const natName = skill.facets?.NAT?.name || 'Unclassified';
+        const ctx = skill.facets?.CTX?.code || 'UNKNOWN';
+        const ctxName = skill.facets?.CTX?.name || 'Unclassified';
+        const lvl = skill.facets?.LVL?.code || 'UNKNOWN';
+        const lvlName = skill.facets?.LVL?.name || 'Unclassified';
+        
+        // Initialize nested structure
+        if (!hierarchyData[asced]) {
+            hierarchyData[asced] = { name: ascedName, code: asced, children: {} };
+        }
+        if (!hierarchyData[asced].children[nat]) {
+            hierarchyData[asced].children[nat] = { name: natName, code: nat, children: {} };
+        }
+        if (!hierarchyData[asced].children[nat].children[ctx]) {
+            hierarchyData[asced].children[nat].children[ctx] = { name: ctxName, code: ctx, children: {} };
+        }
+        if (!hierarchyData[asced].children[nat].children[ctx].children[lvl]) {
+            hierarchyData[asced].children[nat].children[ctx].children[lvl] = { name: lvlName, code: lvl, skills: [] };
+        }
+        
+        hierarchyData[asced].children[nat].children[ctx].children[lvl].skills.push(skill);
+    }
+    
+    // Update stats
+    const ascedCount = Object.keys(hierarchyData).length;
+    let natCount = 0, ctxCount = 0, lvlCount = 0;
+    
+    for (const asced of Object.values(hierarchyData)) {
+        natCount += Object.keys(asced.children).length;
+        for (const nat of Object.values(asced.children)) {
+            ctxCount += Object.keys(nat.children).length;
+            for (const ctx of Object.values(nat.children)) {
+                lvlCount += Object.keys(ctx.children).length;
+            }
+        }
+    }
+    
+    document.getElementById('hierarchyStats').innerHTML = 
+        `<i class="bi bi-diagram-3"></i> ${ascedCount} ASCED → ${natCount} Nature → ${ctxCount} Context → ${lvlCount} Levels → ${taxonomyData.skills.length} Skills`;
+}
+
+function renderHierarchyTree() {
+    const container = document.getElementById('treeContainer');
+    
+    // Sort ASCED codes
+    const sortedAscedCodes = Object.keys(hierarchyData).sort();
+    
+    let html = '';
+    
+    for (const ascedCode of sortedAscedCodes) {
+        const ascedNode = hierarchyData[ascedCode];
+        html += renderTreeNode(ascedCode, ascedNode, 0, 'asced');
+    }
+    
+    container.innerHTML = html || '<p style="color: var(--jsa-grey-500); padding: 20px;">No data available</p>';
+    
+    // Attach event listeners
+    attachTreeEventListeners();
+}
+
+function renderTreeNode(code, node, level, type) {
+    const nodeId = `node-${type}-${code}`.replace(/[^a-zA-Z0-9-]/g, '_');
+    const isExpanded = expandedNodes.has(nodeId);
+    
+    // Calculate skill count for this branch
+    let skillCount = 0;
+    if (node.skills) {
+        skillCount = node.skills.length;
+    } else if (node.children) {
+        skillCount = countSkillsInBranch(node);
+    }
+    
+    // Get icon based on level
+    const icons = ['bi-mortarboard', 'bi-bookmark-fill', 'bi-briefcase-fill', 'bi-layers-fill', 'bi-lightbulb-fill'];
+    const icon = icons[level] || 'bi-circle-fill';
+    
+    let html = `
+        <div class="tree-node" data-node-id="${nodeId}" data-level="${level}">
+            <div class="tree-node-content" data-code="${code}" data-type="${type}" data-level="${level}">
+                <span class="tree-toggle ${node.skills ? 'empty' : ''} ${isExpanded ? 'expanded' : ''}">
+                    <i class="bi bi-chevron-right"></i>
+                </span>
+                <span class="tree-icon level-${level}">
+                    <i class="bi ${icon}"></i>
+                </span>
+                <span class="tree-label level-${level}" title="${node.name}">${node.name}</span>
+                <span class="tree-count level-${level}">${skillCount}</span>
+            </div>
+    `;
+    
+    // Render children or skills
+    if (node.children || node.skills) {
+        html += `<div class="tree-children ${isExpanded ? 'expanded' : ''}" id="children-${nodeId}">`;
+        
+        if (node.children) {
+            const childCodes = Object.keys(node.children).sort();
+            const childTypes = ['nat', 'ctx', 'lvl'];
+            const childType = childTypes[level] || 'child';
+            
+            for (const childCode of childCodes) {
+                html += renderTreeNode(childCode, node.children[childCode], level + 1, `${type}-${childType}`);
+            }
+        } else if (node.skills) {
+            // Render skills as leaf nodes
+            for (const skill of node.skills) {
+                const skillNodeId = `skill-${skill.id}`;
+                html += `
+                    <div class="tree-node" data-node-id="${skillNodeId}" data-level="4">
+                        <div class="tree-node-content skill-node" data-skill-id="${skill.id}" data-level="4">
+                            <span class="tree-toggle empty">
+                                <i class="bi bi-chevron-right"></i>
+                            </span>
+                            <span class="tree-icon level-4">
+                                <i class="bi bi-lightbulb-fill"></i>
+                            </span>
+                            <span class="tree-label level-4" title="${skill.name}">${skill.name}</span>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        html += `</div>`;
+    }
+    
+    html += `</div>`;
+    
+    return html;
+}
+
+function countSkillsInBranch(node) {
+    let count = 0;
+    if (node.skills) {
+        count = node.skills.length;
+    } else if (node.children) {
+        for (const child of Object.values(node.children)) {
+            count += countSkillsInBranch(child);
+        }
+    }
+    return count;
+}
+
+function attachTreeEventListeners() {
+    document.querySelectorAll('.tree-node-content').forEach(content => {
+        content.addEventListener('click', (e) => {
+            const nodeEl = content.closest('.tree-node');
+            const nodeId = nodeEl.dataset.nodeId;
+            const level = parseInt(content.dataset.level);
+            
+            // Handle skill click
+            if (content.classList.contains('skill-node')) {
+                const skillId = content.dataset.skillId;
+                document.querySelectorAll('.tree-node-content').forEach(c => c.classList.remove('selected'));
+                content.classList.add('selected');
+                showSkillDetail('hierarchy', skillId);
+                return;
+            }
+            
+            // Handle branch toggle
+            const toggle = content.querySelector('.tree-toggle');
+            const children = document.getElementById(`children-${nodeId}`);
+            
+            if (children && !toggle.classList.contains('empty')) {
+                const isExpanded = children.classList.contains('expanded');
+                
+                if (isExpanded) {
+                    children.classList.remove('expanded');
+                    toggle.classList.remove('expanded');
+                    expandedNodes.delete(nodeId);
+                } else {
+                    children.classList.add('expanded');
+                    toggle.classList.add('expanded');
+                    expandedNodes.add(nodeId);
+                }
+            }
+        });
+    });
+}
+
+function expandAllNodes() {
+    document.querySelectorAll('.tree-children').forEach(children => {
+        children.classList.add('expanded');
+        const nodeId = children.id.replace('children-', '');
+        expandedNodes.add(nodeId);
+    });
+    document.querySelectorAll('.tree-toggle:not(.empty)').forEach(toggle => {
+        toggle.classList.add('expanded');
+    });
+}
+
+function collapseAllNodes() {
+    document.querySelectorAll('.tree-children').forEach(children => {
+        children.classList.remove('expanded');
+    });
+    document.querySelectorAll('.tree-toggle').forEach(toggle => {
+        toggle.classList.remove('expanded');
+    });
+    expandedNodes.clear();
+}
+
+function searchHierarchy(query) {
+    const container = document.getElementById('treeContainer');
+    
+    if (!query || query.length < 2) {
+        // Reset highlighting
+        container.querySelectorAll('.tree-node').forEach(node => {
+            node.classList.remove('highlight');
+            node.style.display = '';
+        });
+        return;
+    }
+    
+    const searchLower = query.toLowerCase();
+    let foundCount = 0;
+    
+    // Find matching skills and expand their parents
+    container.querySelectorAll('.tree-node-content.skill-node').forEach(skillNode => {
+        const skillName = skillNode.querySelector('.tree-label').textContent.toLowerCase();
+        const skillId = skillNode.dataset.skillId?.toLowerCase() || '';
+        const matches = skillName.includes(searchLower) || skillId.includes(searchLower);
+        
+        const treeNode = skillNode.closest('.tree-node');
+        
+        if (matches) {
+            foundCount++;
+            treeNode.classList.add('highlight');
+            
+            // Expand all parent nodes
+            let parent = treeNode.parentElement;
+            while (parent) {
+                if (parent.classList.contains('tree-children')) {
+                    parent.classList.add('expanded');
+                    const toggle = parent.previousElementSibling?.querySelector('.tree-toggle');
+                    if (toggle) toggle.classList.add('expanded');
+                    const nodeId = parent.id.replace('children-', '');
+                    expandedNodes.add(nodeId);
+                }
+                parent = parent.parentElement;
+            }
+        } else {
+            treeNode.classList.remove('highlight');
+        }
+    });
+    
+    // Update stats with search results
+    document.getElementById('hierarchyStats').innerHTML = 
+        `<i class="bi bi-search"></i> Found ${foundCount} skills matching "${query}"`;
+}
+
 function initializeTableView() {
     const container = document.getElementById('tableView');
     
@@ -2412,6 +2975,8 @@ function initializeEventListeners() {
                 document.getElementById('tableView').classList.add('active');
             } else if (view === 'filter') {
                 document.getElementById('filterView').classList.add('active');
+            } else if (view === 'hierarchy') {
+                document.getElementById('hierarchyView').classList.add('active');
             } else {
                 document.getElementById(`${view}View`)?.classList.add('active');
             }
