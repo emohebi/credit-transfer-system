@@ -2451,11 +2451,11 @@ function clearMultiFilters() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  HIERARCHY TREE VIEW
+//  HIERARCHY TREE VIEW - LAZY LOADING
 // ═══════════════════════════════════════════════════════════════════════════
 
 let hierarchyData = null;
-let expandedNodes = new Set();
+let hierarchySkillCounts = {};
 
 function initializeHierarchyView() {
     const container = document.getElementById('hierarchyView');
@@ -2464,10 +2464,10 @@ function initializeHierarchyView() {
         <div class="hierarchy-view">
             <div class="hierarchy-main">
                 <div class="hierarchy-controls">
-                    <button class="btn-custom btn-outline" onclick="expandAllNodes()">
+                    <button class="btn-custom btn-outline" onclick="expandAllHierarchy()">
                         <i class="bi bi-arrows-expand"></i> Expand All
                     </button>
-                    <button class="btn-custom btn-outline" onclick="collapseAllNodes()">
+                    <button class="btn-custom btn-outline" onclick="collapseAllHierarchy()">
                         <i class="bi bi-arrows-collapse"></i> Collapse All
                     </button>
                     <div class="hierarchy-search">
@@ -2514,20 +2514,23 @@ function initializeHierarchyView() {
         </div>
     `;
     
-    // Build hierarchy data
-    buildHierarchyData();
+    // Build hierarchy data structure (only data, no DOM)
+    buildHierarchyDataStructure();
     
-    // Render tree
-    renderHierarchyTree();
+    // Render only top level (ASCED nodes)
+    renderTopLevelHierarchy();
     
-    // Setup search
+    // Setup search with debounce
+    let searchTimeout;
     document.getElementById('hierarchySearch')?.addEventListener('input', (e) => {
-        searchHierarchy(e.target.value);
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => searchHierarchy(e.target.value), 300);
     });
 }
 
-function buildHierarchyData() {
+function buildHierarchyDataStructure() {
     hierarchyData = {};
+    hierarchySkillCounts = {};
     
     // Group skills by ASCED -> NAT -> CTX -> LVL
     for (const skill of taxonomyData.skills) {
@@ -2540,7 +2543,19 @@ function buildHierarchyData() {
         const lvl = skill.facets?.LVL?.code || 'UNKNOWN';
         const lvlName = skill.facets?.LVL?.name || 'Unclassified';
         
-        // Initialize nested structure
+        // Build path keys for counting
+        const ascedKey = asced;
+        const natKey = `${asced}|${nat}`;
+        const ctxKey = `${asced}|${nat}|${ctx}`;
+        const lvlKey = `${asced}|${nat}|${ctx}|${lvl}`;
+        
+        // Initialize counts
+        hierarchySkillCounts[ascedKey] = (hierarchySkillCounts[ascedKey] || 0) + 1;
+        hierarchySkillCounts[natKey] = (hierarchySkillCounts[natKey] || 0) + 1;
+        hierarchySkillCounts[ctxKey] = (hierarchySkillCounts[ctxKey] || 0) + 1;
+        hierarchySkillCounts[lvlKey] = (hierarchySkillCounts[lvlKey] || 0) + 1;
+        
+        // Build nested structure
         if (!hierarchyData[asced]) {
             hierarchyData[asced] = { name: ascedName, code: asced, children: {} };
         }
@@ -2575,212 +2590,265 @@ function buildHierarchyData() {
         `<i class="bi bi-diagram-3"></i> ${ascedCount} ASCED → ${natCount} Nature → ${ctxCount} Context → ${lvlCount} Levels → ${taxonomyData.skills.length} Skills`;
 }
 
-function renderHierarchyTree() {
+function renderTopLevelHierarchy() {
     const container = document.getElementById('treeContainer');
-    
-    // Sort ASCED codes
     const sortedAscedCodes = Object.keys(hierarchyData).sort();
     
     let html = '';
-    
-    for (const ascedCode of sortedAscedCodes) {
-        const ascedNode = hierarchyData[ascedCode];
-        html += renderTreeNode(ascedCode, ascedNode, 0, 'asced');
+    for (const code of sortedAscedCodes) {
+        const node = hierarchyData[code];
+        const count = hierarchySkillCounts[code] || 0;
+        html += createLazyNodeHTML(code, node.name, count, 0, code);
     }
     
     container.innerHTML = html || '<p style="color: var(--jsa-grey-500); padding: 20px;">No data available</p>';
-    
-    // Attach event listeners
-    attachTreeEventListeners();
 }
 
-function renderTreeNode(code, node, level, type) {
-    const nodeId = `node-${type}-${code}`.replace(/[^a-zA-Z0-9-]/g, '_');
-    const isExpanded = expandedNodes.has(nodeId);
-    
-    // Calculate skill count for this branch
-    let skillCount = 0;
-    if (node.skills) {
-        skillCount = node.skills.length;
-    } else if (node.children) {
-        skillCount = countSkillsInBranch(node);
-    }
-    
-    // Get icon based on level
+function createLazyNodeHTML(code, name, count, level, pathKey) {
+    const nodeId = `h_${pathKey}`.replace(/[^a-zA-Z0-9_]/g, '_');
     const icons = ['bi-mortarboard', 'bi-bookmark-fill', 'bi-briefcase-fill', 'bi-layers-fill', 'bi-lightbulb-fill'];
     const icon = icons[level] || 'bi-circle-fill';
+    const hasChildren = level < 4;
     
-    let html = `
-        <div class="tree-node" data-node-id="${nodeId}" data-level="${level}">
-            <div class="tree-node-content" data-code="${code}" data-type="${type}" data-level="${level}">
-                <span class="tree-toggle ${node.skills ? 'empty' : ''} ${isExpanded ? 'expanded' : ''}">
+    return `
+        <div class="tree-node" id="${nodeId}" data-path="${pathKey}" data-level="${level}" data-loaded="false">
+            <div class="tree-node-content" onclick="toggleHierarchyNode('${nodeId}', '${pathKey}', ${level})">
+                <span class="tree-toggle ${!hasChildren ? 'empty' : ''}">
                     <i class="bi bi-chevron-right"></i>
                 </span>
                 <span class="tree-icon level-${level}">
                     <i class="bi ${icon}"></i>
                 </span>
-                <span class="tree-label level-${level}" title="${node.name}">${node.name}</span>
-                <span class="tree-count level-${level}">${skillCount}</span>
+                <span class="tree-label level-${level}" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
+                <span class="tree-count level-${level}">${count}</span>
             </div>
+            <div class="tree-children" id="children_${nodeId}"></div>
+        </div>
     `;
+}
+
+function createSkillLeafHTML(skill) {
+    const skillId = skill.id.replace(/[^a-zA-Z0-9_]/g, '_');
+    return `
+        <div class="tree-node skill-leaf" data-level="4" data-skill-id="${skill.id}">
+            <div class="tree-node-content skill-node" onclick="selectHierarchySkill('${skill.id}', this)">
+                <span class="tree-toggle empty">
+                    <i class="bi bi-chevron-right"></i>
+                </span>
+                <span class="tree-icon level-4">
+                    <i class="bi bi-lightbulb-fill"></i>
+                </span>
+                <span class="tree-label level-4" title="${escapeHtml(skill.name)}">${escapeHtml(skill.name)}</span>
+            </div>
+        </div>
+    `;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text || '';
+    return div.innerHTML;
+}
+
+function toggleHierarchyNode(nodeId, pathKey, level) {
+    const nodeEl = document.getElementById(nodeId);
+    const childrenEl = document.getElementById('children_' + nodeId);
+    const toggle = nodeEl.querySelector('.tree-toggle');
     
-    // Render children or skills
-    if (node.children || node.skills) {
-        html += `<div class="tree-children ${isExpanded ? 'expanded' : ''}" id="children-${nodeId}">`;
-        
-        if (node.children) {
-            const childCodes = Object.keys(node.children).sort();
-            const childTypes = ['nat', 'ctx', 'lvl'];
-            const childType = childTypes[level] || 'child';
-            
-            for (const childCode of childCodes) {
-                html += renderTreeNode(childCode, node.children[childCode], level + 1, `${type}-${childType}`);
-            }
-        } else if (node.skills) {
-            // Render skills as leaf nodes
-            for (const skill of node.skills) {
-                const skillNodeId = `skill-${skill.id}`;
-                html += `
-                    <div class="tree-node" data-node-id="${skillNodeId}" data-level="4">
-                        <div class="tree-node-content skill-node" data-skill-id="${skill.id}" data-level="4">
-                            <span class="tree-toggle empty">
-                                <i class="bi bi-chevron-right"></i>
-                            </span>
-                            <span class="tree-icon level-4">
-                                <i class="bi bi-lightbulb-fill"></i>
-                            </span>
-                            <span class="tree-label level-4" title="${skill.name}">${skill.name}</span>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-        
-        html += `</div>`;
-    }
+    if (!nodeEl || !childrenEl || !toggle) return;
     
-    html += `</div>`;
+    const isExpanded = childrenEl.classList.contains('expanded');
     
-    return html;
-}
-
-function countSkillsInBranch(node) {
-    let count = 0;
-    if (node.skills) {
-        count = node.skills.length;
-    } else if (node.children) {
-        for (const child of Object.values(node.children)) {
-            count += countSkillsInBranch(child);
-        }
-    }
-    return count;
-}
-
-function attachTreeEventListeners() {
-    document.querySelectorAll('.tree-node-content').forEach(content => {
-        content.addEventListener('click', (e) => {
-            const nodeEl = content.closest('.tree-node');
-            const nodeId = nodeEl.dataset.nodeId;
-            const level = parseInt(content.dataset.level);
-            
-            // Handle skill click
-            if (content.classList.contains('skill-node')) {
-                const skillId = content.dataset.skillId;
-                document.querySelectorAll('.tree-node-content').forEach(c => c.classList.remove('selected'));
-                content.classList.add('selected');
-                showSkillDetail('hierarchy', skillId);
-                return;
-            }
-            
-            // Handle branch toggle
-            const toggle = content.querySelector('.tree-toggle');
-            const children = document.getElementById(`children-${nodeId}`);
-            
-            if (children && !toggle.classList.contains('empty')) {
-                const isExpanded = children.classList.contains('expanded');
-                
-                if (isExpanded) {
-                    children.classList.remove('expanded');
-                    toggle.classList.remove('expanded');
-                    expandedNodes.delete(nodeId);
-                } else {
-                    children.classList.add('expanded');
-                    toggle.classList.add('expanded');
-                    expandedNodes.add(nodeId);
-                }
-            }
-        });
-    });
-}
-
-function expandAllNodes() {
-    document.querySelectorAll('.tree-children').forEach(children => {
-        children.classList.add('expanded');
-        const nodeId = children.id.replace('children-', '');
-        expandedNodes.add(nodeId);
-    });
-    document.querySelectorAll('.tree-toggle:not(.empty)').forEach(toggle => {
-        toggle.classList.add('expanded');
-    });
-}
-
-function collapseAllNodes() {
-    document.querySelectorAll('.tree-children').forEach(children => {
-        children.classList.remove('expanded');
-    });
-    document.querySelectorAll('.tree-toggle').forEach(toggle => {
+    if (isExpanded) {
+        // Collapse
+        childrenEl.classList.remove('expanded');
         toggle.classList.remove('expanded');
+    } else {
+        // Expand - lazy load if needed
+        if (nodeEl.dataset.loaded !== 'true') {
+            loadHierarchyChildren(nodeId, pathKey, level, childrenEl);
+            nodeEl.dataset.loaded = 'true';
+        }
+        childrenEl.classList.add('expanded');
+        toggle.classList.add('expanded');
+    }
+}
+
+function loadHierarchyChildren(nodeId, pathKey, level, childrenEl) {
+    const pathParts = pathKey.split('|');
+    
+    // Navigate to the correct data node
+    let dataNode = hierarchyData;
+    for (let i = 0; i < pathParts.length; i++) {
+        if (i === 0) {
+            dataNode = dataNode[pathParts[i]];
+        } else {
+            dataNode = dataNode?.children?.[pathParts[i]];
+        }
+    }
+    
+    if (!dataNode) {
+        childrenEl.innerHTML = '<p style="padding: 8px; color: var(--jsa-grey-500);">No data</p>';
+        return;
+    }
+    
+    let html = '';
+    
+    if (level === 3) {
+        // Level 3 (LVL) -> render skills
+        const skills = dataNode.skills || [];
+        for (const skill of skills) {
+            html += createSkillLeafHTML(skill);
+        }
+    } else {
+        // Render child branches
+        const children = dataNode.children || {};
+        const sortedCodes = Object.keys(children).sort();
+        
+        for (const code of sortedCodes) {
+            const child = children[code];
+            const childPathKey = `${pathKey}|${code}`;
+            const count = hierarchySkillCounts[childPathKey] || 0;
+            html += createLazyNodeHTML(code, child.name, count, level + 1, childPathKey);
+        }
+    }
+    
+    childrenEl.innerHTML = html || '<p style="padding: 8px; color: var(--jsa-grey-500);">Empty</p>';
+}
+
+function selectHierarchySkill(skillId, element) {
+    // Remove previous selection
+    document.querySelectorAll('#treeContainer .tree-node-content.selected').forEach(el => {
+        el.classList.remove('selected');
     });
-    expandedNodes.clear();
+    
+    // Add selection to clicked element
+    element.classList.add('selected');
+    
+    // Show skill detail
+    showSkillDetail('hierarchy', skillId);
+}
+
+function expandAllHierarchy() {
+    // Expand level by level with delays for performance
+    expandHierarchyLevel(0, () => {
+        setTimeout(() => expandHierarchyLevel(1, () => {
+            setTimeout(() => expandHierarchyLevel(2, () => {
+                setTimeout(() => expandHierarchyLevel(3), 50);
+            }), 50);
+        }), 50);
+    });
+}
+
+function expandHierarchyLevel(level, callback) {
+    const nodes = document.querySelectorAll(`#treeContainer .tree-node[data-level="${level}"]`);
+    
+    nodes.forEach(nodeEl => {
+        const nodeId = nodeEl.id;
+        const pathKey = nodeEl.dataset.path;
+        const childrenEl = document.getElementById('children_' + nodeId);
+        const toggle = nodeEl.querySelector('.tree-toggle');
+        
+        if (!childrenEl || toggle?.classList.contains('empty')) return;
+        
+        // Load if not loaded
+        if (nodeEl.dataset.loaded !== 'true') {
+            loadHierarchyChildren(nodeId, pathKey, level, childrenEl);
+            nodeEl.dataset.loaded = 'true';
+        }
+        
+        childrenEl.classList.add('expanded');
+        if (toggle) toggle.classList.add('expanded');
+    });
+    
+    if (callback) callback();
+}
+
+function collapseAllHierarchy() {
+    document.querySelectorAll('#treeContainer .tree-children').forEach(el => {
+        el.classList.remove('expanded');
+    });
+    document.querySelectorAll('#treeContainer .tree-toggle').forEach(el => {
+        el.classList.remove('expanded');
+    });
 }
 
 function searchHierarchy(query) {
-    const container = document.getElementById('treeContainer');
+    const statsEl = document.getElementById('hierarchyStats');
     
     if (!query || query.length < 2) {
-        // Reset highlighting
-        container.querySelectorAll('.tree-node').forEach(node => {
-            node.classList.remove('highlight');
-            node.style.display = '';
+        // Reset
+        document.querySelectorAll('#treeContainer .tree-node.highlight').forEach(el => {
+            el.classList.remove('highlight');
         });
+        const ascedCount = Object.keys(hierarchyData).length;
+        statsEl.innerHTML = `<i class="bi bi-diagram-3"></i> ${ascedCount} ASCED fields, ${taxonomyData.skills.length} total skills`;
         return;
     }
     
     const searchLower = query.toLowerCase();
-    let foundCount = 0;
-    
-    // Find matching skills and expand their parents
-    container.querySelectorAll('.tree-node-content.skill-node').forEach(skillNode => {
-        const skillName = skillNode.querySelector('.tree-label').textContent.toLowerCase();
-        const skillId = skillNode.dataset.skillId?.toLowerCase() || '';
-        const matches = skillName.includes(searchLower) || skillId.includes(searchLower);
-        
-        const treeNode = skillNode.closest('.tree-node');
-        
-        if (matches) {
-            foundCount++;
-            treeNode.classList.add('highlight');
-            
-            // Expand all parent nodes
-            let parent = treeNode.parentElement;
-            while (parent) {
-                if (parent.classList.contains('tree-children')) {
-                    parent.classList.add('expanded');
-                    const toggle = parent.previousElementSibling?.querySelector('.tree-toggle');
-                    if (toggle) toggle.classList.add('expanded');
-                    const nodeId = parent.id.replace('children-', '');
-                    expandedNodes.add(nodeId);
-                }
-                parent = parent.parentElement;
-            }
-        } else {
-            treeNode.classList.remove('highlight');
-        }
+    const matchingSkills = taxonomyData.skills.filter(skill => {
+        return skill.name?.toLowerCase().includes(searchLower) ||
+               skill.id?.toLowerCase().includes(searchLower) ||
+               skill.code?.toLowerCase().includes(searchLower);
     });
     
-    // Update stats with search results
-    document.getElementById('hierarchyStats').innerHTML = 
-        `<i class="bi bi-search"></i> Found ${foundCount} skills matching "${query}"`;
+    statsEl.innerHTML = `<i class="bi bi-search"></i> Found ${matchingSkills.length} skills matching "${escapeHtml(query)}"`;
+    
+    // Clear previous highlights
+    document.querySelectorAll('#treeContainer .tree-node.highlight').forEach(el => {
+        el.classList.remove('highlight');
+    });
+    
+    // Expand paths to first 50 matching skills and highlight them
+    const toExpand = matchingSkills.slice(0, 50);
+    
+    for (const skill of toExpand) {
+        expandPathToSkill(skill);
+    }
+    
+    // Highlight after a delay to let DOM update
+    setTimeout(() => {
+        for (const skill of toExpand) {
+            const skillEl = document.querySelector(`#treeContainer .skill-leaf[data-skill-id="${skill.id}"]`);
+            if (skillEl) {
+                skillEl.classList.add('highlight');
+            }
+        }
+    }, 100);
+}
+
+function expandPathToSkill(skill) {
+    const asced = skill.facets?.ASCED?.code || skill.facets?.IND?.code || 'UNKNOWN';
+    const nat = skill.facets?.NAT?.code || 'UNKNOWN';
+    const ctx = skill.facets?.CTX?.code || 'UNKNOWN';
+    const lvl = skill.facets?.LVL?.code || 'UNKNOWN';
+    
+    const levels = [
+        { pathKey: asced, level: 0 },
+        { pathKey: `${asced}|${nat}`, level: 1 },
+        { pathKey: `${asced}|${nat}|${ctx}`, level: 2 },
+        { pathKey: `${asced}|${nat}|${ctx}|${lvl}`, level: 3 }
+    ];
+    
+    for (const { pathKey, level } of levels) {
+        const nodeId = `h_${pathKey}`.replace(/[^a-zA-Z0-9_]/g, '_');
+        const nodeEl = document.getElementById(nodeId);
+        
+        if (nodeEl) {
+            const childrenEl = document.getElementById('children_' + nodeId);
+            const toggle = nodeEl.querySelector('.tree-toggle');
+            
+            if (childrenEl && toggle && !toggle.classList.contains('empty')) {
+                if (nodeEl.dataset.loaded !== 'true') {
+                    loadHierarchyChildren(nodeId, pathKey, level, childrenEl);
+                    nodeEl.dataset.loaded = 'true';
+                }
+                childrenEl.classList.add('expanded');
+                toggle.classList.add('expanded');
+            }
+        }
+    }
 }
 
 function initializeTableView() {
