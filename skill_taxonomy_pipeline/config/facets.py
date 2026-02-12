@@ -1314,7 +1314,7 @@ ASCED_FIELD_OF_EDUCATION_FACET = {
         "0601": {
         "code": "0601",
         "name": "Medical Studies",
-        "description": "Medical Studies disciplines covering key subfields such as Anaesthesiology, General Medicine, and General Practice.",
+        "description": "Medical Studies disciplines for human only, covering key subfields such as Anaesthesiology, General Medicine, and General Practice.",
         "keywords": [
             "Anaesthesiology",
             "General Medicine",
@@ -1333,7 +1333,7 @@ ASCED_FIELD_OF_EDUCATION_FACET = {
         "0603": {
         "code": "0603",
         "name": "Nursing",
-        "description": "Nursing disciplines covering key subfields such as Aged Care Nursing, Community Nursing, and Critical Care Nursing.",
+        "description": "Nursing disciplines for human only, covering key subfields such as Aged Care Nursing, Community Nursing, and Critical Care Nursing.",
         "keywords": [
             "Aged Care Nursing",
             "Community Nursing",
@@ -1715,7 +1715,7 @@ ASCED_FIELD_OF_EDUCATION_FACET = {
         "0921": {
         "code": "0921",
         "name": "Sport and Recreation",
-        "description": "Sport and Recreation disciplines covering key subfields such as Sport and Recreation Activities, and Sports Coaching, Officiating and Instruction.",
+        "description": "Sport and Recreation for human only, disciplines covering key subfields such as Sport and Recreation Activities, and Sports Coaching, Officiating and Instruction.",
         "keywords": [
             "Sport and Recreation Activities",
             "Sport and Recreation, n.e.c.",
@@ -1813,7 +1813,7 @@ ASCED_FIELD_OF_EDUCATION_FACET = {
         "1103": {
         "code": "1103",
         "name": "Personal Services",
-        "description": "Personal Services disciplines covering key subfields such as Beauty Therapy, and Hairdressing.",
+        "description": "Personal Services disciplines for human only, covering key subfields such as Beauty Therapy, and Hairdressing.",
         "keywords": [
             "Beauty Therapy",
             "Hairdressing",
@@ -1824,7 +1824,7 @@ ASCED_FIELD_OF_EDUCATION_FACET = {
         "1201": {
         "code": "1201",
         "name": "General Education Programmes",
-        "description": "General Education Programmes disciplines covering key subfields such as General Primary and Secondary Education Programmes and Learning Skills Programmes.",
+        "description": "General Education Programmes disciplines for human only covering key subfields such as General Primary and Secondary Education Programmes and Learning Skills Programmes.",
         "keywords": [
             "General Education Programmes, n.e.c.",
             "General Primary and Secondary Education Programmes",

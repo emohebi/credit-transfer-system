@@ -177,14 +177,14 @@ DATA_CONFIG = {
 
 EMBEDDING_CONFIG = {
     "model_name": "jinaai--jina-embeddings-v4",
-    "batch_size": 8,
+    "batch_size": 64,
     "cache_embeddings": True,
     "normalize_embeddings": True,
     "device": "cuda" if os.environ.get("CUDA_AVAILABLE") else "cuda:1",
     "external_model_dir": os.getenv("EXTERNAL_MODEL_DIR", "/Volumes/jsa_external_prod/external_vols/scratch/Scratch/Ehsan/Models"),
     "model_cache_dir": os.getenv("MODEL_CACHE_DIR", "/root/.cache/huggingface/hub"),
     "similarity_method": os.environ.get("SIMILARITY_METHOD", "matrix"),
-    "matrix_memory_threshold": 500000,
+    "matrix_memory_threshold": 50000,
     "faiss_exact_search_threshold": 5000,
     **MULTI_FACTOR_WEIGHTS
 }
