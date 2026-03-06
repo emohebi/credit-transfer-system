@@ -91,8 +91,12 @@ def _extract_qualification_level(title):
         return 'Unknown'
     
 def _extract_training_package_code(qual_code):
-    """Extract training package code from qualification code"""
+    # National: BSB40120 → BSB
     match = re.match(r'^([A-Z]+)', qual_code)
+    if match:
+        return match.group(1)
+    # State/territory accredited: 22603VIC → VIC, 10218NAT → NAT
+    match = re.match(r'^\d+([A-Z]+)$', qual_code)
     if match:
         return match.group(1)
     return 'OTHER'
@@ -129,7 +133,7 @@ class TrainingGovDownloader:
     def search_all_qualifications(self):
         """Search for all qualifications"""
         logger.info("Searching for all qualifications...")
-        
+        INCLUDED_TYPES = {'Qualification', 'AccreditedCourse'}
         all_qualifications = []
         page_number = 0
         page_size = 100
@@ -143,6 +147,7 @@ class TrainingGovDownloader:
                     'PageSize': page_size,
                     'TrainingComponentTypes': {
                         'IncludeQualification': True,
+                        'IncludeAccreditedCourse': True
                     }
                 }
                 
@@ -162,7 +167,7 @@ class TrainingGovDownloader:
                             if not isinstance(comp_types, list):
                                 comp_types = [comp_types]
                             
-                            if 'Qualification' in comp_types:
+                            if any(t in INCLUDED_TYPES for t in comp_types):
                                 all_qualifications.append({
                                     'code': summary.Code,
                                     'title': summary.Title if hasattr(summary, 'Title') else ''
@@ -993,13 +998,15 @@ def process_qualification_wrapper(qual_info, username, password, use_sandbox, ou
             package_dir = os.path.join(output_dir, training_package)
             os.makedirs(package_dir, exist_ok=True)
             
-            # Save to file
+            # Save to file only if it doesn't already exist
             filename = os.path.join(package_dir, f"{qual_code}.json")
-            with open(filename, 'w', encoding='utf-8') as f:
-                json.dump(qual_data, f, indent=2, ensure_ascii=False)
-            
-            logger.info(f"✓ Saved: {qual_code} ({qual_data['status']}, {len(qual_data['units'])} units)")
-            
+            if not os.path.exists(filename):
+                with open(filename, 'w', encoding='utf-8') as f:
+                    json.dump(qual_data, f, indent=2, ensure_ascii=False)
+                logger.info(f"✓ Saved: {qual_code} ({qual_data['status']}, {len(qual_data['units'])} units)")
+            else:
+                logger.info(f"⏭ Skipped (already exists): {qual_code}")
+
             return {
                 'code': qual_code,
                 'success': True,
@@ -1233,6 +1240,40 @@ def main():
         print(f"\n✗ Error: {e}")
         print(f"Check log file in '{output_dir}' folder for details")
 
+def run_get_types():
+    from zeep import Client
+    from zeep.wsse.username import UsernameToken
 
+    wsse = UsernameToken("WebService.Read", "Asdf098")
+    url = "https://ws.sandbox.training.gov.au/Deewr.Tga.WebServices/TrainingComponentServiceV2.svc?wsdl"
+    client = Client(url, wsse=wsse)
+
+    # Print all available types for the Search request
+    for service_name, service in client.wsdl.services.items():
+        for port_name, port in service.ports.items():
+            for op_name, op in port.binding._operations.items():
+                print(f"\n{'='*60}")
+                print(f"Operation: {op_name}")
+                try:
+                    body = op.input.body
+                    if body and hasattr(body, 'type') and hasattr(body.type, 'elements'):
+                        for elem_name, elem in body.type.elements:
+                            print(f"  [{elem_name}]: {elem.type}")
+                            try:
+                                if hasattr(elem.type, 'elements'):
+                                    for sub_name, sub in elem.type.elements:
+                                        print(f"      [{sub_name}]: {sub.type}")
+                                        try:
+                                            if hasattr(sub.type, 'elements'):
+                                                for sub2_name, sub2 in sub.type.elements:
+                                                    print(f"          [{sub2_name}]: {sub2.type}")
+                                        except Exception as e:
+                                            print(f"          (error: {e})")
+                            except Exception as e:
+                                print(f"      (error: {e})")
+                except Exception as e:
+                    print(f"  (error reading input: {e})")
+    
 if __name__ == "__main__":
     main()
+    # run_get_types()
