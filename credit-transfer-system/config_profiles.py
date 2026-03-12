@@ -128,9 +128,9 @@ class ConfigProfiles:
             "matching_strategy": "direct_one_vs_all",  # Options: "clustering", "direct", "hybrid", "direct_one_vs_all"
             "direct_match_threshold": 0.9,  # Threshold for direct skill name matching
             "partial_threshold": 0.8,  # Threshold for partial matches
-            "semantic_weight": 0.60,
-            "level_weight": 0.25,
-            "context_weight": 0.15,  # Weight for context similarity
+            "semantic_weight": 0.65,
+            "level_weight": 0.20,
+            "context_weight": 0.10,  # Weight for context similarity
             "enable_bidirectional_coverage": True,  # Use bidirectional coverage
             "enable_one_to_many": True,  # Support one-to-many skill mappings
             "enable_clustering_validation": True,  # Validate direct matches with clustering

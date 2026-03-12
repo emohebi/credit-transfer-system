@@ -546,22 +546,22 @@ def install_chrome_databricks():
 
 def install_selenium_packages():
     """Install required Python packages"""
-    try:
-        import selenium
-        logger.info("[SELENIUM] Selenium already installed")
-        return True
-    except ImportError:
-        try:
-            logger.info("[SELENIUM] Installing selenium package...")
-            subprocess.check_call([
-                sys.executable, "-m", "pip", "install", 
-                "selenium", "webdriver-manager", "-q"
-            ])
-            logger.info("[SELENIUM] ✓ Selenium installed")
-            return True
-        except Exception as e:
-            logger.error(f"[SELENIUM] Failed to install selenium: {e}")
-            return False
+    # try:
+    #     import selenium
+    #     logger.info("[SELENIUM] Selenium already installed")
+    #     return True
+    # except ImportError:
+    #     try:
+    #         logger.info("[SELENIUM] Installing selenium package...")
+    #         subprocess.check_call([
+    #             sys.executable, "-m", "pip", "install", 
+    #             "selenium", "webdriver-manager", "-q"
+    #         ])
+    #         logger.info("[SELENIUM] ✓ Selenium installed")
+    #         return True
+    #     except Exception as e:
+    #         logger.error(f"[SELENIUM] Failed to install selenium: {e}")
+    return False
 
 def check_selenium_available():
     """Check if Selenium can be used in this environment"""
@@ -1194,11 +1194,11 @@ def main():
             print("Web scraping will be disabled, using XML and API only")
     
     # Get credentials
-    username = input("Enter your API username: ")
-    password = input("Enter your API password: ")
-    environment = input("Use sandbox? (y/n): ").lower()
+    username = "WebService.Read"# input("Enter your API username: ")
+    password = "Asdf098" # input("Enter your API password: ")
+    environment = 'y' #input("Use sandbox? (y/n): ").lower()
     
-    num_processes_input = input(f"Number of parallel processes (default: {max(1, cpu_count()-1)}): ")
+    num_processes_input = "5" # input(f"Number of parallel processes (default: {max(1, cpu_count()-1)}): ")
     if num_processes_input.strip():
         num_processes = int(num_processes_input)
     else:
@@ -1212,7 +1212,7 @@ def main():
     
     try:
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        output_dir = f'qualifications_{timestamp}'
+        output_dir = f'/Volumes/jsa_external_prod/external_vols/scratch/Scratch/Ehsan/NST/TGA_Quals'
         
         print(f"\nOutput: {output_dir}/")
         print("Organized by training package")

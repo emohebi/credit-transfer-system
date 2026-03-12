@@ -265,7 +265,6 @@ class ReportGenerator:
         report.append("=" * 80)
         report.append("CREDIT TRANSFER ANALYSIS REPORT")
         report.append("=" * 80)
-        report.append(f"\nGenerated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         report.append(f"\nVET Qualification: {vet_qual.code} - {vet_qual.name}")
         report.append(f"Level: {vet_qual.level}")
         report.append(f"Total Units: {len(vet_qual.units)}")
@@ -1351,7 +1350,6 @@ class ReportGenerator:
             <div class="header-content">
                 <h1><i class="fas fa-graduation-cap"></i> Credit Transfer Analysis Report</h1>
                 <div class="header-info">
-                    <p><i class="fas fa-calendar"></i> Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
                     <p><i class="fas fa-certificate"></i> VET Qualification: {vet_qual.code} - {vet_qual.name}</p>
                     <p><i class="fas fa-university"></i> University Program: {uni_qual.code} - {uni_qual.name}</p>
                 </div>
