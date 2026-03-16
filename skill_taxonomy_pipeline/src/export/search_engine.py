@@ -65,6 +65,9 @@ def _build_html(data_file: str) -> str:
       <button class="tab" data-tab="units"><i class="bi bi-journal-code"></i> Units</button>
       <button class="tab" data-tab="quals"><i class="bi bi-award"></i> Qualifications</button>
       <button class="tab" data-tab="occs"><i class="bi bi-person-badge"></i> Occupations</button>
+      <button class="tab" data-tab="matrix"><i class="bi bi-water"></i> Sankey Flow</button>
+      <button class="tab" data-tab="scatter"><i class="bi bi-bullseye"></i> Context × Level</button>
+      <button class="tab" data-tab="graph"><i class="bi bi-diagram-3"></i> Graph</button>
     </nav>
 
     <!-- Skills Tab -->
@@ -127,6 +130,58 @@ def _build_html(data_file: str) -> str:
         <button class="btn-load" onclick="loadMoreOccs()">Load more</button>
       </div>
     </section>
+
+    <!-- Sankey Flow Tab -->
+    <section class="panel hidden" id="matrixPanel">
+      <div class="matrix-controls">
+        <div class="search-box" style="flex:1;min-width:260px">
+          <i class="bi bi-search"></i>
+          <input type="text" id="matrixSearch" placeholder="Search a skill, unit, qualification or occupation…" autocomplete="off">
+        </div>
+        <div class="matrix-legend">
+          <span class="legend-dot" style="background:#0f6b5e"></span> Skill
+          <span class="legend-dot" style="background:#6d28d9"></span> Assertion
+          <span class="legend-dot" style="background:#2563ab"></span> Unit
+          <span class="legend-dot" style="background:#16a34a"></span> Qualification
+          <span class="legend-dot" style="background:#dc6b16"></span> Occupation
+        </div>
+      </div>
+      <div id="matrixHint" class="graph-hint">Search for any entity to see the full Skill → Unit → Qualification → Occupation flow</div>
+      <div id="matrixContainer" style="overflow-x:auto"></div>
+      <div id="matrixDetail" style="margin-top:16px"></div>
+    </section>
+
+    <!-- Context × Level Scatter Tab -->
+    <section class="panel hidden" id="scatterPanel">
+      <div class="matrix-controls">
+        <div class="search-box" style="flex:1;min-width:260px">
+          <i class="bi bi-search"></i>
+          <input type="text" id="scatterSearch" placeholder="Search a skill to see its assertion distribution…" autocomplete="off">
+        </div>
+      </div>
+      <div id="scatterHint" class="graph-hint">Search for a skill to plot all its assertions on Context × Level axes</div>
+      <div id="scatterContainer" style="overflow-x:auto"></div>
+      <div id="scatterDetail" style="margin-top:12px"></div>
+    </section>
+
+    <!-- Graph Tab -->
+    <section class="panel hidden" id="graphPanel">
+      <div class="graph-controls">
+        <div class="search-box" style="flex:1;min-width:260px">
+          <i class="bi bi-search"></i>
+          <input type="text" id="graphSearch" placeholder="Type a skill, qualification, occupation, or unit code…" autocomplete="off">
+        </div>
+        <div class="graph-legend">
+          <span class="legend-dot" style="background:#0f6b5e"></span> Skill
+          <span class="legend-dot" style="background:#2563ab"></span> Unit
+          <span class="legend-dot" style="background:#16a34a"></span> Qualification
+          <span class="legend-dot" style="background:#dc6b16"></span> Occupation
+        </div>
+      </div>
+      <div id="graphContainer" style="width:100%;height:600px;border:1px solid var(--c-border);border-radius:var(--radius);background:#fafbfc"></div>
+      <div class="graph-hint" id="graphHint">Search for any entity to explore its connections</div>
+    </section>
+
   </div>
 
   <!-- Skill Detail Drawer -->
@@ -284,6 +339,27 @@ body { font-family: 'DM Sans', sans-serif; background: var(--c-bg); color: var(-
 .facet-val { font-size: .78rem; font-weight: 600; color: var(--c-text); }
 
 .err { color: #c62828; padding: 20px; font-size: .9rem; }
+
+/* Graph */
+.graph-controls, .matrix-controls { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.graph-legend, .matrix-legend { display: flex; gap: 14px; align-items: center; font-size: .78rem; color: var(--c-text2); flex-wrap: wrap; }
+.legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 3px; }
+.graph-hint { text-align: center; margin-top: 12px; font-size: .82rem; color: var(--c-text3); }
+
+/* Sankey flow */
+
+/* Assertion detail card (below matrix/scatter) */
+.assertion-detail-card { background: var(--c-bg); border-radius: var(--radius); padding: 16px; border: 1px solid var(--c-border); animation: fadeIn .15s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.assertion-detail-card h4 { font-size: .9rem; color: var(--c-accent2); margin-bottom: 10px; }
+.assertion-meta-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
+.assertion-meta-item { font-size: .8rem; }
+.assertion-meta-item b { color: var(--c-text); }
+.assertion-evidence { font-size: .82rem; color: var(--c-text2); padding: 10px; background: white; border-radius: 6px; margin-top: 8px; line-height: 1.5; border-left: 3px solid var(--c-accent); }
+
+/* Scatter plot */
+.scatter-summary { font-size: .82rem; color: var(--c-text2); margin-top: 10px; padding: 12px; background: var(--c-bg); border-radius: var(--radius); }
+.scatter-summary b { color: var(--c-text); }
 
 @media (max-width: 640px) {
   .results-grid { grid-template-columns: 1fr; }
@@ -554,8 +630,13 @@ function openSkill(sid) {
   if (s.assertions?.length) {
     const show = s.assertions.slice(0,20);
     html += `<div class="d-section"><div class="d-label"><i class="bi bi-link-45deg"></i> Assertions (${s.assertions.length})</div>`;
-    html += `<table class="a-table"><thead><tr><th>Unit</th><th>Context</th><th>Level</th><th>Conf</th><th>Evidence</th></tr></thead><tbody>`;
-    for (const a of show) { const cls=CTX_CLASS[a.teaching_context]||'hybrid'; html += `<tr><td><span class="d-tag code" style="cursor:pointer" onclick="openUnit('${a.unit_code}')">${a.unit_code}</span></td><td><span class="a-ctx-dot ${cls}"></span>${a.teaching_context}</td><td>${a.level_of_engagement}</td><td>${(a.confidence*100).toFixed(0)}%</td><td class="a-evidence" title="${esc(a.evidence)}">${esc(a.evidence)}</td></tr>`; }
+    html += `<table class="a-table"><thead><tr><th>Unit</th><th>Context</th><th>Level</th><th>Quals</th><th>Occs</th><th>Evidence</th></tr></thead><tbody>`;
+    for (const a of show) {
+      const cls=CTX_CLASS[a.teaching_context]||'hybrid';
+      const qCodes = (a.qualification_codes||[]).join(', ');
+      const oCodes = (a.occupation_codes||[]).join(', ');
+      html += `<tr><td><span class="d-tag code" style="cursor:pointer" onclick="openUnit('${a.unit_code}')">${a.unit_code}</span></td><td><span class="a-ctx-dot ${cls}"></span>${a.teaching_context}</td><td>${a.level_of_engagement}</td><td style="font-size:.7rem;max-width:100px" title="${esc(qCodes)}">${esc(qCodes.substring(0,20))}${qCodes.length>20?'…':''}</td><td style="font-size:.7rem;max-width:100px" title="${esc(oCodes)}">${esc(oCodes.substring(0,20))}${oCodes.length>20?'…':''}</td><td class="a-evidence" title="${esc(a.evidence)}">${esc(a.evidence)}</td></tr>`;
+    }
     html += '</tbody></table>';
     if (s.assertions.length > 20) html += `<div style="text-align:center;margin-top:8px;font-size:.78rem;color:var(--c-text3)">Showing 20 of ${s.assertions.length}</div>`;
     html += '</div>';
@@ -631,9 +712,495 @@ function closeDrawer() { document.getElementById('drawer').classList.add('hidden
 function onTabClick(e) {
   const tab = e.currentTarget.dataset.tab;
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-  ['skills','units','quals','occs'].forEach(p => { document.getElementById(p+'Panel').classList.toggle('hidden', p !== tab); });
+  ['skills','units','quals','occs','matrix','scatter','graph'].forEach(p => { document.getElementById(p+'Panel').classList.toggle('hidden', p !== tab); });
+  if (tab === 'graph' && !graphInitialized) initGraph();
+  if (tab === 'matrix' && !matrixInitialized) initMatrix();
+  if (tab === 'scatter' && !scatterInitialized) initScatter();
 }
 
 function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+
+// ══════════════════════════════════════════════════════════
+//  FORCE-DIRECTED GRAPH (Pure SVG + vanilla JS simulation)
+// ══════════════════════════════════════════════════════════
+let graphInitialized = false;
+const GCOLORS = { skill: '#0f6b5e', unit: '#2563ab', qual: '#16a34a', occ: '#dc6b16' };
+
+function initGraph() {
+  graphInitialized = true;
+  document.getElementById('graphSearch').addEventListener('input', debounce(onGraphSearch, 350));
+}
+
+function onGraphSearch() {
+  const q = document.getElementById('graphSearch').value.toLowerCase().trim();
+  if (q.length < 2) { document.getElementById('graphContainer').innerHTML = ''; document.getElementById('graphHint').textContent = 'Type at least 2 characters'; return; }
+
+  let center = null, ctype = '';
+  const ms = data.skills.find(s => s.preferred_label.toLowerCase().includes(q) || s.skill_id.toLowerCase().includes(q));
+  if (ms) { center = ms; ctype = 'skill'; }
+  if (!center) { const mq = (data.qualifications||[]).find(x => x.qualification_code.toLowerCase().includes(q) || x.qualification_title.toLowerCase().includes(q)); if (mq) { center = mq; ctype = 'qual'; } }
+  if (!center) { const mo = (data.occupations||[]).find(x => x.anzsco_code.toLowerCase().includes(q) || x.anzsco_title.toLowerCase().includes(q)); if (mo) { center = mo; ctype = 'occ'; } }
+  if (!center) { const mu = (data.units||[]).find(x => x.unit_code.toLowerCase().includes(q) || (x.unit_title||'').toLowerCase().includes(q)); if (mu) { center = mu; ctype = 'unit'; } }
+
+  if (!center) { document.getElementById('graphHint').textContent = 'No match found'; document.getElementById('graphContainer').innerHTML = ''; return; }
+  document.getElementById('graphHint').textContent = '';
+  buildForceGraph(center, ctype);
+}
+
+function buildForceGraph(center, ctype) {
+  const nodes = [], links = [], nset = new Set();
+  function add(id, label, type, r) { if (nset.has(id)) return; nset.add(id); nodes.push({id, label: label.substring(0,35), type, r: r||7}); }
+  function link(a, b) { links.push({source: a, target: b}); }
+
+  if (ctype === 'skill') {
+    const s = center; add(s.skill_id, s.preferred_label, 'skill', 16);
+    (s.unit_codes||[]).slice(0,12).forEach(c => { add(c, c, 'unit', 6); link(s.skill_id, c); });
+    (s.qualifications||[]).slice(0,8).forEach(q => { add(q.code, q.title||q.code, 'qual', 9); link(s.skill_id, q.code); });
+    (s.occupations||[]).slice(0,6).forEach(o => { add(o.code, o.title||o.code, 'occ', 9); link(s.skill_id, o.code); });
+  } else if (ctype === 'qual') {
+    const q = center; add(q.qualification_code, q.qualification_title, 'qual', 16);
+    q.skill_ids.slice(0,18).forEach(sid => { const sk = skillIndex.get(sid); add(sid, sk?sk.preferred_label:sid, 'skill', 6); link(q.qualification_code, sid); });
+    q.unit_codes.slice(0,10).forEach(uc => { add(uc, uc, 'unit', 5); link(q.qualification_code, uc); });
+    q.occupation_codes.slice(0,6).forEach(ac => { const o = occIndex.get(ac); add(ac, o?o.anzsco_title:ac, 'occ', 9); link(q.qualification_code, ac); });
+  } else if (ctype === 'occ') {
+    const o = center; add(o.anzsco_code, o.anzsco_title, 'occ', 16);
+    o.qualification_codes.slice(0,8).forEach(qc => { const q = qualIndex.get(qc); add(qc, q?q.qualification_title:qc, 'qual', 9); link(o.anzsco_code, qc); });
+    o.skill_ids.slice(0,18).forEach(sid => { const sk = skillIndex.get(sid); add(sid, sk?sk.preferred_label:sid, 'skill', 6); link(o.anzsco_code, sid); });
+  } else if (ctype === 'unit') {
+    const u = center; add(u.unit_code, u.unit_title||u.unit_code, 'unit', 16);
+    u.skill_ids.slice(0,18).forEach(sid => { const sk = skillIndex.get(sid); add(sid, sk?sk.preferred_label:sid, 'skill', 6); link(u.unit_code, sid); });
+    (u.qualifications||[]).slice(0,8).forEach(q => { add(q.code, q.title||q.code, 'qual', 9); link(u.unit_code, q.code); });
+  }
+
+  runForceSimulation(nodes, links);
+}
+
+function runForceSimulation(nodes, links) {
+  const container = document.getElementById('graphContainer');
+  const W = container.clientWidth || 800, H = 600;
+  const cx = W/2, cy = H/2;
+
+  // Init positions
+  nodes.forEach((n, i) => { if (i === 0) { n.x = cx; n.y = cy; } else { const a = (i/nodes.length)*Math.PI*2; const d = 120+Math.random()*80; n.x = cx+Math.cos(a)*d; n.y = cy+Math.sin(a)*d; } n.vx = 0; n.vy = 0; });
+
+  // Index
+  const nmap = {}; nodes.forEach(n => nmap[n.id] = n);
+  const resolvedLinks = links.map(l => ({source: nmap[l.source], target: nmap[l.target]})).filter(l => l.source && l.target);
+
+  // Simulate
+  const ITER = 120;
+  for (let iter = 0; iter < ITER; iter++) {
+    const alpha = 1 - iter/ITER;
+    // Repulsion
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i+1; j < nodes.length; j++) {
+        let dx = nodes[j].x - nodes[i].x, dy = nodes[j].y - nodes[i].y;
+        let dist = Math.sqrt(dx*dx + dy*dy) || 1;
+        let force = alpha * 800 / (dist * dist);
+        let fx = dx/dist * force, fy = dy/dist * force;
+        nodes[i].vx -= fx; nodes[i].vy -= fy;
+        nodes[j].vx += fx; nodes[j].vy += fy;
+      }
+    }
+    // Attraction (links)
+    resolvedLinks.forEach(l => {
+      let dx = l.target.x - l.source.x, dy = l.target.y - l.source.y;
+      let dist = Math.sqrt(dx*dx+dy*dy) || 1;
+      let force = alpha * (dist - 100) * 0.04;
+      let fx = dx/dist*force, fy = dy/dist*force;
+      l.source.vx += fx; l.source.vy += fy;
+      l.target.vx -= fx; l.target.vy -= fy;
+    });
+    // Center gravity
+    nodes.forEach(n => { n.vx += (cx - n.x) * 0.01 * alpha; n.vy += (cy - n.y) * 0.01 * alpha; });
+    // Apply velocity
+    nodes.forEach(n => { n.x += n.vx * 0.4; n.y += n.vy * 0.4; n.vx *= 0.85; n.vy *= 0.85; n.x = Math.max(30, Math.min(W-30, n.x)); n.y = Math.max(30, Math.min(H-30, n.y)); });
+  }
+
+  // Render SVG
+  let svg = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="font-family:DM Sans,sans-serif">`;
+  // Links
+  resolvedLinks.forEach(l => { svg += `<line x1="${l.source.x}" y1="${l.source.y}" x2="${l.target.x}" y2="${l.target.y}" stroke="#c8d0db" stroke-width="1.2"/>`; });
+  // Nodes
+  nodes.forEach(n => {
+    const col = GCOLORS[n.type] || '#999';
+    svg += `<circle cx="${n.x}" cy="${n.y}" r="${n.r}" fill="${col}" stroke="white" stroke-width="1.5" style="cursor:pointer" onclick="graphNodeClick('${n.id}')"/>`;
+    if (n.r >= 9) { svg += `<text x="${n.x}" y="${n.y + n.r + 13}" text-anchor="middle" font-size="10" fill="#4a5568" pointer-events="none">${esc(n.label)}</text>`; }
+  });
+  // Tooltip layer
+  nodes.forEach(n => {
+    if (n.r < 9) { svg += `<title>${esc(n.label)}</title>`; }
+    svg += `<circle cx="${n.x}" cy="${n.y}" r="${Math.max(n.r, 12)}" fill="transparent" style="cursor:pointer" onclick="graphNodeClick('${n.id}')"><title>${esc(n.label)}</title></circle>`;
+  });
+  svg += '</svg>';
+  container.innerHTML = svg;
+}
+
+function graphNodeClick(id) {
+  if (skillIndex.has(id)) openSkill(id);
+  else if (qualIndex.has(id)) openQual(id);
+  else if (occIndex.has(id)) openOcc(id);
+  else if (unitIndex.has(id)) openUnit(id);
+}
+
+// ══════════════════════════════════════════════════════════
+//  SANKEY: Skill → Assertion → Unit → Qual → Occ (5 columns)
+//  One assertion node per unique (context, level) per skill
+//  Multiple flows out from one assertion to different units
+// ══════════════════════════════════════════════════════════
+let matrixInitialized = false;
+const CTX_CLS = { PRACTICAL:'prac', THEORETICAL:'theo', HYBRID:'hybrid' };
+const CTX_COL = { PRACTICAL:'#16a34a', THEORETICAL:'#2563ab', HYBRID:'#7c3aed' };
+const SANKEY_COLORS = { skill:'#0f6b5e', assertion:'#6d28d9', unit:'#2563ab', qual:'#16a34a', occ:'#dc6b16' };
+
+function initMatrix() {
+  matrixInitialized = true;
+  document.getElementById('matrixSearch').addEventListener('input', debounce(onMatrixSearch, 300));
+}
+
+function onMatrixSearch() {
+  const q = document.getElementById('matrixSearch').value.toLowerCase().trim();
+  document.getElementById('matrixDetail').innerHTML = '';
+  if (q.length < 2) { document.getElementById('matrixContainer').innerHTML = ''; document.getElementById('matrixHint').textContent = 'Type at least 2 characters'; return; }
+
+  let skills = [];
+  const ms = data.skills.filter(s => s.preferred_label.toLowerCase().includes(q) || s.skill_id.toLowerCase().includes(q) || (s.alternative_labels||[]).some(a=>a.toLowerCase().includes(q)));
+  if (ms.length) skills = ms.slice(0,6);
+  if (!skills.length) { const mq = (data.qualifications||[]).find(x => x.qualification_code.toLowerCase().includes(q) || x.qualification_title.toLowerCase().includes(q)); if (mq) skills = mq.skill_ids.map(sid => skillIndex.get(sid)).filter(Boolean).slice(0,10); }
+  if (!skills.length) { const mo = (data.occupations||[]).find(x => x.anzsco_code.toLowerCase().includes(q) || x.anzsco_title.toLowerCase().includes(q)); if (mo) skills = mo.skill_ids.map(sid => skillIndex.get(sid)).filter(Boolean).slice(0,10); }
+  if (!skills.length) { const mu = (data.units||[]).find(x => x.unit_code.toLowerCase().includes(q) || (x.unit_title||'').toLowerCase().includes(q)); if (mu) skills = (mu.skill_ids||[]).map(sid => skillIndex.get(sid)).filter(Boolean).slice(0,10); }
+
+  if (!skills.length) { document.getElementById('matrixHint').textContent = 'No match found'; document.getElementById('matrixContainer').innerHTML = ''; return; }
+  document.getElementById('matrixHint').textContent = '';
+  renderSankey(skills);
+}
+
+function renderSankey(skills) {
+  const skillNodes=[], assertNodes=[], unitNodes=[], qualNodes=[], occNodes=[];
+  const skillSet=new Set(), assertSet=new Set(), unitSet=new Set(), qualSet=new Set(), occSet=new Set();
+  const flows_sa=[], flows_au=[], flows_uq=[], flows_qo=[];
+
+  skills.forEach(s => {
+    if (skillSet.has(s.skill_id)) return;
+    skillSet.add(s.skill_id);
+    skillNodes.push({ id:s.skill_id, label:s.preferred_label });
+
+    // Group by (context, level, unit) per skill — each unit gets its own assertion node
+    const grouped = {};
+    (s.assertions||[]).forEach(a => {
+      const key = s.skill_id + '|' + a.teaching_context + '|' + a.level_of_engagement + '|' + a.unit_code;
+      if (!grouped[key]) grouped[key] = { ctx:a.teaching_context, lvl:a.level_of_engagement, unitCode:a.unit_code, evidence:'' };
+      if (!grouped[key].evidence && a.evidence) grouped[key].evidence = a.evidence;
+    });
+
+    for (const [key, g] of Object.entries(grouped)) {
+      const aId = 'AG_' + key.replace(/[^a-zA-Z0-9]/g, '_');
+      if (!assertSet.has(aId)) {
+        assertSet.add(aId);
+        assertNodes.push({ id:aId, ctx:g.ctx, lvl:g.lvl, color:CTX_COL[g.ctx]||'#999', evidence:g.evidence });
+      }
+      // One flow: skill → this assertion node
+      if (!flows_sa.find(f=>f.from===s.skill_id&&f.to===aId)) flows_sa.push({ from:s.skill_id, to:aId });
+
+      // One flow: assertion node → its unit
+      const uc = g.unitCode;
+      if (!unitSet.has(uc)) {
+        unitSet.add(uc);
+        const u = unitIndex.get(uc);
+        unitNodes.push({ id:uc, code:uc, label:u?(u.unit_title||'').substring(0,32):'', fullTitle:u?(u.unit_title||''):'' });
+      }
+      if (!flows_au.find(f=>f.from===aId&&f.to===uc)) flows_au.push({ from:aId, to:uc });
+
+      // Unit → Quals
+      const u = unitIndex.get(uc);
+      (u?.qualification_codes||[]).forEach(qc => {
+        if (!qualSet.has(qc)) { qualSet.add(qc); const q=qualIndex.get(qc); qualNodes.push({ id:qc, code:qc, label:q?q.qualification_title.substring(0,30):'', fullTitle:q?q.qualification_title:'' }); }
+        if (!flows_uq.find(f=>f.from===uc&&f.to===qc)) flows_uq.push({ from:uc, to:qc });
+      });
+    }
+  });
+
+  // Qual → Occ
+  qualNodes.forEach(qn => {
+    const q = qualIndex.get(qn.id);
+    (q?.occupation_codes||[]).forEach(ac => {
+      if (!occSet.has(ac)) { occSet.add(ac); const o=occIndex.get(ac); occNodes.push({ id:ac, code:ac, label:o?o.anzsco_title.substring(0,30):'', fullTitle:o?o.anzsco_title:'' }); }
+      if (!flows_qo.find(f=>f.from===qn.id&&f.to===ac)) flows_qo.push({ from:qn.id, to:ac });
+    });
+  });
+
+  // ── Layout (fill container width) ───────────────────────
+  const container = document.getElementById('matrixContainer');
+  const W = container.clientWidth || 1100;
+  const PAD=12, GAP=36;
+  const totalGap = PAD*2 + GAP*4;
+  const colSpace = W - totalGap;
+  // Proportional column widths — all space goes to columns
+  const ratios = [1, 0.8, 1.15, 1.15, 1];
+  const ratioSum = ratios.reduce((a,b)=>a+b,0);
+  const CW = ratios.map(r => Math.floor(colSpace * r / ratioSum));
+  const colX=[PAD];
+  for(let i=1;i<5;i++) colX.push(colX[i-1]+CW[i-1]+GAP);
+
+  const NH=36, AH=48, NG=5;
+  const allCols = [
+    { nodes:skillNodes, h:NH, color:SANKEY_COLORS.skill },
+    { nodes:assertNodes, h:AH, color:SANKEY_COLORS.assertion },
+    { nodes:unitNodes, h:NH, color:SANKEY_COLORS.unit },
+    { nodes:qualNodes, h:NH, color:SANKEY_COLORS.qual },
+    { nodes:occNodes, h:NH, color:SANKEY_COLORS.occ },
+  ];
+
+  const colHeights = allCols.map(c => c.nodes.length*(c.h+NG));
+  const maxH = Math.max(...colHeights, 200);
+  const H = maxH + 80;
+
+  const nodePos = {};
+  allCols.forEach((col, ci) => {
+    const totalH = col.nodes.length*(col.h+NG);
+    const y0 = Math.max(50, (H-totalH)/2);
+    col.nodes.forEach((n,i) => {
+      const c = n.color || col.color;
+      nodePos[n.id] = { x:colX[ci], y:y0+i*(col.h+NG), w:CW[ci], h:col.h, color:c };
+    });
+  });
+
+  // ── SVG ────────────────────────────────────────────────
+  let svg = `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" style="font-family:DM Sans,sans-serif;user-select:none">`;
+  svg += `<defs><linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="0">`;
+  svg += `<stop offset="0%" stop-color="#f0fdf4" stop-opacity="0.35"/><stop offset="20%" stop-color="#f5f3ff" stop-opacity="0.35"/>`;
+  svg += `<stop offset="40%" stop-color="#eff6ff" stop-opacity="0.35"/><stop offset="70%" stop-color="#f0fdf4" stop-opacity="0.35"/>`;
+  svg += `<stop offset="100%" stop-color="#fff7ed" stop-opacity="0.35"/></linearGradient></defs>`;
+  svg += `<rect width="${W}" height="${H}" fill="url(#bgGrad)" rx="8"/>`;
+
+  // Column headers
+  const hdrLabels = ['SKILLS','ASSERTIONS','UNITS','QUALIFICATIONS','OCCUPATIONS'];
+  const hdrColors = [SANKEY_COLORS.skill, SANKEY_COLORS.assertion, SANKEY_COLORS.unit, SANKEY_COLORS.qual, SANKEY_COLORS.occ];
+  hdrLabels.forEach((lbl,i) => {
+    svg += `<text x="${colX[i]+CW[i]/2}" y="24" text-anchor="middle" font-size="9.5" font-weight="700" fill="${hdrColors[i]}" letter-spacing="0.5">${lbl}</text>`;
+    svg += `<line x1="${colX[i]}" y1="33" x2="${colX[i]+CW[i]}" y2="33" stroke="${hdrColors[i]}" stroke-width="2" stroke-opacity="0.2"/>`;
+  });
+
+  // ── Flows ──────────────────────────────────────────────
+  function drawFlow(from, to, color) {
+    const s=nodePos[from], t=nodePos[to];
+    if(!s||!t) return;
+    const x1=s.x+s.w, y1=s.y+s.h/2, x2=t.x, y2=t.y+t.h/2;
+    svg += `<path d="M${x1},${y1} C${(x1+x2)/2},${y1} ${(x1+x2)/2},${y2} ${x2},${y2}" fill="none" stroke="${color}" stroke-width="2" stroke-opacity="0.22" stroke-linecap="round"/>`;
+  }
+  flows_sa.forEach(f => drawFlow(f.from, f.to, SANKEY_COLORS.skill));
+  flows_au.forEach(f => { const a=nodePos[f.from]; drawFlow(f.from, f.to, a?a.color:'#999'); });
+  flows_uq.forEach(f => drawFlow(f.from, f.to, SANKEY_COLORS.unit));
+  flows_qo.forEach(f => drawFlow(f.from, f.to, SANKEY_COLORS.qual));
+
+  // ── Skill nodes ────────────────────────────────────────
+  skillNodes.forEach(n => {
+    const p=nodePos[n.id];
+    svg += `<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="6" fill="${p.color}" fill-opacity="0.1" stroke="${p.color}" stroke-width="1.5" style="cursor:pointer" onclick="sankeyNodeClick('${n.id}')"/>`;
+    svg += `<text x="${p.x+8}" y="${p.y+p.h/2+4}" font-size="10" fill="${p.color}" font-weight="600" pointer-events="none">${esc(n.label.substring(0,28))}</text>`;
+  });
+
+  // ── Assertion nodes: line 1 = ● CONTEXT + LEVEL, line 2 = evidence (with tooltip)
+  assertNodes.forEach(n => {
+    const p=nodePos[n.id], col=n.color;
+    const evMaxChars = Math.floor(p.w / 5.5);
+    const evText = n.evidence ? n.evidence.substring(0, evMaxChars) + (n.evidence.length > evMaxChars ? '…' : '') : '';
+    svg += `<g>`;
+    svg += `<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="6" fill="${col}" fill-opacity="0.1" stroke="${col}" stroke-width="1.5"/>`;
+    svg += `<circle cx="${p.x+11}" cy="${p.y+14}" r="4" fill="${col}"/>`;
+    svg += `<text x="${p.x+19}" y="${p.y+17}" font-size="9" fill="${col}" font-weight="700" pointer-events="none">${n.ctx}</text>`;
+    svg += `<text x="${p.x+p.w-8}" y="${p.y+17}" text-anchor="end" font-size="8.5" fill="#5a6072" font-weight="500" pointer-events="none">${n.lvl}</text>`;
+    if (evText) svg += `<text x="${p.x+8}" y="${p.y+33}" font-size="7.5" fill="#8892a4" font-style="italic" pointer-events="none">${esc(evText)}</text>`;
+    if (n.evidence) svg += `<title>${esc(n.evidence)}</title>`;
+    svg += `</g>`;
+  });
+
+  // ── Unit / Qual / Occ nodes (code + title) ─────────────
+  function drawCodeNode(n) {
+    const p=nodePos[n.id];
+    const tip = n.code + (n.fullTitle ? ' — ' + n.fullTitle : '');
+    svg += `<g style="cursor:pointer" onclick="sankeyNodeClick('${n.id}')">`;
+    svg += `<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="6" fill="${p.color}" fill-opacity="0.1" stroke="${p.color}" stroke-width="1.5"/>`;
+    svg += `<text x="${p.x+8}" y="${p.y+13}" font-size="9.5" fill="${p.color}" font-weight="700" pointer-events="none">${esc(n.code)}</text>`;
+    svg += `<text x="${p.x+8}" y="${p.y+25}" font-size="7.5" fill="#6b7785" pointer-events="none">${esc(n.label)}</text>`;
+    svg += `<title>${esc(tip)}</title></g>`;
+  }
+  unitNodes.forEach(drawCodeNode);
+  qualNodes.forEach(drawCodeNode);
+  occNodes.forEach(drawCodeNode);
+
+  svg += '</svg>';
+  document.getElementById('matrixContainer').innerHTML = svg;
+}
+
+function sankeyNodeClick(id) {
+  if (skillIndex.has(id)) openSkill(id);
+  else if (qualIndex.has(id)) openQual(id);
+  else if (occIndex.has(id)) openOcc(id);
+  else if (unitIndex.has(id)) openUnit(id);
+}
+
+function showAssertionDetail(skillId, unitCode) {
+  const s = skillIndex.get(skillId); if (!s) return;
+  const a = (s.assertions||[]).find(x => x.unit_code === unitCode); if (!a) return;
+  const u = unitIndex.get(unitCode);
+  const cls = CTX_CLS[a.teaching_context] || 'hybrid';
+  document.getElementById('matrixDetail').innerHTML = `
+    <div class="assertion-detail-card">
+      <h4><i class="bi bi-link-45deg" style="color:var(--c-accent)"></i> Assertion Detail</h4>
+      <div class="assertion-meta-row">
+        <span class="assertion-meta-item"><b>Skill:</b> <span style="cursor:pointer;color:var(--c-accent)" onclick="openSkill('${skillId}')">${esc(s.preferred_label)}</span></span>
+        <span class="assertion-meta-item"><b>Unit:</b> <span style="cursor:pointer;color:var(--c-accent)" onclick="openUnit('${unitCode}')">${esc(unitCode)}</span> ${esc(u?u.unit_title:'')}</span>
+      </div>
+      <div class="assertion-meta-row">
+        <span class="assertion-meta-item"><b>Context:</b> <span class="a-ctx-dot ${cls}" style="display:inline-block"></span> ${a.teaching_context}</span>
+        <span class="assertion-meta-item"><b>Level:</b> ${a.level_of_engagement}</span>
+      </div>
+      ${a.evidence ? `<div class="assertion-evidence">${esc(a.evidence)}</div>` : ''}
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════
+//  CONTEXT × LEVEL SCATTER
+// ══════════════════════════════════════════════════════════
+let scatterInitialized = false;
+const CTX_ORDER = ['PRACTICAL', 'HYBRID', 'THEORETICAL'];
+const LVL_ORDER = ['FOLLOW', 'ASSIST', 'APPLY', 'ENABLE', 'ENSURE_ADVISE', 'INITIATE_INFLUENCE', 'SET_STRATEGY'];
+const CTX_COLORS = { PRACTICAL: '#16a34a', THEORETICAL: '#2563ab', HYBRID: '#7c3aed' };
+
+function initScatter() {
+  scatterInitialized = true;
+  document.getElementById('scatterSearch').addEventListener('input', debounce(onScatterSearch, 300));
+}
+
+function onScatterSearch() {
+  const q = document.getElementById('scatterSearch').value.toLowerCase().trim();
+  document.getElementById('scatterDetail').innerHTML = '';
+  if (q.length < 2) { document.getElementById('scatterContainer').innerHTML = ''; document.getElementById('scatterHint').textContent = 'Type at least 2 characters'; return; }
+
+  const match = data.skills.find(s =>
+    s.preferred_label.toLowerCase().includes(q) ||
+    s.skill_id.toLowerCase().includes(q)
+  );
+
+  if (!match) {
+    document.getElementById('scatterHint').textContent = 'No skill found';
+    document.getElementById('scatterContainer').innerHTML = '';
+    return;
+  }
+
+  document.getElementById('scatterHint').textContent = '';
+  renderScatter(match);
+}
+
+function renderScatter(skill) {
+  const assertions = skill.assertions || [];
+  if (!assertions.length) { document.getElementById('scatterContainer').innerHTML = '<p style="color:var(--c-text3)">No assertions</p>'; return; }
+
+  // Layout
+  const PAD_L = 130, PAD_R = 30, PAD_T = 50, PAD_B = 50;
+  const COL_W = 160;
+  const ROW_H = 50;
+  const W = PAD_L + CTX_ORDER.length * COL_W + PAD_R;
+  const H = PAD_T + LVL_ORDER.length * ROW_H + PAD_B;
+
+  // Count assertions per cell for jitter/sizing
+  const cellCounts = {};
+  assertions.forEach(a => {
+    const key = a.teaching_context + '|' + a.level_of_engagement;
+    if (!cellCounts[key]) cellCounts[key] = [];
+    cellCounts[key].push(a);
+  });
+
+  let svg = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="font-family:DM Sans,sans-serif">`;
+
+  // Title
+  svg += `<text x="${W/2}" y="24" text-anchor="middle" font-size="13" font-weight="600" fill="#1a1f36">${esc(skill.preferred_label)} — ${assertions.length} assertions</text>`;
+
+  // Grid background
+  svg += `<rect x="${PAD_L}" y="${PAD_T}" width="${CTX_ORDER.length*COL_W}" height="${LVL_ORDER.length*ROW_H}" fill="#f8f9fb" stroke="#e2e6ed" rx="6"/>`;
+
+  // Grid lines + row labels (levels)
+  LVL_ORDER.forEach((lvl, i) => {
+    const y = PAD_T + i * ROW_H;
+    if (i > 0) svg += `<line x1="${PAD_L}" y1="${y}" x2="${PAD_L+CTX_ORDER.length*COL_W}" y2="${y}" stroke="#e2e6ed" stroke-dasharray="3,3"/>`;
+    svg += `<text x="${PAD_L-8}" y="${y+ROW_H/2+4}" text-anchor="end" font-size="10" fill="#5a6072">${lvl}</text>`;
+  });
+
+  // Column labels (contexts)
+  CTX_ORDER.forEach((ctx, j) => {
+    const x = PAD_L + j * COL_W;
+    if (j > 0) svg += `<line x1="${x}" y1="${PAD_T}" x2="${x}" y2="${PAD_T+LVL_ORDER.length*ROW_H}" stroke="#e2e6ed" stroke-dasharray="3,3"/>`;
+    svg += `<text x="${x+COL_W/2}" y="${PAD_T+LVL_ORDER.length*ROW_H+20}" text-anchor="middle" font-size="11" font-weight="600" fill="${CTX_COLORS[ctx]||'#999'}">${ctx}</text>`;
+  });
+
+  // Plot dots
+  for (const [key, cellAssertions] of Object.entries(cellCounts)) {
+    const [ctx, lvl] = key.split('|');
+    const ci = CTX_ORDER.indexOf(ctx);
+    const li = LVL_ORDER.indexOf(lvl);
+    if (ci < 0 || li < 0) continue;
+
+    const cx = PAD_L + ci * COL_W + COL_W / 2;
+    const cy = PAD_T + li * ROW_H + ROW_H / 2;
+    const count = cellAssertions.length;
+    const r = Math.min(8 + count * 3, 22);
+    const col = CTX_COLORS[ctx] || '#999';
+
+    // Bubble
+    svg += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${col}" fill-opacity="0.25" stroke="${col}" stroke-width="2"/>`;
+    svg += `<text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="${count > 9 ? 10 : 11}" font-weight="700" fill="${col}">${count}</text>`;
+
+    // Invisible click target
+    cellAssertions.forEach((a, idx) => {
+      const angle = (idx / count) * Math.PI * 2;
+      const jx = count > 1 ? Math.cos(angle) * (r + 4) : 0;
+      const jy = count > 1 ? Math.sin(angle) * (r + 4) : 0;
+      svg += `<circle cx="${cx+jx}" cy="${cy+jy}" r="6" fill="transparent" style="cursor:pointer" onclick="showScatterDetail('${skill.skill_id}','${a.unit_code}')"><title>${a.unit_code}: ${a.teaching_context} / ${a.level_of_engagement} (${(a.confidence*100).toFixed(0)}%)</title></circle>`;
+    });
+  }
+
+  // Axis labels
+  svg += `<text x="${PAD_L-8}" y="${PAD_T-10}" text-anchor="end" font-size="9" fill="#8892a4" font-weight="600">LEVEL ↑</text>`;
+  svg += `<text x="${PAD_L+CTX_ORDER.length*COL_W}" y="${PAD_T+LVL_ORDER.length*ROW_H+20}" text-anchor="end" font-size="9" fill="#8892a4" font-weight="600">CONTEXT →</text>`;
+
+  svg += '</svg>';
+  document.getElementById('scatterContainer').innerHTML = svg;
+
+  // Summary
+  const ctxSummary = Object.entries(skill.context_distribution || {}).map(([k,v]) => `${k}: ${v}`).join(', ');
+  const lvlSummary = Object.entries(skill.level_distribution || {}).map(([k,v]) => `${k}: ${v}`).join(', ');
+  document.getElementById('scatterDetail').innerHTML = `
+    <div class="scatter-summary">
+      <b>Context:</b> ${ctxSummary || 'none'} &nbsp;|&nbsp; <b>Level:</b> ${lvlSummary || 'none'} &nbsp;|&nbsp; <b>Units:</b> ${(skill.unit_codes||[]).length} &nbsp;|&nbsp; <b>Total assertions:</b> ${assertions.length}
+    </div>`;
+}
+
+function showScatterDetail(skillId, unitCode) {
+  // Render assertion detail into scatterDetail directly
+  const s = skillIndex.get(skillId);
+  if (!s) return;
+  const a = (s.assertions||[]).find(x => x.unit_code === unitCode);
+  if (!a) return;
+  const u = unitIndex.get(unitCode);
+  const unitTitle = u ? u.unit_title : '';
+  const cls = CTX_CLS[a.teaching_context] || 'hybrid';
+
+  document.getElementById('scatterDetail').innerHTML = `
+    <div class="assertion-detail-card">
+      <h4><i class="bi bi-link-45deg" style="color:var(--c-accent)"></i> Assertion Detail</h4>
+      <div class="assertion-meta-row">
+        <span class="assertion-meta-item"><b>Skill:</b> <span style="cursor:pointer;color:var(--c-accent)" onclick="openSkill('${skillId}')">${esc(s.preferred_label)}</span></span>
+        <span class="assertion-meta-item"><b>Unit:</b> <span style="cursor:pointer;color:var(--c-accent)" onclick="openUnit('${unitCode}')">${esc(unitCode)}</span> ${esc(unitTitle)}</span>
+      </div>
+      <div class="assertion-meta-row">
+        <span class="assertion-meta-item"><b>Context:</b> <span class="a-ctx-dot ${cls}" style="display:inline-block"></span> ${a.teaching_context}</span>
+        <span class="assertion-meta-item"><b>Level:</b> ${a.level_of_engagement}</span>
+        <span class="assertion-meta-item"><b>Confidence:</b> ${(a.confidence*100).toFixed(0)}%</span>
+      </div>
+      ${a.evidence ? `<div class="assertion-evidence">${esc(a.evidence)}</div>` : ''}
+      ${a.keywords?.length ? `<div style="margin-top:8px"><b style="font-size:.75rem;color:var(--c-text3)">Keywords:</b> <span class="d-tags" style="display:inline-flex;gap:4px">${a.keywords.map(k=>'<span class="d-tag">'+esc(k)+'</span>').join('')}</span></div>` : ''}
+    </div>`;
+}
 """

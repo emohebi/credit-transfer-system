@@ -198,7 +198,7 @@ class SkillAssertionPipeline:
                     "category": info["category"],
                     "level": 3,
                     "context": "HYBRID",
-                    "embedding_text": f"{info['preferred_label']}. {info['definition']}",
+                    "embedding_text": f"{info['preferred_label']}",#. {info['definition']}",
                     "confidence": 1.0,
                 })
             df_unique = pd.DataFrame(unique_rows)
@@ -324,6 +324,8 @@ class SkillAssertionPipeline:
                         "evidence": a.evidence,
                         "keywords": a.keywords,
                         "confidence": a.confidence,
+                        "qualification_codes": a.qualification_codes,
+                        "occupation_codes": a.occupation_codes,
                     }
                     for a in sa
                 ],
@@ -431,6 +433,8 @@ class SkillAssertionPipeline:
                     "evidence": a.evidence[:200],
                     "keywords": "; ".join(a.keywords[:10]),
                     "confidence": a.confidence,
+                    "qualification_codes": "; ".join(a.qualification_codes[:10]),
+                    "occupation_codes": "; ".join(a.occupation_codes[:10]),
                 }
                 for a in assertions
             ]

@@ -51,16 +51,28 @@ class AssertionBuilder:
         # ── 1. Assertions (one per original row) ─────────────────
         assertions = []
         for idx, row in df.iterrows():
+            uc = row["code"]
+            # Resolve qual/occ codes for this assertion's unit
+            a_qual_codes = []
+            a_occ_codes = []
+            if has_concordance:
+                a_qual_codes = concordance.unit_to_quals.get(uc, [])
+                for qc in a_qual_codes:
+                    a_occ_codes.extend(concordance.qual_to_occupations.get(qc, []))
+                a_occ_codes = sorted(set(a_occ_codes))
+
             assertions.append(SkillAssertion(
                 assertion_id=f"SA-{idx:06d}",
                 skill_id=row["skill_id"],
-                unit_code=row["code"],
+                unit_code=uc,
                 teaching_context=row["context"],
                 level_of_engagement=LEVEL_NAMES.get(int(row["level"]), "APPLY"),
                 evidence=str(row.get("evidence", "")),
                 keywords=row.get("keywords_list", []) if isinstance(row.get("keywords_list"), list) else [],
                 confidence=float(row.get("confidence", 0.0)),
                 category=str(row.get("category", "")),
+                qualification_codes=a_qual_codes,
+                occupation_codes=a_occ_codes,
             ))
 
         # ── 2. unit_code → skill_ids index ───────────────────────

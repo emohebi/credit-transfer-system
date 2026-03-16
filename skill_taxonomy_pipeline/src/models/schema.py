@@ -69,7 +69,10 @@ class Skill:
 class SkillAssertion:
     """
     Link between a Skill and a Unit of Competency.
-    Captures HOW and at WHAT DEPTH the skill is taught in a specific unit.
+    Captures HOW and at WHAT DEPTH the skill is taught in a specific unit,
+    and the full teaching path: which qualifications include this unit
+    and which occupations those qualifications map to.
+
     This is where education-specific meaning sits.
     """
     assertion_id: str
@@ -82,6 +85,10 @@ class SkillAssertion:
     keywords: List[str] = field(default_factory=list)
     confidence: float = 0.0
     category: str = ""
+
+    # Full teaching path (from concordance via unit)
+    qualification_codes: List[str] = field(default_factory=list)
+    occupation_codes: List[str] = field(default_factory=list)
 
 
 @dataclass

@@ -173,6 +173,6 @@ class AssertionDataPreprocessor:
 
     def _create_embedding_text(self, df: pd.DataFrame) -> pd.DataFrame:
         """Text used for embedding-based deduplication. Name + description only."""
-        df["embedding_text"] = (df["name"].fillna("") + ". " + df["description"].fillna("")).str.strip()
+        df["embedding_text"] = (df["name"].fillna(""))# + ". " + df["description"].fillna("")).str.strip()
         df = df[df["embedding_text"] != ""]
         return df

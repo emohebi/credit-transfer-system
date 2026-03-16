@@ -72,8 +72,8 @@ class SkillDeduplicator:
             descs = rows["description"].dropna().astype(str)
             best = descs.loc[descs.str.len().idxmax()] if len(descs) > 0 else ""
             name_to_desc[name] = best
-
-        texts = [f"{name}. {name_to_desc[name]}".strip() for name in unique_names]
+        # "{name}. {name_to_desc[name]}"
+        texts = [f"{name}".strip() for name in unique_names]
         embeddings = self.embedding_interface.encode(
             texts,
             batch_size=self.config["embedding"]["batch_size"],
