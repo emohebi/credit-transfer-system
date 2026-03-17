@@ -38,7 +38,7 @@ EMBEDDING_CONFIG = {
     "model_name": "jinaai--jina-embeddings-v4",
     "batch_size": 64,
     "normalize_embeddings": True,
-    "device": os.environ.get("EMBEDDING_DEVICE", "cuda"),
+    "device": os.environ.get("EMBEDDING_DEVICE", "cuda:1"),
     "external_model_dir": os.getenv("EXTERNAL_MODEL_DIR", "/Volumes/jsa_external_prod/external_vols/scratch/Scratch/Ehsan/Models"),
     "model_cache_dir": os.getenv("MODEL_CACHE_DIR", "/root/.cache/huggingface/hub"),
 }

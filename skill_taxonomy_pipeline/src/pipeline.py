@@ -23,8 +23,6 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 from dataclasses import asdict
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + "/..")
-
 from config.settings import CONFIG
 from config.facets import ALL_FACETS
 from src.data_processing.preprocessor import AssertionDataPreprocessor
@@ -47,6 +45,11 @@ class SkillAssertionPipeline:
         # Lazy-init interfaces
         self.embedding_interface = None
         self.genai_interface = None
+
+        # ── 2. INIT INTERFACES ────────────────────────────────
+        logger.info("\nInitialising model interfaces...")
+        self._init_embedding()
+        self._init_genai()
 
     # ═══════════════════════════════════════════════════════════════
     #  INTERFACE INITIALISATION (reuses original project's code)
@@ -171,11 +174,9 @@ class SkillAssertionPipeline:
             logger.info("\n[1/6] Preprocessing...")
             df = self.preprocessor.preprocess(input_data)
 
-            # ── 2. INIT INTERFACES ────────────────────────────────
-            logger.info("\n[2/6] Initialising model interfaces...")
-            self._init_embedding()
-            if not skip_genai:
-                self._init_genai()
+            logger.info("\n[2/6] Check Interfaces...")
+            if self.embedding_interface and self.genai_interface:
+                logger.info("\nPass")
 
             # ── 3. DEDUPLICATE SKILL LABELS ───────────────────────
             logger.info("\n[3/6] Deduplicating skill labels...")
