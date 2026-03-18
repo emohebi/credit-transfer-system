@@ -7,10 +7,10 @@ Five-object model:
 Pipeline steps:
   1. Preprocess data (clean, normalize — keep all rows)
   2. Deduplicate skill LABELS (embed unique names, cluster, validate)
-  3. Assign facets to deduplicated Skills (configurable subset)
+  3. Init embedding + GenAI interfaces
   4. Load concordance (unit → qualification → occupation)
-  5. Build five-object schema with precomputed traversals
-  6. Export JSON + HTML search engine
+  5. Assign facets to deduplicated Skills (ASCED uses unit titles for context)
+  6. Build five-object schema with precomputed traversals + export
 """
 import logging
 import json
@@ -22,6 +22,8 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, Any, Optional
 from dataclasses import asdict
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + "/..")
 
 from config.settings import CONFIG
 from config.facets import ALL_FACETS
@@ -45,11 +47,6 @@ class SkillAssertionPipeline:
         # Lazy-init interfaces
         self.embedding_interface = None
         self.genai_interface = None
-
-        # ── 2. INIT INTERFACES ────────────────────────────────
-        logger.info("\nInitialising model interfaces...")
-        self._init_embedding()
-        self._init_genai()
 
     # ═══════════════════════════════════════════════════════════════
     #  INTERFACE INITIALISATION (reuses original project's code)
@@ -90,15 +87,17 @@ class SkillAssertionPipeline:
     #  FACET ASSIGNMENT (reuse FacetAssigner from original project)
     # ═══════════════════════════════════════════════════════════════
 
-    def _assign_facets_to_skills(self, skill_registry: Dict, df_unique_skills: pd.DataFrame):
+    def _assign_facets_to_skills(self, skill_registry: Dict, df_unique_skills: pd.DataFrame, concordance=None):
         """
         Assign facets to the deduplicated Skill objects.
         Uses embedding similarity + optional LLM re-ranking.
+
+        For ASCED, uses unit-title-enriched embedding text so the assigner
+        has field-of-education context from the concordance.
         """
         try:
             from src.facets.facet_assigner import FacetAssigner
         except ImportError:
-            # Try importing from original project
             from src.clustering.facet_assigner import FacetAssigner
 
         assigner = FacetAssigner(
@@ -107,19 +106,63 @@ class SkillAssertionPipeline:
             embedding_interface=self.embedding_interface,
         )
 
-        # Generate embeddings for unique skills
-        texts = df_unique_skills["embedding_text"].tolist()
-        embeddings = self.embedding_interface.encode(
-            texts,
-            batch_size=self.config["embedding"]["batch_size"],
-            normalize_embeddings=self.config["embedding"]["normalize_embeddings"],
-        )
+        facets_to_assign = self.config["facet_assignment"]["facets_to_assign"]
 
-        # Run facet assignment
-        df_faceted = assigner.assign_facets(df_unique_skills, embeddings)
+        # Determine which embedding text to use:
+        # - For ASCED: use embedding_text_asced (includes unit titles)
+        # - For all others: use embedding_text (skill name + definition only)
+        has_asced = "ASCED" in facets_to_assign
+        has_asced_col = "embedding_text_asced" in df_unique_skills.columns
+
+        if has_asced and has_asced_col and concordance:
+            # Run non-ASCED facets with standard embedding text
+            non_asced = [f for f in facets_to_assign if f != "ASCED"]
+            asced_only = ["ASCED"]
+
+            if non_asced:
+                logger.info(f"  Assigning non-ASCED facets {non_asced} with skill text...")
+                texts = df_unique_skills["embedding_text"].tolist()
+                embeddings = self.embedding_interface.encode(
+                    texts,
+                    batch_size=self.config["embedding"]["batch_size"],
+                    normalize_embeddings=self.config["embedding"]["normalize_embeddings"],
+                )
+                # Temporarily override config to only assign non-ASCED
+                saved = self.config["facet_assignment"]["facets_to_assign"]
+                self.config["facet_assignment"]["facets_to_assign"] = non_asced
+                df_faceted = assigner.assign_facets(df_unique_skills, embeddings)
+                self.config["facet_assignment"]["facets_to_assign"] = saved
+            else:
+                df_faceted = df_unique_skills.copy()
+
+            # Run ASCED with unit-title-enriched embedding text
+            logger.info("  Assigning ASCED facet with unit-title-enriched text...")
+            texts_asced = df_unique_skills["embedding_text_asced"].tolist()
+            embeddings_asced = self.embedding_interface.encode(
+                texts_asced,
+                batch_size=self.config["embedding"]["batch_size"],
+                normalize_embeddings=self.config["embedding"]["normalize_embeddings"],
+            )
+            saved = self.config["facet_assignment"]["facets_to_assign"]
+            self.config["facet_assignment"]["facets_to_assign"] = asced_only
+            df_asced = assigner.assign_facets(df_unique_skills, embeddings_asced)
+            self.config["facet_assignment"]["facets_to_assign"] = saved
+
+            # Merge ASCED columns into df_faceted
+            asced_cols = [c for c in df_asced.columns if c.startswith("facet_ASCED")]
+            for col in asced_cols:
+                df_faceted[col] = df_asced[col]
+        else:
+            # No concordance or no ASCED — run all facets with standard text
+            texts = df_unique_skills["embedding_text"].tolist()
+            embeddings = self.embedding_interface.encode(
+                texts,
+                batch_size=self.config["embedding"]["batch_size"],
+                normalize_embeddings=self.config["embedding"]["normalize_embeddings"],
+            )
+            df_faceted = assigner.assign_facets(df_unique_skills, embeddings)
 
         # Write facets back into skill_registry
-        facets_to_assign = self.config["facet_assignment"]["facets_to_assign"]
         for _, row in df_faceted.iterrows():
             sid = row["skill_id"]
             if sid not in skill_registry:
@@ -174,9 +217,11 @@ class SkillAssertionPipeline:
             logger.info("\n[1/6] Preprocessing...")
             df = self.preprocessor.preprocess(input_data)
 
-            logger.info("\n[2/6] Check Interfaces...")
-            if self.embedding_interface and self.genai_interface:
-                logger.info("\nPass")
+            # ── 2. INIT INTERFACES ────────────────────────────────
+            logger.info("\n[2/6] Initialising model interfaces...")
+            self._init_embedding()
+            if not skip_genai:
+                self._init_genai()
 
             # ── 3. DEDUPLICATE SKILL LABELS ───────────────────────
             logger.info("\n[3/6] Deduplicating skill labels...")
@@ -187,11 +232,31 @@ class SkillAssertionPipeline:
             )
             df, skill_registry = deduplicator.deduplicate(df)
 
-            # ── 4. ASSIGN FACETS TO SKILLS ────────────────────────
-            logger.info("\n[4/6] Assigning facets to deduplicated skills...")
+            # ── 4. LOAD CONCORDANCE ───────────────────────────────
+            concordance = None
+            if concordance_path:
+                logger.info(f"\n[4/6] Loading concordance from: {concordance_path}")
+                concordance = load_concordance(concordance_path)
+            else:
+                logger.info("\n[4/6] No concordance file — skipping qual/occ enrichment")
+
+            # ── 5. ASSIGN FACETS TO SKILLS ────────────────────────
+            logger.info("\n[5/6] Assigning facets to deduplicated skills...")
 
             unique_rows = []
             for sid, info in skill_registry.items():
+                # For ASCED, enrich embedding text with unit titles from concordance
+                # so the facet assigner has field-of-education context
+                unit_titles_text = ""
+                if concordance:
+                    titles = []
+                    for uc in info.get("unit_codes", []):
+                        t = concordance.unit_titles.get(uc, "")
+                        if t:
+                            titles.append(t)
+                    if titles:
+                        unit_titles_text = " Units: " + "; ".join(titles[:5])
+
                 unique_rows.append({
                     "skill_id": sid,
                     "name": info["preferred_label"],
@@ -199,20 +264,13 @@ class SkillAssertionPipeline:
                     "category": info["category"],
                     "level": 3,
                     "context": "HYBRID",
-                    "embedding_text": f"{info['preferred_label']}",#. {info['definition']}",
+                    "embedding_text": f"{info['preferred_label']}. {info['definition']}",
+                    "embedding_text_asced": f"{info['preferred_label']}. {info['definition']}{unit_titles_text}",
                     "confidence": 1.0,
                 })
             df_unique = pd.DataFrame(unique_rows)
 
-            skill_registry = self._assign_facets_to_skills(skill_registry, df_unique)
-
-            # ── 5. LOAD CONCORDANCE ───────────────────────────────
-            concordance = None
-            if concordance_path:
-                logger.info(f"\n[5/6] Loading concordance from: {concordance_path}")
-                concordance = load_concordance(concordance_path)
-            else:
-                logger.info("\n[5/6] No concordance file — skipping qual/occ enrichment")
+            skill_registry = self._assign_facets_to_skills(skill_registry, df_unique, concordance)
 
             # ── 6. BUILD SCHEMA & EXPORT ──────────────────────────
             logger.info("\n[6/6] Building schema and exporting...")

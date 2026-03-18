@@ -86,12 +86,16 @@ class FacetAssigner:
                         for k, j in enumerate(top_idx) if top_sims[k] >= self.multi_value_threshold
                     ]
                     if len(candidates) > 1:
-                        to_rerank[fid].append({
+                        item = {
                             "idx": df.index[i],
                             "skill_name": df.iloc[i]["name"],
                             "skill_desc": str(df.iloc[i].get("description", ""))[:300],
                             "candidates": candidates,
-                        })
+                        }
+                        # For ASCED, include unit titles as extra context
+                        if fid == "ASCED" and "embedding_text_asced" in df.columns:
+                            item["unit_context"] = str(df.iloc[i].get("embedding_text_asced", ""))[:500]
+                        to_rerank[fid].append(item)
                         continue
 
                 # Direct assignment
@@ -161,10 +165,12 @@ class FacetAssigner:
         prompts = []
         for item in batch:
             cands = "\n".join(f"{i+1}. {c['name']}: {c['description']}" for i, c in enumerate(item["candidates"]))
-            prompts.append(
-                f"SKILL: {item['skill_name']}\nDESCRIPTION: {item['skill_desc']}\n\n"
-                f"CANDIDATES:\n{cands}\n\nRespond JSON only:"
-            )
+            prompt = f"SKILL: {item['skill_name']}\nDESCRIPTION: {item['skill_desc']}\n"
+            # Include unit title context for ASCED
+            if "unit_context" in item and item["unit_context"]:
+                prompt += f"TEACHING CONTEXT: {item['unit_context']}\n"
+            prompt += f"\nCANDIDATES:\n{cands}\n\nRespond JSON only:"
+            prompts.append(prompt)
         results = {}
         try:
             responses = self.genai_interface._generate_batch(user_prompts=prompts, system_prompt=system)
