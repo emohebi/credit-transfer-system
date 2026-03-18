@@ -132,11 +132,7 @@ class SkillAssertionPipeline:
                     batch_size=self.config["embedding"]["batch_size"],
                     normalize_embeddings=self.config["embedding"]["normalize_embeddings"],
                 )
-                # Temporarily override config to only assign non-ASCED
-                saved = self.config["facet_assignment"]["facets_to_assign"]
-                self.config["facet_assignment"]["facets_to_assign"] = non_asced
-                df_faceted = assigner.assign_facets(df_unique_skills, embeddings)
-                self.config["facet_assignment"]["facets_to_assign"] = saved
+                df_faceted = assigner.assign_facets(df_unique_skills, embeddings, facets_override=non_asced)
             else:
                 df_faceted = df_unique_skills.copy()
 
@@ -148,10 +144,7 @@ class SkillAssertionPipeline:
                 batch_size=self.config["embedding"]["batch_size"],
                 normalize_embeddings=self.config["embedding"]["normalize_embeddings"],
             )
-            saved = self.config["facet_assignment"]["facets_to_assign"]
-            self.config["facet_assignment"]["facets_to_assign"] = asced_only
-            df_asced = assigner.assign_facets(df_unique_skills, embeddings_asced)
-            self.config["facet_assignment"]["facets_to_assign"] = saved
+            df_asced = assigner.assign_facets(df_unique_skills, embeddings_asced, facets_override=asced_only)
 
             # Merge ASCED columns into df_faceted
             asced_cols = [c for c in df_asced.columns if c.startswith("facet_ASCED")]
@@ -222,6 +215,7 @@ class SkillAssertionPipeline:
             logger.info("\n[1/6] Preprocessing...")
             df = self.preprocessor.preprocess(input_data)
 
+            # ── 2. INIT INTERFACES ────────────────────────────────
             logger.info("\n[2/6] Check Interfaces...")
             if self.embedding_interface and self.genai_interface:
                 logger.info("\nPass")
@@ -267,8 +261,8 @@ class SkillAssertionPipeline:
                     "category": info["category"],
                     "level": 3,
                     "context": "HYBRID",
-                    "embedding_text": f"{info['preferred_label']}. {info['definition']}",
-                    "embedding_text_asced": f"{info['preferred_label']}. {info['definition']}{unit_titles_text}",
+                    "embedding_text": f"{info['preferred_label']}",#. {info['definition']}",
+                    "embedding_text_asced": f"{info['preferred_label']}. {unit_titles_text}",#{info['definition']}{unit_titles_text}",
                     "confidence": 1.0,
                 })
             df_unique = pd.DataFrame(unique_rows)

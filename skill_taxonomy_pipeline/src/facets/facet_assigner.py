@@ -44,26 +44,31 @@ class FacetAssigner:
 
         logger.info(f"FacetAssigner: facets={self.facets_to_assign}, llm={self.use_llm}")
 
-    def assign_facets(self, df: pd.DataFrame, embeddings: np.ndarray) -> pd.DataFrame:
-        """Assign facets to skills DataFrame."""
-        logger.info(f"Assigning {len(self.facets_to_assign)} facets to {len(df)} skills")
+    def assign_facets(self, df: pd.DataFrame, embeddings: np.ndarray, facets_override: List[str] = None) -> pd.DataFrame:
+        """Assign facets to skills DataFrame.
+        
+        Args:
+            facets_override: If provided, only assign these facets (ignores config).
+        """
+        active_facets = facets_override if facets_override is not None else self.facets_to_assign
+        logger.info(f"Assigning {len(active_facets)} facets ({active_facets}) to {len(df)} skills")
         df = df.copy()
 
         self._precompute_facet_embeddings()
 
         # Init columns
-        for fid in self.facets_to_assign:
+        for fid in active_facets:
             df[f"facet_{fid}"] = None
             df[f"facet_{fid}_name"] = None
             df[f"facet_{fid}_confidence"] = 0.0
 
         # Assign using embedding similarity
-        to_rerank = {fid: [] for fid in self.facets_to_assign}
+        to_rerank = {fid: [] for fid in active_facets}
 
         for i in tqdm(range(len(df)), desc="Facet similarity"):
             skill_emb = embeddings[i].reshape(1, -1)
 
-            for fid in self.facets_to_assign:
+            for fid in active_facets:
                 if fid not in self.facet_embeddings:
                     continue
 
@@ -134,7 +139,7 @@ class FacetAssigner:
                         df.at[idx, f"facet_{fid}_name"] = c["name"]
                         df.at[idx, f"facet_{fid}_confidence"] = c["similarity"]
 
-        self._log_stats(df)
+        self._log_stats(df, active_facets)
         return df
 
     def _precompute_facet_embeddings(self):
@@ -189,8 +194,8 @@ class FacetAssigner:
             logger.warning(f"LLM rerank failed for {fid}: {e}")
         return results
 
-    def _log_stats(self, df):
-        for fid in self.facets_to_assign:
+    def _log_stats(self, df, facets=None):
+        for fid in (facets or self.facets_to_assign):
             col = f"facet_{fid}"
             if col in df.columns:
                 assigned = df[col].notna().sum()
