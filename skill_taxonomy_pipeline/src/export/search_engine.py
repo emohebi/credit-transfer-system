@@ -66,6 +66,7 @@ def _build_html(data_file: str) -> str:
       <button class="tab" data-tab="quals"><i class="bi bi-award"></i> Qualifications</button>
       <button class="tab" data-tab="occs"><i class="bi bi-person-badge"></i> Occupations</button>
       <button class="tab" data-tab="matrix"><i class="bi bi-water"></i> Sankey Flow</button>
+      <button class="tab" data-tab="unitasced"><i class="bi bi-diagram-2"></i> Unit-First</button>
     </nav>
 
     <!-- Skills Tab -->
@@ -147,6 +148,25 @@ def _build_html(data_file: str) -> str:
       <div id="matrixHint" class="graph-hint">Search for any entity to see the full Skill → Unit → Qualification → Occupation flow</div>
       <div id="matrixContainer" style="overflow-x:auto"></div>
       <div id="matrixDetail" style="margin-top:16px"></div>
+    </section>
+
+    <!-- Unit-First Tab: Unit → Assertion → Skill → Qual → Occ -->
+    <section class="panel hidden" id="unitascedPanel">
+      <div class="matrix-controls">
+        <div class="search-box" style="flex:1;min-width:260px">
+          <i class="bi bi-search"></i>
+          <input type="text" id="uaSearch" placeholder="Search a unit code or title…" autocomplete="off">
+        </div>
+        <div class="matrix-legend">
+          <span class="legend-dot" style="background:#2563ab"></span> Unit
+          <span class="legend-dot" style="background:#6d28d9"></span> Assertion
+          <span class="legend-dot" style="background:#0f6b5e"></span> Skill
+          <span class="legend-dot" style="background:#16a34a"></span> Qualification
+          <span class="legend-dot" style="background:#dc6b16"></span> Occupation
+        </div>
+      </div>
+      <div id="uaHint" class="graph-hint">Search for a unit to see its skills and where they lead</div>
+      <div id="uaContainer" style="overflow-x:auto"></div>
     </section>
 
   </div>
@@ -677,8 +697,9 @@ function closeDrawer() { document.getElementById('drawer').classList.add('hidden
 function onTabClick(e) {
   const tab = e.currentTarget.dataset.tab;
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-  ['skills','units','quals','occs','matrix'].forEach(p => { document.getElementById(p+'Panel').classList.toggle('hidden', p !== tab); });
+  ['skills','units','quals','occs','matrix','unitasced'].forEach(p => { document.getElementById(p+'Panel').classList.toggle('hidden', p !== tab); });
   if (tab === 'matrix' && !matrixInitialized) initMatrix();
+  if (tab === 'unitasced' && !uaInitialized) initUnitAsced();
 }
 
 function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
@@ -962,5 +983,234 @@ function showAssertionDetail(skillId, unitCode) {
       </div>
       ${a.evidence ? `<div class="assertion-evidence">${esc(a.evidence)}</div>` : ''}
     </div>`;
+}
+
+
+// ══════════════════════════════════════════════════════════
+//  UNIT-FIRST: Unit → Assertion → Skill → Qual → Occ (5 columns)
+// ══════════════════════════════════════════════════════════
+let uaInitialized = false;
+const UF_COLORS = { unit:'#2563ab', assertion:'#6d28d9', skill:'#0f6b5e', qual:'#16a34a', occ:'#dc6b16' };
+
+function initUnitAsced() {
+  uaInitialized = true;
+  document.getElementById('uaSearch').addEventListener('input', debounce(onUaSearch, 300));
+}
+
+function onUaSearch() {
+  const q = document.getElementById('uaSearch').value.toLowerCase().trim();
+  if (q.length < 2) { document.getElementById('uaContainer').innerHTML = ''; document.getElementById('uaHint').textContent = 'Type at least 2 characters'; return; }
+  const units = (data.units||[]).filter(u => u.unit_code.toLowerCase().includes(q) || (u.unit_title||'').toLowerCase().includes(q));
+  if (!units.length) { document.getElementById('uaHint').textContent = 'No matching units'; document.getElementById('uaContainer').innerHTML = ''; return; }
+  document.getElementById('uaHint').textContent = '';
+  renderUnitFirst(units.slice(0, 4));
+}
+
+function renderUnitFirst(startUnits) {
+  const unitNodes=[], assertNodes=[], skillNodes=[], qualNodes=[], occNodes=[];
+  const unitSet=new Set(), assertSet=new Set(), skillSet=new Set(), qualSet=new Set(), occSet=new Set();
+  const flows_ua=[], flows_as=[], flows_sq=[], flows_qo=[];
+
+  startUnits.forEach(u => {
+    if (unitSet.has(u.unit_code)) return;
+    unitSet.add(u.unit_code);
+    unitNodes.push({ id:u.unit_code, code:u.unit_code, label:(u.unit_title||'').substring(0,30), fullTitle:u.unit_title||'' });
+
+    (u.skill_ids||[]).forEach(sid => {
+      const s = skillIndex.get(sid);
+      if (!s) return;
+
+      // Assertions from this skill to this unit, grouped by ctx+lvl
+      const grouped = {};
+      (s.assertions||[]).forEach(a => {
+        if (a.unit_code !== u.unit_code) return;
+        const key = sid + '|' + a.teaching_context + '|' + a.level_of_engagement + '|' + u.unit_code;
+        if (!grouped[key]) grouped[key] = { ctx:a.teaching_context, lvl:a.level_of_engagement, evidence:a.evidence||'' };
+      });
+
+      for (const [key, g] of Object.entries(grouped)) {
+        const aId = 'UF_' + key.replace(/[^a-zA-Z0-9]/g, '_');
+        if (!assertSet.has(aId)) {
+          assertSet.add(aId);
+          assertNodes.push({ id:aId, ctx:g.ctx, lvl:g.lvl, color:CTX_COL[g.ctx]||'#999', evidence:g.evidence });
+        }
+        if (!flows_ua.find(f=>f.from===u.unit_code&&f.to===aId)) flows_ua.push({ from:u.unit_code, to:aId });
+        if (!flows_as.find(f=>f.from===aId&&f.to===sid)) flows_as.push({ from:aId, to:sid });
+      }
+
+      // Skill node
+      if (!skillSet.has(sid)) {
+        skillSet.add(sid);
+        skillNodes.push({ id:sid, label:s.preferred_label });
+
+        // Skill → Qualifications
+        (s.qualifications||[]).forEach(q => {
+          const qc = q.code;
+          if (!qualSet.has(qc)) {
+            qualSet.add(qc);
+            const qObj = qualIndex.get(qc);
+            qualNodes.push({ id:qc, code:qc, label:qObj?qObj.qualification_title.substring(0,26):'', fullTitle:qObj?qObj.qualification_title:'' });
+          }
+          if (!flows_sq.find(f=>f.from===sid&&f.to===qc)) flows_sq.push({ from:sid, to:qc });
+        });
+      }
+    });
+  });
+
+  // Qual → Occupation
+  qualNodes.forEach(qn => {
+    const q = qualIndex.get(qn.id);
+    (q?.occupation_codes||[]).forEach(ac => {
+      if (!occSet.has(ac)) {
+        occSet.add(ac);
+        const o = occIndex.get(ac);
+        occNodes.push({ id:ac, code:ac, label:o?o.anzsco_title.substring(0,26):'', fullTitle:o?o.anzsco_title:'' });
+      }
+      if (!flows_qo.find(f=>f.from===qn.id&&f.to===ac)) flows_qo.push({ from:qn.id, to:ac });
+    });
+  });
+
+  // ── Layout ─────────────────────────────────────────────
+  const container = document.getElementById('uaContainer');
+  const W = container.clientWidth || 1100;
+  const PAD=12, GAP=36;
+  const ratios = [1, 0.8, 1, 1.1, 1];
+  const totalGap = PAD*2 + GAP*4;
+  const colSpace = W - totalGap;
+  const rSum = ratios.reduce((a,b)=>a+b,0);
+  const CW = ratios.map(r => Math.floor(colSpace * r / rSum));
+  const colX=[PAD];
+  for(let i=1;i<5;i++) colX.push(colX[i-1]+CW[i-1]+GAP);
+
+  const NH=36, AH=48, NG=5;
+  const allCols = [
+    { nodes:unitNodes, h:NH },
+    { nodes:assertNodes, h:AH },
+    { nodes:skillNodes, h:NH },
+    { nodes:qualNodes, h:NH },
+    { nodes:occNodes, h:NH },
+  ];
+
+  const colHeights = allCols.map(c => c.nodes.length*(c.h+NG));
+  const maxH = Math.max(...colHeights, 200);
+  const H = maxH + 80;
+
+  const colColors = [UF_COLORS.unit, UF_COLORS.assertion, UF_COLORS.skill, UF_COLORS.qual, UF_COLORS.occ];
+  const nodePos = {};
+  allCols.forEach((col, ci) => {
+    const totalH = col.nodes.length*(col.h+NG);
+    const y0 = Math.max(50, (H-totalH)/2);
+    col.nodes.forEach((n,i) => {
+      const c = n.color || colColors[ci];
+      nodePos[n.id] = { x:colX[ci], y:y0+i*(col.h+NG), w:CW[ci], h:col.h, color:c };
+    });
+  });
+
+  // ── SVG ────────────────────────────────────────────────
+  let svg = `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" style="font-family:DM Sans,sans-serif;user-select:none">`;
+  svg += `<defs><linearGradient id="ufBg" x1="0" y1="0" x2="1" y2="0">`;
+  svg += `<stop offset="0%" stop-color="#eff6ff" stop-opacity="0.3"/><stop offset="20%" stop-color="#f5f3ff" stop-opacity="0.3"/>`;
+  svg += `<stop offset="40%" stop-color="#f0fdf4" stop-opacity="0.3"/><stop offset="70%" stop-color="#f0fdf4" stop-opacity="0.3"/>`;
+  svg += `<stop offset="100%" stop-color="#fff7ed" stop-opacity="0.3"/></linearGradient></defs>`;
+  svg += `<rect width="${W}" height="${H}" fill="url(#ufBg)" rx="8"/>`;
+
+  // Headers
+  const hdrLabels = ['UNITS','ASSERTIONS','SKILLS','QUALIFICATIONS','OCCUPATIONS'];
+  hdrLabels.forEach((lbl,i) => {
+    svg += `<text x="${colX[i]+CW[i]/2}" y="24" text-anchor="middle" font-size="9.5" font-weight="700" fill="${colColors[i]}" letter-spacing="0.5">${lbl}</text>`;
+    svg += `<line x1="${colX[i]}" y1="33" x2="${colX[i]+CW[i]}" y2="33" stroke="${colColors[i]}" stroke-width="2" stroke-opacity="0.2"/>`;
+  });
+
+  // ── Flows ──────────────────────────────────────────────
+  const allFlows = [];
+  function drawFlow(from, to, color) {
+    const s=nodePos[from], t=nodePos[to];
+    if(!s||!t) return;
+    allFlows.push({from, to});
+    const x1=s.x+s.w, y1=s.y+s.h/2, x2=t.x, y2=t.y+t.h/2;
+    svg += `<path class="sk-flow" data-from="${from}" data-to="${to}" d="M${x1},${y1} C${(x1+x2)/2},${y1} ${(x1+x2)/2},${y2} ${x2},${y2}" fill="none" stroke="${color}" stroke-width="2" stroke-opacity="0.22" stroke-linecap="round"/>`;
+  }
+  flows_ua.forEach(f => drawFlow(f.from, f.to, UF_COLORS.unit));
+  flows_as.forEach(f => { const a=nodePos[f.from]; drawFlow(f.from, f.to, a?a.color:'#999'); });
+  flows_sq.forEach(f => drawFlow(f.from, f.to, UF_COLORS.skill));
+  flows_qo.forEach(f => drawFlow(f.from, f.to, UF_COLORS.qual));
+
+  // ── Unit nodes ─────────────────────────────────────────
+  unitNodes.forEach(n => {
+    const p=nodePos[n.id];
+    svg += `<g class="sk-node" data-nid="${n.id}" style="cursor:pointer" onclick="sankeyNodeClick('${n.id}')" onmouseenter="ufHl('${n.id}')" onmouseleave="ufClr()">`;
+    svg += `<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="6" fill="${p.color}" fill-opacity="0.1" stroke="${p.color}" stroke-width="1.5"/>`;
+    svg += `<text x="${p.x+8}" y="${p.y+13}" font-size="9.5" fill="${p.color}" font-weight="700" pointer-events="none">${esc(n.code)}</text>`;
+    svg += `<text x="${p.x+8}" y="${p.y+25}" font-size="7.5" fill="#6b7785" pointer-events="none">${esc(n.label)}</text>`;
+    svg += `<title>${esc(n.code+(n.fullTitle?' \u2014 '+n.fullTitle:''))}</title></g>`;
+  });
+
+  // ── Assertion nodes ────────────────────────────────────
+  assertNodes.forEach(n => {
+    const p=nodePos[n.id], col=n.color;
+    const evMax = Math.floor(p.w / 5.5);
+    const evText = n.evidence ? n.evidence.substring(0, evMax) + (n.evidence.length > evMax ? '\u2026' : '') : '';
+    svg += `<g class="sk-node" data-nid="${n.id}" onmouseenter="ufHl('${n.id}')" onmouseleave="ufClr()">`;
+    svg += `<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="6" fill="${col}" fill-opacity="0.1" stroke="${col}" stroke-width="1.5"/>`;
+    svg += `<circle cx="${p.x+11}" cy="${p.y+14}" r="4" fill="${col}"/>`;
+    svg += `<text x="${p.x+19}" y="${p.y+17}" font-size="9" fill="${col}" font-weight="700" pointer-events="none">${n.ctx}</text>`;
+    svg += `<text x="${p.x+p.w-8}" y="${p.y+17}" text-anchor="end" font-size="8.5" fill="#5a6072" font-weight="500" pointer-events="none">${n.lvl}</text>`;
+    if (evText) svg += `<text x="${p.x+8}" y="${p.y+33}" font-size="7.5" fill="#8892a4" font-style="italic" pointer-events="none">${esc(evText)}</text>`;
+    if (n.evidence) svg += `<title>${esc(n.evidence)}</title>`;
+    svg += `</g>`;
+  });
+
+  // ── Skill nodes ────────────────────────────────────────
+  skillNodes.forEach(n => {
+    const p=nodePos[n.id];
+    svg += `<g class="sk-node" data-nid="${n.id}" style="cursor:pointer" onclick="sankeyNodeClick('${n.id}')" onmouseenter="ufHl('${n.id}')" onmouseleave="ufClr()">`;
+    svg += `<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="6" fill="${p.color}" fill-opacity="0.1" stroke="${p.color}" stroke-width="1.5"/>`;
+    svg += `<text x="${p.x+8}" y="${p.y+p.h/2+4}" font-size="10" fill="${p.color}" font-weight="600" pointer-events="none">${esc(n.label.substring(0,26))}</text>`;
+    svg += `</g>`;
+  });
+
+  // ── Code+title nodes (qual, occ) ───────────────────────
+  function drawCodeNode(n) {
+    const p=nodePos[n.id];
+    svg += `<g class="sk-node" data-nid="${n.id}" style="cursor:pointer" onclick="sankeyNodeClick('${n.id}')" onmouseenter="ufHl('${n.id}')" onmouseleave="ufClr()">`;
+    svg += `<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="6" fill="${p.color}" fill-opacity="0.1" stroke="${p.color}" stroke-width="1.5"/>`;
+    svg += `<text x="${p.x+8}" y="${p.y+13}" font-size="9.5" fill="${p.color}" font-weight="700" pointer-events="none">${esc(n.code)}</text>`;
+    svg += `<text x="${p.x+8}" y="${p.y+25}" font-size="7.5" fill="#6b7785" pointer-events="none">${esc(n.label)}</text>`;
+    svg += `<title>${esc(n.code+(n.fullTitle?' \u2014 '+n.fullTitle:''))}</title></g>`;
+  }
+  qualNodes.forEach(drawCodeNode);
+  occNodes.forEach(drawCodeNode);
+
+  svg += '</svg>';
+  container.innerHTML = svg;
+
+  // ── Adjacency ──────────────────────────────────────────
+  window._ufAdj = { fwd:{}, rev:{} };
+  allFlows.forEach(f => {
+    if (!window._ufAdj.fwd[f.from]) window._ufAdj.fwd[f.from] = [];
+    window._ufAdj.fwd[f.from].push(f.to);
+    if (!window._ufAdj.rev[f.to]) window._ufAdj.rev[f.to] = [];
+    window._ufAdj.rev[f.to].push(f.from);
+  });
+}
+
+function ufHl(nodeId) {
+  const adj = window._ufAdj; if (!adj) return;
+  const c = new Set(); c.add(nodeId);
+  function fwd(id) { (adj.fwd[id]||[]).forEach(n => { if (!c.has(n)) { c.add(n); fwd(n); } }); }
+  function rev(id) { (adj.rev[id]||[]).forEach(n => { if (!c.has(n)) { c.add(n); rev(n); } }); }
+  fwd(nodeId); rev(nodeId);
+  const el = document.getElementById('uaContainer');
+  el.querySelectorAll('.sk-node').forEach(e => { e.style.opacity = c.has(e.dataset.nid) ? '1' : '0.12'; });
+  el.querySelectorAll('.sk-flow').forEach(e => {
+    if (c.has(e.dataset.from) && c.has(e.dataset.to)) { e.style.strokeOpacity='0.55'; e.style.strokeWidth='3'; }
+    else { e.style.strokeOpacity='0.04'; e.style.strokeWidth='1'; }
+  });
+}
+
+function ufClr() {
+  const el = document.getElementById('uaContainer');
+  el.querySelectorAll('.sk-node').forEach(e => { e.style.opacity=''; });
+  el.querySelectorAll('.sk-flow').forEach(e => { e.style.strokeOpacity=''; e.style.strokeWidth=''; });
 }
 """
