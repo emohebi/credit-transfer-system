@@ -343,7 +343,7 @@ class SkillAssertionPipeline:
             logger.info(f"Exported HTML: {html_path}")
 
             # Summary Excel
-            self._export_excel(skills, assertions, units, qualifications, occupations, output_path)
+            self._export_excel(skills, assertions, units, qualifications, occupations, output_path, archetypes_data)
 
             # ── DONE ──────────────────────────────────────────────
             duration = (datetime.now() - start).total_seconds()
@@ -391,6 +391,36 @@ class SkillAssertionPipeline:
         for a in assertions:
             assertions_by_skill.setdefault(a.skill_id, []).append(a)
 
+        # Build reverse mapping: skill_id → archetype/sub-cluster info
+        skill_to_archetype = {}
+        if archetypes_data:
+            for arch in archetypes_data:
+                arch_id = arch.get("archetype_id", "")
+                arch_label = arch.get("label", "")
+                for sc in arch.get("sub_clusters", []):
+                    sc_id = sc.get("cluster_id", "")
+                    sc_label = sc.get("label", "")
+                    sc_prog_type = sc.get("progression_type", "")
+                    for sid in sc.get("skill_ids", []):
+                        skill_to_archetype[sid] = {
+                            "archetype_id": arch_id,
+                            "archetype_label": arch_label,
+                            "sub_cluster_id": sc_id,
+                            "sub_cluster_label": sc_label,
+                            "progression_type": sc_prog_type,
+                        }
+                # Also handle unclassified skills
+                for us in arch.get("unclassified_skills", []):
+                    sid = us.get("skill_id", "")
+                    if sid and sid not in skill_to_archetype:
+                        skill_to_archetype[sid] = {
+                            "archetype_id": arch_id,
+                            "archetype_label": arch_label,
+                            "sub_cluster_id": "",
+                            "sub_cluster_label": "(unclassified)",
+                            "progression_type": "",
+                        }
+
         # Skills export
         skills_export = []
         for s in skills:
@@ -411,6 +441,9 @@ class SkillAssertionPipeline:
                 for ac in s.occupation_codes:
                     occ_list.append({"code": ac, "title": concordance.occupation_titles.get(ac, "")})
 
+            # Get archetype membership
+            arch_info = skill_to_archetype.get(s.skill_id, {})
+
             skills_export.append({
                 "skill_id": s.skill_id,
                 "preferred_label": s.preferred_label,
@@ -418,6 +451,11 @@ class SkillAssertionPipeline:
                 "definition": s.definition,
                 "category": s.category,
                 "facets": s.facets,
+                "archetype_id": arch_info.get("archetype_id", ""),
+                "archetype_label": arch_info.get("archetype_label", ""),
+                "sub_cluster_id": arch_info.get("sub_cluster_id", ""),
+                "sub_cluster_label": arch_info.get("sub_cluster_label", ""),
+                "progression_type": arch_info.get("progression_type", ""),
                 "assertion_count": len(sa),
                 "unit_codes": s.unit_codes,
                 "qualifications": qual_list,
@@ -515,11 +553,31 @@ class SkillAssertionPipeline:
             "archetypes": archetypes_data or [],
         }
 
-    def _export_excel(self, skills, assertions, units, qualifications, occupations, output_path):
-        """Export summary Excel with 5 sheets."""
+    def _export_excel(self, skills, assertions, units, qualifications, occupations, output_path, archetypes_data=None):
+        """Export summary Excel with 7 sheets (5 schema objects + Archetypes + Sub-Clusters)."""
         try:
+            # Build reverse mapping for Excel: skill_id → archetype info
+            skill_to_arch = {}
+            if archetypes_data:
+                for arch in archetypes_data:
+                    arch_id = arch.get("archetype_id", "")
+                    arch_label = arch.get("label", "")
+                    for sc in arch.get("sub_clusters", []):
+                        sc_id = sc.get("cluster_id", "")
+                        sc_label = sc.get("label", "")
+                        sc_prog = sc.get("progression_type", "")
+                        for sid in sc.get("skill_ids", []):
+                            skill_to_arch[sid] = {
+                                "archetype_id": arch_id,
+                                "archetype_label": arch_label,
+                                "sub_cluster_id": sc_id,
+                                "sub_cluster_label": sc_label,
+                                "progression_type": sc_prog,
+                            }
+
             skills_rows = []
             for s in skills:
+                arch_info = skill_to_arch.get(s.skill_id, {})
                 row = {
                     "skill_id": s.skill_id,
                     "preferred_label": s.preferred_label,
@@ -527,6 +585,11 @@ class SkillAssertionPipeline:
                     "definition": s.definition,
                     "category": s.category,
                     "assertion_count": s.assertion_count,
+                    "archetype_id": arch_info.get("archetype_id", ""),
+                    "archetype_label": arch_info.get("archetype_label", ""),
+                    "sub_cluster_id": arch_info.get("sub_cluster_id", ""),
+                    "sub_cluster_label": arch_info.get("sub_cluster_label", ""),
+                    "progression_type": arch_info.get("progression_type", ""),
                     "unit_codes": "; ".join(s.unit_codes[:20]),
                     "qualification_codes": "; ".join(s.qualification_codes[:10]),
                     "occupation_codes": "; ".join(s.occupation_codes[:10]),
@@ -582,14 +645,74 @@ class SkillAssertionPipeline:
                 for o in occupations
             ]
 
+            # Build archetype and sub-cluster rows
+            archetype_rows = []
+            subcluster_rows = []
+
+            if archetypes_data:
+                for arch in archetypes_data:
+                    levels = arch.get("level_distribution", {})
+                    level_keys = sorted(levels.keys(), key=lambda x: int(x) if str(x).isdigit() else 0)
+                    level_range = f"{level_keys[0]}-{level_keys[-1]}" if level_keys else "-"
+
+                    archetype_rows.append({
+                        "archetype_id": arch.get("archetype_id", ""),
+                        "label": arch.get("label", ""),
+                        "skill_nature": arch.get("nat", {}).get("name", ""),
+                        "transferability": arch.get("trf", {}).get("name", ""),
+                        "cognitive_complexity": arch.get("cog", {}).get("name", ""),
+                        "total_skills": arch.get("total_skills", 0),
+                        "sub_cluster_count": len(arch.get("sub_clusters", [])),
+                        "asced_field_count": len(arch.get("asced_coverage", {})),
+                        "level_range": level_range,
+                        "qualification_count": arch.get("qualification_count", 0),
+                        "occupation_count": arch.get("occupation_count", 0),
+                        "progression_summary": "; ".join(
+                            f"{k}: {v}" for k, v in arch.get("progression_summary", {}).items()
+                        ),
+                    })
+
+                    for sc in arch.get("sub_clusters", []):
+                        progression = sc.get("progression", [])
+                        level_skills = []
+                        for rung in progression:
+                            names = rung.get("skill_names", [])[:5]
+                            level_skills.append(f"L{rung['level']}({rung.get('skill_count', 0)}): {'; '.join(names)}")
+
+                        subcluster_rows.append({
+                            "cluster_id": sc.get("cluster_id", ""),
+                            "archetype_id": arch.get("archetype_id", ""),
+                            "archetype_label": arch.get("label", ""),
+                            "label": sc.get("label", ""),
+                            "total_skills": sc.get("total_skills", 0),
+                            "progression_type": sc.get("progression_type", ""),
+                            "level_span": f"{sc.get('level_span', [0, 0])[0]}-{sc.get('level_span', [0, 0])[1]}",
+                            "level_gaps": "; ".join(str(g) for g in sc.get("level_gaps", [])),
+                            "asced_field_count": len(sc.get("asced_spread", {})),
+                            "asced_fields": "; ".join(
+                                f"{code} ({sc.get('asced_names', {}).get(code, code)})"
+                                for code in sorted(sc.get("asced_spread", {}).keys())[:10]
+                            ),
+                            "avg_intra_similarity": round(sc.get("avg_intra_similarity", 0), 4),
+                            "representative_skills": "; ".join(
+                                rs.get("name", "") for rs in sc.get("representative_skills", [])[:5]
+                            ),
+                            "progression_detail": " | ".join(level_skills[:7]),
+                        })
+
             with pd.ExcelWriter(output_path / "skill_assertion_export.xlsx", engine="openpyxl") as writer:
                 pd.DataFrame(skills_rows).to_excel(writer, sheet_name="Skills", index=False)
                 pd.DataFrame(assertion_rows).to_excel(writer, sheet_name="Assertions", index=False)
                 pd.DataFrame(unit_rows).to_excel(writer, sheet_name="Units", index=False)
                 pd.DataFrame(qual_rows).to_excel(writer, sheet_name="Qualifications", index=False)
                 pd.DataFrame(occ_rows).to_excel(writer, sheet_name="Occupations", index=False)
+                if archetype_rows:
+                    pd.DataFrame(archetype_rows).to_excel(writer, sheet_name="Archetypes", index=False)
+                if subcluster_rows:
+                    pd.DataFrame(subcluster_rows).to_excel(writer, sheet_name="Sub-Clusters", index=False)
 
-            logger.info(f"Exported Excel: {output_path / 'skill_assertion_export.xlsx'}")
+            n_sheets = 5 + (1 if archetype_rows else 0) + (1 if subcluster_rows else 0)
+            logger.info(f"Exported Excel ({n_sheets} sheets): {output_path / 'skill_assertion_export.xlsx'}")
         except Exception as e:
             logger.warning(f"Excel export failed: {e}")
 
