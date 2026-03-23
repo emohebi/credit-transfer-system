@@ -24,10 +24,10 @@ for d in [DATA_DIR, OUTPUT_DIR, CACHE_DIR]:
 # ═══════════════════════════════════════════════════════════════════
 
 DEDUP_CONFIG = {
-    "similarity_threshold": 0.90,       # High threshold for semantic dedup
-    "use_genai_validation": True,        # Validate dedup candidates with LLM
-    "genai_batch_size": 30,              # Batch size for LLM validation
-    "max_candidates_per_skill": 20,      # Max neighbours to check
+    "similarity_threshold": 0.90,
+    "use_genai_validation": True,
+    "genai_batch_size": 30,
+    "max_candidates_per_skill": 20,
 }
 
 # ═══════════════════════════════════════════════════════════════════
@@ -44,10 +44,10 @@ EMBEDDING_CONFIG = {
 }
 
 # ═══════════════════════════════════════════════════════════════════
-#  FACETS TO ASSIGN (configurable subset)
+#  FACETS TO ASSIGN
 # ═══════════════════════════════════════════════════════════════════
 
-FACETS_TO_ASSIGN = ["NAT", "TRF", "COG", "ASCED"]
+FACETS_TO_ASSIGN = ["NAT", "TRF", "COG", "ASCED", "LVL"]
 
 FACET_ASSIGNMENT_CONFIG = {
     "facets_to_assign": FACETS_TO_ASSIGN,
@@ -68,6 +68,23 @@ DATA_CONFIG = {
     "confidence_threshold": 0.7,
     "min_skill_length": 3,
     "max_skill_length": 200,
+}
+
+# ═══════════════════════════════════════════════════════════════════
+#  ABILITY ARCHETYPE CLUSTERING (NEW)
+# ═══════════════════════════════════════════════════════════════════
+
+ARCHETYPE_CLUSTERING_CONFIG = {
+    "min_archetype_size": 5,
+    "min_subcluster_size": 3,
+    "distance_threshold_floor": 0.3,
+    "distance_threshold_ceiling": 0.7,
+    "distance_threshold_sigma": 0.5,
+    "large_archetype_threshold": 5000,
+    "facet_confidence_threshold": 0.4,
+    "use_llm_labels": True,
+    "llm_label_batch_size": 20,
+    "representative_skill_count": 5,
 }
 
 # ═══════════════════════════════════════════════════════════════════
@@ -123,7 +140,7 @@ LLM_MODELS = {
 }
 
 # ═══════════════════════════════════════════════════════════════════
-#  AGGREGATE CONFIG (passed around the pipeline)
+#  AGGREGATE CONFIG
 # ═══════════════════════════════════════════════════════════════════
 
 CONFIG = {
@@ -132,6 +149,7 @@ CONFIG = {
     "embedding": EMBEDDING_CONFIG,
     "dedup": DEDUP_CONFIG,
     "facet_assignment": FACET_ASSIGNMENT_CONFIG,
+    "archetype_clustering": ARCHETYPE_CLUSTERING_CONFIG,  # NEW
     "llm": LLM_CONFIG,
     "paths": {
         "project_root": str(PROJECT_ROOT),

@@ -1,12 +1,13 @@
 """
 Enhanced Configuration settings for multi-dimensional faceted skill taxonomy pipeline
 Implements faceted taxonomy with multiple independent dimensions including ASCED
+Now includes Ability Archetype clustering configuration
 """
 import os
 from pathlib import Path
 from typing import Dict, Any
 
-from config.facets import ALL_FACETS, FACET_PRIORITY
+from config.facets import ALL_FACETS
 
 # Project paths
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -206,7 +207,6 @@ DEDUP_CONFIG = {
 
 # ============================================================================
 # FACET ASSIGNMENT SETTINGS
-# Now uses ASCED (Australian Standard Classification of Education) instead of IND
 # ============================================================================
 
 FACET_ASSIGNMENT_CONFIG = {
@@ -218,19 +218,43 @@ FACET_ASSIGNMENT_CONFIG = {
     "multi_value_threshold": 0.25,
     "max_multi_values": 5,
     "max_retries": 3,
-    # Facets to assign (order matters - processed in this order)
-    # Note: ASCED replaces IND (Industry Domain) for ASCED Field of Education
     "facets_to_assign": [
         "NAT",    # Skill Nature
         "TRF",    # Transferability
         "COG",    # Cognitive Complexity
         "CTX",    # Work Context
         "FUT",    # Future Readiness
-        "LRN",    # Learning Context (from existing 'context' field)
+        "LRN",    # Learning Context
         "DIG",    # Digital Intensity
-        "ASCED",  # ASCED Field of Education (multi-value) - replaces IND
-        "LVL",    # Proficiency Level (from existing 'level' field)
+        "ASCED",  # ASCED Field of Education (multi-value)
+        "LVL",    # Proficiency Level
     ],
+}
+
+# ============================================================================
+# ABILITY ARCHETYPE CLUSTERING SETTINGS (NEW)
+# ============================================================================
+
+ARCHETYPE_CLUSTERING_CONFIG = {
+    # Minimum skills in an archetype to sub-cluster it
+    "min_archetype_size": 5,
+    # Minimum skills in a sub-cluster to keep it (smaller ones become unclassified)
+    "min_subcluster_size": 3,
+    # Agglomerative clustering: adaptive distance threshold parameters
+    # threshold = mean_dist - sigma * std_dist, clamped to [floor, ceiling]
+    "distance_threshold_floor": 0.3,
+    "distance_threshold_ceiling": 0.7,
+    "distance_threshold_sigma": 0.5,
+    # Archetypes larger than this use Leiden community detection (future)
+    "large_archetype_threshold": 5000,
+    # Minimum facet confidence for a skill to be included in archetype clustering
+    "facet_confidence_threshold": 0.4,
+    # Use LLM to generate sub-cluster labels
+    "use_llm_labels": True,
+    # Batch size for LLM label generation
+    "llm_label_batch_size": 20,
+    # Number of representative skills per sub-cluster (nearest to centroid)
+    "representative_skill_count": 5,
 }
 
 # ============================================================================
@@ -277,7 +301,7 @@ LLM_CONFIG = {
 }
 
 # ============================================================================
-# MODEL CONFIGURATIONS "737fa5c46f0262ceba4a462ffa1c5bcf01da416f"
+# MODEL CONFIGURATIONS
 # ============================================================================
 
 EMBEDDING_MODELS = {
@@ -330,6 +354,7 @@ CONFIG: Dict[str, Any] = {
     "embedding": EMBEDDING_CONFIG,
     "dedup": DEDUP_CONFIG,
     "facet_assignment": FACET_ASSIGNMENT_CONFIG,
+    "archetype_clustering": ARCHETYPE_CLUSTERING_CONFIG,  # NEW
     "validation": VALIDATION_CONFIG,
     "llm": LLM_CONFIG,
     "multi_factor": {
@@ -410,5 +435,6 @@ logger.info("=" * 60)
 logger.info(f"Facets: {len(ALL_FACETS)}")
 logger.info(f"Facets to assign: {FACET_ASSIGNMENT_CONFIG['facets_to_assign']}")
 logger.info(f"Training Packages: {len(TRAINING_PACKAGES)}")
+logger.info(f"Archetype clustering enabled: min_size={ARCHETYPE_CLUSTERING_CONFIG['min_archetype_size']}")
 logger.info(f"ASCED Classification: Australian Standard Classification of Education 2001")
 logger.info("=" * 60)
