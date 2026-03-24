@@ -11,7 +11,9 @@ a facet_LVL column. This module handles that translation.
 Usage in pipeline.py:
     from src.archetypes.archetype_builder import build_archetypes_from_registry
     archetypes, arch_stats = build_archetypes_from_registry(
-        skill_registry, df, config, embedding_interface, genai_interface
+        skill_registry, df, config, embedding_interface, genai_interface,
+        precomputed_embeddings=skill_embeddings,
+        skill_id_to_emb_idx=skill_id_to_emb_idx,
     )
 """
 
@@ -39,6 +41,8 @@ def build_archetypes_from_registry(
     config: Dict,
     embedding_interface,
     genai_interface=None,
+    precomputed_embeddings: np.ndarray = None,
+    skill_id_to_emb_idx: Dict[str, int] = None,
 ) -> Tuple[List[Dict], Dict[str, Any]]:
     """
     Build ability archetypes from the assertion pipeline's skill registry.
@@ -46,7 +50,7 @@ def build_archetypes_from_registry(
     Steps:
     1. Convert skill_registry to a DataFrame with facet_NAT, facet_TRF, facet_COG columns
     2. Compute the dominant level per skill from its assertions
-    3. Generate embeddings for unique skills
+    3. Reuse precomputed embeddings (or generate if not provided)
     4. Run ArchetypeClusterer
     5. Enrich archetypes with assertion-level progression data
        (uses actual assertion levels, not facet_LVL)
@@ -58,6 +62,11 @@ def build_archetypes_from_registry(
         config: Pipeline config dict
         embedding_interface: For embedding generation and similarity
         genai_interface: Optional, for sub-cluster labelling
+        precomputed_embeddings: Precomputed embeddings from the pipeline's single-pass
+            encoding step (aligned with skill_id_to_emb_idx). If provided, avoids
+            redundant re-encoding of all skill names.
+        skill_id_to_emb_idx: Mapping from skill_id to row index in
+            precomputed_embeddings. Required when precomputed_embeddings is provided.
 
     Returns:
         (archetypes_list_of_dicts, statistics_dict)
@@ -68,6 +77,7 @@ def build_archetypes_from_registry(
 
     # ── Step 1: Build skills DataFrame with facet columns ─────────
     rows = []
+    row_order_skill_ids = []  # Track skill_id order for embedding alignment
     for sid, info in skill_registry.items():
         facets = info.get("facets", {})
         row = {
@@ -104,20 +114,60 @@ def build_archetypes_from_registry(
             row["facet_LVL_confidence"] = 1.0
 
         rows.append(row)
+        row_order_skill_ids.append(sid)
 
     df_skills = pd.DataFrame(rows)
     df_skills = df_skills.reset_index(drop=True)
     logger.info(f"Prepared {len(df_skills)} skills for archetype clustering")
 
-    # ── Step 2: Generate embeddings ───────────────────────────────
-    logger.info("Generating embeddings for skill names...")
-    texts = df_skills["name"].tolist()
-    embeddings = embedding_interface.encode(
-        texts,
-        batch_size=config["embedding"].get("batch_size", 64),
-        normalize_embeddings=config["embedding"].get("normalize_embeddings", True),
-    )
-    logger.info(f"Embeddings shape: {embeddings.shape}")
+    # ── Step 2: Get or reuse embeddings ───────────────────────────
+    if precomputed_embeddings is not None and skill_id_to_emb_idx is not None:
+        # Reuse precomputed embeddings — just reorder to match df_skills row order
+        logger.info("Reusing precomputed skill embeddings (no re-encoding needed)")
+        emb_indices = []
+        missing_sids = []
+        for sid in row_order_skill_ids:
+            idx = skill_id_to_emb_idx.get(sid)
+            if idx is not None:
+                emb_indices.append(idx)
+            else:
+                missing_sids.append(sid)
+                emb_indices.append(0)  # Placeholder, will be overwritten
+
+        embeddings = precomputed_embeddings[emb_indices]
+
+        if missing_sids:
+            logger.warning(
+                f"{len(missing_sids)} skill_ids not found in precomputed embeddings, "
+                f"encoding them now..."
+            )
+            # Encode only the missing ones
+            missing_texts = [
+                skill_registry[sid]["preferred_label"] for sid in missing_sids
+            ]
+            missing_embeddings = embedding_interface.encode(
+                missing_texts,
+                batch_size=config["embedding"].get("batch_size", 64),
+                normalize_embeddings=config["embedding"].get("normalize_embeddings", True),
+            )
+            # Patch them into the right positions
+            missing_positions = [
+                i for i, sid in enumerate(row_order_skill_ids) if sid in missing_sids
+            ]
+            for pos, emb in zip(missing_positions, missing_embeddings):
+                embeddings[pos] = emb
+
+        logger.info(f"Embeddings shape: {embeddings.shape}")
+    else:
+        # Fallback: generate embeddings from scratch (backward compatibility)
+        logger.info("Generating embeddings for skill names (no precomputed embeddings provided)...")
+        texts = df_skills["name"].tolist()
+        embeddings = embedding_interface.encode(
+            texts,
+            batch_size=config["embedding"].get("batch_size", 64),
+            normalize_embeddings=config["embedding"].get("normalize_embeddings", True),
+        )
+        logger.info(f"Embeddings shape: {embeddings.shape}")
 
     # ── Step 3: Run ArchetypeClusterer ────────────────────────────
     clusterer = ArchetypeClusterer(

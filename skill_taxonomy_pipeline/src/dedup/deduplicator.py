@@ -208,7 +208,7 @@ class SkillDeduplicator:
 
             try:
                 responses = self.genai_interface._generate_batch(
-                    user_prompts=user_prompts, system_prompt=system_prompt
+                    user_prompts=user_prompts, system_prompt=system_prompt, max_tokens=10240
                 )
 
                 for cluster, response in zip(batch, responses):

@@ -26,7 +26,7 @@ for d in [DATA_DIR, OUTPUT_DIR, CACHE_DIR]:
 DEDUP_CONFIG = {
     "similarity_threshold": 0.90,
     "use_genai_validation": True,
-    "genai_batch_size": 30,
+    "genai_batch_size": 3,
     "max_candidates_per_skill": 20,
 }
 

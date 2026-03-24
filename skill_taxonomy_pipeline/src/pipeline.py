@@ -7,11 +7,11 @@ Five-object model + Ability Archetypes:
 
 Pipeline steps:
   1. Preprocess data (clean, normalize — keep all rows)
-  2. Init interfaces
-  3. Deduplicate skill LABELS (embed unique names, cluster, validate)
-  4. Load concordance (unit → qualification → occupation)
-  5. Assign facets to deduplicated Skills
-  6. Build ability archetypes with progression ladders (NEW)
+  2. Load concordance (needed early for LVL assignment)
+  3. Reassign proficiency levels (LVL facet-based, per assertion row)
+  4. Deduplicate skill LABELS (embed unique names, cluster, validate)
+  5. Assign remaining facets (NAT, TRF, COG, ASCED) to deduplicated Skills
+  6. Build ability archetypes with progression ladders
   7. Build five-object schema with precomputed traversals + export
 """
 import logging
@@ -22,7 +22,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from dataclasses import asdict
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + "/..")
@@ -39,7 +39,9 @@ logger = logging.getLogger(__name__)
 
 class SkillAssertionPipeline:
     """
-    Orchestrates: preprocess → dedup labels → assign facets → build archetypes → build schema → export.
+    Orchestrates:
+      preprocess → load concordance → reassign levels → dedup labels
+      → assign facets → build archetypes → build schema → export.
     """
 
     def __init__(self, config: Optional[Dict] = None):
@@ -91,14 +93,98 @@ class SkillAssertionPipeline:
             logger.warning(f"Could not init GenAI interface: {e}")
 
     # ═══════════════════════════════════════════════════════════════
-    #  FACET ASSIGNMENT
+    #  LEVEL REASSIGNMENT (EARLY STEP)
     # ═══════════════════════════════════════════════════════════════
 
-    def _assign_facets_to_skills(self, skill_registry: Dict, df_unique_skills: pd.DataFrame, concordance=None):
+    def _reassign_levels(self, df: pd.DataFrame, concordance, skip_genai: bool = False):
         """
-        Assign facets to the deduplicated Skill objects.
-        Uses embedding similarity + optional LLM re-ranking.
-        For ASCED, uses unit-title-enriched embedding text.
+        Reassign proficiency levels using LVL facet embedding similarity.
+        Runs on ALL rows (before dedup) so every assertion gets a
+        facet-derived level. Uses unit title context from concordance.
+
+        Args:
+            df: Preprocessed DataFrame (all rows)
+            concordance: ConcordanceData (may be None)
+            skip_genai: Skip LLM re-ranking for ambiguous cases
+
+        Returns:
+            DataFrame with 'level' overwritten and 'level_confidence' added
+        """
+        from src.facets.level_reassigner import LevelReassigner
+
+        reassigner = LevelReassigner(
+            config=self.config,
+            embedding_interface=self.embedding_interface,
+            genai_interface=self.genai_interface if not skip_genai else None,
+        )
+
+        return reassigner.reassign_levels(df, concordance)
+
+    # ═══════════════════════════════════════════════════════════════
+    #  EMBEDDING GENERATION (SINGLE PASS)
+    # ═══════════════════════════════════════════════════════════════
+
+    def _generate_skill_embeddings(self, df_unique: pd.DataFrame, concordance=None):
+        """
+        Generate all embeddings needed for the pipeline in a single pass.
+
+        Returns:
+            skill_embeddings: np.ndarray of shape (n_skills, embed_dim)
+                Embeddings from skill name text, used for non-ASCED facets
+                and archetype clustering.
+            asced_embeddings: np.ndarray or None
+                Embeddings from unit-title-enriched text, used for ASCED
+                facet assignment. None if ASCED is not being assigned or
+                no concordance is available.
+        """
+        batch_size = self.config["embedding"]["batch_size"]
+        normalize = self.config["embedding"]["normalize_embeddings"]
+
+        # Primary embeddings: skill name text (used for NAT/TRF/COG facets + archetypes)
+        texts = df_unique["embedding_text"].tolist()
+        logger.info(f"Generating primary skill embeddings for {len(texts)} unique skills...")
+        skill_embeddings = self.embedding_interface.encode(
+            texts,
+            batch_size=batch_size,
+            normalize_embeddings=normalize,
+        )
+        logger.info(f"Primary embeddings shape: {skill_embeddings.shape}")
+
+        # ASCED embeddings: unit-title-enriched text (only if needed)
+        asced_embeddings = None
+        remaining_facets = self._get_remaining_facets()
+        has_asced = "ASCED" in remaining_facets
+        has_asced_col = "embedding_text_asced" in df_unique.columns
+
+        if has_asced and has_asced_col and concordance:
+            texts_asced = df_unique["embedding_text_asced"].tolist()
+            logger.info(f"Generating ASCED-enriched embeddings for {len(texts_asced)} unique skills...")
+            asced_embeddings = self.embedding_interface.encode(
+                texts_asced,
+                batch_size=batch_size,
+                normalize_embeddings=normalize,
+            )
+            logger.info(f"ASCED embeddings shape: {asced_embeddings.shape}")
+
+        return skill_embeddings, asced_embeddings
+
+    # ═══════════════════════════════════════════════════════════════
+    #  FACET ASSIGNMENT (REMAINING FACETS — excludes LVL)
+    # ═══════════════════════════════════════════════════════════════
+
+    def _get_remaining_facets(self) -> List[str]:
+        """Get facets to assign at the skill level (excludes LVL, handled earlier)."""
+        all_facets = self.config["facet_assignment"]["facets_to_assign"]
+        return [f for f in all_facets if f != "LVL"]
+
+    def _assign_facets_to_skills(self, skill_registry: Dict, df_unique_skills: pd.DataFrame,
+                                  skill_embeddings: np.ndarray, asced_embeddings: np.ndarray = None,
+                                  concordance=None):
+        """
+        Assign remaining facets (NAT, TRF, COG, ASCED) to deduplicated Skills.
+        LVL is excluded — it was already assigned per-row in the early step.
+
+        Uses precomputed embeddings + optional LLM re-ranking.
         """
         try:
             from src.facets.facet_assigner import FacetAssigner
@@ -111,55 +197,35 @@ class SkillAssertionPipeline:
             embedding_interface=self.embedding_interface,
         )
 
-        facets_to_assign = self.config["facet_assignment"]["facets_to_assign"]
+        remaining_facets = self._get_remaining_facets()
+        has_asced = "ASCED" in remaining_facets
 
-        has_asced = "ASCED" in facets_to_assign
-        has_asced_col = "embedding_text_asced" in df_unique_skills.columns
-
-        if has_asced and has_asced_col and concordance:
-            non_asced = [f for f in facets_to_assign if f != "ASCED"]
+        if has_asced and asced_embeddings is not None:
+            non_asced = [f for f in remaining_facets if f != "ASCED"]
             asced_only = ["ASCED"]
 
             if non_asced:
-                logger.info(f"  Assigning non-ASCED facets {non_asced} with skill text...")
-                texts = df_unique_skills["embedding_text"].tolist()
-                embeddings = self.embedding_interface.encode(
-                    texts,
-                    batch_size=self.config["embedding"]["batch_size"],
-                    normalize_embeddings=self.config["embedding"]["normalize_embeddings"],
-                )
-                df_faceted = assigner.assign_facets(df_unique_skills, embeddings, facets_override=non_asced)
+                logger.info(f"  Assigning non-ASCED facets {non_asced} with skill text embeddings...")
+                df_faceted = assigner.assign_facets(df_unique_skills, skill_embeddings, facets_override=non_asced)
             else:
                 df_faceted = df_unique_skills.copy()
 
-            logger.info("  Assigning ASCED facet with unit-title-enriched text...")
-            texts_asced = df_unique_skills["embedding_text_asced"].tolist()
-            embeddings_asced = self.embedding_interface.encode(
-                texts_asced,
-                batch_size=self.config["embedding"]["batch_size"],
-                normalize_embeddings=self.config["embedding"]["normalize_embeddings"],
-            )
-            df_asced = assigner.assign_facets(df_unique_skills, embeddings_asced, facets_override=asced_only)
+            logger.info("  Assigning ASCED facet with unit-title-enriched embeddings...")
+            df_asced = assigner.assign_facets(df_unique_skills, asced_embeddings, facets_override=asced_only)
 
             asced_cols = [c for c in df_asced.columns if c.startswith("facet_ASCED")]
             for col in asced_cols:
                 df_faceted[col] = df_asced[col]
         else:
-            texts = df_unique_skills["embedding_text"].tolist()
-            embeddings = self.embedding_interface.encode(
-                texts,
-                batch_size=self.config["embedding"]["batch_size"],
-                normalize_embeddings=self.config["embedding"]["normalize_embeddings"],
-            )
-            df_faceted = assigner.assign_facets(df_unique_skills, embeddings)
+            df_faceted = assigner.assign_facets(df_unique_skills, skill_embeddings, facets_override=remaining_facets)
 
         # Write facets back into skill_registry
         for _, row in df_faceted.iterrows():
             sid = row["skill_id"]
             if sid not in skill_registry:
                 continue
-            facets = {}
-            for fid in facets_to_assign:
+            facets = skill_registry[sid].get("facets", {})
+            for fid in remaining_facets:
                 col = f"facet_{fid}"
                 if col in row and pd.notna(row[col]):
                     facets[fid] = {
@@ -171,28 +237,51 @@ class SkillAssertionPipeline:
 
         return skill_registry
 
+    def _assign_lvl_facet_to_registry(self, skill_registry: Dict, df: pd.DataFrame):
+        """
+        Compute the dominant LVL facet for each deduplicated skill from its
+        assertion rows (which now have facet-assigned levels).
+
+        This populates the LVL facet on the Skill object for export and
+        archetype grouping.
+        """
+        logger.info("Computing dominant LVL facet per skill from reassigned assertion levels...")
+
+        for sid, info in skill_registry.items():
+            skill_assertions = df[df["skill_id"] == sid]
+            if len(skill_assertions) > 0:
+                level_counts = skill_assertions["level"].value_counts()
+                dominant_level = int(level_counts.index[0])
+                avg_conf = float(skill_assertions["level_confidence"].mean()) if "level_confidence" in skill_assertions.columns else 0.8
+            else:
+                dominant_level = 3
+                avg_conf = 0.0
+
+            facets = info.get("facets", {})
+            facets["LVL"] = {
+                "code": f"LVL.{dominant_level}",
+                "name": _level_name(dominant_level),
+                "confidence": avg_conf,
+            }
+            info["facets"] = facets
+
     # ═══════════════════════════════════════════════════════════════
-    #  ARCHETYPE CLUSTERING (NEW)
+    #  ARCHETYPE CLUSTERING
     # ═══════════════════════════════════════════════════════════════
 
-    def _build_archetypes(self, skill_registry: Dict, df: pd.DataFrame, skip_genai: bool = False):
+    def _build_archetypes(self, skill_registry: Dict, df: pd.DataFrame,
+                           skill_embeddings: np.ndarray, df_unique: pd.DataFrame,
+                           skip_genai: bool = False):
         """
         Build ability archetypes from faceted skill registry.
-
-        Uses the adapter in src/archetypes/archetype_builder.py to bridge
-        between the assertion pipeline's dict-based skill_registry and
-        the ArchetypeClusterer which expects a DataFrame with facet columns.
-
-        Args:
-            skill_registry: Dict with facets already assigned
-            df: Full assertions DataFrame (for level progression data)
-            skip_genai: Skip LLM-based sub-cluster labelling
-
-        Returns:
-            (archetypes_data, archetype_stats) or ([], {}) on failure
+        Uses precomputed skill_embeddings instead of re-encoding.
         """
         try:
             from src.archetypes.archetype_builder import build_archetypes_from_registry
+
+            skill_id_to_emb_idx = {
+                row["skill_id"]: i for i, (_, row) in enumerate(df_unique.iterrows())
+            }
 
             archetypes_data, arch_stats = build_archetypes_from_registry(
                 skill_registry=skill_registry,
@@ -200,6 +289,8 @@ class SkillAssertionPipeline:
                 config=self.config,
                 embedding_interface=self.embedding_interface,
                 genai_interface=self.genai_interface if not skip_genai else None,
+                precomputed_embeddings=skill_embeddings,
+                skill_id_to_emb_idx=skill_id_to_emb_idx,
             )
 
             return archetypes_data, arch_stats
@@ -247,13 +338,20 @@ class SkillAssertionPipeline:
             logger.info("\n[1/7] Preprocessing...")
             df = self.preprocessor.preprocess(input_data)
 
-            # ── 2. CHECK INTERFACES ───────────────────────────────
-            logger.info("\n[2/7] Check Interfaces...")
-            if self.embedding_interface and self.genai_interface:
-                logger.info("  Pass")
+            # ── 2. LOAD CONCORDANCE (early — needed for LVL) ─────
+            concordance = None
+            if concordance_path:
+                logger.info(f"\n[2/7] Loading concordance from: {concordance_path}")
+                concordance = load_concordance(concordance_path)
+            else:
+                logger.info("\n[2/7] No concordance file — LVL assignment will use skill names only")
 
-            # ── 3. DEDUPLICATE SKILL LABELS ───────────────────────
-            logger.info("\n[3/7] Deduplicating skill labels...")
+            # ── 3. REASSIGN PROFICIENCY LEVELS (LVL facet) ────────
+            logger.info("\n[3/7] Reassigning proficiency levels (LVL facet-based)...")
+            df = self._reassign_levels(df, concordance, skip_genai=skip_genai)
+
+            # ── 4. DEDUPLICATE SKILL LABELS ───────────────────────
+            logger.info("\n[4/7] Deduplicating skill labels...")
             deduplicator = SkillDeduplicator(
                 self.config,
                 embedding_interface=self.embedding_interface,
@@ -261,16 +359,10 @@ class SkillAssertionPipeline:
             )
             df, skill_registry = deduplicator.deduplicate(df)
 
-            # ── 4. LOAD CONCORDANCE ───────────────────────────────
-            concordance = None
-            if concordance_path:
-                logger.info(f"\n[4/7] Loading concordance from: {concordance_path}")
-                concordance = load_concordance(concordance_path)
-            else:
-                logger.info("\n[4/7] No concordance file — skipping qual/occ enrichment")
-
-            # ── 5. ASSIGN FACETS TO SKILLS ────────────────────────
+            # ── 5. ASSIGN REMAINING FACETS TO SKILLS ──────────────
             logger.info("\n[5/7] Assigning facets to deduplicated skills...")
+            remaining_facets = self._get_remaining_facets()
+            logger.info(f"  Remaining facets (LVL already done): {remaining_facets}")
 
             unique_rows = []
             for sid, info in skill_registry.items():
@@ -297,12 +389,30 @@ class SkillAssertionPipeline:
                 })
             df_unique = pd.DataFrame(unique_rows)
 
-            skill_registry = self._assign_facets_to_skills(skill_registry, df_unique, concordance)
+            # Generate embeddings ONCE for all downstream uses
+            logger.info("Generating skill embeddings (single pass for facets + archetypes)...")
+            skill_embeddings, asced_embeddings = self._generate_skill_embeddings(
+                df_unique, concordance
+            )
 
-            # ── 6. BUILD ABILITY ARCHETYPES (NEW) ─────────────────
+            # Assign remaining facets (NAT, TRF, COG, ASCED) using precomputed embeddings
+            skill_registry = self._assign_facets_to_skills(
+                skill_registry, df_unique,
+                skill_embeddings=skill_embeddings,
+                asced_embeddings=asced_embeddings,
+                concordance=concordance,
+            )
+
+            # Assign LVL facet to skill registry from reassigned assertion levels
+            self._assign_lvl_facet_to_registry(skill_registry, df)
+
+            # ── 6. BUILD ABILITY ARCHETYPES ───────────────────────
             logger.info("\n[6/7] Building ability archetypes with progression ladders...")
             archetypes_data, arch_stats = self._build_archetypes(
-                skill_registry, df, skip_genai=skip_genai
+                skill_registry, df,
+                skill_embeddings=skill_embeddings,
+                df_unique=df_unique,
+                skip_genai=skip_genai,
             )
 
             # Save archetypes JSON
@@ -386,12 +496,10 @@ class SkillAssertionPipeline:
     def _build_export(self, skills, assertions, units, qualifications, occupations,
                       concordance, archetypes_data=None, arch_stats=None):
         """Build the JSON export structure with all 5 object types + archetypes."""
-        # Index assertions
         assertions_by_skill = {}
         for a in assertions:
             assertions_by_skill.setdefault(a.skill_id, []).append(a)
 
-        # Build reverse mapping: skill_id → archetype/sub-cluster info
         skill_to_archetype = {}
         if archetypes_data:
             for arch in archetypes_data:
@@ -409,7 +517,6 @@ class SkillAssertionPipeline:
                             "sub_cluster_label": sc_label,
                             "progression_type": sc_prog_type,
                         }
-                # Also handle unclassified skills
                 for us in arch.get("unclassified_skills", []):
                     sid = us.get("skill_id", "")
                     if sid and sid not in skill_to_archetype:
@@ -421,7 +528,6 @@ class SkillAssertionPipeline:
                             "progression_type": "",
                         }
 
-        # Skills export
         skills_export = []
         for s in skills:
             sa = assertions_by_skill.get(s.skill_id, [])
@@ -441,7 +547,6 @@ class SkillAssertionPipeline:
                 for ac in s.occupation_codes:
                     occ_list.append({"code": ac, "title": concordance.occupation_titles.get(ac, "")})
 
-            # Get archetype membership
             arch_info = skill_to_archetype.get(s.skill_id, {})
 
             skills_export.append({
@@ -478,7 +583,6 @@ class SkillAssertionPipeline:
                 ],
             })
 
-        # Units export
         units_export = []
         for u in units:
             qual_list = []
@@ -494,7 +598,6 @@ class SkillAssertionPipeline:
                 "skill_ids": u.skill_ids,
             })
 
-        # Qualifications export
         quals_export = [
             {
                 "qualification_code": q.qualification_code,
@@ -507,7 +610,6 @@ class SkillAssertionPipeline:
             for q in qualifications
         ]
 
-        # Occupations export
         occs_export = [
             {
                 "anzsco_code": o.anzsco_code,
@@ -519,7 +621,6 @@ class SkillAssertionPipeline:
             for o in occupations
         ]
 
-        # Facets meta
         facets_meta = {}
         for fid in self.config["facet_assignment"]["facets_to_assign"]:
             fi = ALL_FACETS.get(fid, {})
@@ -554,9 +655,8 @@ class SkillAssertionPipeline:
         }
 
     def _export_excel(self, skills, assertions, units, qualifications, occupations, output_path, archetypes_data=None):
-        """Export summary Excel with 7 sheets (5 schema objects + Archetypes + Sub-Clusters)."""
+        """Export summary Excel with 7 sheets."""
         try:
-            # Build reverse mapping for Excel: skill_id → archetype info
             skill_to_arch = {}
             if archetypes_data:
                 for arch in archetypes_data:
@@ -600,10 +700,8 @@ class SkillAssertionPipeline:
 
             assertion_rows = [
                 {
-                    "assertion_id": a.assertion_id,
-                    "skill_id": a.skill_id,
-                    "unit_code": a.unit_code,
-                    "teaching_context": a.teaching_context,
+                    "assertion_id": a.assertion_id, "skill_id": a.skill_id,
+                    "unit_code": a.unit_code, "teaching_context": a.teaching_context,
                     "level_of_engagement": a.level_of_engagement,
                     "evidence": a.evidence[:200],
                     "keywords": "; ".join(a.keywords[:10]),
@@ -614,50 +712,19 @@ class SkillAssertionPipeline:
                 for a in assertions
             ]
 
-            unit_rows = [
-                {
-                    "unit_code": u.unit_code,
-                    "unit_title": u.unit_title,
-                    "skill_count": u.skill_count,
-                    "qualification_codes": "; ".join(u.qualification_codes[:10]),
-                }
-                for u in units
-            ]
+            unit_rows = [{"unit_code": u.unit_code, "unit_title": u.unit_title, "skill_count": u.skill_count, "qualification_codes": "; ".join(u.qualification_codes[:10])} for u in units]
+            qual_rows = [{"qualification_code": q.qualification_code, "qualification_title": q.qualification_title, "unit_count": len(q.unit_codes), "skill_count": q.skill_count, "occupation_codes": "; ".join(q.occupation_codes[:10])} for q in qualifications]
+            occ_rows = [{"anzsco_code": o.anzsco_code, "anzsco_title": o.anzsco_title, "qualification_count": len(o.qualification_codes), "skill_count": o.skill_count} for o in occupations]
 
-            qual_rows = [
-                {
-                    "qualification_code": q.qualification_code,
-                    "qualification_title": q.qualification_title,
-                    "unit_count": len(q.unit_codes),
-                    "skill_count": q.skill_count,
-                    "occupation_codes": "; ".join(q.occupation_codes[:10]),
-                }
-                for q in qualifications
-            ]
-
-            occ_rows = [
-                {
-                    "anzsco_code": o.anzsco_code,
-                    "anzsco_title": o.anzsco_title,
-                    "qualification_count": len(o.qualification_codes),
-                    "skill_count": o.skill_count,
-                }
-                for o in occupations
-            ]
-
-            # Build archetype and sub-cluster rows
             archetype_rows = []
             subcluster_rows = []
-
             if archetypes_data:
                 for arch in archetypes_data:
                     levels = arch.get("level_distribution", {})
                     level_keys = sorted(levels.keys(), key=lambda x: int(x) if str(x).isdigit() else 0)
                     level_range = f"{level_keys[0]}-{level_keys[-1]}" if level_keys else "-"
-
                     archetype_rows.append({
-                        "archetype_id": arch.get("archetype_id", ""),
-                        "label": arch.get("label", ""),
+                        "archetype_id": arch.get("archetype_id", ""), "label": arch.get("label", ""),
                         "skill_nature": arch.get("nat", {}).get("name", ""),
                         "transferability": arch.get("trf", {}).get("name", ""),
                         "cognitive_complexity": arch.get("cog", {}).get("name", ""),
@@ -667,36 +734,21 @@ class SkillAssertionPipeline:
                         "level_range": level_range,
                         "qualification_count": arch.get("qualification_count", 0),
                         "occupation_count": arch.get("occupation_count", 0),
-                        "progression_summary": "; ".join(
-                            f"{k}: {v}" for k, v in arch.get("progression_summary", {}).items()
-                        ),
+                        "progression_summary": "; ".join(f"{k}: {v}" for k, v in arch.get("progression_summary", {}).items()),
                     })
-
                     for sc in arch.get("sub_clusters", []):
                         progression = sc.get("progression", [])
-                        level_skills = []
-                        for rung in progression:
-                            names = rung.get("skill_names", [])[:5]
-                            level_skills.append(f"L{rung['level']}({rung.get('skill_count', 0)}): {'; '.join(names)}")
-
+                        level_skills = [f"L{r['level']}({r.get('skill_count',0)}): {'; '.join(r.get('skill_names',[])[:5])}" for r in progression]
                         subcluster_rows.append({
-                            "cluster_id": sc.get("cluster_id", ""),
-                            "archetype_id": arch.get("archetype_id", ""),
-                            "archetype_label": arch.get("label", ""),
-                            "label": sc.get("label", ""),
-                            "total_skills": sc.get("total_skills", 0),
-                            "progression_type": sc.get("progression_type", ""),
-                            "level_span": f"{sc.get('level_span', [0, 0])[0]}-{sc.get('level_span', [0, 0])[1]}",
+                            "cluster_id": sc.get("cluster_id", ""), "archetype_id": arch.get("archetype_id", ""),
+                            "archetype_label": arch.get("label", ""), "label": sc.get("label", ""),
+                            "total_skills": sc.get("total_skills", 0), "progression_type": sc.get("progression_type", ""),
+                            "level_span": f"{sc.get('level_span',[0,0])[0]}-{sc.get('level_span',[0,0])[1]}",
                             "level_gaps": "; ".join(str(g) for g in sc.get("level_gaps", [])),
                             "asced_field_count": len(sc.get("asced_spread", {})),
-                            "asced_fields": "; ".join(
-                                f"{code} ({sc.get('asced_names', {}).get(code, code)})"
-                                for code in sorted(sc.get("asced_spread", {}).keys())[:10]
-                            ),
+                            "asced_fields": "; ".join(f"{c} ({sc.get('asced_names',{}).get(c,c)})" for c in sorted(sc.get("asced_spread",{}).keys())[:10]),
                             "avg_intra_similarity": round(sc.get("avg_intra_similarity", 0), 4),
-                            "representative_skills": "; ".join(
-                                rs.get("name", "") for rs in sc.get("representative_skills", [])[:5]
-                            ),
+                            "representative_skills": "; ".join(rs.get("name","") for rs in sc.get("representative_skills",[])[:5]),
                             "progression_detail": " | ".join(level_skills[:7]),
                         })
 
@@ -720,3 +772,12 @@ class SkillAssertionPipeline:
         """Generate the HTML search engine + data JS file."""
         from src.export.search_engine import generate_search_html
         generate_search_html(export_data, str(html_path), str(data_js_path))
+
+
+def _level_name(level_int: int) -> str:
+    """Map integer level to name."""
+    names = {
+        1: "Follow", 2: "Assist", 3: "Apply", 4: "Enable",
+        5: "Ensure & Advise", 6: "Initiate & Influence", 7: "Set Strategy",
+    }
+    return names.get(level_int, f"Level {level_int}")
