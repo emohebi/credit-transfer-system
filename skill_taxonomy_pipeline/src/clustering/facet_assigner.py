@@ -42,6 +42,9 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+# Maximum retries for LLM JSON parsing failures
+MAX_LLM_RETRIES = 5
+
 
 class FacetAssigner:
     """
@@ -53,14 +56,6 @@ class FacetAssigner:
     """
     
     def __init__(self, config: Dict, genai_interface=None, embedding_interface=None):
-        """
-        Initialize the facet assigner
-        
-        Args:
-            config: Configuration dictionary
-            genai_interface: GenAI interface for LLM-based re-ranking
-            embedding_interface: Embedding interface for similarity matching
-        """
         self.config = config
         self.genai_interface = genai_interface
         self.embedding_interface = embedding_interface
@@ -81,8 +76,8 @@ class FacetAssigner:
         self.facets_to_assign = self.facet_config.get('facets_to_assign', FACET_PRIORITY)
         
         # Precomputed embeddings for each facet
-        self.facet_embeddings = {}  # {facet_id: {value_code: embedding}}
-        self.facet_value_keys = {}  # {facet_id: [value_codes]}
+        self.facet_embeddings = {}
+        self.facet_value_keys = {}
         
         # Statistics
         self.assignment_stats = defaultdict(lambda: defaultdict(int))
@@ -130,13 +125,6 @@ class FacetAssigner:
     def assign_facets(self, df: pd.DataFrame, embeddings: Optional[np.ndarray] = None) -> pd.DataFrame:
         """
         Assign facet values to all skills
-        
-        Args:
-            df: DataFrame with skills data
-            embeddings: Precomputed skill embeddings
-            
-        Returns:
-            DataFrame with facet columns added
         """
         logger.info("=" * 80)
         logger.info("ASSIGNING FACETS TO SKILLS")
@@ -161,10 +149,6 @@ class FacetAssigner:
         # Special handling for LVL facet - use existing level column
         if 'LVL' in self.facets_to_assign and 'level' in df_result.columns:
             df_result = self._assign_level_facet(df_result)
-        
-        # Special handling for LRN facet - use existing context column
-        # if 'LRN' in self.facets_to_assign and 'context' in df_result.columns:
-        #     df_result = self._assign_learning_context_facet(df_result)
         
         # Assign other facets using embedding + LLM
         facets_for_embedding = [f for f in self.facets_to_assign 
@@ -213,36 +197,6 @@ class FacetAssigner:
         
         return df
     
-    def _assign_learning_context_facet(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Map existing context column to LRN facet"""
-        logger.info("Mapping existing context column to LRN facet...")
-        
-        context_map = {
-            'practical': "LRN.PRA",
-            'theoretical': "LRN.THE",
-            'hybrid': "LRN.HYB"
-        }
-        
-        context_names = {
-            "LRN.PRA": "Practical/Hands-on",
-            "LRN.THE": "Theoretical/Academic",
-            "LRN.HYB": "Hybrid/Blended",
-            "LRN.WRK": "Workplace/On-the-Job",
-            "LRN.DIG": "Digital/Self-Paced"
-        }
-        
-        for idx in df.index:
-            context = str(df.loc[idx, 'context']).lower()
-            context_code = context_map.get(context, "LRN.HYB")
-            
-            df.loc[idx, 'facet_LRN'] = context_code
-            df.loc[idx, 'facet_LRN_name'] = context_names.get(context_code, "Hybrid/Blended")
-            df.loc[idx, 'facet_LRN_confidence'] = 1.0
-            df.loc[idx, 'facet_LRN_method'] = 'direct_mapping'
-            self.assignment_stats['LRN']['direct_mapping'] += 1
-        
-        return df
-    
     def _assign_facets_with_embeddings(self, df: pd.DataFrame, facets: List[str]) -> pd.DataFrame:
         """Assign facets using embedding similarity + optional LLM re-ranking"""
         
@@ -265,10 +219,8 @@ class FacetAssigner:
                 facet_embs = self.facet_embeddings[facet_id]
                 facet_keys = self.facet_value_keys[facet_id]
                 
-                # Calculate similarity to all facet values
                 similarities = self.embedding_interface.similarity(skill_emb, facet_embs)[0]
                 
-                # Get top-K candidates
                 top_k = self.rerank_top_k
                 top_indices = np.argsort(similarities)[-top_k:][::-1]
                 top_similarities = similarities[top_indices]
@@ -276,11 +228,9 @@ class FacetAssigner:
                 best_idx = top_indices[0]
                 best_similarity = top_similarities[0]
                 
-                # Check if we need LLM re-ranking
                 is_multi_value = facet_id in MULTI_VALUE_FACETS
                 
                 if self.use_llm_reranking and len(top_indices) > 1 and best_similarity < self.embedding_threshold:
-                    # Collect for batch LLM re-ranking
                     candidates = []
                     for i, fval_idx in enumerate(top_indices):
                         if top_similarities[i] >= self.multi_value_threshold:
@@ -310,7 +260,6 @@ class FacetAssigner:
                     facet_info = ALL_FACETS[facet_id]['values'][value_code]
                     
                     if is_multi_value:
-                        # Collect all values above threshold for multi-value facets
                         multi_values = []
                         for i, fval_idx in enumerate(top_indices[:self.max_multi_values]):
                             if top_similarities[i] >= self.multi_value_threshold:
@@ -327,7 +276,6 @@ class FacetAssigner:
                     df.loc[idx, f'facet_{facet_id}_method'] = 'embedding'
                     self.assignment_stats[facet_id]['embedding'] += 1
                 else:
-                    # Below threshold - still assign best match but mark as low confidence
                     value_code = facet_keys[best_idx]
                     facet_info = ALL_FACETS[facet_id]['values'][value_code]
                     df.loc[idx, f'facet_{facet_id}'] = value_code
@@ -343,7 +291,6 @@ class FacetAssigner:
             
             logger.info(f"LLM re-ranking {len(items)} skills for facet {facet_id}...")
             
-            # Process in batches
             for batch_start in range(0, len(items), self.batch_size):
                 batch_end = min(batch_start + self.batch_size, len(items))
                 batch_items = items[batch_start:batch_end]
@@ -362,7 +309,6 @@ class FacetAssigner:
                         df.loc[idx, f'facet_{facet_id}_method'] = 'embedding+llm_rerank'
                         self.assignment_stats[facet_id]['embedding+llm_rerank'] += 1
                     else:
-                        # Fallback to best embedding candidate
                         best_candidate = item['candidates'][0]
                         df.loc[idx, f'facet_{facet_id}'] = best_candidate['code']
                         df.loc[idx, f'facet_{facet_id}_name'] = best_candidate['name']
@@ -372,62 +318,58 @@ class FacetAssigner:
         
         return df
     
-    def _get_facet_prompt(self, facet_id: str, item: Dict) -> Tuple[str, str]:
+    def _build_rerank_prompt(self, facet_id: str, item: Dict) -> Tuple[str, str]:
         """
-        Generate system and user prompts for LLM re-ranking of a specific facet.
-        
-        Args:
-            facet_id: The facet ID (NAT, TRF, COG, etc.)
-            item: Dictionary with skill info and candidates
+        Build tightly constrained system and user prompts for LLM re-ranking.
+        Designed to suppress verbose thinking and force short JSON output.
         """
         facet_info = ALL_FACETS[facet_id]
         facet_name = facet_info['facet_name']
-        
-        system_prompt = f"""You are an expert in vocational skills classification.
-Your task is to select the BEST matching {facet_name} category for each skill.
 
-{facet_info['description']}
-
-Analyze the skill's name, description, and category, then select the most appropriate {facet_name} value.
-Consider:
-1. The skill's core functionality and purpose
-2. How the skill is typically applied
-3. The best match based on the category definitions
-
-You MUST respond with valid JSON only. No additional text, explanation, or markdown."""
+        system_prompt = (
+            f"You classify vocational skills into {facet_name} categories.\n"
+            f"{facet_info['description']}\n\n"
+            f"RULES:\n"
+            f"- Output ONLY a JSON object: {{\"choice\": <int>, \"confidence\": <float>}}\n"
+            f"- choice = the candidate number (1-based) that best fits\n"
+            f"- confidence = your confidence from 0.0 to 1.0\n"
+            f"- Do NOT output any reasoning, explanation, or text outside the JSON\n"
+            f"- Do NOT wrap in markdown code blocks"
+        )
 
         candidates_text = "\n".join([
             f"{i+1}. {c['name']}: {c['description']}"
             for i, c in enumerate(item['candidates'])
         ])
-        
-        user_prompt = f"""Select the BEST {facet_name} category for this skill:
 
-SKILL: {item['skill_name']}
-DESCRIPTION: {item['skill_desc']}
-
-CANDIDATE {facet_name.upper()} CATEGORIES:
-{candidates_text}
-
-Which category (1-{len(item['candidates'])}) is the BEST match? Think carefully and respond with JSON only:
-{{"choice": <number>, "confidence": <0.0-1.0>}}
-
-Respond with valid JSON only:""" # ORIGINAL CATEGORY: {item['skill_category']}
+        user_prompt = (
+            f"SKILL: {item['skill_name']}\n"
+            f"DESCRIPTION: {item['skill_desc']}\n\n"
+            f"CANDIDATES:\n{candidates_text}\n\n"
+            f"{{\"choice\":"
+        )
 
         return system_prompt, user_prompt
     
     def _rerank_facet_batch(self, facet_id: str, batch_items: List[Dict]) -> Dict[Any, Tuple[str, float]]:
-        """Batch re-rank facet candidates using LLM with retry logic"""
-        
+        """
+        Batch re-rank facet candidates using LLM with retry logic.
+
+        For each item:
+        - Attempts to parse the LLM response as JSON
+        - On failure, retries up to MAX_LLM_RETRIES times with single-item regeneration
+        - Falls back to embedding-based best candidate if all retries exhaust
+        """
         results = {}
-        user_prompts = []
-        system_prompt = None
         
+        # Build prompts
+        system_prompt = None
+        user_prompts = []
         for item in batch_items:
-            sys_prompt, user_prompt = self._get_facet_prompt(facet_id, item)
+            sys_p, usr_p = self._build_rerank_prompt(facet_id, item)
             if system_prompt is None:
-                system_prompt = sys_prompt
-            user_prompts.append(user_prompt)
+                system_prompt = sys_p
+            user_prompts.append(usr_p)
         
         try:
             responses = self.genai_interface._generate_batch(
@@ -437,7 +379,7 @@ Respond with valid JSON only:""" # ORIGINAL CATEGORY: {item['skill_category']}
             
             for response, item in zip(responses, batch_items):
                 idx = item['idx']
-                retry_count = 5
+                retry_count = MAX_LLM_RETRIES
                 current_response = response
                 
                 while retry_count > 0:
@@ -449,33 +391,38 @@ Respond with valid JSON only:""" # ORIGINAL CATEGORY: {item['skill_category']}
                             
                             if 1 <= choice <= len(item['candidates']):
                                 selected = item['candidates'][choice - 1]
-                                final_confidence = confidence# selected['similarity']# (confidence + selected['similarity']) / 2
-                                results[idx] = (selected['code'], final_confidence)
+                                results[idx] = (selected['code'], float(confidence))
                                 break
                             else:
-                                logger.debug(f"Invalid choice {choice} for facet {facet_id}, skill {idx}")
-                                raise ValueError(f"Invalid choice: {choice}")
+                                raise ValueError(
+                                    f"Invalid choice: {choice}, "
+                                    f"expected 1-{len(item['candidates'])}"
+                                )
                         else:
-                            logger.debug(f"Response not a dictionary for facet {facet_id}, skill {idx}")
-                            raise ValueError("Response not a dictionary")
+                            raise ValueError(f"Response is not a dict: {type(parsed)}")
                             
                     except Exception as e:
                         retry_count -= 1
                         if retry_count > 0:
-                            logger.debug(f"Retrying facet {facet_id} for skill {idx}, {retry_count} attempts left: {e}")
-                            # Regenerate single response
+                            logger.debug(
+                                f"Retry {facet_id} for skill idx={idx}, "
+                                f"{retry_count} attempts left: {e}"
+                            )
+                            # Regenerate single response with fresh prompt
                             try:
-                                sys_prompt, user_prompt = self._get_facet_prompt(facet_id, item)
+                                sys_p, usr_p = self._build_rerank_prompt(facet_id, item)
                                 single_responses = self.genai_interface._generate_batch(
-                                    user_prompts=[user_prompt],
-                                    system_prompt=sys_prompt
+                                    user_prompts=[usr_p],
+                                    system_prompt=sys_p
                                 )
                                 current_response = single_responses[0]
                             except Exception as retry_e:
                                 logger.debug(f"Retry generation failed: {retry_e}")
                                 break
                         else:
-                            logger.debug(f"All retries exhausted for facet {facet_id}, skill {idx}")
+                            logger.debug(
+                                f"All retries exhausted for {facet_id}, skill idx={idx}"
+                            )
                             
         except Exception as e:
             logger.error(f"LLM batch re-ranking failed for facet {facet_id}: {e}")
@@ -501,7 +448,6 @@ Respond with valid JSON only:""" # ORIGINAL CATEGORY: {item['skill_category']}
             logger.info(f"\n{facet_name} ({facet_id}):")
             logger.info(f"  Assigned: {assigned} ({100*assigned/total_skills:.1f}%)")
             
-            # Method breakdown
             method_col = f'facet_{facet_id}_method'
             if method_col in df.columns:
                 methods = df[method_col].value_counts()
@@ -509,7 +455,6 @@ Respond with valid JSON only:""" # ORIGINAL CATEGORY: {item['skill_category']}
                     if method:
                         logger.info(f"    {method}: {count}")
             
-            # Value distribution (top 5)
             value_dist = df[col].value_counts().head(5)
             logger.info(f"  Top values:")
             for value, count in value_dist.items():
@@ -519,22 +464,10 @@ Respond with valid JSON only:""" # ORIGINAL CATEGORY: {item['skill_category']}
     
     def _compute_related_skills(self, df: pd.DataFrame, embeddings: np.ndarray, 
                                  top_k: int = 20, similarity_threshold: float = 0.7) -> Dict[Any, List[Dict]]:
-        """
-        Compute related skills for each skill using embeddings + LLM re-ranking.
-        
-        Args:
-            df: DataFrame with skills
-            embeddings: Skill embeddings
-            top_k: Number of top candidates to consider
-            similarity_threshold: Minimum similarity for related skills
-            
-        Returns:
-            Dict mapping skill index to list of related skills
-        """
+        """Compute related skills for each skill using embeddings + LLM re-ranking."""
         related_skills_map = {}
         indices = df.index.tolist()
         
-        # Build skill ID to name mapping
         skill_id_to_name = {}
         skill_id_to_idx = {}
         for idx in indices:
@@ -542,11 +475,9 @@ Respond with valid JSON only:""" # ORIGINAL CATEGORY: {item['skill_category']}
             skill_id_to_name[skill_id] = df.loc[idx, 'name']
             skill_id_to_idx[skill_id] = idx
         
-        # Compute all pairwise similarities using matrix operation
         logger.info(f"Computing pairwise similarities for {len(indices)} skills...")
         all_similarities = self.embedding_interface.similarity(embeddings, embeddings)
         
-        # Collect items for batch LLM re-ranking
         to_be_reranked = []
         
         for i, idx in enumerate(tqdm(indices, desc="Finding related skills")):
@@ -555,15 +486,12 @@ Respond with valid JSON only:""" # ORIGINAL CATEGORY: {item['skill_category']}
             skill_name = df.loc[idx, 'name']
             skill_desc = df.loc[idx, 'description'] if 'description' in df.columns else ''
             
-            # Get similarities for this skill
             similarities = all_similarities[position]
-            
-            # Get top-K candidates (excluding self)
             top_indices = np.argsort(similarities)[-top_k-1:][::-1]
             
             candidates = []
             for top_idx in top_indices:
-                if top_idx == position:  # Skip self
+                if top_idx == position:
                     continue
                 
                 sim = similarities[top_idx]
@@ -583,20 +511,17 @@ Respond with valid JSON only:""" # ORIGINAL CATEGORY: {item['skill_category']}
                 if len(candidates) >= top_k:
                     break
             
-            # If we have candidates and LLM is available, queue for re-ranking
             if candidates and self.use_llm_reranking and len(candidates) > 3:
                 to_be_reranked.append({
                     'idx': idx,
                     'skill_id': skill_id,
                     'skill_name': skill_name,
                     'skill_desc': str(skill_desc),
-                    'candidates': candidates[:10]  # Limit to top 10 for LLM
+                    'candidates': candidates[:10]
                 })
             elif candidates:
-                # Use embedding similarity directly
                 related_skills_map[idx] = candidates[:10]
         
-        # Batch LLM re-ranking for related skills
         if to_be_reranked and self.genai_interface:
             logger.info(f"LLM re-ranking related skills for {len(to_be_reranked)} skills...")
             
@@ -611,29 +536,22 @@ Respond with valid JSON only:""" # ORIGINAL CATEGORY: {item['skill_category']}
                     if idx in reranked_results:
                         related_skills_map[idx] = reranked_results[idx]
                     else:
-                        # Fallback to embedding-based
                         related_skills_map[idx] = item['candidates'][:10]
         
         return related_skills_map
     
     def _rerank_related_skills_batch(self, batch_items: List[Dict]) -> Dict[Any, List[Dict]]:
-        """
-        Batch re-rank related skills using LLM to identify truly similar skills.
-        
-        Args:
-            batch_items: List of items with skill info and candidates
-            
-        Returns:
-            Dict mapping skill index to filtered related skills
-        """
+        """Batch re-rank related skills using LLM with retry logic."""
         results = {}
         
-        system_prompt = """You are an expert in vocational skills analysis.
-Your task is to identify which candidate skills are truly similar or related to the given skill.
-Consider semantic similarity, skill application, and functional overlap.
-
-For each candidate, rate if it is truly related (1) or not related (0).
-You MUST respond with valid JSON only. No additional text."""
+        system_prompt = (
+            "You identify which candidate skills are truly related to a given skill.\n\n"
+            "RULES:\n"
+            "- Output ONLY a JSON object: {\"related\": [<list of candidate numbers>]}\n"
+            "- Include only candidate numbers (1-based) that are truly related\n"
+            "- Do NOT output any reasoning, explanation, or text outside the JSON\n"
+            "- Do NOT wrap in markdown code blocks"
+        )
 
         user_prompts = []
         
@@ -643,18 +561,12 @@ You MUST respond with valid JSON only. No additional text."""
                 for i, c in enumerate(item['candidates'])
             ])
             
-            user_prompt = f"""Identify which skills are truly related to the given skill:
-
-SKILL: {item['skill_name']}
-DESCRIPTION: {item['skill_desc']}
-
-CANDIDATE RELATED SKILLS:
-{candidates_text}
-
-For each candidate (1-{len(item['candidates'])}), indicate if it is truly related.
-Respond with JSON: {{"related": [<list of candidate numbers that are truly related>]}}
-
-Respond with valid JSON only:"""
+            user_prompt = (
+                f"SKILL: {item['skill_name']}\n"
+                f"DESCRIPTION: {item['skill_desc']}\n\n"
+                f"CANDIDATES:\n{candidates_text}\n\n"
+                f"{{\"related\":"
+            )
             
             user_prompts.append(user_prompt)
         
@@ -666,37 +578,68 @@ Respond with valid JSON only:"""
             
             for response, item in zip(responses, batch_items):
                 idx = item['idx']
-                try:
-                    parsed = self.genai_interface._parse_json_response(response)
-                    if parsed and isinstance(parsed, dict):
-                        related_indices = parsed.get('related', [])
-                        
-                        filtered_related = []
-                        for rel_idx in related_indices:
-                            if 1 <= rel_idx <= len(item['candidates']):
-                                candidate = item['candidates'][rel_idx - 1]
-                                filtered_related.append({
-                                    'skill_id': candidate['skill_id'],
-                                    'skill_name': candidate['skill_name'],
-                                    'similarity': candidate['similarity']
-                                })
-                        
-                        if filtered_related:
-                            results[idx] = filtered_related
+                retry_count = MAX_LLM_RETRIES
+                current_response = response
+
+                while retry_count > 0:
+                    try:
+                        parsed = self.genai_interface._parse_json_response(current_response)
+                        if parsed and isinstance(parsed, dict):
+                            related_indices = parsed.get('related', [])
+                            
+                            filtered_related = []
+                            for rel_idx in related_indices:
+                                if 1 <= rel_idx <= len(item['candidates']):
+                                    candidate = item['candidates'][rel_idx - 1]
+                                    filtered_related.append({
+                                        'skill_id': candidate['skill_id'],
+                                        'skill_name': candidate['skill_name'],
+                                        'similarity': candidate['similarity']
+                                    })
+                            
+                            if filtered_related:
+                                results[idx] = filtered_related
+                            else:
+                                results[idx] = [
+                                    {'skill_id': c['skill_id'], 'skill_name': c['skill_name'], 'similarity': c['similarity']}
+                                    for c in item['candidates'][:5]
+                                ]
+                            break
                         else:
-                            # Keep top 5 by similarity if LLM returns empty
+                            raise ValueError(f"Response is not a dict: {type(parsed)}")
+                                
+                    except Exception as e:
+                        retry_count -= 1
+                        if retry_count > 0:
+                            logger.debug(
+                                f"Retry related skills for idx={idx}, "
+                                f"{retry_count} attempts left: {e}"
+                            )
+                            try:
+                                candidates_text = "\n".join([
+                                    f"{i+1}. {c['skill_name']}: {c['skill_desc']}"
+                                    for i, c in enumerate(item['candidates'])
+                                ])
+                                retry_prompt = (
+                                    f"SKILL: {item['skill_name']}\n"
+                                    f"DESCRIPTION: {item['skill_desc']}\n\n"
+                                    f"CANDIDATES:\n{candidates_text}\n\n"
+                                    f"{{\"related\":"
+                                )
+                                single_responses = self.genai_interface._generate_batch(
+                                    user_prompts=[retry_prompt],
+                                    system_prompt=system_prompt
+                                )
+                                current_response = single_responses[0]
+                            except Exception as retry_e:
+                                logger.debug(f"Retry generation failed: {retry_e}")
+                                break
+                        else:
+                            logger.debug(f"All retries exhausted for related skills, idx={idx}")
                             results[idx] = [
                                 {'skill_id': c['skill_id'], 'skill_name': c['skill_name'], 'similarity': c['similarity']}
                                 for c in item['candidates'][:5]
                             ]
-                            
-                except Exception as e:
-                    logger.debug(f"Failed to parse related skills LLM response: {e}")
-                    # Fallback to embedding-based top 5
-                    results[idx] = [
-                        {'skill_id': c['skill_id'], 'skill_name': c['skill_name'], 'similarity': c['similarity']}
-                        for c in item['candidates'][:5]
-                    ]
                     
         except Exception as e:
             logger.error(f"LLM batch re-ranking for related skills failed: {e}")
@@ -704,18 +647,9 @@ Respond with valid JSON only:"""
         return results
     
     def get_faceted_skill_data(self, df: pd.DataFrame, embeddings: np.ndarray = None) -> List[Dict]:
-        """
-        Export skills with all facet data for visualization
-        
-        Args:
-            df: DataFrame with facet assignments
-            embeddings: Skill embeddings for related skills calculation
-        
-        Returns list of skill dictionaries with facet values and related skills
-        """
+        """Export skills with all facet data for visualization"""
         skills = []
         
-        # Build related skills if embeddings are available
         related_skills_map = {}
         if embeddings is not None and self.embedding_interface is not None:
             logger.info("Computing related skills...")
@@ -739,13 +673,11 @@ Respond with valid JSON only:"""
                 'facets': {}
             }
             
-            # Add facet data
             for facet_id in self.facets_to_assign:
                 col = f'facet_{facet_id}'
                 if col in df.columns and pd.notna(df.loc[idx, col]):
                     value = df.loc[idx, col]
                     
-                    # Handle multi-value facets (stored as JSON)
                     if facet_id in MULTI_VALUE_FACETS and isinstance(value, str) and value.startswith('['):
                         try:
                             value = json.loads(value)

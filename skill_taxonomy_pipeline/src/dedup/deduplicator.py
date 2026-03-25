@@ -21,6 +21,9 @@ from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
+# Maximum retries for LLM JSON parsing failures
+MAX_LLM_RETRIES = 5
+
 
 class SkillDeduplicator:
 
@@ -180,19 +183,25 @@ class SkillDeduplicator:
     def _validate_clusters_genai(
         self, clusters: List[List[str]], name_counts: pd.Series
     ) -> List[List[str]]:
-        """Use LLM to validate whether names in a cluster are truly the same skill."""
+        """
+        Use LLM to validate whether names in a cluster are truly the same skill.
+        Includes retry logic with single-item regeneration on JSON parse failure.
+        """
         multi_clusters = [c for c in clusters if len(c) > 1]
         single_clusters = [c for c in clusters if len(c) == 1]
 
         validated = list(single_clusters)  # Singles pass through
 
         system_prompt = (
-            "You are an expert in vocational skills classification.\n"
-            "Given a group of skill names, decide which ones refer to the SAME skill.\n"
-            "Return a JSON object with a key 'groups' containing a list of lists.\n"
-            "Each inner list is a group of skill names that are the same skill.\n"
-            "If all are the same skill, return one group. If some are different, split them.\n"
-            "Respond with valid JSON only."
+            "You validate whether skill names refer to the same skill.\n\n"
+            "RULES:\n"
+            "- Output ONLY a JSON object: {\"groups\": [[...], ...]}\n"
+            "- Each inner list contains skill names that are the SAME skill\n"
+            "- If all names are the same skill, return one group with all names\n"
+            "- If some are different, split into separate groups\n"
+            "- Use the exact skill names provided (as strings, not numbers)\n"
+            "- Do NOT output any reasoning, explanation, or text outside the JSON\n"
+            "- Do NOT wrap in markdown code blocks"
         )
 
         for batch_start in range(0, len(multi_clusters), self.genai_batch_size):
@@ -202,39 +211,115 @@ class SkillDeduplicator:
             for cluster in batch:
                 names_text = "\n".join(f"  {i+1}. {name}" for i, name in enumerate(cluster))
                 user_prompts.append(
-                    f"Are these skill names referring to the SAME skill?\n\n{names_text}\n\n"
-                    f'Respond with JSON: {{"groups": [[...], ...]}}'
+                    f"Are these skill names the SAME skill?\n\n{names_text}\n\n"
+                    f"{{\"groups\":"
                 )
 
             try:
                 responses = self.genai_interface._generate_batch(
-                    user_prompts=user_prompts, system_prompt=system_prompt, max_tokens=10240
+                    user_prompts=user_prompts, system_prompt=system_prompt
                 )
 
                 for cluster, response in zip(batch, responses):
-                    try:
-                        parsed = self.genai_interface._parse_json_response(response)
-                        if isinstance(parsed, dict) and "groups" in parsed:
-                            for group in parsed["groups"]:
-                                # Map numbered items back to names
-                                if all(isinstance(g, int) for g in group):
-                                    sub = [cluster[g - 1] for g in group if 1 <= g <= len(cluster)]
-                                elif all(isinstance(g, str) for g in group):
-                                    sub = [n for n in group if n in cluster]
-                                else:
-                                    sub = list(cluster)
-                                if sub:
-                                    validated.append(sub)
-                        else:
-                            validated.append(cluster)  # Fallback: keep as-is
-                    except Exception:
-                        validated.append(cluster)
+                    retry_count = MAX_LLM_RETRIES
+                    current_response = response
+
+                    while retry_count > 0:
+                        try:
+                            parsed = self._parse_cluster_response(current_response, cluster)
+                            if parsed is not None:
+                                validated.extend(parsed)
+                                break
+                            else:
+                                raise ValueError("Could not parse cluster groups from response")
+
+                        except Exception as e:
+                            retry_count -= 1
+                            if retry_count > 0:
+                                logger.debug(
+                                    f"Retry cluster validation, "
+                                    f"{retry_count} attempts left: {e}"
+                                )
+                                try:
+                                    names_text = "\n".join(
+                                        f"  {i+1}. {name}"
+                                        for i, name in enumerate(cluster)
+                                    )
+                                    retry_prompt = (
+                                        f"Are these skill names the SAME skill?\n\n"
+                                        f"{names_text}\n\n"
+                                        f"{{\"groups\":"
+                                    )
+                                    single_responses = self.genai_interface._generate_batch(
+                                        user_prompts=[retry_prompt],
+                                        system_prompt=system_prompt,
+                                    )
+                                    current_response = single_responses[0]
+                                except Exception as retry_e:
+                                    logger.debug(f"Retry generation failed: {retry_e}")
+                                    break
+                            else:
+                                logger.debug(
+                                    f"All retries exhausted for cluster with "
+                                    f"{len(cluster)} names, keeping as-is"
+                                )
+                                validated.append(cluster)
+
             except Exception as e:
                 logger.warning(f"GenAI validation batch failed: {e}. Keeping clusters as-is.")
                 validated.extend(batch)
 
         logger.info(f"After GenAI validation: {len(validated)} clusters")
         return validated
+
+    def _parse_cluster_response(
+        self, response: str, cluster: List[str]
+    ) -> Optional[List[List[str]]]:
+        """
+        Parse LLM response for cluster validation.
+        Handles both numbered and string-based group formats.
+
+        Returns:
+            List of sub-clusters (each a list of skill names), or None on failure.
+        """
+        parsed = self.genai_interface._parse_json_response(response)
+
+        if not isinstance(parsed, dict) or "groups" not in parsed:
+            return None
+
+        result = []
+        for group in parsed["groups"]:
+            if not isinstance(group, list) or not group:
+                continue
+
+            # Handle numbered items (e.g., [1, 3, 5])
+            if all(isinstance(g, int) for g in group):
+                sub = [cluster[g - 1] for g in group if 1 <= g <= len(cluster)]
+            # Handle string items (e.g., ["Skill A", "Skill B"])
+            elif all(isinstance(g, str) for g in group):
+                sub = [n for n in group if n in cluster]
+            else:
+                # Mixed or unexpected — keep the whole cluster together
+                sub = list(cluster)
+
+            if sub:
+                result.append(sub)
+
+        # If parsing produced valid groups, return them
+        if result:
+            # Verify all names are accounted for
+            all_parsed_names = set()
+            for sub in result:
+                all_parsed_names.update(sub)
+
+            # Any names missing from the parsed result? Add them as singletons
+            for name in cluster:
+                if name not in all_parsed_names:
+                    result.append([name])
+
+            return result
+
+        return None
 
     # ═══════════════════════════════════════════════════════════════
     #  BUILD SKILL REGISTRY

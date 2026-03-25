@@ -272,7 +272,12 @@ class LevelReassigner:
 
     def _rerank_levels_llm(self, items: List[Dict]) -> Dict[str, Tuple[int, float]]:
         """
-        Use LLM to re-rank ambiguous level assignments.
+        Use LLM to re-rank ambiguous level assignments with retry logic.
+
+        For each item:
+        - Attempts to parse the LLM response as JSON
+        - On failure, retries up to MAX_RETRIES times with single-item regeneration
+        - Falls back to embedding-based best if all retries exhaust
 
         Args:
             items: List of dicts with 'key', 'text', 'candidates'
@@ -280,38 +285,33 @@ class LevelReassigner:
         Returns:
             Dict of {pair_key: (lvl_int, confidence)}
         """
+        MAX_RETRIES = 5
         results = {}
 
         system_prompt = (
-            "You are an expert in vocational education and SFIA proficiency levels.\n"
-            "Given a skill name (optionally with its unit of competency title), "
-            "select the most appropriate SFIA proficiency level.\n"
-            "Consider:\n"
-            "- Level 1 (Follow): Simple tasks under close supervision\n"
-            "- Level 2 (Assist): Routine tasks with some guidance\n"
-            "- Level 3 (Apply): Independent work in familiar contexts\n"
-            "- Level 4 (Enable): Managing work, enabling others\n"
-            "- Level 5 (Ensure & Advise): Ensuring compliance, advising on best practice\n"
-            "- Level 6 (Initiate & Influence): Initiating improvements, influencing direction\n"
-            "- Level 7 (Set Strategy): Setting strategy at the highest level\n\n"
-            "Respond with valid JSON only: {\"choice\": <number>, \"confidence\": <0.0-1.0>}"
+            "You classify vocational skills into SFIA proficiency levels.\n\n"
+            "RULES:\n"
+            "- Output ONLY a JSON object: {\"choice\": <int>, \"confidence\": <float>}\n"
+            "- choice = the candidate number (1-based) that best fits\n"
+            "- confidence = your confidence from 0.0 to 1.0\n"
+            "- Do NOT output any reasoning, explanation, or text outside the JSON\n"
+            "- Do NOT wrap in markdown code blocks"
         )
+
+        def _build_user_prompt(item):
+            cands = "\n".join(
+                f"{i+1}. {c['name']}: {c['description']}"
+                for i, c in enumerate(item["candidates"])
+            )
+            return (
+                f"SKILL IN CONTEXT: {item['text']}\n\n"
+                f"CANDIDATE LEVELS:\n{cands}\n\n"
+                f"{{\"choice\":"
+            )
 
         for batch_start in range(0, len(items), self.llm_batch_size):
             batch = items[batch_start:batch_start + self.llm_batch_size]
-            user_prompts = []
-
-            for item in batch:
-                cands = "\n".join(
-                    f"{i+1}. {c['name']}: {c['description']}"
-                    for i, c in enumerate(item["candidates"])
-                )
-                prompt = (
-                    f"SKILL IN CONTEXT: {item['text']}\n\n"
-                    f"CANDIDATE LEVELS:\n{cands}\n\n"
-                    f"Which level best fits this skill? Respond JSON only:"
-                )
-                user_prompts.append(prompt)
+            user_prompts = [_build_user_prompt(item) for item in batch]
 
             try:
                 responses = self.genai_interface._generate_batch(
@@ -319,18 +319,50 @@ class LevelReassigner:
                     system_prompt=system_prompt,
                 )
 
-                for item, resp in zip(batch, responses):
-                    try:
-                        parsed = self.genai_interface._parse_json_response(resp)
-                        if isinstance(parsed, dict):
-                            choice = parsed.get("choice", 1)
-                            conf = parsed.get("confidence", 0.7)
-                            if 1 <= choice <= len(item["candidates"]):
-                                code = item["candidates"][choice - 1]["code"]
-                                lvl_int = LVL_CODE_TO_INT.get(code, 3)
-                                results[item["key"]] = (lvl_int, float(conf))
-                    except Exception as e:
-                        logger.debug(f"Failed to parse LLM level response: {e}")
+                for item, response in zip(batch, responses):
+                    key = item["key"]
+                    retry_count = MAX_RETRIES
+                    current_response = response
+
+                    while retry_count > 0:
+                        try:
+                            parsed = self.genai_interface._parse_json_response(current_response)
+                            if isinstance(parsed, dict):
+                                choice = parsed.get("choice", 1)
+                                conf = parsed.get("confidence", 0.7)
+                                if 1 <= choice <= len(item["candidates"]):
+                                    code = item["candidates"][choice - 1]["code"]
+                                    lvl_int = LVL_CODE_TO_INT.get(code, 3)
+                                    results[key] = (lvl_int, float(conf))
+                                    break
+                                else:
+                                    raise ValueError(
+                                        f"Invalid choice: {choice}, "
+                                        f"expected 1-{len(item['candidates'])}"
+                                    )
+                            else:
+                                raise ValueError(f"Response is not a dict: {type(parsed)}")
+
+                        except Exception as e:
+                            retry_count -= 1
+                            if retry_count > 0:
+                                logger.debug(
+                                    f"Retry LVL for key={key}, "
+                                    f"{retry_count} attempts left: {e}"
+                                )
+                                try:
+                                    single_responses = self.genai_interface._generate_batch(
+                                        user_prompts=[_build_user_prompt(item)],
+                                        system_prompt=system_prompt,
+                                    )
+                                    current_response = single_responses[0]
+                                except Exception as retry_e:
+                                    logger.debug(f"Retry generation failed: {retry_e}")
+                                    break
+                            else:
+                                logger.debug(
+                                    f"All retries exhausted for LVL, key={key}"
+                                )
 
             except Exception as e:
                 logger.warning(f"LLM level re-ranking batch failed: {e}")

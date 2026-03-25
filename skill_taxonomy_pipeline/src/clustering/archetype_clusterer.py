@@ -25,6 +25,9 @@ from config.facets import ALL_FACETS, MULTI_VALUE_FACETS
 
 logger = logging.getLogger(__name__)
 
+# Maximum retries for LLM JSON parsing failures
+MAX_LLM_RETRIES = 5
+
 
 # ═══════════════════════════════════════════════════════════════════
 #  DATA CLASSES
@@ -118,15 +121,6 @@ class ArchetypeClusterer:
     """
 
     def __init__(self, config: Dict, embedding_interface=None, genai_interface=None):
-        """
-        Initialize the archetype clusterer.
-
-        Args:
-            config: Pipeline configuration dictionary
-            embedding_interface: Embedding model for similarity computation
-                                (reuse from EmbeddingManager.model)
-            genai_interface: Optional LLM interface for sub-cluster labelling
-        """
         self.config = config
         self.embedding_interface = embedding_interface
         self.genai_interface = genai_interface
@@ -171,13 +165,6 @@ class ArchetypeClusterer:
     ) -> Tuple[List[AbilityArchetype], Dict[str, Any]]:
         """
         Main method: build ability archetypes with sub-clusters and progression ladders.
-
-        Args:
-            df: DataFrame with facet assignments (output of FacetAssigner.assign_facets)
-            embeddings: Precomputed skill embeddings (aligned with df rows)
-
-        Returns:
-            Tuple of (list of AbilityArchetype, statistics dict)
         """
         logger.info("=" * 80)
         logger.info("BUILDING ABILITY ARCHETYPES WITH PROGRESSION LADDERS")
@@ -410,44 +397,32 @@ class ArchetypeClusterer:
         """
         Sub-cluster embeddings using agglomerative clustering with
         average linkage and cosine distance. Uses adaptive distance threshold.
-
-        Args:
-            embeddings: Skill embeddings for one archetype (n_skills, embed_dim)
-
-        Returns:
-            Array of cluster labels (int). -1 is not used here since agglomerative
-            assigns all points; very small clusters are handled downstream.
         """
         n = len(embeddings)
 
         if n < self.min_subcluster_size:
-            # Too few skills to sub-cluster — all in one cluster
             return np.zeros(n, dtype=int)
 
-        # Compute pairwise cosine similarity using the embedding interface
+        # Compute pairwise cosine similarity
         if self.embedding_interface is not None:
             sim_matrix = self.embedding_interface.similarity(embeddings, embeddings)
         else:
-            # Fallback: dot product for normalized embeddings
             sim_matrix = np.dot(embeddings, embeddings.T)
 
-        # Clamp similarities to [0, 1] for numerical safety
         sim_matrix = np.clip(sim_matrix, 0.0, 1.0)
 
         # Convert to cosine distance
         dist_matrix = 1.0 - sim_matrix
         np.fill_diagonal(dist_matrix, 0.0)
 
-        # Adaptive threshold based on distance distribution
+        # Adaptive threshold
         threshold = self._compute_adaptive_threshold(dist_matrix)
 
-        # Convert to condensed form for scipy
+        # Condensed form for scipy
         dist_condensed = squareform(dist_matrix, checks=False)
 
         # Agglomerative clustering with average linkage
         Z = linkage(dist_condensed, method='average')
-
-        # Cut dendrogram at adaptive threshold
         labels = fcluster(Z, t=threshold, criterion='distance')
 
         # Shift to 0-indexed
@@ -462,15 +437,7 @@ class ArchetypeClusterer:
         return labels
 
     def _compute_adaptive_threshold(self, dist_matrix: np.ndarray) -> float:
-        """
-        Compute an adaptive distance threshold for agglomerative clustering.
-
-        Uses: threshold = mean_dist - sigma * std_dist
-        Clamped to [floor, ceiling].
-
-        A tighter threshold (lower) produces more sub-clusters.
-        """
-        # Extract upper triangle (exclude diagonal)
+        """Compute adaptive distance threshold for agglomerative clustering."""
         upper_tri = dist_matrix[np.triu_indices_from(dist_matrix, k=1)]
 
         if len(upper_tri) == 0:
@@ -481,7 +448,6 @@ class ArchetypeClusterer:
 
         threshold = mean_dist - self.distance_threshold_sigma * std_dist
 
-        # Clamp
         threshold = np.clip(
             threshold,
             self.distance_threshold_floor,
@@ -582,8 +548,6 @@ class ArchetypeClusterer:
                 asced_col = f'facet_{self.industry_facet}'
                 if asced_col in df.columns and pd.notna(df.loc[df_idx, asced_col]):
                     asced_val = df.loc[df_idx, asced_col]
-                    asced_name_col = f'facet_{self.industry_facet}_name'
-                    asced_name = df.loc[df_idx, asced_name_col] if asced_name_col in df.columns else ''
                     if isinstance(asced_val, str) and asced_val.startswith('['):
                         try:
                             for code in json.loads(asced_val):
@@ -637,17 +601,15 @@ class ArchetypeClusterer:
 
     def _parse_level(self, lvl_facet_val, lvl_col_val) -> int:
         """Parse level value from facet or column."""
-        # Try facet value first (e.g. "LVL.3")
         if pd.notna(lvl_facet_val):
             try:
                 return int(str(lvl_facet_val).replace('LVL.', ''))
             except:
                 pass
-        # Fallback to level column
         try:
             return int(lvl_col_val)
         except:
-            return 3  # Default
+            return 3
 
     def _find_level_gaps(self, levels_present: List[int]) -> List[int]:
         """Find missing levels between min and max."""
@@ -684,7 +646,6 @@ class ArchetypeClusterer:
         else:
             sim_matrix = np.dot(embeddings, embeddings.T)
 
-        # Average of upper triangle (exclude diagonal)
         upper_tri = sim_matrix[np.triu_indices_from(sim_matrix, k=1)]
         return float(np.mean(upper_tri)) if len(upper_tri) > 0 else 1.0
 
@@ -709,7 +670,11 @@ class ArchetypeClusterer:
     # ═══════════════════════════════════════════════════════════════
 
     def _generate_llm_labels(self, archetypes: List[AbilityArchetype]):
-        """Generate concise labels for sub-clusters using LLM."""
+        """
+        Generate concise labels for sub-clusters using LLM.
+        Includes retry logic with single-item regeneration on JSON parse failure.
+        Tightened prompts to suppress verbose thinking.
+        """
         if not self.genai_interface:
             return
 
@@ -732,25 +697,26 @@ class ArchetypeClusterer:
         logger.info(f"Generating LLM labels for {len(items_to_label)} sub-clusters...")
 
         system_prompt = (
-            "You are an expert in vocational education and training (VET) skills classification. "
-            "Given a list of representative skill names from a cluster, generate a short, "
-            "descriptive label (3-8 words) that captures the common theme. "
-            "Respond with JSON only: {\"label\": \"your label here\"}"
+            "You generate short labels for vocational skill clusters.\n\n"
+            "RULES:\n"
+            "- Output ONLY a JSON object: {\"label\": \"your label here\"}\n"
+            "- The label must be 3-8 words capturing the common theme\n"
+            "- Do NOT output any reasoning, explanation, or text outside the JSON\n"
+            "- Do NOT wrap in markdown code blocks"
         )
+
+        def _build_label_prompt(item):
+            names_text = "\n".join(f"- {n}" for n in item['skill_names'])
+            return (
+                f"Archetype: {item['archetype_label']}\n"
+                f"Skills:\n{names_text}\n\n"
+                f"{{\"label\":"
+            )
 
         # Process in batches
         for batch_start in range(0, len(items_to_label), self.llm_label_batch_size):
             batch = items_to_label[batch_start:batch_start + self.llm_label_batch_size]
-            user_prompts = []
-
-            for item in batch:
-                names_text = "\n".join(f"- {n}" for n in item['skill_names'])
-                user_prompts.append(
-                    f"Archetype: {item['archetype_label']}\n"
-                    f"Representative skills:\n{names_text}\n\n"
-                    f"Generate a concise label (3-8 words) for this skill cluster.\n"
-                    f"Respond with JSON: {{\"label\": \"...\"}}"
-                )
+            user_prompts = [_build_label_prompt(item) for item in batch]
 
             try:
                 responses = self.genai_interface._generate_batch(
@@ -759,12 +725,43 @@ class ArchetypeClusterer:
                 )
 
                 for response, item in zip(responses, batch):
-                    try:
-                        parsed = self.genai_interface._parse_json_response(response)
-                        if parsed and isinstance(parsed, dict) and 'label' in parsed:
-                            item['sub_cluster_ref'].label = parsed['label']
-                    except Exception as e:
-                        logger.debug(f"Failed to parse label for {item['cluster_id']}: {e}")
+                    retry_count = MAX_LLM_RETRIES
+                    current_response = response
+
+                    while retry_count > 0:
+                        try:
+                            parsed = self.genai_interface._parse_json_response(current_response)
+                            if parsed and isinstance(parsed, dict) and 'label' in parsed:
+                                label = str(parsed['label']).strip()
+                                if label:
+                                    item['sub_cluster_ref'].label = label
+                                    break
+                                else:
+                                    raise ValueError("Empty label")
+                            else:
+                                raise ValueError(f"Response missing 'label' key: {type(parsed)}")
+
+                        except Exception as e:
+                            retry_count -= 1
+                            if retry_count > 0:
+                                logger.debug(
+                                    f"Retry label for {item['cluster_id']}, "
+                                    f"{retry_count} attempts left: {e}"
+                                )
+                                try:
+                                    single_responses = self.genai_interface._generate_batch(
+                                        user_prompts=[_build_label_prompt(item)],
+                                        system_prompt=system_prompt
+                                    )
+                                    current_response = single_responses[0]
+                                except Exception as retry_e:
+                                    logger.debug(f"Retry generation failed: {retry_e}")
+                                    break
+                            else:
+                                logger.debug(
+                                    f"All retries exhausted for label, "
+                                    f"cluster {item['cluster_id']}"
+                                )
 
             except Exception as e:
                 logger.warning(f"LLM label generation batch failed: {e}")

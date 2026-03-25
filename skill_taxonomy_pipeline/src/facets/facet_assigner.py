@@ -20,6 +20,9 @@ from config.facets import (
 
 logger = logging.getLogger(__name__)
 
+# Maximum retries for LLM JSON parsing failures
+MAX_LLM_RETRIES = 5
+
 
 class FacetAssigner:
     """Assigns configurable facet values to skills using embedding + LLM."""
@@ -46,7 +49,7 @@ class FacetAssigner:
 
     def assign_facets(self, df: pd.DataFrame, embeddings: np.ndarray, facets_override: List[str] = None) -> pd.DataFrame:
         """Assign facets to skills DataFrame.
-        
+
         Args:
             facets_override: If provided, only assign these facets (ignores config).
         """
@@ -117,7 +120,7 @@ class FacetAssigner:
                     df.at[df.index[i], f"facet_{fid}_name"] = info.get("name", best_code)
                 df.at[df.index[i], f"facet_{fid}_confidence"] = float(best_sim)
 
-        # LLM re-ranking
+        # LLM re-ranking with retry logic
         for fid, items in to_rerank.items():
             if not items:
                 continue
@@ -159,39 +162,106 @@ class FacetAssigner:
                 )
                 self.facet_value_keys[fid] = keys
 
-    def _rerank_batch(self, fid: str, batch: List[Dict]) -> Dict:
+    def _build_rerank_prompt(self, fid: str, item: Dict) -> Tuple[str, str]:
+        """
+        Build tightly constrained system and user prompts for LLM re-ranking.
+        Designed to suppress verbose thinking and force short JSON output.
+        """
         fi = ALL_FACETS[fid]
         system = (
-            f"You are an expert in vocational skills classification.\n"
-            f"Select the BEST {fi['facet_name']} category for each skill.\n"
-            f"{fi['description']}\n"
-            f"Respond with valid JSON only: {{\"choice\": <number>, \"confidence\": <0-1>}}"
+            f"You classify vocational skills into {fi['facet_name']} categories.\n"
+            f"{fi['description']}\n\n"
+            f"RULES:\n"
+            f"- Output ONLY a JSON object: {{\"choice\": <int>, \"confidence\": <float>}}\n"
+            f"- choice = the candidate number (1-based) that best fits\n"
+            f"- confidence = your confidence from 0.0 to 1.0\n"
+            f"- Do NOT output any reasoning, explanation, or text outside the JSON\n"
+            f"- Do NOT wrap in markdown code blocks"
         )
-        prompts = []
-        for item in batch:
-            cands = "\n".join(f"{i+1}. {c['name']}: {c['description']}" for i, c in enumerate(item["candidates"]))
-            prompt = f"SKILL: {item['skill_name']}\nDESCRIPTION: {item['skill_desc']}\n"
-            # Include unit title context for ASCED
-            if "unit_context" in item and item["unit_context"]:
-                prompt += f"TEACHING CONTEXT: {item['unit_context']}\n"
-            prompt += f"\nCANDIDATES:\n{cands}\n\nRespond JSON only:"
-            prompts.append(prompt)
+
+        cands = "\n".join(
+            f"{i+1}. {c['name']}: {c['description']}"
+            for i, c in enumerate(item["candidates"])
+        )
+        prompt = f"SKILL: {item['skill_name']}\n"
+        if item.get("skill_desc"):
+            prompt += f"DESCRIPTION: {item['skill_desc']}\n"
+        if item.get("unit_context"):
+            prompt += f"TEACHING CONTEXT: {item['unit_context']}\n"
+        prompt += f"\nCANDIDATES:\n{cands}\n\n{{\"choice\":"
+
+        return system, prompt
+
+    def _rerank_batch(self, fid: str, batch: List[Dict]) -> Dict:
+        """
+        Batch re-rank facet candidates using LLM with retry logic.
+
+        For each item in the batch:
+        - Attempts to parse the LLM response as JSON
+        - On failure, retries up to MAX_LLM_RETRIES times with single-item regeneration
+        - Falls back to embedding-based best candidate if all retries exhaust
+        """
         results = {}
+
+        # Build prompts
+        system_prompt = None
+        user_prompts = []
+        for item in batch:
+            sys_p, usr_p = self._build_rerank_prompt(fid, item)
+            if system_prompt is None:
+                system_prompt = sys_p
+            user_prompts.append(usr_p)
+
         try:
-            responses = self.genai_interface._generate_batch(user_prompts=prompts, system_prompt=system)
-            for item, resp in zip(batch, responses):
-                try:
-                    parsed = self.genai_interface._parse_json_response(resp)
-                    if isinstance(parsed, dict):
-                        choice = parsed.get("choice", 1)
-                        conf = parsed.get("confidence", 0.7)
-                        if 1 <= choice <= len(item["candidates"]):
-                            c = item["candidates"][choice - 1]
-                            results[item["idx"]] = (c["code"], conf)
-                except Exception:
-                    pass
+            responses = self.genai_interface._generate_batch(
+                user_prompts=user_prompts, system_prompt=system_prompt
+            )
+
+            for item, response in zip(batch, responses):
+                idx = item["idx"]
+                retry_count = MAX_LLM_RETRIES
+                current_response = response
+
+                while retry_count > 0:
+                    try:
+                        parsed = self.genai_interface._parse_json_response(current_response)
+                        if isinstance(parsed, dict):
+                            choice = parsed.get("choice", 1)
+                            conf = parsed.get("confidence", 0.7)
+                            if 1 <= choice <= len(item["candidates"]):
+                                results[idx] = (item["candidates"][choice - 1]["code"], float(conf))
+                                break
+                            else:
+                                raise ValueError(f"Invalid choice: {choice}, expected 1-{len(item['candidates'])}")
+                        else:
+                            raise ValueError(f"Response is not a dict: {type(parsed)}")
+
+                    except Exception as e:
+                        retry_count -= 1
+                        if retry_count > 0:
+                            logger.debug(
+                                f"Retry {fid} for skill idx={idx}, "
+                                f"{retry_count} attempts left: {e}"
+                            )
+                            # Regenerate single response with fresh prompt
+                            try:
+                                sys_p, usr_p = self._build_rerank_prompt(fid, item)
+                                single_responses = self.genai_interface._generate_batch(
+                                    user_prompts=[usr_p],
+                                    system_prompt=sys_p,
+                                )
+                                current_response = single_responses[0]
+                            except Exception as retry_e:
+                                logger.debug(f"Retry generation failed: {retry_e}")
+                                break
+                        else:
+                            logger.debug(
+                                f"All retries exhausted for {fid}, skill idx={idx}"
+                            )
+
         except Exception as e:
-            logger.warning(f"LLM rerank failed for {fid}: {e}")
+            logger.warning(f"LLM rerank batch failed for {fid}: {e}")
+
         return results
 
     def _log_stats(self, df, facets=None):
