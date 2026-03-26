@@ -123,12 +123,23 @@ class GenAIInterface:
 
     def _generate_batch(self,
                         user_prompts: List[str],
-                        system_prompt: Optional[str] = None,
+                        system_prompt: str = "",
                         max_tokens: Optional[int] = None,
                         temperature: float = 0.0) -> List[str]:
         """
         Generate responses for a batch of prompts.
-        Azure OpenAI doesn't support true batching, so this processes sequentially.
+
+        Azure OpenAI doesn't support true batching, so this processes
+        sequentially with per-item error handling.
+
+        Args:
+            user_prompts: List of user prompt strings
+            system_prompt: System prompt (shared across all prompts)
+            max_tokens: Maximum output tokens per response
+            temperature: Sampling temperature
+
+        Returns:
+            List of response strings, same length as user_prompts
         """
         responses = []
         for user_prompt in user_prompts:
@@ -175,14 +186,12 @@ class GenAIInterface:
         if not response:
             return {}
 
-        # Use the robust shared parser
         try:
             from src.utils.json_parser import robust_parse_json
             return robust_parse_json(response)
         except ImportError:
             pass
 
-        # Legacy fallback
         return self._legacy_parse_json(response)
 
     def _legacy_parse_json(self, response: str) -> Dict:

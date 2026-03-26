@@ -54,9 +54,11 @@ class VLLMGenAIInterface:
         self.model_config = self.MODELS[model_name]
         self.template = self.model_config.get("template", "Mistral")
 
-        # Token budget for batching: leave room for output tokens
-        # Use 80% of max_model_len as the per-prompt ceiling
-        self._max_prompt_tokens = int(self.max_model_len * 0.80)
+        # Token budget: leave room for output tokens (max_tokens default 2048)
+        # Use 70% of max_model_len as the per-prompt ceiling for input
+        self._max_input_tokens = int(self.max_model_len * 0.70)
+        # Approximate chars per token for estimation
+        self._chars_per_token = 4
 
         # Initialize the model
         self.llm = None
@@ -74,7 +76,7 @@ class VLLMGenAIInterface:
                 max_model_len=self.max_model_len,
                 gpu_memory_utilization=self.gpu_memory_utilization
             )
-            logger.info(f"Successfully loaded model: {self.model_name} on GPU(s) specified by CUDA_VISIBLE_DEVICES")
+            logger.info(f"Successfully loaded model: {self.model_name}")
 
         except Exception as e:
             logger.error(f"Failed to initialize model: {e}")
@@ -131,19 +133,59 @@ class VLLMGenAIInterface:
             return f'<s> [INST] {sys_message} [/INST]\nUser: {query}\nAssistant: '
 
     def _estimate_tokens(self, text: str) -> int:
-        """
-        Rough token count estimate. Uses ~4 chars per token as a conservative
-        heuristic. This avoids needing the actual tokenizer for batching decisions.
-        """
-        return len(text) // 4 + 1
+        """Rough token count estimate (~4 chars per token)."""
+        return len(text) // self._chars_per_token + 1
 
-    def _generate_batch(self, system_prompt: str, user_prompts: List[str], max_tokens: int = 2048) -> List[str]:
+    def _truncate_prompt_to_fit(self, system_prompt: str, user_prompt: str) -> str:
         """
-        Generate responses for a batch of prompts with token-aware sub-batching.
+        Truncate the user prompt so the formatted instruction fits within
+        the model's input token budget. The system prompt is kept intact
+        since it contains critical formatting rules.
 
-        If any single formatted prompt exceeds the model's context window,
-        it is skipped (returns empty string). If the batch as a whole is too
-        large for a single vLLM call, it is split into sub-batches.
+        Returns:
+            A (possibly truncated) user_prompt that fits.
+        """
+        # Estimate overhead from system prompt + template markers
+        template_overhead = self._estimate_tokens(
+            self._format_instruction(system_prompt, "")
+        )
+        available_for_user = self._max_input_tokens - template_overhead
+
+        if available_for_user <= 100:
+            # System prompt alone nearly fills the context — hard truncate
+            logger.warning("System prompt nearly fills context window, severely truncating user prompt")
+            available_for_user = 100
+
+        max_user_chars = available_for_user * self._chars_per_token
+
+        if len(user_prompt) <= max_user_chars:
+            return user_prompt
+
+        logger.debug(
+            f"Truncating user prompt from {len(user_prompt)} to {max_user_chars} chars "
+            f"(~{available_for_user} tokens)"
+        )
+        return user_prompt[:max_user_chars]
+
+    def _generate_batch(self,
+                        user_prompts: List[str],
+                        system_prompt: str = "",
+                        max_tokens: int = 2048) -> List[str]:
+        """
+        Generate responses for a batch of prompts.
+
+        Each prompt is checked against the model's context window.
+        Oversized prompts are truncated (not skipped).
+        Prompts are processed in sub-batches to manage memory.
+        On sub-batch failure, falls back to one-by-one processing.
+
+        Args:
+            user_prompts: List of user prompt strings
+            system_prompt: System prompt (shared across all prompts)
+            max_tokens: Maximum output tokens per response
+
+        Returns:
+            List of response strings, same length as user_prompts
         """
         sampling_params = SamplingParams(
             max_tokens=max_tokens,
@@ -155,83 +197,60 @@ class VLLMGenAIInterface:
             best_of=1
         )
 
-        # Format all prompts and check token counts
+        # Format all prompts, truncating any that are too long
         formatted_prompts = []
-        prompt_indices = []  # Track which original index each formatted prompt corresponds to
-        skipped = set()
-
-        for i, user_prompt in enumerate(user_prompts):
-            full_prompt = self._format_instruction(system_prompt, user_prompt)
-            estimated_tokens = self._estimate_tokens(full_prompt)
-
-            if estimated_tokens > self._max_prompt_tokens:
-                logger.warning(
-                    f"Prompt {i} too long (~{estimated_tokens} tokens, "
-                    f"max {self._max_prompt_tokens}). Skipping."
-                )
-                skipped.add(i)
-                continue
-
+        for user_prompt in user_prompts:
+            safe_prompt = self._truncate_prompt_to_fit(system_prompt, user_prompt)
+            full_prompt = self._format_instruction(system_prompt, safe_prompt)
             formatted_prompts.append(full_prompt)
-            prompt_indices.append(i)
 
-        # Generate in sub-batches to avoid overwhelming vLLM
-        # Group prompts so each sub-batch stays under a reasonable total token count
-        all_outputs = [""] * len(user_prompts)  # Pre-fill with empty strings
+        all_outputs = [""] * len(user_prompts)
 
         if not formatted_prompts:
             return all_outputs
 
-        sub_batches = self._split_into_subbatches(formatted_prompts, prompt_indices)
+        # Process in sub-batches (cap at 16 per batch for memory safety)
+        max_sub_batch = min(16, len(formatted_prompts))
 
-        for sub_formatted, sub_indices in sub_batches:
+        for start in range(0, len(formatted_prompts), max_sub_batch):
+            end = min(start + max_sub_batch, len(formatted_prompts))
+            sub_formatted = formatted_prompts[start:end]
+            sub_range = range(start, end)
+
             try:
-                outputs = self.llm.generate(sub_formatted, sampling_params=sampling_params, use_tqdm=False)
-                for output, orig_idx in zip(outputs, sub_indices):
-                    all_outputs[orig_idx] = output.outputs[0].text
+                outputs = self.llm.generate(
+                    sub_formatted, sampling_params=sampling_params, use_tqdm=False
+                )
+                for output, idx in zip(outputs, sub_range):
+                    all_outputs[idx] = output.outputs[0].text
             except Exception as e:
-                logger.error(f"vLLM generation failed for sub-batch of {len(sub_formatted)}: {e}")
-                # Try one-by-one fallback for this sub-batch
-                for single_prompt, orig_idx in zip(sub_formatted, sub_indices):
+                logger.error(
+                    f"vLLM sub-batch failed ({len(sub_formatted)} prompts): {e}. "
+                    f"Falling back to one-by-one."
+                )
+                # One-by-one fallback
+                for single_prompt, idx in zip(sub_formatted, sub_range):
                     try:
-                        single_output = self.llm.generate([single_prompt], sampling_params=sampling_params, use_tqdm=False)
-                        all_outputs[orig_idx] = single_output[0].outputs[0].text
+                        single_output = self.llm.generate(
+                            [single_prompt], sampling_params=sampling_params, use_tqdm=False
+                        )
+                        all_outputs[idx] = single_output[0].outputs[0].text
                     except Exception as single_e:
-                        logger.warning(f"Single prompt generation also failed for idx {orig_idx}: {single_e}")
+                        logger.warning(
+                            f"Single prompt also failed (idx {idx}): {single_e}"
+                        )
 
         return all_outputs
 
-    def _split_into_subbatches(
-        self,
-        formatted_prompts: List[str],
-        prompt_indices: List[int],
-    ) -> List[tuple]:
-        """
-        Split formatted prompts into sub-batches where each sub-batch's
-        total estimated token count stays reasonable.
-
-        Returns list of (sub_formatted, sub_indices) tuples.
-        """
-        # Each prompt is processed independently by vLLM, so the constraint
-        # is really per-prompt, not total. But very large batches can cause
-        # memory issues, so cap at a reasonable batch size.
-        max_batch = min(32, len(formatted_prompts))
-
-        sub_batches = []
-        for start in range(0, len(formatted_prompts), max_batch):
-            end = min(start + max_batch, len(formatted_prompts))
-            sub_batches.append((
-                formatted_prompts[start:end],
-                prompt_indices[start:end],
-            ))
-
-        return sub_batches
-
     def generate_response(self, system_prompt: str, user_prompt: str, max_tokens: int = 2048) -> str:
-        """Unified method for generating responses"""
+        """Unified method for generating single responses"""
         if max_tokens is None:
             max_tokens = 2048
-        responses = self._generate_batch(system_prompt, [user_prompt], max_tokens)
+        responses = self._generate_batch(
+            user_prompts=[user_prompt],
+            system_prompt=system_prompt,
+            max_tokens=max_tokens,
+        )
         return responses[0] if responses else ""
 
     def generate_json(self,
@@ -264,14 +283,12 @@ class VLLMGenAIInterface:
         if not response:
             return {}
 
-        # Use the robust shared parser
         try:
             from src.utils.json_parser import robust_parse_json
             return robust_parse_json(response)
         except ImportError:
             pass
 
-        # Legacy fallback — kept for backward compatibility
         return self._legacy_parse_json(response)
 
     def _legacy_parse_json(self, response: str) -> Dict:
