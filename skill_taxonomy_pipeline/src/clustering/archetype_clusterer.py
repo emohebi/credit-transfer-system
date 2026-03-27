@@ -129,8 +129,8 @@ class ArchetypeClusterer:
         cluster_config = config.get('archetype_clustering', {})
         self.min_archetype_size = cluster_config.get('min_archetype_size', 5)
         self.min_subcluster_size = cluster_config.get('min_subcluster_size', 3)
-        self.distance_threshold_floor = cluster_config.get('distance_threshold_floor', 0.3)
-        self.distance_threshold_ceiling = cluster_config.get('distance_threshold_ceiling', 0.7)
+        self.distance_threshold_floor = cluster_config.get('distance_threshold_floor', 0.45)
+        self.distance_threshold_ceiling = cluster_config.get('distance_threshold_ceiling', 0.65)
         self.distance_threshold_sigma = cluster_config.get('distance_threshold_sigma', 0.5)
         self.large_archetype_threshold = cluster_config.get('large_archetype_threshold', 5000)
         self.facet_confidence_threshold = cluster_config.get('facet_confidence_threshold', 0.4)
@@ -396,7 +396,12 @@ class ArchetypeClusterer:
     def _agglomerative_subcluster(self, embeddings: np.ndarray) -> np.ndarray:
         """
         Sub-cluster embeddings using agglomerative clustering with
-        average linkage and cosine distance. Uses adaptive distance threshold.
+        complete linkage and cosine distance. Uses adaptive distance threshold.
+
+        Complete linkage merges clusters based on the maximum distance between
+        any pair of members, producing tighter, more coherent clusters than
+        average linkage. This prevents chain-effect merges where A~B and B~C
+        leads to A and C being grouped even when they are dissimilar.
         """
         n = len(embeddings)
 
@@ -421,8 +426,10 @@ class ArchetypeClusterer:
         # Condensed form for scipy
         dist_condensed = squareform(dist_matrix, checks=False)
 
-        # Agglomerative clustering with average linkage
-        Z = linkage(dist_condensed, method='average')
+        # Agglomerative clustering with complete linkage
+        # Complete linkage uses the maximum distance between any two members
+        # of merging clusters, preventing chain-effect merges of unrelated skills
+        Z = linkage(dist_condensed, method='complete')
         labels = fcluster(Z, t=threshold, criterion='distance')
 
         # Shift to 0-indexed
@@ -437,16 +444,27 @@ class ArchetypeClusterer:
         return labels
 
     def _compute_adaptive_threshold(self, dist_matrix: np.ndarray) -> float:
-        """Compute adaptive distance threshold for agglomerative clustering."""
+        """
+        Compute an adaptive distance threshold for agglomerative clustering.
+
+        With complete linkage, the threshold represents the maximum allowed
+        distance between ANY two members of a merged cluster. This needs to
+        be tighter than with average linkage.
+
+        Uses: threshold = median_dist - sigma * std_dist
+        Clamped to [floor, ceiling].
+
+        Median is used instead of mean for robustness to outlier pairs.
+        """
         upper_tri = dist_matrix[np.triu_indices_from(dist_matrix, k=1)]
 
         if len(upper_tri) == 0:
             return self.distance_threshold_floor
 
-        mean_dist = np.mean(upper_tri)
-        std_dist = np.std(upper_tri)
+        median_dist = float(np.median(upper_tri))
+        std_dist = float(np.std(upper_tri))
 
-        threshold = mean_dist - self.distance_threshold_sigma * std_dist
+        threshold = median_dist - self.distance_threshold_sigma * std_dist
 
         threshold = np.clip(
             threshold,

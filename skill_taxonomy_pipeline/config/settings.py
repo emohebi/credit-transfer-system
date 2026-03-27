@@ -26,7 +26,7 @@ for d in [DATA_DIR, OUTPUT_DIR, CACHE_DIR]:
 DEDUP_CONFIG = {
     "similarity_threshold": 0.90,
     "use_genai_validation": True,
-    "genai_batch_size": 3,
+    "genai_batch_size": 30,
     "max_candidates_per_skill": 20,
 }
 
@@ -71,14 +71,17 @@ DATA_CONFIG = {
 }
 
 # ═══════════════════════════════════════════════════════════════════
-#  ABILITY ARCHETYPE CLUSTERING (NEW)
+#  ABILITY ARCHETYPE CLUSTERING
 # ═══════════════════════════════════════════════════════════════════
 
 ARCHETYPE_CLUSTERING_CONFIG = {
     "min_archetype_size": 5,
     "min_subcluster_size": 3,
-    "distance_threshold_floor": 0.3,
-    "distance_threshold_ceiling": 0.7,
+    # Complete linkage thresholds (cosine distance = 1 - similarity)
+    # floor=0.45 means clusters need at least 55% pairwise similarity
+    # ceiling=0.65 means clusters won't require more than 35% similarity
+    "distance_threshold_floor": 0.45,
+    "distance_threshold_ceiling": 0.65,
     "distance_threshold_sigma": 0.5,
     "large_archetype_threshold": 5000,
     "facet_confidence_threshold": 0.4,
@@ -149,7 +152,7 @@ CONFIG = {
     "embedding": EMBEDDING_CONFIG,
     "dedup": DEDUP_CONFIG,
     "facet_assignment": FACET_ASSIGNMENT_CONFIG,
-    "archetype_clustering": ARCHETYPE_CLUSTERING_CONFIG,  # NEW
+    "archetype_clustering": ARCHETYPE_CLUSTERING_CONFIG,
     "llm": LLM_CONFIG,
     "paths": {
         "project_root": str(PROJECT_ROOT),
