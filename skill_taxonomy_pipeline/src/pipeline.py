@@ -727,7 +727,6 @@ class SkillAssertionPipeline:
                         "archetype_id": arch.get("archetype_id", ""), "label": arch.get("label", ""),
                         "skill_nature": arch.get("nat", {}).get("name", ""),
                         "transferability": arch.get("trf", {}).get("name", ""),
-                        "cognitive_complexity": arch.get("cog", {}).get("name", ""),
                         "total_skills": arch.get("total_skills", 0),
                         "sub_cluster_count": len(arch.get("sub_clusters", [])),
                         "asced_field_count": len(arch.get("asced_coverage", {})),

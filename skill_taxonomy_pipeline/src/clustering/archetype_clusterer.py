@@ -6,7 +6,7 @@ then sub-clusters within each archetype using agglomerative clustering
 on embeddings, and builds progression ladders ordered by proficiency level.
 
 Architecture:
-    Ability Archetype  (NAT, TRF, COG)
+    Ability Archetype  (NAT, TRF)
       └── Skill Sub-cluster  (embedding-based, agglomerative clustering)
             └── Progression Ladder  (skills ordered by LVL within sub-cluster)
 """
@@ -68,14 +68,12 @@ class SkillSubCluster:
 
 @dataclass
 class AbilityArchetype:
-    """A group of skills sharing the same ability signature (NAT, TRF, COG)"""
+    """A group of skills sharing the same ability signature (NAT, TRF)"""
     archetype_id: str
     nat_code: str
     nat_name: str
     trf_code: str
     trf_name: str
-    cog_code: str
-    cog_name: str
     label: str  # Human-readable composite label
     sub_clusters: List[SkillSubCluster]
     unclassified_skills: List[Dict]  # Noise points
@@ -109,12 +107,12 @@ class ArchetypeClusterer:
     Clusters skills into Ability Archetypes and builds progression ladders.
 
     Uses existing pipeline components:
-    - Facet assignments from FacetAssigner (NAT, TRF, COG, LVL, ASCED)
+    - Facet assignments from FacetAssigner (NAT, TRF, LVL, ASCED; COG on skills only)
     - Precomputed embeddings from EmbeddingManager
     - Embedding similarity via EmbeddingInterface
 
     Algorithm:
-    1. Group skills by (NAT, TRF, COG) -> Ability Archetypes
+    1. Group skills by (NAT, TRF) -> Ability Archetypes
     2. Within each archetype, agglomerative clustering on embeddings -> Sub-clusters
     3. Within each sub-cluster, order by LVL -> Progression Ladders
     4. Compute cross-industry pathway analysis from ASCED distribution
@@ -138,8 +136,12 @@ class ArchetypeClusterer:
         self.llm_label_batch_size = cluster_config.get('llm_label_batch_size', 20)
         self.representative_skill_count = cluster_config.get('representative_skill_count', 5)
 
-        # Key facets for archetype signature
-        self.signature_facets = ['NAT', 'TRF', 'COG']
+        # Key facets for archetype signature (NAT × TRF = 24 archetypes)
+        # COG is excluded — it's a depth indicator, not a type indicator.
+        # Skills of the same nature and transferability but different cognitive
+        # complexity should be in the same archetype so progression ladders
+        # can capture the depth variation.
+        self.signature_facets = ['NAT', 'TRF']
         # Progression axis
         self.progression_facet = 'LVL'
         # Industry spread facet
@@ -242,7 +244,7 @@ class ArchetypeClusterer:
     # ═══════════════════════════════════════════════════════════════
 
     def _build_archetype_groups(self, df: pd.DataFrame) -> Dict[Tuple[str, ...], List[int]]:
-        """Group skills by their ability signature (NAT, TRF, COG)."""
+        """Group skills by their ability signature (NAT, TRF)."""
 
         groups = defaultdict(list)
 
@@ -287,15 +289,14 @@ class ArchetypeClusterer:
     ) -> Optional[AbilityArchetype]:
         """Process a single archetype: sub-cluster + build progression ladders."""
 
-        nat_code, trf_code, cog_code = archetype_key
-        archetype_id = f"{nat_code}_{trf_code}_{cog_code}"
+        nat_code, trf_code = archetype_key
+        archetype_id = f"{nat_code}_{trf_code}"
 
         # Get facet names
         nat_name = ALL_FACETS.get('NAT', {}).get('values', {}).get(nat_code, {}).get('name', nat_code)
         trf_name = ALL_FACETS.get('TRF', {}).get('values', {}).get(trf_code, {}).get('name', trf_code)
-        cog_name = ALL_FACETS.get('COG', {}).get('values', {}).get(cog_code, {}).get('name', cog_code)
 
-        label = f"{nat_name} + {trf_name} + {cog_name}"
+        label = f"{nat_name} + {trf_name}"
 
         # Extract embeddings for this archetype
         arch_embeddings = embeddings[group_positions]
@@ -378,8 +379,6 @@ class ArchetypeClusterer:
             nat_name=nat_name,
             trf_code=trf_code,
             trf_name=trf_name,
-            cog_code=cog_code,
-            cog_name=cog_name,
             label=label,
             sub_clusters=sub_clusters,
             unclassified_skills=unclassified_skills,
@@ -894,7 +893,6 @@ class ArchetypeClusterer:
                 'archetype_id': a.archetype_id,
                 'nat': {'code': a.nat_code, 'name': a.nat_name},
                 'trf': {'code': a.trf_code, 'name': a.trf_name},
-                'cog': {'code': a.cog_code, 'name': a.cog_name},
                 'label': a.label,
                 'total_skills': a.total_skills,
                 'asced_coverage': a.asced_coverage,
