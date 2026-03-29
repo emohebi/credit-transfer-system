@@ -267,6 +267,12 @@ body { font-family: 'DM Sans', sans-serif; background: var(--c-bg); color: var(-
   font-size: .75rem; background: #fff7ed; color: #92400e;
 }
 
+.kw-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.kw-tag {
+  display: inline-block; padding: 3px 9px; border-radius: 6px;
+  font-size: .75rem; background: var(--c-tag-bg); color: var(--c-tag-text);
+}
+
 .dim-row {
   display: flex; align-items: center; justify-content: space-between;
   padding: 5px 0; border-bottom: 1px solid var(--c-bg);
@@ -462,24 +468,39 @@ function openSkill(sid, ev) {
   if (skill.definition)
     h += `<div class="d-section"><div class="d-label"><i class="bi bi-info-circle"></i> Definition</div><div class="d-def">${esc(skill.definition)}</div></div>`;
 
+  // Dimensions (Nature + Transferability + Cognitive Complexity)
+  const facets = skill.facets || {};
+  const nat = facets.NAT;
+  const trf = facets.TRF;
+  const cog = facets.COG;
+  if (nat || trf || cog) {
+    h += `<div class="d-section"><div class="d-label"><i class="bi bi-tags"></i> Dimensions</div>`;
+    if (nat) h += `<div class="dim-row"><span class="dim-key">Nature</span><span class="dim-val">${esc(nat.name)}</span></div>`;
+    if (trf) h += `<div class="dim-row"><span class="dim-key">Transferability</span><span class="dim-val">${esc(trf.name)}</span></div>`;
+    if (cog) h += `<div class="dim-row"><span class="dim-key">Cognitive Complexity</span><span class="dim-val">${esc(cog.name)}</span></div>`;
+    h += `</div>`;
+  }
+
   // Alternative titles
   const alts = skill.alternative_labels || [];
   if (alts.length)
     h += `<div class="d-section"><div class="d-label"><i class="bi bi-card-heading"></i> Alternative Titles (${alts.length})</div><div class="alt-tags">${alts.map(a => `<span class="alt-tag">${esc(a)}</span>`).join('')}</div></div>`;
 
-  // Dimensions (Nature + Transferability)
-  const facets = skill.facets || {};
-  const nat = facets.NAT;
-  const trf = facets.TRF;
-  if (nat || trf) {
-    h += `<div class="d-section"><div class="d-label"><i class="bi bi-tags"></i> Dimensions</div>`;
-    if (nat) h += `<div class="dim-row"><span class="dim-key">Nature</span><span class="dim-val">${esc(nat.name)}</span></div>`;
-    if (trf) h += `<div class="dim-row"><span class="dim-key">Transferability</span><span class="dim-val">${esc(trf.name)}</span></div>`;
-    h += `</div>`;
+  // Context Keywords (collected from all assertions)
+  const assertions = skill.assertions || [];
+  const kwSet = new Set();
+  for (const a of assertions) {
+    if (Array.isArray(a.keywords)) {
+      a.keywords.forEach(k => { if (k) kwSet.add(k); });
+    }
+  }
+  const keywords = [...kwSet];
+  if (keywords.length) {
+    h += `<div class="d-section"><div class="d-label"><i class="bi bi-key"></i> Context Keywords (${keywords.length})</div>`;
+    h += `<div class="kw-tags">${keywords.map(k => `<span class="kw-tag">${esc(k)}</span>`).join('')}</div></div>`;
   }
 
   // Assertions table
-  const assertions = skill.assertions || [];
   if (assertions.length) {
     h += `<div class="d-section"><div class="d-label"><i class="bi bi-link-45deg"></i> Assertions (${assertions.length})</div>`;
     h += `<table class="assert-tbl"><thead><tr><th>Unit Code</th><th>Unit Name</th><th>Level</th><th>Evidence</th><th>Qual</th><th>Occ</th></tr></thead><tbody>`;
