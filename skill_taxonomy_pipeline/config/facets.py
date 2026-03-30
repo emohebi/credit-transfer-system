@@ -148,10 +148,14 @@ def get_facet_text_for_embedding(facet_id: str, value_code: str) -> str:
     """Text representation of a facet value for embedding similarity."""
     facet = ALL_FACETS.get(facet_id, {})
     value = facet.get("values", {}).get(value_code, {})
+    if facet_id == "THA":
+        # For THA: name + typical_skills only — keeps embedding focused
+        # Description and keywords are used in LLM re-ranking prompts, not embeddings
+        parts = [value.get("name", "")]
+        if "typical_skills" in value:
+            parts.append("; ".join(value["typical_skills"]))
+        return ". ".join(p for p in parts if p)
     parts = [value.get("name", ""), value.get("description", "")]
-    # Include keywords for THA to improve embedding quality
-    if facet_id == "THA" and "keywords" in value:
-        parts.append("Keywords: " + ", ".join(value["keywords"]))
     return ". ".join(p for p in parts if p)
 
 
