@@ -316,6 +316,22 @@ class SkillAssertionPipeline:
             )
             self._assign_lvl_facet_to_registry(skill_registry, df)
 
+            # ── 5b. VALIDATE THA ASSIGNMENTS ──────────────────
+            logger.info("\nValidating THA facet assignments...")
+            try:
+                from src.validation.tha_validator import THAValidator
+                validator = THAValidator(
+                    self.config,
+                    embedding_interface=self.embedding_interface,
+                    genai_interface=self.genai_interface,
+                )
+                validation_stats = validator.validate_and_report(
+                    skill_registry, df_unique, skill_embeddings, output_path,
+                )
+                logger.info(f"Validation complete: {validation_stats.get('total_issues', 0)} issues flagged")
+            except Exception as e:
+                logger.warning(f"THA validation failed (non-fatal): {e}")
+
             # ── 6. BUILD ABILITY GROUPS (TRF → THA → LVL) ────────
             logger.info("\n[6/7] Building ability groups (TRF → THA → LVL)...")
             groups_data, group_stats = self._build_ability_groups(skill_registry, df)
