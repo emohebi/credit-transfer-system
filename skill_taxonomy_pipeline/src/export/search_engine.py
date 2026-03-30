@@ -1,11 +1,11 @@
 """
-Generate an HTML-based skill cluster explorer for the Skill Assertion schema.
+Generate an HTML-based skill ability explorer for the Skill Assertion schema.
 
 Single-view design:
-  - Flat table of all sub-clusters with progression dots
-  - Expandable skill rows sorted by level within each cluster
-  - Slide-out drawer for full skill detail (definition, alt titles, dimensions, assertions)
-  - Search across cluster labels and skill names
+  - Flat table of all THA (Transferable Human Ability) groups with progression dots
+  - Expandable skill rows sorted by level within each ability group
+  - Slide-out drawer for full skill detail (definition, dimensions, alt titles, context keywords, assertions)
+  - Search across ability labels and skill names
   - External data file for performance
 """
 import json
@@ -36,7 +36,7 @@ def _build_html(data_file: str) -> str:
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VET Skill Cluster Explorer</title>
+<title>VET Skill Ability Explorer</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>{_css()}</style>
@@ -48,8 +48,8 @@ def _build_html(data_file: str) -> str:
     <div class="hdr-brand">
       <div class="hdr-icon"><i class="bi bi-bar-chart-steps"></i></div>
       <div>
-        <h1>Skill Cluster Explorer</h1>
-        <p class="hdr-sub">Sub-clusters with progression ladders — click a skill for full details</p>
+        <h1>Skill Ability Explorer</h1>
+        <p class="hdr-sub">Transferable human abilities with progression ladders — click a skill for full details</p>
       </div>
     </div>
     <div class="hdr-stats" id="headerStats"></div>
@@ -61,7 +61,7 @@ def _build_html(data_file: str) -> str:
     <div class="table-toolbar">
       <div class="search-box">
         <i class="bi bi-search"></i>
-        <input type="text" id="scSearch" placeholder="Search clusters or skills…" autocomplete="off">
+        <input type="text" id="scSearch" placeholder="Search abilities or skills…" autocomplete="off">
       </div>
       <span class="toolbar-stat" id="statLabel"></span>
     </div>
@@ -69,11 +69,10 @@ def _build_html(data_file: str) -> str:
       <thead>
         <tr>
           <th style="width:28px"></th>
-          <th>Cluster</th>
+          <th>Ability</th>
           <th style="text-align:center">Skills</th>
           <th>Progression</th>
           <th>Type</th>
-          <th style="text-align:center">Sim</th>
         </tr>
       </thead>
       <tbody id="scBody"></tbody>
@@ -96,7 +95,7 @@ def _build_html(data_file: str) -> str:
   <div class="drawer-body" id="drawerBody"></div>
 </aside>
 
-<script src="{data_file}" onerror="document.getElementById('scBody').innerHTML='<tr><td colspan=6 class=err>Failed to load data file. Ensure <b>{data_file}</b> is in the same directory.</td></tr>'"></script>
+<script src="{data_file}" onerror="document.getElementById('scBody').innerHTML='<tr><td colspan=5 class=err>Failed to load data file. Ensure <b>{data_file}</b> is in the same directory.</td></tr>'"></script>
 <script>{_js()}</script>
 </body>
 </html>"""
@@ -169,7 +168,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--c-bg); color: var(-
 
 .sc-label { font-weight: 600; font-size: .88rem; color: var(--c-accent2); }
 .sc-count { font-size: .82rem; color: var(--c-text2); text-align: center; }
-.sc-sim { font-size: .78rem; color: var(--c-text3); text-align: center; }
 
 /* Progression dots */
 .prog-bar { display: flex; align-items: center; gap: 2px; }
@@ -325,7 +323,7 @@ function init(d) {
   // Build unit index
   (data.units || []).forEach(u => unitIndex.set(u.unit_code, u));
 
-  // Flatten all sub-clusters from all archetypes into one list
+  // Flatten all ability groups from all TRF groups into one list
   allSubClusters = [];
   (data.archetypes || []).forEach(arch => {
     (arch.sub_clusters || []).forEach(sc => {
@@ -334,11 +332,11 @@ function init(d) {
       allSubClusters.push({
         cluster_id: sc.cluster_id,
         label: sc.label,
+        trf_group: arch.label || '',
         total_skills: sc.total_skills || skills.length,
         progression_type: sc.progression_type,
         level_span: sc.level_span || [0, 0],
         level_gaps: sc.level_gaps || [],
-        avg_intra_similarity: sc.avg_intra_similarity || 0,
         progression: sc.progression || [],
         skills: skills,
       });
@@ -362,7 +360,7 @@ function renderHeader() {
   html += `<span><b>${m.total_skills.toLocaleString()}</b> Skills</span>`;
   html += `<span><b>${m.total_assertions.toLocaleString()}</b> Assertions</span>`;
   html += `<span><b>${m.total_units.toLocaleString()}</b> Units</span>`;
-  html += `<span><b>${allSubClusters.length}</b> Clusters</span>`;
+  html += `<span><b>${allSubClusters.length}</b> Abilities</span>`;
   if (m.total_qualifications) html += `<span><b>${m.total_qualifications.toLocaleString()}</b> Quals</span>`;
   if (m.total_occupations) html += `<span><b>${m.total_occupations.toLocaleString()}</b> Occs</span>`;
   document.getElementById('headerStats').innerHTML = html;
@@ -376,18 +374,17 @@ function renderTable() {
   const tbody = document.getElementById('scBody');
   const totalSkills = filteredClusters.reduce((s, c) => s + c.total_skills, 0);
   document.getElementById('statLabel').textContent =
-    `${filteredClusters.length} clusters · ${totalSkills} skills`;
+    `${filteredClusters.length} abilities · ${totalSkills} skills`;
 
   let html = '';
   for (const sc of filteredClusters) {
-    // Cluster row
+    // Ability row
     html += `<tr class="sc-row" data-cid="${sc.cluster_id}" onclick="toggleCluster('${sc.cluster_id}')">`;
     html += `<td><span class="sc-chevron"><i class="bi bi-chevron-right"></i></span></td>`;
-    html += `<td><span class="sc-label">${esc(sc.label)}</span></td>`;
+    html += `<td><span class="sc-label">${esc(sc.label)}</span><span style="font-size:.7rem;color:var(--c-text3);margin-left:8px">${esc(sc.trf_group)}</span></td>`;
     html += `<td class="sc-count">${sc.total_skills}</td>`;
     html += `<td>${renderProgBar(sc)}</td>`;
     html += `<td><span class="prog-badge ${sc.progression_type}">${sc.progression_type}</span></td>`;
-    html += `<td class="sc-sim">${(sc.avg_intra_similarity * 100).toFixed(0)}%</td>`;
     html += `</tr>`;
 
     // Skill drawer (sorted by level)
@@ -397,7 +394,7 @@ function renderTable() {
       return la - lb;
     });
 
-    html += `<tr class="sk-drawer" data-drawer="${sc.cluster_id}"><td colspan="6"><div class="sk-inner">`;
+    html += `<tr class="sk-drawer" data-drawer="${sc.cluster_id}"><td colspan="5"><div class="sk-inner">`;
     html += `<table class="sk-tbl"><thead><tr><th>Skill</th><th>Level</th><th style="text-align:center">Assertions</th></tr></thead><tbody>`;
     for (const sk of sorted) {
       const lvl = getLevelInt(sk);

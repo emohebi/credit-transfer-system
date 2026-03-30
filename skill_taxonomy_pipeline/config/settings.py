@@ -47,7 +47,7 @@ EMBEDDING_CONFIG = {
 #  FACETS TO ASSIGN
 # ═══════════════════════════════════════════════════════════════════
 
-FACETS_TO_ASSIGN = ["NAT", "TRF", "COG", "ASCED", "LVL"]
+FACETS_TO_ASSIGN = ["NAT", "TRF", "COG", "ASCED", "LVL", "THA"]
 
 FACET_ASSIGNMENT_CONFIG = {
     "facets_to_assign": FACETS_TO_ASSIGN,
