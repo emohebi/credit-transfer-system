@@ -1,1879 +1,1055 @@
 """
 Transferable Human Ability (THA) Facet Definition
 
-Each value includes typical_skills for embedding similarity matching.
+~160 functional human abilities organized under TRF categories.
+Each describes WHAT a human can do, not WHERE they do it.
+Domain/industry is captured by the ASCED facet.
 """
 
 TRANSFERABLE_HUMAN_ABILITY_FACET = {
     "facet_id": "THA",
     "facet_name": "Transferable Human Ability",
-    "description": "Functional human capability that can be applied across contexts.",
-    "multi_value": True,
+    "description": "Functional human capability applied across contexts. Describes WHAT a person can do, independent of industry.",
+    "multi_value": False,
     "parent_facet": "TRF",
     "values": {
         "THA.UNI.ORC": {
                 "code": "THA.UNI.ORC",
                 "name": "Oral Communication",
                 "parent_trf": "TRF.UNI",
-                "description": "Listening to and understanding spoken information, and communicating ideas and information clearly through speech.",
-                "keywords": [
-                        "speaking",
-                        "listening",
-                        "verbal",
-                        "conversation",
-                        "presentation"
-                ],
-                "typical_skills": [
-                        "communicate effectively in the workplace",
-                        "use verbal communication skills",
-                        "participate in workplace conversations",
-                        "deliver verbal briefings and instructions",
-                        "listen actively and respond appropriately",
-                        "provide clear spoken directions",
-                        "present information to small groups",
-                        "confirm understanding through questioning",
-                        "use effective telephone communication",
-                        "participate in workplace meetings"
-                ]
+                "description": "Listening to and understanding spoken information, and communicating ideas clearly through speech, presentations, and conversations."
         },
         "THA.UNI.WRC": {
                 "code": "THA.UNI.WRC",
                 "name": "Written Communication",
                 "parent_trf": "TRF.UNI",
-                "description": "Reading, understanding, and producing written information. Includes report writing, documentation, form completion, and interpreting written instructions.",
-                "keywords": [
-                        "writing",
-                        "reading",
-                        "documentation",
-                        "report",
-                        "correspondence",
-                        "forms"
-                ],
-                "typical_skills": [
-                        "write workplace correspondence",
-                        "read and interpret workplace documents",
-                        "complete workplace forms and records",
-                        "draft emails and written communications",
-                        "interpret written instructions and procedures",
-                        "prepare written notes and summaries",
-                        "use workplace vocabulary and terminology",
-                        "proofread documents for accuracy",
-                        "write simple technical reports",
-                        "maintain written workplace logs"
-                ]
+                "description": "Reading, understanding, and producing written information including reports, emails, forms, and workplace documentation."
         },
         "THA.UNI.NUM": {
                 "code": "THA.UNI.NUM",
                 "name": "Numeracy & Calculation",
                 "parent_trf": "TRF.UNI",
-                "description": "Applying mathematical concepts including arithmetic, measurement, estimation, and basic statistical reasoning to workplace tasks.",
-                "keywords": [
-                        "mathematics",
-                        "calculation",
-                        "measurement",
-                        "estimation",
-                        "counting",
-                        "arithmetic"
-                ],
-                "typical_skills": [
-                        "perform basic workplace calculations",
-                        "use and apply workplace numeracy",
-                        "estimate and calculate quantities",
-                        "take measurements and record dimensions",
-                        "calculate percentages and ratios",
-                        "apply units of measurement",
-                        "interpret graphs tables and charts",
-                        "calculate areas volumes and weights",
-                        "perform financial calculations",
-                        "use measuring instruments accurately"
-                ]
+                "description": "Applying mathematical concepts including arithmetic, measurement, estimation, ratios, and basic statistical reasoning."
         },
         "THA.UNI.DIG": {
                 "code": "THA.UNI.DIG",
                 "name": "Digital Literacy",
                 "parent_trf": "TRF.UNI",
-                "description": "Using digital devices, software applications, and online platforms effectively.",
-                "keywords": [
-                        "computer",
-                        "digital",
-                        "software",
-                        "internet",
-                        "technology",
-                        "ICT"
-                ],
-                "typical_skills": [
-                        "use digital technology in the workplace",
-                        "operate basic computer applications",
-                        "use business software applications",
-                        "manage digital files and records",
-                        "use internet and email effectively",
-                        "apply digital literacy skills in the workplace",
-                        "use word processing software",
-                        "create and use spreadsheets",
-                        "operate digital communication tools",
-                        "navigate online platforms and systems"
-                ]
+                "description": "Using digital devices, software applications, online platforms, and workplace information systems effectively."
         },
         "THA.UNI.LRN": {
                 "code": "THA.UNI.LRN",
                 "name": "Learning & Self-Development",
                 "parent_trf": "TRF.UNI",
-                "description": "Acquiring new knowledge and skills, reflecting on performance, seeking feedback, and adapting to new methods.",
-                "keywords": [
-                        "learning",
-                        "training",
-                        "development",
-                        "study",
-                        "upskilling",
-                        "reflection"
-                ],
-                "typical_skills": [
-                        "develop and maintain professional competence",
-                        "participate in professional development activities",
-                        "identify personal learning needs",
-                        "apply learning to workplace tasks",
-                        "seek and respond to workplace feedback",
-                        "reflect on own professional practice",
-                        "maintain currency of industry knowledge",
-                        "develop a learning plan",
-                        "adapt to new workplace procedures",
-                        "engage in self-directed learning"
-                ]
+                "description": "Acquiring new knowledge and skills, reflecting on performance, seeking feedback, maintaining professional currency."
         },
         "THA.UNI.PSL": {
                 "code": "THA.UNI.PSL",
-                "name": "Problem Solving",
+                "name": "Problem Solving & Critical Thinking",
                 "parent_trf": "TRF.UNI",
-                "description": "Identifying problems, gathering relevant information, generating possible solutions, evaluating options, and implementing effective solutions.",
-                "keywords": [
-                        "problem solving",
-                        "troubleshooting",
-                        "solutions",
-                        "resolving",
-                        "identifying issues"
-                ],
-                "typical_skills": [
-                        "solve problems in the workplace",
-                        "apply problem-solving techniques",
-                        "identify and resolve workplace issues",
-                        "troubleshoot equipment and process faults",
-                        "analyse problems and develop solutions",
-                        "apply systematic problem-solving processes",
-                        "use initiative to address workplace challenges",
-                        "evaluate options and recommend solutions",
-                        "investigate and resolve complaints",
-                        "identify root causes of problems"
-                ]
-        },
-        "THA.UNI.CRT": {
-                "code": "THA.UNI.CRT",
-                "name": "Critical Thinking & Judgement",
-                "parent_trf": "TRF.UNI",
-                "description": "Analysing information objectively, evaluating evidence, recognising assumptions, and forming reasoned conclusions.",
-                "keywords": [
-                        "critical thinking",
-                        "analysis",
-                        "judgement",
-                        "reasoning",
-                        "evaluation",
-                        "decision making"
-                ],
-                "typical_skills": [
-                        "apply critical thinking skills",
-                        "make informed decisions in the workplace",
-                        "analyse and evaluate information",
-                        "exercise professional judgement",
-                        "assess situations and determine actions",
-                        "evaluate alternatives and make recommendations",
-                        "apply logical reasoning to workplace tasks",
-                        "interpret and assess workplace data",
-                        "make decisions within scope of authority"
-                ]
+                "description": "Identifying problems, analysing information, evaluating evidence, generating solutions, and making reasoned decisions."
         },
         "THA.UNI.TMG": {
                 "code": "THA.UNI.TMG",
                 "name": "Time Management & Organisation",
                 "parent_trf": "TRF.UNI",
-                "description": "Planning, prioritising, and managing ones own time and workload effectively.",
-                "keywords": [
-                        "time management",
-                        "planning",
-                        "prioritising",
-                        "scheduling",
-                        "organising",
-                        "deadlines"
-                ],
-                "typical_skills": [
-                        "organise personal work priorities and development",
-                        "manage own time and priorities",
-                        "plan and organise work schedules",
-                        "prioritise tasks and manage workload",
-                        "meet workplace deadlines and timeframes",
-                        "maintain an organised work environment",
-                        "schedule work activities and appointments",
-                        "manage competing work demands",
-                        "plan daily and weekly work activities"
-                ]
+                "description": "Planning, prioritising, and managing workload, schedules, deadlines, and workplace resources effectively."
         },
         "THA.UNI.TWK": {
                 "code": "THA.UNI.TWK",
                 "name": "Teamwork & Collaboration",
                 "parent_trf": "TRF.UNI",
-                "description": "Working cooperatively with others toward shared goals.",
-                "keywords": [
-                        "teamwork",
-                        "collaboration",
-                        "cooperation",
-                        "group work",
-                        "team",
-                        "working together"
-                ],
-                "typical_skills": [
-                        "work effectively with others",
-                        "work in a team environment",
-                        "contribute to team effectiveness",
-                        "participate in team planning and activities",
-                        "support team members to achieve goals",
-                        "share information with colleagues",
-                        "collaborate across work areas",
-                        "build and maintain cooperative relationships",
-                        "participate in group decision-making"
-                ]
+                "description": "Working cooperatively with others, contributing to group tasks, supporting colleagues, and participating in team processes."
         },
         "THA.UNI.ETH": {
                 "code": "THA.UNI.ETH",
                 "name": "Workplace Ethics & Professionalism",
                 "parent_trf": "TRF.UNI",
-                "description": "Demonstrating integrity, responsibility, reliability, and professional conduct.",
-                "keywords": [
-                        "ethics",
-                        "professionalism",
-                        "integrity",
-                        "responsibility",
-                        "conduct",
-                        "confidentiality"
-                ],
-                "typical_skills": [
-                        "apply ethical principles in the workplace",
-                        "maintain professional conduct and appearance",
-                        "follow workplace codes of conduct",
-                        "demonstrate workplace values and ethics",
-                        "maintain confidentiality of information",
-                        "apply workplace privacy requirements",
-                        "exercise duty of care",
-                        "demonstrate accountability for own work",
-                        "recognise and address ethical dilemmas"
-                ]
+                "description": "Demonstrating integrity, responsibility, reliability, following codes of conduct, and maintaining confidentiality."
         },
         "THA.UNI.CUL": {
                 "code": "THA.UNI.CUL",
                 "name": "Cultural Awareness & Inclusion",
                 "parent_trf": "TRF.UNI",
-                "description": "Recognising and respecting cultural diversity, working effectively with people from different backgrounds.",
-                "keywords": [
-                        "cultural awareness",
-                        "diversity",
-                        "inclusion",
-                        "respect",
-                        "cross-cultural",
-                        "indigenous"
-                ],
-                "typical_skills": [
-                        "work with diverse people",
-                        "develop cultural competence",
-                        "communicate with people from diverse backgrounds",
-                        "support Aboriginal and Torres Strait Islander cultural safety",
-                        "work respectfully with culturally diverse clients",
-                        "apply principles of cultural safety",
-                        "address cross-cultural communication challenges",
-                        "promote inclusive workplace practices",
-                        "recognise and respect cultural differences"
-                ]
+                "description": "Respecting cultural diversity, working with people from different backgrounds, and contributing to inclusive environments."
         },
         "THA.UNI.SLF": {
                 "code": "THA.UNI.SLF",
                 "name": "Self-Management & Resilience",
                 "parent_trf": "TRF.UNI",
-                "description": "Managing ones own emotions, stress, and motivation. Includes adaptability and persistence.",
-                "keywords": [
-                        "self-management",
-                        "resilience",
-                        "adaptability",
-                        "stress management",
-                        "motivation",
-                        "composure"
-                ],
-                "typical_skills": [
-                        "manage personal stress in the workplace",
-                        "demonstrate resilience and adaptability",
-                        "maintain personal wellbeing at work",
-                        "adapt to changing workplace situations",
-                        "manage emotional responses at work",
-                        "work effectively under pressure",
-                        "demonstrate initiative and enterprise",
-                        "develop personal resilience strategies",
-                        "maintain motivation and engagement"
-                ]
+                "description": "Managing emotions, stress, and motivation; adapting to change; maintaining composure and persistence under pressure."
         },
         "THA.UNI.SAF": {
                 "code": "THA.UNI.SAF",
                 "name": "Personal Safety Awareness",
                 "parent_trf": "TRF.UNI",
-                "description": "Recognising personal safety risks, following basic safety procedures, using PPE.",
-                "keywords": [
-                        "safety",
-                        "PPE",
-                        "hazard",
-                        "safe work",
-                        "personal protection",
-                        "safety awareness"
-                ],
-                "typical_skills": [
-                        "follow safe work practices",
-                        "use personal protective equipment",
-                        "identify and report hazards",
-                        "follow workplace safety procedures",
-                        "apply basic safety rules and regulations",
-                        "maintain a safe and clean work area",
-                        "participate in safety inductions",
-                        "respond to workplace safety signs and signals",
-                        "apply manual handling techniques",
-                        "follow infection control procedures"
-                ]
+                "description": "Recognising safety risks, following safety procedures, using PPE, applying manual handling techniques, and maintaining safe work habits."
         },
         "THA.BRD.RSK": {
                 "code": "THA.BRD.RSK",
                 "name": "Risk Assessment & Mitigation",
                 "parent_trf": "TRF.BRD",
-                "description": "Systematically identifying, evaluating, and controlling risks.",
-                "keywords": [
-                        "risk assessment",
-                        "risk management",
-                        "hazard identification",
-                        "risk mitigation",
-                        "risk matrix",
-                        "controls"
-                ],
-                "typical_skills": [
-                        "conduct risk assessments",
-                        "identify hazards and assess risks",
-                        "apply risk management processes",
-                        "develop risk treatment plans",
-                        "apply the hierarchy of controls",
-                        "complete risk assessment documentation",
-                        "monitor and review risk controls",
-                        "facilitate risk identification workshops",
-                        "evaluate and prioritise risks",
-                        "implement risk mitigation strategies"
-                ]
+                "description": "Systematically identifying, evaluating, and controlling risks using hazard identification, risk matrices, and hierarchy of controls."
         },
         "THA.BRD.LDR": {
                 "code": "THA.BRD.LDR",
                 "name": "Leadership & People Management",
                 "parent_trf": "TRF.BRD",
-                "description": "Guiding, motivating, and directing people.",
-                "keywords": [
-                        "leadership",
-                        "management",
-                        "supervision",
-                        "delegation",
-                        "mentoring",
-                        "coaching",
-                        "performance management"
-                ],
-                "typical_skills": [
-                        "lead and manage team effectiveness",
-                        "manage people performance",
-                        "provide leadership across the organisation",
-                        "supervise and coordinate work activities",
-                        "delegate and monitor work tasks",
-                        "manage staff performance and development",
-                        "mentor and coach individuals",
-                        "provide constructive feedback to staff",
-                        "manage workforce planning",
-                        "develop and implement leadership strategies",
-                        "build high-performing teams"
-                ]
+                "description": "Guiding, motivating, and directing people including delegation, performance management, mentoring, and building team capability."
         },
         "THA.BRD.PRJ": {
                 "code": "THA.BRD.PRJ",
                 "name": "Project Planning & Coordination",
                 "parent_trf": "TRF.BRD",
-                "description": "Planning, organising, and coordinating projects or work activities.",
-                "keywords": [
-                        "project management",
-                        "planning",
-                        "coordination",
-                        "scheduling",
-                        "milestones",
-                        "deliverables"
-                ],
-                "typical_skills": [
-                        "manage projects",
-                        "plan and coordinate project activities",
-                        "develop project plans and schedules",
-                        "manage project scope and deliverables",
-                        "allocate and manage project resources",
-                        "monitor project progress and milestones",
-                        "coordinate project stakeholders",
-                        "manage project risks and issues",
-                        "apply project management methodologies",
-                        "manage project budgets and timelines"
-                ]
+                "description": "Planning, organising, and coordinating projects including scope, resources, scheduling, and monitoring deliverables."
         },
         "THA.BRD.QMS": {
                 "code": "THA.BRD.QMS",
                 "name": "Quality Assurance & Improvement",
                 "parent_trf": "TRF.BRD",
-                "description": "Monitoring, evaluating, and improving quality of products, services, or processes.",
-                "keywords": [
-                        "quality",
-                        "quality assurance",
-                        "quality control",
-                        "continuous improvement",
-                        "audit",
-                        "standards"
-                ],
-                "typical_skills": [
-                        "implement quality assurance processes",
-                        "manage quality systems and standards",
-                        "conduct quality audits and inspections",
-                        "implement continuous improvement programs",
-                        "monitor product or service quality",
-                        "apply quality management tools and techniques",
-                        "identify and correct non-conformances",
-                        "facilitate continuous improvement initiatives",
-                        "develop quality control procedures",
-                        "evaluate quality performance data"
-                ]
+                "description": "Monitoring, evaluating, and improving quality through standards, auditing, continuous improvement, and defect analysis."
         },
         "THA.BRD.TRN": {
                 "code": "THA.BRD.TRN",
                 "name": "Training & Knowledge Transfer",
                 "parent_trf": "TRF.BRD",
-                "description": "Teaching, instructing, and transferring knowledge or skills to others.",
-                "keywords": [
-                        "training",
-                        "teaching",
-                        "instruction",
-                        "coaching",
-                        "knowledge transfer",
-                        "facilitation"
-                ],
-                "typical_skills": [
-                        "deliver training and instruction",
-                        "plan and conduct training sessions",
-                        "assess competence and performance",
-                        "facilitate learning in the workplace",
-                        "design training programs and materials",
-                        "demonstrate work skills to others",
-                        "conduct workplace inductions",
-                        "transfer knowledge and skills to team members",
-                        "assess and validate learner competence",
-                        "develop and deliver presentations for training"
-                ]
+                "description": "Teaching, instructing, and transferring knowledge to others including training design, delivery, facilitation, and competency assessment."
         },
         "THA.BRD.REG": {
                 "code": "THA.BRD.REG",
                 "name": "Regulatory Compliance & Governance",
                 "parent_trf": "TRF.BRD",
-                "description": "Ensuring adherence to laws, regulations, standards, and organisational policies.",
-                "keywords": [
-                        "compliance",
-                        "regulation",
-                        "legislation",
-                        "governance",
-                        "policy",
-                        "standards",
-                        "legal"
-                ],
-                "typical_skills": [
-                        "ensure compliance with legislation and regulations",
-                        "interpret and apply workplace legislation",
-                        "manage regulatory compliance requirements",
-                        "develop and implement policies and procedures",
-                        "conduct compliance audits and reviews",
-                        "maintain compliance documentation and records",
-                        "advise on legal and regulatory obligations",
-                        "apply industry codes of practice",
-                        "manage licensing and permit requirements",
-                        "implement governance frameworks"
-                ]
+                "description": "Ensuring adherence to laws, regulations, standards, and organisational policies through interpretation, documentation, and auditing."
         },
         "THA.BRD.DAT": {
                 "code": "THA.BRD.DAT",
                 "name": "Data Analysis & Interpretation",
                 "parent_trf": "TRF.BRD",
-                "description": "Collecting, organising, analysing, and interpreting data to extract meaningful insights.",
-                "keywords": [
-                        "data analysis",
-                        "statistics",
-                        "interpretation",
-                        "data collection",
-                        "trends",
-                        "reporting",
-                        "metrics"
-                ],
-                "typical_skills": [
-                        "analyse and present research data",
-                        "collect and organise workplace data",
-                        "interpret statistical information",
-                        "identify trends and patterns in data",
-                        "prepare data reports and summaries",
-                        "use data analysis tools and software",
-                        "apply evidence-based decision making",
-                        "develop performance metrics and KPIs",
-                        "create data visualisations and dashboards",
-                        "evaluate data quality and reliability"
-                ]
+                "description": "Collecting, organising, analysing, and interpreting data to extract insights, identify trends, and support evidence-based decisions."
         },
         "THA.BRD.NEG": {
                 "code": "THA.BRD.NEG",
                 "name": "Negotiation & Conflict Resolution",
                 "parent_trf": "TRF.BRD",
-                "description": "Reaching agreements, resolving disputes, and managing conflicting interests.",
-                "keywords": [
-                        "negotiation",
-                        "conflict resolution",
-                        "mediation",
-                        "dispute",
-                        "compromise",
-                        "persuasion"
-                ],
-                "typical_skills": [
-                        "manage conflict in the workplace",
-                        "negotiate agreements and contracts",
-                        "resolve workplace disputes and grievances",
-                        "mediate between conflicting parties",
-                        "apply negotiation techniques",
-                        "manage difficult conversations",
-                        "facilitate consensus and agreement",
-                        "address and resolve complaints",
-                        "manage industrial relations issues"
-                ]
+                "description": "Reaching agreements, resolving disputes, mediating between parties, and managing conflicting interests constructively."
         },
         "THA.BRD.CUS": {
                 "code": "THA.BRD.CUS",
                 "name": "Client & Stakeholder Engagement",
                 "parent_trf": "TRF.BRD",
-                "description": "Building and maintaining relationships with clients, customers, and stakeholders.",
-                "keywords": [
-                        "customer service",
-                        "client relations",
-                        "stakeholder",
-                        "engagement",
-                        "complaints",
-                        "service delivery"
-                ],
-                "typical_skills": [
-                        "deliver and monitor a service to customers",
-                        "manage client relationships",
-                        "identify and respond to customer needs",
-                        "handle customer complaints and feedback",
-                        "manage stakeholder engagement",
-                        "build and maintain business relationships",
-                        "provide quality customer service",
-                        "consult with clients and stakeholders",
-                        "manage service level agreements",
-                        "develop customer engagement strategies"
-                ]
+                "description": "Building and maintaining relationships with clients, customers, and stakeholders through needs assessment, service delivery, and complaint handling."
         },
         "THA.BRD.RPT": {
                 "code": "THA.BRD.RPT",
                 "name": "Technical Reporting & Documentation",
                 "parent_trf": "TRF.BRD",
-                "description": "Preparing accurate technical documentation including reports, specifications, and procedures.",
-                "keywords": [
-                        "technical writing",
-                        "documentation",
-                        "reporting",
-                        "records",
-                        "specifications",
-                        "procedures"
-                ],
-                "typical_skills": [
-                        "prepare technical reports and documentation",
-                        "write standard operating procedures",
-                        "maintain workplace records and registers",
-                        "document work activities and outcomes",
-                        "prepare specifications and work instructions",
-                        "write incident and investigation reports",
-                        "develop technical manuals and guides",
-                        "maintain asset and maintenance records",
-                        "prepare compliance and audit reports",
-                        "create process documentation"
-                ]
+                "description": "Preparing accurate technical reports, specifications, procedures, work instructions, incident reports, and compliance records."
         },
         "THA.BRD.FIN": {
                 "code": "THA.BRD.FIN",
                 "name": "Financial Management & Budgeting",
                 "parent_trf": "TRF.BRD",
-                "description": "Managing financial resources including budgeting, cost estimation, and financial reporting.",
-                "keywords": [
-                        "budget",
-                        "finance",
-                        "costing",
-                        "invoicing",
-                        "financial management",
-                        "accounting"
-                ],
-                "typical_skills": [
-                        "manage budgets and financial plans",
-                        "prepare and monitor budgets",
-                        "process financial transactions",
-                        "manage accounts payable and receivable",
-                        "prepare financial reports and statements",
-                        "manage payroll and employee payments",
-                        "forecast and monitor expenditure",
-                        "develop and manage operational budgets",
-                        "apply financial management principles",
-                        "maintain financial records and documentation"
-                ]
+                "description": "Managing financial resources including budgeting, cost estimation, financial reporting, invoicing, and expenditure monitoring."
         },
         "THA.BRD.WHS": {
                 "code": "THA.BRD.WHS",
                 "name": "Workplace Health & Safety Management",
                 "parent_trf": "TRF.BRD",
-                "description": "Implementing and managing workplace health and safety systems.",
-                "keywords": [
-                        "WHS",
-                        "OHS",
-                        "safety management",
-                        "incident investigation",
-                        "safety audit",
-                        "emergency response"
-                ],
-                "typical_skills": [
-                        "manage work health and safety processes",
-                        "implement and monitor WHS policies",
-                        "investigate workplace incidents and accidents",
-                        "conduct workplace safety audits",
-                        "develop emergency response procedures",
-                        "manage WHS consultation and communication",
-                        "monitor and maintain WHS management systems",
-                        "coordinate return-to-work programs",
-                        "develop and implement safety improvement plans",
-                        "manage hazardous substance procedures",
-                        "conduct WHS risk management"
-                ]
+                "description": "Implementing and managing WHS systems including policy development, incident investigation, safety auditing, and emergency coordination."
         },
         "THA.BRD.ENV": {
                 "code": "THA.BRD.ENV",
                 "name": "Environmental & Sustainability Management",
                 "parent_trf": "TRF.BRD",
-                "description": "Managing environmental impacts and promoting sustainable practices.",
-                "keywords": [
-                        "environmental",
-                        "sustainability",
-                        "waste management",
-                        "conservation",
-                        "recycling",
-                        "emissions"
-                ],
-                "typical_skills": [
-                        "implement and monitor environmental policies",
-                        "manage waste and recycling systems",
-                        "conduct environmental impact assessments",
-                        "implement sustainability initiatives",
-                        "monitor environmental conditions and compliance",
-                        "develop environmental management plans",
-                        "manage resource conservation programs",
-                        "implement energy efficiency measures",
-                        "manage emissions and pollution controls",
-                        "promote sustainable work practices"
-                ]
+                "description": "Managing environmental impacts through waste management, resource conservation, environmental monitoring, and sustainability planning."
         },
         "THA.BRD.PRC": {
                 "code": "THA.BRD.PRC",
                 "name": "Process Design & Optimisation",
                 "parent_trf": "TRF.BRD",
-                "description": "Designing, mapping, and improving work processes and workflows.",
-                "keywords": [
-                        "process improvement",
-                        "workflow",
-                        "optimisation",
-                        "efficiency",
-                        "lean",
-                        "standardisation"
-                ],
-                "typical_skills": [
-                        "analyse and improve work processes",
-                        "develop and implement standard operating procedures",
-                        "map and optimise business workflows",
-                        "apply lean and continuous improvement methods",
-                        "review and streamline operational processes",
-                        "design efficient work systems",
-                        "implement process standardisation",
-                        "evaluate and improve operational efficiency",
-                        "develop workflow diagrams and procedures",
-                        "manage organisational change for process improvement"
-                ]
+                "description": "Designing, mapping, and improving work processes and workflows using process analysis, standardisation, and lean methodology."
         },
         "THA.BRD.SCM": {
                 "code": "THA.BRD.SCM",
                 "name": "Supply Chain & Logistics Coordination",
                 "parent_trf": "TRF.BRD",
-                "description": "Coordinating the flow of materials, products, and information through supply chains.",
-                "keywords": [
-                        "supply chain",
-                        "logistics",
-                        "procurement",
-                        "inventory",
-                        "warehousing",
-                        "distribution"
-                ],
-                "typical_skills": [
-                        "manage procurement and purchasing",
-                        "coordinate supply chain operations",
-                        "manage inventory and stock levels",
-                        "plan and coordinate logistics activities",
-                        "manage warehouse and storage operations",
-                        "process and track purchase orders",
-                        "coordinate goods receipt and dispatch",
-                        "manage supplier relationships and contracts",
-                        "forecast demand and plan replenishment",
-                        "optimise distribution and delivery schedules"
-                ]
-        },
-        "THA.BRD.INN": {
-                "code": "THA.BRD.INN",
-                "name": "Innovation & Creative Problem Solving",
-                "parent_trf": "TRF.BRD",
-                "description": "Generating novel ideas, developing creative solutions, and driving innovation.",
-                "keywords": [
-                        "innovation",
-                        "creativity",
-                        "design thinking",
-                        "ideation",
-                        "novel solutions"
-                ],
-                "typical_skills": [
-                        "foster innovation in the workplace",
-                        "apply creative problem-solving techniques",
-                        "generate and evaluate new ideas",
-                        "develop innovative solutions to workplace challenges",
-                        "apply design thinking methodology",
-                        "prototype and test new concepts",
-                        "manage innovation programs and initiatives",
-                        "facilitate brainstorming and ideation sessions",
-                        "implement new workplace methods and technologies"
-                ]
+                "description": "Coordinating material, product, and information flow through procurement, inventory management, warehousing, and distribution."
         },
         "THA.BRD.STP": {
                 "code": "THA.BRD.STP",
                 "name": "Strategic Planning & Decision Making",
                 "parent_trf": "TRF.BRD",
-                "description": "Developing long-term plans, setting objectives, and making complex decisions.",
-                "keywords": [
-                        "strategic planning",
-                        "strategy",
-                        "decision making",
-                        "objectives",
-                        "policy"
-                ],
-                "typical_skills": [
-                        "develop and implement strategic plans",
-                        "make complex business decisions",
-                        "set organisational objectives and priorities",
-                        "develop and implement business plans",
-                        "conduct strategic analysis and planning",
-                        "develop organisational policies and strategies",
-                        "manage strategic risk and opportunity",
-                        "lead strategic change initiatives",
-                        "align operational plans with strategic goals"
-                ]
-        },
-        "THA.BRD.CHG": {
-                "code": "THA.BRD.CHG",
-                "name": "Change Management & Adaptation",
-                "parent_trf": "TRF.BRD",
-                "description": "Managing and facilitating organisational or procedural change.",
-                "keywords": [
-                        "change management",
-                        "transition",
-                        "transformation",
-                        "adaptation",
-                        "implementation"
-                ],
-                "typical_skills": [
-                        "lead and manage organisational change",
-                        "develop and implement change management plans",
-                        "manage stakeholder engagement during change",
-                        "facilitate organisational transitions",
-                        "manage resistance to change",
-                        "communicate change initiatives effectively",
-                        "implement new systems and processes",
-                        "evaluate and sustain change outcomes",
-                        "manage organisational restructures"
-                ]
+                "description": "Developing long-term plans, setting objectives, conducting scenario analysis, and making complex decisions with incomplete information."
         },
         "THA.BRD.INF": {
                 "code": "THA.BRD.INF",
                 "name": "Information Management & Research",
                 "parent_trf": "TRF.BRD",
-                "description": "Sourcing, organising, evaluating, and managing information.",
-                "keywords": [
-                        "research",
-                        "information management",
-                        "knowledge management",
-                        "evidence",
-                        "sourcing"
-                ],
-                "typical_skills": [
-                        "manage information and knowledge",
-                        "conduct workplace research and investigation",
-                        "manage records and information systems",
-                        "source and evaluate information",
-                        "apply research methodology and techniques",
-                        "manage business knowledge and intellectual property",
-                        "maintain document control systems",
-                        "develop information management procedures",
-                        "apply evidence-based practice"
-                ]
-        },
-        "THA.BRD.PRS": {
-                "code": "THA.BRD.PRS",
-                "name": "Presentation & Public Communication",
-                "parent_trf": "TRF.BRD",
-                "description": "Delivering information to groups through presentations and public speaking.",
-                "keywords": [
-                        "presentation",
-                        "public speaking",
-                        "demonstration",
-                        "visual aids",
-                        "audience"
-                ],
-                "typical_skills": [
-                        "deliver workplace presentations",
-                        "present information to groups and audiences",
-                        "prepare and use visual aids and slides",
-                        "facilitate workshops and seminars",
-                        "deliver public speaking engagements",
-                        "communicate persuasively to stakeholders",
-                        "conduct product or service demonstrations",
-                        "present reports and recommendations to management",
-                        "facilitate conference sessions"
-                ]
+                "description": "Sourcing, organising, evaluating, and managing information through research methods, records management, and knowledge systems."
         },
         "THA.SEC.DGN": {
                 "code": "THA.SEC.DGN",
                 "name": "Design & Drafting",
                 "parent_trf": "TRF.SEC",
-                "description": "Creating designs, plans, drawings, and specifications.",
-                "keywords": [
-                        "design",
-                        "drafting",
-                        "CAD",
-                        "drawing",
-                        "blueprint",
-                        "schematic",
-                        "specifications"
-                ],
-                "typical_skills": [
-                        "create technical drawings and plans",
-                        "use computer-aided design software",
-                        "produce architectural and engineering drawings",
-                        "interpret and produce design specifications",
-                        "develop construction and manufacturing drawings",
-                        "create 3D models and visualisations",
-                        "read and interpret technical blueprints",
-                        "prepare schematic and wiring diagrams",
-                        "develop landscape and site plans",
-                        "validate designs against standards"
-                ]
+                "description": "Creating designs, plans, drawings, specifications, CAD models, schematics, and 3D visualisations for construction, manufacturing, or engineering."
         },
         "THA.SEC.INS": {
                 "code": "THA.SEC.INS",
                 "name": "Inspection & Testing",
                 "parent_trf": "TRF.SEC",
-                "description": "Examining products, systems, or structures to verify conformance to standards.",
-                "keywords": [
-                        "inspection",
-                        "testing",
-                        "examination",
-                        "verification",
-                        "quality check",
-                        "measurement"
-                ],
-                "typical_skills": [
-                        "inspect and test products and components",
-                        "conduct visual and dimensional inspections",
-                        "perform non-destructive testing",
-                        "test electrical installations and circuits",
-                        "inspect structures for defects and compliance",
-                        "conduct pressure and leak testing",
-                        "perform materials testing and analysis",
-                        "verify compliance with standards and specifications",
-                        "conduct pre-start and pre-use equipment checks",
-                        "inspect and test fire protection systems"
-                ]
+                "description": "Examining products, systems, or structures to verify conformance through visual inspection, dimensional checks, pressure testing, and compliance verification."
         },
         "THA.SEC.CAL": {
                 "code": "THA.SEC.CAL",
                 "name": "Calibration & Precision Measurement",
                 "parent_trf": "TRF.SEC",
-                "description": "Calibrating instruments and making precise measurements.",
-                "keywords": [
-                        "calibration",
-                        "measurement",
-                        "precision",
-                        "metrology",
-                        "tolerance",
-                        "instruments"
-                ],
-                "typical_skills": [
-                        "calibrate and maintain measuring instruments",
-                        "perform precision measurements",
-                        "use micrometers verniers and gauges",
-                        "check tolerances and dimensional accuracy",
-                        "calibrate process control instruments",
-                        "operate coordinate measuring machines",
-                        "perform instrument verification and adjustment",
-                        "apply measurement uncertainty principles",
-                        "maintain calibration records and schedules"
-                ]
+                "description": "Calibrating instruments, making precise measurements, checking tolerances, and applying metrology principles with gauges and measuring devices."
         },
         "THA.SEC.DIA": {
                 "code": "THA.SEC.DIA",
                 "name": "Diagnostic Reasoning & Fault Finding",
                 "parent_trf": "TRF.SEC",
-                "description": "Systematically diagnosing faults, malfunctions, or conditions.",
-                "keywords": [
-                        "diagnosis",
-                        "fault finding",
-                        "troubleshooting",
-                        "root cause",
-                        "symptoms",
-                        "diagnostic"
-                ],
-                "typical_skills": [
-                        "diagnose faults in mechanical systems",
-                        "troubleshoot electrical and electronic circuits",
-                        "conduct systematic fault-finding procedures",
-                        "diagnose engine and vehicle malfunctions",
-                        "use diagnostic equipment and scan tools",
-                        "perform root cause analysis of failures",
-                        "diagnose patient or client conditions",
-                        "troubleshoot hydraulic and pneumatic systems",
-                        "analyse failure modes and effects",
-                        "diagnose IT network and system faults"
-                ]
+                "description": "Systematically diagnosing faults and malfunctions through symptom analysis, root cause identification, and use of diagnostic tools."
         },
         "THA.SEC.PAT": {
                 "code": "THA.SEC.PAT",
                 "name": "Client & Patient Assessment",
                 "parent_trf": "TRF.SEC",
-                "description": "Assessing the needs, conditions, or capabilities of clients or patients.",
-                "keywords": [
-                        "assessment",
-                        "patient assessment",
-                        "client assessment",
-                        "screening",
-                        "triage",
-                        "needs analysis"
-                ],
-                "typical_skills": [
-                        "assess client needs and circumstances",
-                        "conduct patient health assessments",
-                        "perform initial intake and screening",
-                        "triage patients and prioritise care",
-                        "assess client functional capacity",
-                        "conduct mental health assessments",
-                        "assess learning needs and abilities",
-                        "perform skin and condition assessments",
-                        "evaluate client eligibility for services",
-                        "conduct nutritional and dietary assessments"
-                ]
+                "description": "Assessing needs, conditions, or capabilities of clients, patients, or service users through intake, screening, triage, and needs analysis."
         },
         "THA.SEC.CPL": {
                 "code": "THA.SEC.CPL",
                 "name": "Care Planning & Case Management",
                 "parent_trf": "TRF.SEC",
-                "description": "Developing and managing individualised care, treatment, or service plans.",
-                "keywords": [
-                        "care plan",
-                        "case management",
-                        "treatment plan",
-                        "individual plan",
-                        "service plan",
-                        "care coordination"
-                ],
-                "typical_skills": [
-                        "develop individualised care plans",
-                        "manage case loads and client records",
-                        "coordinate client services and referrals",
-                        "develop and implement treatment plans",
-                        "monitor client progress and outcomes",
-                        "review and update care plans",
-                        "develop individual support plans",
-                        "coordinate multidisciplinary care teams",
-                        "manage discharge and transition planning",
-                        "set and review client goals"
-                ]
+                "description": "Developing and managing individualised care, treatment, or service plans including goal setting, progress monitoring, and case coordination."
         },
         "THA.SEC.MON": {
                 "code": "THA.SEC.MON",
                 "name": "Monitoring & Surveillance",
                 "parent_trf": "TRF.SEC",
-                "description": "Continuously observing and monitoring systems, conditions, processes, or environments.",
-                "keywords": [
-                        "monitoring",
-                        "surveillance",
-                        "observation",
-                        "watch",
-                        "tracking",
-                        "vital signs",
-                        "alarms"
-                ],
-                "typical_skills": [
-                        "monitor patient vital signs and conditions",
-                        "operate security and surveillance systems",
-                        "monitor process parameters and controls",
-                        "conduct security patrols and inspections",
-                        "monitor environmental conditions and alarms",
-                        "track and monitor equipment performance",
-                        "operate SCADA and control room systems",
-                        "monitor water quality and treatment processes",
-                        "observe and report on client behaviour",
-                        "monitor and respond to alarm systems"
-                ]
+                "description": "Continuously observing systems, conditions, or environments including vital signs monitoring, process monitoring, SCADA, and alarm response."
         },
         "THA.SEC.SMP": {
                 "code": "THA.SEC.SMP",
                 "name": "Sampling & Laboratory Technique",
                 "parent_trf": "TRF.SEC",
-                "description": "Collecting, preparing, and processing samples using laboratory or field techniques.",
-                "keywords": [
-                        "sampling",
-                        "laboratory",
-                        "specimen",
-                        "sample preparation",
-                        "testing",
-                        "analysis"
-                ],
-                "typical_skills": [
-                        "collect and prepare samples for analysis",
-                        "perform laboratory tests and analyses",
-                        "handle and process biological specimens",
-                        "maintain laboratory equipment and supplies",
-                        "apply aseptic and contamination control techniques",
-                        "conduct soil water and air sampling",
-                        "prepare chemical solutions and reagents",
-                        "record and report laboratory results",
-                        "perform microbiological testing",
-                        "calibrate and maintain laboratory instruments"
-                ]
+                "description": "Collecting, preparing, and processing samples using laboratory or field techniques including specimen handling and contamination control."
         },
         "THA.SEC.SRV": {
                 "code": "THA.SEC.SRV",
                 "name": "Surveying & Spatial Measurement",
                 "parent_trf": "TRF.SEC",
-                "description": "Measuring and mapping physical spaces, land, or structures.",
-                "keywords": [
-                        "surveying",
-                        "measurement",
-                        "spatial",
-                        "GPS",
-                        "GIS",
-                        "mapping",
-                        "site measurement"
-                ],
-                "typical_skills": [
-                        "conduct land and site surveys",
-                        "use GPS and total station equipment",
-                        "establish survey control and set out works",
-                        "collect and process spatial data",
-                        "use geographic information systems",
-                        "perform levelling and height measurements",
-                        "create site maps and boundary plans",
-                        "interpret survey data and coordinates",
-                        "set out building and construction works"
-                ]
+                "description": "Measuring and mapping physical spaces using surveying equipment, GPS, GIS, levelling instruments, and spatial data processing."
         },
         "THA.SEC.EST": {
                 "code": "THA.SEC.EST",
                 "name": "Estimation & Costing",
                 "parent_trf": "TRF.SEC",
-                "description": "Estimating quantities, costs, timeframes, and resource requirements.",
-                "keywords": [
-                        "estimation",
-                        "costing",
-                        "quantities",
-                        "bill of quantities",
-                        "material takeoff",
-                        "pricing"
-                ],
-                "typical_skills": [
-                        "estimate materials and quantities for projects",
-                        "prepare cost estimates and quotations",
-                        "calculate material takeoff from plans",
-                        "prepare bills of quantities",
-                        "estimate project labour and resource costs",
-                        "prepare tender documentation and pricing",
-                        "calculate job costing and profitability",
-                        "estimate timeframes for work activities",
-                        "develop project cost forecasts"
-                ]
+                "description": "Estimating quantities, costs, timeframes, and resource requirements through material takeoff, bills of quantities, and tender preparation."
         },
         "THA.SEC.MKT": {
                 "code": "THA.SEC.MKT",
                 "name": "Marketing & Promotion",
                 "parent_trf": "TRF.SEC",
-                "description": "Promoting products, services, or ideas to target audiences.",
-                "keywords": [
-                        "marketing",
-                        "promotion",
-                        "advertising",
-                        "branding",
-                        "sales",
-                        "market research"
-                ],
-                "typical_skills": [
-                        "develop and implement marketing plans",
-                        "conduct market research and analysis",
-                        "manage advertising and promotional campaigns",
-                        "develop and manage brand identity",
-                        "create digital marketing content",
-                        "manage social media marketing",
-                        "develop sales strategies and targets",
-                        "coordinate promotional events and launches",
-                        "analyse marketing performance metrics",
-                        "develop customer acquisition strategies"
-                ]
+                "description": "Promoting products, services, or ideas through market research, advertising, branding, digital marketing, and campaign management."
         },
-        "THA.SEC.FDP": {
-                "code": "THA.SEC.FDP",
-                "name": "Food Preparation & Hygiene",
+        "THA.SEC.CPN": {
+                "code": "THA.SEC.CPN",
+                "name": "Counselling & Psychosocial Support",
                 "parent_trf": "TRF.SEC",
-                "description": "Preparing, cooking, and handling food safely and hygienically.",
-                "keywords": [
-                        "food preparation",
-                        "cooking",
-                        "food safety",
-                        "hygiene",
-                        "HACCP",
-                        "kitchen"
-                ],
-                "typical_skills": [
-                        "prepare and cook food items",
-                        "apply food safety and hygiene practices",
-                        "implement food safety programs and HACCP",
-                        "prepare menus and food production plans",
-                        "manage kitchen operations and workflow",
-                        "prepare food for special dietary requirements",
-                        "handle and store food safely",
-                        "maintain clean and hygienic food areas",
-                        "produce cakes pastries and bakery products",
-                        "prepare and present food for service"
-                ]
+                "description": "Providing emotional support, counselling, crisis intervention, and therapeutic communication to individuals in distress or need."
         },
-        "THA.SEC.HOS": {
-                "code": "THA.SEC.HOS",
-                "name": "Hospitality & Service Operations",
+        "THA.SEC.RHB": {
+                "code": "THA.SEC.RHB",
+                "name": "Rehabilitation & Recovery Support",
                 "parent_trf": "TRF.SEC",
-                "description": "Managing hospitality service operations.",
-                "keywords": [
-                        "hospitality",
-                        "service",
-                        "accommodation",
-                        "food service",
-                        "beverage",
-                        "events"
-                ],
-                "typical_skills": [
-                        "provide food and beverage service",
-                        "manage front office and reception operations",
-                        "manage accommodation services",
-                        "coordinate and manage events",
-                        "serve alcoholic and non-alcoholic beverages",
-                        "manage gaming operations",
-                        "provide concierge and guest services",
-                        "manage housekeeping operations",
-                        "plan and coordinate functions and events",
-                        "operate bar and cellar operations"
-                ]
+                "description": "Supporting individuals in physical, mental, or social recovery through structured programs, exercise therapy, and community reintegration."
         },
-        "THA.SEC.CRE": {
-                "code": "THA.SEC.CRE",
-                "name": "Creative & Artistic Expression",
+        "THA.SEC.MDA": {
+                "code": "THA.SEC.MDA",
+                "name": "Media Production & Content Creation",
                 "parent_trf": "TRF.SEC",
-                "description": "Applying creative and artistic skills to produce visual, auditory, or performative works.",
-                "keywords": [
-                        "creative",
-                        "artistic",
-                        "design",
-                        "visual arts",
-                        "graphic design",
-                        "photography"
-                ],
-                "typical_skills": [
-                        "create visual arts and design works",
-                        "produce graphic design and digital media",
-                        "capture and edit photographs and video",
-                        "perform music and manage audio production",
-                        "develop creative concepts and designs",
-                        "apply colour theory and composition",
-                        "produce illustrations and artwork",
-                        "create and manage multimedia content",
-                        "develop costume and set designs"
-                ]
+                "description": "Creating, editing, and producing multimedia content including video, audio, photography, graphic design, and digital publishing."
         },
-        "THA.SEC.AGR": {
-                "code": "THA.SEC.AGR",
-                "name": "Agricultural & Horticultural Practice",
+        "THA.SEC.PFM": {
+                "code": "THA.SEC.PFM",
+                "name": "Performance & Presentation Arts",
                 "parent_trf": "TRF.SEC",
-                "description": "Applying knowledge and techniques for growing crops, managing livestock, and maintaining landscapes.",
-                "keywords": [
-                        "agriculture",
-                        "horticulture",
-                        "farming",
-                        "crops",
-                        "livestock",
-                        "soil",
-                        "planting"
-                ],
-                "typical_skills": [
-                        "plant and maintain crops and pastures",
-                        "operate and maintain irrigation systems",
-                        "apply fertilisers and soil amendments",
-                        "manage pest weed and disease control",
-                        "harvest and handle agricultural produce",
-                        "maintain turf and landscape areas",
-                        "operate farm machinery and equipment",
-                        "manage soil health and conservation",
-                        "propagate and cultivate plants",
-                        "plan and implement crop rotations"
-                ]
+                "description": "Performing, directing, and producing live and recorded performances in music, dance, drama, and public events."
         },
-        "THA.SEC.ANM": {
-                "code": "THA.SEC.ANM",
-                "name": "Animal Care & Handling",
+        "THA.SEC.CLN": {
+                "code": "THA.SEC.CLN",
+                "name": "Cleaning & Decontamination",
                 "parent_trf": "TRF.SEC",
-                "description": "Caring for, handling, and managing animals safely and humanely.",
-                "keywords": [
-                        "animal care",
-                        "animal handling",
-                        "animal welfare",
-                        "livestock",
-                        "veterinary",
-                        "feeding"
-                ],
-                "typical_skills": [
-                        "handle and restrain animals safely",
-                        "provide basic animal care and husbandry",
-                        "monitor animal health and behaviour",
-                        "feed and water animals according to requirements",
-                        "administer animal health treatments",
-                        "manage animal breeding programs",
-                        "transport and move livestock safely",
-                        "maintain animal housing and enclosures",
-                        "provide grooming and hygiene care for animals",
-                        "implement animal welfare standards"
-                ]
+                "description": "Applying systematic cleaning, sanitisation, sterilisation, and decontamination procedures for facilities, equipment, and environments."
         },
-        "THA.SEC.SFT": {
-                "code": "THA.SEC.SFT",
-                "name": "Software & Systems Development",
+        "THA.SEC.WTR": {
+                "code": "THA.SEC.WTR",
+                "name": "Water & Waste Treatment",
                 "parent_trf": "TRF.SEC",
-                "description": "Developing, configuring, and maintaining software applications and information systems.",
-                "keywords": [
-                        "software",
-                        "programming",
-                        "coding",
-                        "systems",
-                        "database",
-                        "IT",
-                        "development"
-                ],
-                "typical_skills": [
-                        "develop and maintain software applications",
-                        "write and test program code",
-                        "configure and manage ICT systems",
-                        "administer databases and data storage",
-                        "install and support ICT hardware and software",
-                        "manage network infrastructure and security",
-                        "develop and maintain websites",
-                        "manage cloud computing services",
-                        "implement cybersecurity measures",
-                        "apply software development methodologies"
-                ]
+                "description": "Operating and maintaining water treatment, wastewater processing, and solid waste management systems and infrastructure."
         },
-        "THA.SEC.SEC": {
-                "code": "THA.SEC.SEC",
-                "name": "Security & Protective Services",
+        "THA.SEC.NET": {
+                "code": "THA.SEC.NET",
+                "name": "Network & Infrastructure Management",
                 "parent_trf": "TRF.SEC",
-                "description": "Providing security and protection for people, property, and assets.",
-                "keywords": [
-                        "security",
-                        "protection",
-                        "access control",
-                        "surveillance",
-                        "crowd management"
-                ],
-                "typical_skills": [
-                        "manage security operations and personnel",
-                        "conduct security risk assessments",
-                        "operate access control and surveillance systems",
-                        "manage crowd control and event security",
-                        "respond to security incidents and breaches",
-                        "conduct security patrols and screening",
-                        "coordinate emergency evacuations",
-                        "manage protective security arrangements",
-                        "investigate security incidents"
-                ]
+                "description": "Configuring, managing, and maintaining ICT networks, servers, cloud infrastructure, and telecommunications systems."
         },
-        "THA.OCC.FAB": {
-                "code": "THA.OCC.FAB",
-                "name": "Material Fabrication & Joining",
-                "parent_trf": "TRF.OCC",
-                "description": "Cutting, shaping, joining, and finishing materials.",
-                "keywords": [
-                        "welding",
-                        "fabrication",
-                        "cutting",
-                        "joining",
-                        "soldering",
-                        "brazing",
-                        "metalwork"
-                ],
-                "typical_skills": [
-                        "perform manual metal arc welding",
-                        "oxy-fuel cut ferrous metals",
-                        "perform MIG MAG welding",
-                        "perform TIG welding",
-                        "fabricate structural steel components",
-                        "cut and shape materials using hand and power tools",
-                        "join plastics using thermal techniques",
-                        "assemble fabricated components",
-                        "apply soldering and brazing techniques",
-                        "operate guillotine press brake and rolls"
-                ]
+        "THA.SEC.CYB": {
+                "code": "THA.SEC.CYB",
+                "name": "Cybersecurity & Information Protection",
+                "parent_trf": "TRF.SEC",
+                "description": "Implementing security measures, threat detection, incident response, and data protection for information systems and networks."
         },
-        "THA.OCC.ELC": {
-                "code": "THA.OCC.ELC",
-                "name": "Electrical & Electronic Systems",
-                "parent_trf": "TRF.OCC",
-                "description": "Installing, maintaining, and repairing electrical and electronic systems.",
-                "keywords": [
-                        "electrical",
-                        "electronics",
-                        "wiring",
-                        "circuits",
-                        "control systems",
-                        "installation"
-                ],
-                "typical_skills": [
-                        "install and maintain electrical wiring systems",
-                        "terminate cables and wiring",
-                        "install and test switchboard and control panels",
-                        "diagnose and repair electrical circuits",
-                        "install and commission programmable controllers",
-                        "test and verify electrical installations",
-                        "install and maintain lighting systems",
-                        "connect and configure control systems",
-                        "install and maintain power distribution systems",
-                        "repair and maintain electronic equipment"
-                ]
+        "THA.SEC.TUT": {
+                "code": "THA.SEC.TUT",
+                "name": "Tutoring & Learner Support",
+                "parent_trf": "TRF.SEC",
+                "description": "Providing individualised learning support, academic assistance, and guided instruction to students with varying needs."
         },
-        "THA.OCC.MEC": {
-                "code": "THA.OCC.MEC",
-                "name": "Mechanical Systems & Machinery",
-                "parent_trf": "TRF.OCC",
-                "description": "Operating, maintaining, and repairing mechanical systems and machinery.",
-                "keywords": [
-                        "mechanical",
-                        "machinery",
-                        "engines",
-                        "hydraulics",
-                        "pneumatics",
-                        "maintenance",
-                        "repair"
-                ],
-                "typical_skills": [
-                        "service and repair mechanical equipment",
-                        "maintain and overhaul engines and motors",
-                        "service hydraulic and pneumatic systems",
-                        "replace and align mechanical seals and bearings",
-                        "perform preventive maintenance on plant equipment",
-                        "disassemble inspect and reassemble mechanical components",
-                        "maintain pumps and compressors",
-                        "operate and maintain conveyor systems",
-                        "perform condition monitoring of machinery",
-                        "service and repair gearboxes and drive systems"
-                ]
+        "THA.SEC.DSP": {
+                "code": "THA.SEC.DSP",
+                "name": "Dispensing & Dosage Preparation",
+                "parent_trf": "TRF.SEC",
+                "description": "Measuring, preparing, compounding, and dispensing medications, chemical formulations, or specialised mixtures accurately."
         },
-        "THA.OCC.PLB": {
-                "code": "THA.OCC.PLB",
-                "name": "Plumbing & Fluid Systems",
-                "parent_trf": "TRF.OCC",
-                "description": "Installing, maintaining, and repairing plumbing, gas, and fluid systems.",
-                "keywords": [
-                        "plumbing",
-                        "piping",
-                        "drainage",
-                        "water supply",
-                        "gas fitting",
-                        "pipe fitting"
-                ],
-                "typical_skills": [
-                        "install and maintain hot and cold water systems",
-                        "install drainage and sanitary plumbing",
-                        "install and commission gas appliances",
-                        "fabricate and install piping systems",
-                        "install and test backflow prevention devices",
-                        "lay and connect stormwater drainage",
-                        "install and maintain water heating systems",
-                        "braze and solder copper piping",
-                        "install and maintain irrigation systems",
-                        "test and commission plumbing installations"
-                ]
+        "THA.SEC.IMG": {
+                "code": "THA.SEC.IMG",
+                "name": "Imaging & Visualisation",
+                "parent_trf": "TRF.SEC",
+                "description": "Operating imaging equipment and interpreting visual outputs including radiography, ultrasound, photography, and microscopy."
         },
-        "THA.OCC.BLD": {
-                "code": "THA.OCC.BLD",
-                "name": "Building & Structural Construction",
-                "parent_trf": "TRF.OCC",
-                "description": "Constructing, assembling, and erecting building structures.",
-                "keywords": [
-                        "construction",
-                        "building",
-                        "carpentry",
-                        "bricklaying",
-                        "concreting",
-                        "formwork",
-                        "scaffolding"
-                ],
-                "typical_skills": [
-                        "construct wall and floor frames",
-                        "install roof framing and trusses",
-                        "lay bricks and blocks to line and level",
-                        "erect and dismantle scaffolding",
-                        "construct and strip formwork",
-                        "pour and finish concrete slabs and footings",
-                        "install windows doors and fixtures",
-                        "construct timber and steel structures",
-                        "install external and internal cladding",
-                        "carry out levelling and setting out"
-                ]
+        "THA.SEC.ERG": {
+                "code": "THA.SEC.ERG",
+                "name": "Ergonomic & Workplace Assessment",
+                "parent_trf": "TRF.SEC",
+                "description": "Evaluating workplace design, posture, equipment setup, and environmental conditions to optimise human performance and safety."
         },
-        "THA.OCC.HVR": {
-                "code": "THA.OCC.HVR",
-                "name": "HVAC & Refrigeration Systems",
-                "parent_trf": "TRF.OCC",
-                "description": "Installing, servicing, and repairing HVAC and refrigeration systems.",
-                "keywords": [
-                        "HVAC",
-                        "refrigeration",
-                        "air conditioning",
-                        "heating",
-                        "ventilation",
-                        "ductwork"
-                ],
-                "typical_skills": [
-                        "install and commission split system air conditioners",
-                        "recover and reclaim refrigerant gases",
-                        "service and maintain commercial refrigeration systems",
-                        "install ductwork and ventilation systems",
-                        "diagnose faults in HVAC systems",
-                        "install and service heat pump systems",
-                        "perform refrigerant leak testing",
-                        "commission and balance air conditioning systems",
-                        "service and maintain cooling towers",
-                        "install and test controls for HVAC systems"
-                ]
+        "THA.SEC.PRS": {
+                "code": "THA.SEC.PRS",
+                "name": "Persuasion & Sales Technique",
+                "parent_trf": "TRF.SEC",
+                "description": "Applying persuasion, negotiation, and closing techniques to sell products, services, or ideas to customers and clients."
         },
-        "THA.OCC.VHC": {
-                "code": "THA.OCC.VHC",
-                "name": "Vehicle Operation & Maintenance",
-                "parent_trf": "TRF.OCC",
-                "description": "Operating, maintaining, and repairing vehicles and mobile equipment.",
-                "keywords": [
-                        "vehicle",
-                        "automotive",
-                        "driving",
-                        "mechanics",
-                        "fleet",
-                        "heavy vehicle"
-                ],
-                "typical_skills": [
-                        "service and repair automotive engines",
-                        "diagnose and repair vehicle braking systems",
-                        "overhaul manual and automatic transmissions",
-                        "carry out vehicle inspections and roadworthiness checks",
-                        "operate light and heavy vehicles safely",
-                        "service and repair vehicle electrical systems",
-                        "maintain and repair vehicle steering and suspension",
-                        "carry out vehicle body repairs",
-                        "manage fleet maintenance schedules",
-                        "perform wheel alignment and tyre services"
-                ]
+        "THA.SEC.EVT": {
+                "code": "THA.SEC.EVT",
+                "name": "Event Planning & Coordination",
+                "parent_trf": "TRF.SEC",
+                "description": "Planning, organising, and managing events, functions, exhibitions, and conferences including logistics, vendors, and attendee management."
         },
-        "THA.OCC.CLN": {
-                "code": "THA.OCC.CLN",
-                "name": "Clinical & Therapeutic Procedures",
-                "parent_trf": "TRF.OCC",
-                "description": "Performing clinical assessments, therapeutic interventions, and medical procedures.",
-                "keywords": [
-                        "clinical",
-                        "therapeutic",
-                        "medical procedures",
-                        "wound care",
-                        "medication",
-                        "physiotherapy",
-                        "nursing"
-                ],
-                "typical_skills": [
-                        "administer medications safely",
-                        "perform wound care and dressing changes",
-                        "provide intravenous therapy and cannulation",
-                        "conduct physiotherapy treatment sessions",
-                        "perform cardiopulmonary resuscitation",
-                        "assist with surgical procedures",
-                        "apply occupational therapy interventions",
-                        "manage catheter and drainage care",
-                        "administer injections and immunisations",
-                        "perform clinical observations and vital signs"
-                ]
+        "THA.SEC.GIS": {
+                "code": "THA.SEC.GIS",
+                "name": "Geospatial Analysis & Mapping",
+                "parent_trf": "TRF.SEC",
+                "description": "Analysing spatial data using GIS software, remote sensing, terrain modelling, and geographic information systems."
         },
-        "THA.OCC.PHA": {
-                "code": "THA.OCC.PHA",
-                "name": "Pharmaceutical & Chemical Handling",
-                "parent_trf": "TRF.OCC",
-                "description": "Handling, preparing, dispensing, and managing pharmaceutical products and chemical substances.",
-                "keywords": [
-                        "pharmaceutical",
-                        "chemical",
-                        "medication",
-                        "dispensing",
-                        "hazardous substances",
-                        "MSDS"
-                ],
-                "typical_skills": [
-                        "dispense pharmaceutical products",
-                        "handle and store hazardous chemicals safely",
-                        "prepare and compound medications",
-                        "calculate medication dosages",
-                        "manage controlled substances and drug registers",
-                        "interpret safety data sheets and chemical labels",
-                        "manage chemical spill response and cleanup",
-                        "store and transport dangerous goods",
-                        "apply chemical application techniques",
-                        "manage pharmaceutical stock and inventory"
-                ]
+        "THA.SEC.BIM": {
+                "code": "THA.SEC.BIM",
+                "name": "Building Information Modelling",
+                "parent_trf": "TRF.SEC",
+                "description": "Creating and managing building information models for design coordination, clash detection, and construction planning."
         },
-        "THA.OCC.FIR": {
-                "code": "THA.OCC.FIR",
-                "name": "Emergency & First Response",
+        "THA.SEC.AUT": {
+                "code": "THA.SEC.AUT",
+                "name": "Automation & Control Systems",
+                "parent_trf": "TRF.SEC",
+                "description": "Programming, configuring, and maintaining automated systems including PLCs, SCADA, robotics, and industrial control networks."
+        },
+        "THA.SEC.SIM": {
+                "code": "THA.SEC.SIM",
+                "name": "Simulation & Modelling",
+                "parent_trf": "TRF.SEC",
+                "description": "Creating and running simulations and computational models for training, analysis, prediction, or design validation."
+        },
+        "THA.SEC.FOR": {
+                "code": "THA.SEC.FOR",
+                "name": "Forensic Analysis & Investigation",
+                "parent_trf": "TRF.SEC",
+                "description": "Collecting, preserving, and analysing physical, digital, or documentary evidence using forensic methods and chain of custody protocols."
+        },
+        "THA.OCC.WLD": {
+                "code": "THA.OCC.WLD",
+                "name": "Arc & Gas Welding",
                 "parent_trf": "TRF.OCC",
-                "description": "Responding to emergencies including fire, medical, rescue, and hazardous situations.",
-                "keywords": [
-                        "emergency response",
-                        "first aid",
-                        "CPR",
-                        "rescue",
-                        "firefighting",
-                        "paramedic"
-                ],
-                "typical_skills": [
-                        "provide first aid and emergency response",
-                        "perform cardiopulmonary resuscitation CPR",
-                        "operate firefighting equipment and extinguishers",
-                        "manage emergency evacuations and drills",
-                        "respond to hazardous material incidents",
-                        "coordinate emergency services and response teams",
-                        "perform rescue operations",
-                        "provide pre-hospital emergency care",
-                        "manage mass casualty and disaster response",
-                        "administer emergency oxygen therapy"
-                ]
+                "description": "Performing manual metal arc, MIG/MAG, TIG, oxy-fuel welding and cutting on ferrous and non-ferrous metals."
+        },
+        "THA.OCC.MTF": {
+                "code": "THA.OCC.MTF",
+                "name": "Metal Fabrication & Forming",
+                "parent_trf": "TRF.OCC",
+                "description": "Cutting, shaping, and forming metal using guillotines, press brakes, rolls, plasma cutters, and hand tools."
+        },
+        "THA.OCC.BRZ": {
+                "code": "THA.OCC.BRZ",
+                "name": "Soldering, Brazing & Thermal Joining",
+                "parent_trf": "TRF.OCC",
+                "description": "Joining materials using soldering, brazing, silver brazing, and thermal bonding techniques for pipes, electronics, and components."
         },
         "THA.OCC.MAC": {
                 "code": "THA.OCC.MAC",
-                "name": "Machining & Precision Manufacturing",
+                "name": "Machining & CNC Operation",
                 "parent_trf": "TRF.OCC",
-                "description": "Operating machine tools to shape materials to precise specifications.",
-                "keywords": [
-                        "machining",
-                        "CNC",
-                        "turning",
-                        "milling",
-                        "grinding",
-                        "lathe",
-                        "toolmaking"
-                ],
-                "typical_skills": [
-                        "operate CNC machining centres",
-                        "perform lathe turning operations",
-                        "set up and operate milling machines",
-                        "perform precision grinding operations",
-                        "program CNC machines using G-code",
-                        "manufacture tooling jigs and fixtures",
-                        "perform thread cutting and boring operations",
-                        "operate wire EDM and spark erosion machines",
-                        "produce components to engineering specifications",
-                        "inspect machined parts using precision instruments"
-                ]
+                "description": "Operating lathes, milling machines, grinders, and CNC machining centres to produce precision components."
+        },
+        "THA.OCC.TLM": {
+                "code": "THA.OCC.TLM",
+                "name": "Toolmaking & Jig Fabrication",
+                "parent_trf": "TRF.OCC",
+                "description": "Manufacturing precision tooling, jigs, fixtures, dies, and moulds for production and assembly processes."
         },
         "THA.OCC.SFC": {
                 "code": "THA.OCC.SFC",
                 "name": "Surface Finishing & Coating",
                 "parent_trf": "TRF.OCC",
-                "description": "Applying surface treatments, coatings, and finishes to materials.",
-                "keywords": [
-                        "painting",
-                        "coating",
-                        "finishing",
-                        "polishing",
-                        "plating",
-                        "powder coating"
-                ],
-                "typical_skills": [
-                        "apply protective coatings and paints",
-                        "prepare surfaces for coating and finishing",
-                        "apply powder coat and electrostatic finishes",
-                        "perform spray painting and colour matching",
-                        "apply anti-corrosion treatments",
-                        "polish and buff metal surfaces",
-                        "perform electroplating and anodising",
-                        "apply industrial and decorative floor coatings",
-                        "apply timber stains and lacquers",
-                        "perform vehicle refinishing and detailing"
-                ]
+                "description": "Applying paint, powder coat, plating, polishing, anti-corrosion treatments, and decorative finishes to surfaces."
         },
-        "THA.OCC.TXL": {
-                "code": "THA.OCC.TXL",
-                "name": "Textile & Garment Production",
+        "THA.OCC.CST": {
+                "code": "THA.OCC.CST",
+                "name": "Casting & Moulding",
                 "parent_trf": "TRF.OCC",
-                "description": "Working with textiles and fabrics to produce garments and textile products.",
-                "keywords": [
-                        "sewing",
-                        "textiles",
-                        "garment",
-                        "pattern making",
-                        "fabric",
-                        "tailoring"
-                ],
-                "typical_skills": [
-                        "cut and sew garments from patterns",
-                        "draft and modify garment patterns",
-                        "operate industrial sewing machines",
-                        "perform alterations and repairs to garments",
-                        "select and prepare fabrics and materials",
-                        "produce soft furnishings and curtains",
-                        "perform upholstery and re-upholstery",
-                        "apply textile printing and dyeing techniques",
-                        "construct prototype garments"
-                ]
+                "description": "Producing components through sand casting, die casting, injection moulding, and other forming processes."
+        },
+        "THA.OCC.ELW": {
+                "code": "THA.OCC.ELW",
+                "name": "Electrical Wiring & Installation",
+                "parent_trf": "TRF.OCC",
+                "description": "Installing, terminating, and connecting electrical wiring, cables, conduits, and distribution systems in buildings and structures."
+        },
+        "THA.OCC.ELT": {
+                "code": "THA.OCC.ELT",
+                "name": "Electrical Testing & Verification",
+                "parent_trf": "TRF.OCC",
+                "description": "Testing, verifying, and commissioning electrical installations, circuits, and equipment for compliance and safety."
+        },
+        "THA.OCC.ELR": {
+                "code": "THA.OCC.ELR",
+                "name": "Electronic Repair & Maintenance",
+                "parent_trf": "TRF.OCC",
+                "description": "Diagnosing, repairing, and maintaining electronic equipment, circuit boards, sensors, and control devices."
+        },
+        "THA.OCC.PLC": {
+                "code": "THA.OCC.PLC",
+                "name": "PLC & Industrial Control Programming",
+                "parent_trf": "TRF.OCC",
+                "description": "Programming, configuring, and troubleshooting programmable logic controllers and industrial automation systems."
+        },
+        "THA.OCC.PWR": {
+                "code": "THA.OCC.PWR",
+                "name": "Power Generation & Distribution",
+                "parent_trf": "TRF.OCC",
+                "description": "Installing, operating, and maintaining power generation, transmission, and distribution systems and equipment."
+        },
+        "THA.OCC.TEL": {
+                "code": "THA.OCC.TEL",
+                "name": "Telecommunications & Cabling",
+                "parent_trf": "TRF.OCC",
+                "description": "Installing, terminating, and testing telecommunications cables, fibre optics, and communication infrastructure."
+        },
+        "THA.OCC.MER": {
+                "code": "THA.OCC.MER",
+                "name": "Mechanical Repair & Overhaul",
+                "parent_trf": "TRF.OCC",
+                "description": "Disassembling, inspecting, repairing, and reassembling mechanical components, engines, motors, and rotating equipment."
+        },
+        "THA.OCC.HYD": {
+                "code": "THA.OCC.HYD",
+                "name": "Hydraulic & Pneumatic Systems",
+                "parent_trf": "TRF.OCC",
+                "description": "Installing, servicing, diagnosing, and repairing hydraulic and pneumatic circuits, cylinders, valves, and pumps."
+        },
+        "THA.OCC.BRG": {
+                "code": "THA.OCC.BRG",
+                "name": "Bearing & Seal Replacement",
+                "parent_trf": "TRF.OCC",
+                "description": "Removing, fitting, and aligning bearings, seals, couplings, and mechanical drive components to specified tolerances."
+        },
+        "THA.OCC.PMT": {
+                "code": "THA.OCC.PMT",
+                "name": "Preventive & Predictive Maintenance",
+                "parent_trf": "TRF.OCC",
+                "description": "Performing scheduled maintenance, condition monitoring, vibration analysis, and oil analysis on plant and equipment."
+        },
+        "THA.OCC.PMP": {
+                "code": "THA.OCC.PMP",
+                "name": "Pump & Compressor Servicing",
+                "parent_trf": "TRF.OCC",
+                "description": "Installing, maintaining, overhauling, and troubleshooting pumps, compressors, fans, and fluid handling equipment."
+        },
+        "THA.OCC.PPF": {
+                "code": "THA.OCC.PPF",
+                "name": "Pipe Fitting & Joining",
+                "parent_trf": "TRF.OCC",
+                "description": "Fabricating, fitting, and joining pipes using threading, welding, brazing, soldering, and mechanical coupling techniques."
+        },
+        "THA.OCC.DRN": {
+                "code": "THA.OCC.DRN",
+                "name": "Drainage & Sanitary Plumbing",
+                "parent_trf": "TRF.OCC",
+                "description": "Installing, testing, and maintaining drainage, sewerage, and sanitary plumbing systems including venting and grading."
+        },
+        "THA.OCC.GAS": {
+                "code": "THA.OCC.GAS",
+                "name": "Gas Fitting & Appliance Installation",
+                "parent_trf": "TRF.OCC",
+                "description": "Installing, commissioning, testing, and servicing gas piping, meters, regulators, and gas-fired appliances."
+        },
+        "THA.OCC.RFG": {
+                "code": "THA.OCC.RFG",
+                "name": "Roofing & Waterproofing",
+                "parent_trf": "TRF.OCC",
+                "description": "Installing and repairing roof coverings, flashings, gutters, downpipes, and waterproofing membranes."
+        },
+        "THA.OCC.IRR": {
+                "code": "THA.OCC.IRR",
+                "name": "Irrigation & Water Reticulation",
+                "parent_trf": "TRF.OCC",
+                "description": "Designing, installing, and maintaining irrigation systems, water reticulation, sprinklers, and drip systems."
+        },
+        "THA.OCC.FRM": {
+                "code": "THA.OCC.FRM",
+                "name": "Structural Framing & Assembly",
+                "parent_trf": "TRF.OCC",
+                "description": "Constructing wall frames, floor frames, roof trusses, and structural assemblies in timber and steel."
+        },
+        "THA.OCC.MSN": {
+                "code": "THA.OCC.MSN",
+                "name": "Masonry & Blockwork",
+                "parent_trf": "TRF.OCC",
+                "description": "Laying bricks, blocks, and stone to line and level for walls, arches, piers, and decorative features."
+        },
+        "THA.OCC.CNC": {
+                "code": "THA.OCC.CNC",
+                "name": "Concrete Placement & Finishing",
+                "parent_trf": "TRF.OCC",
+                "description": "Placing, compacting, levelling, and finishing concrete for slabs, footings, paths, and structural elements."
+        },
+        "THA.OCC.FWK": {
+                "code": "THA.OCC.FWK",
+                "name": "Formwork Construction",
+                "parent_trf": "TRF.OCC",
+                "description": "Constructing, erecting, and stripping timber and steel formwork for concrete pours and structural elements."
+        },
+        "THA.OCC.SCF": {
+                "code": "THA.OCC.SCF",
+                "name": "Scaffolding & Temporary Structures",
+                "parent_trf": "TRF.OCC",
+                "description": "Erecting, altering, and dismantling scaffolding, temporary access structures, and edge protection systems."
+        },
+        "THA.OCC.CLD": {
+                "code": "THA.OCC.CLD",
+                "name": "Cladding & Glazing Installation",
+                "parent_trf": "TRF.OCC",
+                "description": "Installing external cladding, wall linings, window glazing, curtain walls, and facade systems."
+        },
+        "THA.OCC.TIL": {
+                "code": "THA.OCC.TIL",
+                "name": "Tiling & Floor Covering",
+                "parent_trf": "TRF.OCC",
+                "description": "Laying ceramic tiles, natural stone, vinyl, carpet, and timber flooring including substrate preparation."
+        },
+        "THA.OCC.PLT": {
+                "code": "THA.OCC.PLT",
+                "name": "Plastering & Rendering",
+                "parent_trf": "TRF.OCC",
+                "description": "Applying plaster, render, texture coats, and decorative finishes to internal and external surfaces."
+        },
+        "THA.OCC.CAB": {
+                "code": "THA.OCC.CAB",
+                "name": "Cabinetmaking & Joinery",
+                "parent_trf": "TRF.OCC",
+                "description": "Manufacturing and installing cabinets, built-in furniture, bench tops, doors, and architectural joinery."
+        },
+        "THA.OCC.STO": {
+                "code": "THA.OCC.STO",
+                "name": "Setting Out & Levelling",
+                "parent_trf": "TRF.OCC",
+                "description": "Establishing building lines, levels, setout points, and datum references using optical and laser instruments."
+        },
+        "THA.OCC.DML": {
+                "code": "THA.OCC.DML",
+                "name": "Demolition & Deconstruction",
+                "parent_trf": "TRF.OCC",
+                "description": "Safely demolishing structures, removing materials, managing asbestos, and salvaging reusable components."
+        },
+        "THA.OCC.RAC": {
+                "code": "THA.OCC.RAC",
+                "name": "Refrigeration & Air Conditioning",
+                "parent_trf": "TRF.OCC",
+                "description": "Installing, servicing, and repairing split systems, commercial refrigeration, chillers, and heat pump systems."
+        },
+        "THA.OCC.DCT": {
+                "code": "THA.OCC.DCT",
+                "name": "Ductwork & Ventilation",
+                "parent_trf": "TRF.OCC",
+                "description": "Fabricating, installing, and balancing ductwork, ventilation systems, exhaust systems, and air distribution networks."
+        },
+        "THA.OCC.RFH": {
+                "code": "THA.OCC.RFH",
+                "name": "Refrigerant Handling & Recovery",
+                "parent_trf": "TRF.OCC",
+                "description": "Recovering, recycling, and handling refrigerant gases safely in compliance with environmental regulations."
+        },
+        "THA.OCC.AEM": {
+                "code": "THA.OCC.AEM",
+                "name": "Automotive Engine & Drivetrain",
+                "parent_trf": "TRF.OCC",
+                "description": "Servicing, diagnosing, and repairing petrol and diesel engines, transmissions, differentials, and driveline components."
+        },
+        "THA.OCC.ABR": {
+                "code": "THA.OCC.ABR",
+                "name": "Automotive Braking & Suspension",
+                "parent_trf": "TRF.OCC",
+                "description": "Servicing and repairing vehicle braking systems, steering, suspension, wheel alignment, and tyre management."
+        },
+        "THA.OCC.AEL": {
+                "code": "THA.OCC.AEL",
+                "name": "Automotive Electrical & Electronics",
+                "parent_trf": "TRF.OCC",
+                "description": "Diagnosing and repairing vehicle electrical systems, engine management, sensors, wiring harnesses, and onboard electronics."
+        },
+        "THA.OCC.PNL": {
+                "code": "THA.OCC.PNL",
+                "name": "Panel Beating & Body Repair",
+                "parent_trf": "TRF.OCC",
+                "description": "Repairing vehicle body panels, performing structural alignment, rust repair, and preparing surfaces for refinishing."
+        },
+        "THA.OCC.VOP": {
+                "code": "THA.OCC.VOP",
+                "name": "Vehicle & Heavy Plant Operation",
+                "parent_trf": "TRF.OCC",
+                "description": "Safely operating light vehicles, heavy rigid vehicles, articulated vehicles, buses, and mobile plant on roads and worksites."
+        },
+        "THA.OCC.CRN": {
+                "code": "THA.OCC.CRN",
+                "name": "Crane Operation & Lifting",
+                "parent_trf": "TRF.OCC",
+                "description": "Operating mobile and tower cranes, performing crane lifts, managing load charts, and coordinating with doggers and riggers."
+        },
+        "THA.OCC.RIG": {
+                "code": "THA.OCC.RIG",
+                "name": "Rigging & Dogging",
+                "parent_trf": "TRF.OCC",
+                "description": "Selecting and applying slings, chains, shackles, and lifting gear; performing dogging; directing crane movements."
+        },
+        "THA.OCC.FLT": {
+                "code": "THA.OCC.FLT",
+                "name": "Forklift & Order Picker Operation",
+                "parent_trf": "TRF.OCC",
+                "description": "Operating counterbalance forklifts, reach trucks, order pickers, and pallet jacks in warehouse and worksite environments."
+        },
+        "THA.OCC.ETH": {
+                "code": "THA.OCC.ETH",
+                "name": "Earthmoving & Grading",
+                "parent_trf": "TRF.OCC",
+                "description": "Operating excavators, backhoes, bulldozers, graders, scrapers, and compaction equipment for earthworks and civil construction."
+        },
+        "THA.OCC.EWP": {
+                "code": "THA.OCC.EWP",
+                "name": "Elevated Work Platform Operation",
+                "parent_trf": "TRF.OCC",
+                "description": "Operating boom lifts, scissor lifts, and other elevated work platforms for working at heights safely."
+        },
+        "THA.OCC.DRL": {
+                "code": "THA.OCC.DRL",
+                "name": "Drilling & Boring Operations",
+                "parent_trf": "TRF.OCC",
+                "description": "Operating drilling rigs, boring equipment, and piling machines for resource extraction, construction, and exploration."
+        },
+        "THA.OCC.MED": {
+                "code": "THA.OCC.MED",
+                "name": "Medication Administration",
+                "parent_trf": "TRF.OCC",
+                "description": "Preparing, calculating dosages, and administering medications via oral, injection, intravenous, and topical routes."
+        },
+        "THA.OCC.WND": {
+                "code": "THA.OCC.WND",
+                "name": "Wound Care & Dressing",
+                "parent_trf": "TRF.OCC",
+                "description": "Assessing, cleaning, debriding, and dressing wounds including surgical wounds, ulcers, and burns."
+        },
+        "THA.OCC.IVT": {
+                "code": "THA.OCC.IVT",
+                "name": "Intravenous Therapy & Cannulation",
+                "parent_trf": "TRF.OCC",
+                "description": "Inserting cannulae, managing IV lines, administering IV fluids and medications, and monitoring infusion therapy."
+        },
+        "THA.OCC.RSP": {
+                "code": "THA.OCC.RSP",
+                "name": "Respiratory & Airway Management",
+                "parent_trf": "TRF.OCC",
+                "description": "Managing airways, administering oxygen therapy, operating ventilators, and performing suctioning procedures."
+        },
+        "THA.OCC.OBS": {
+                "code": "THA.OCC.OBS",
+                "name": "Clinical Observations & Vital Signs",
+                "parent_trf": "TRF.OCC",
+                "description": "Measuring and recording blood pressure, pulse, temperature, respiration, oxygen saturation, and neurological observations."
+        },
+        "THA.OCC.PHY": {
+                "code": "THA.OCC.PHY",
+                "name": "Physiotherapy & Exercise Therapy",
+                "parent_trf": "TRF.OCC",
+                "description": "Applying therapeutic exercise, manual therapy, electrotherapy, and movement rehabilitation techniques."
+        },
+        "THA.OCC.OTH": {
+                "code": "THA.OCC.OTH",
+                "name": "Occupational Therapy Interventions",
+                "parent_trf": "TRF.OCC",
+                "description": "Applying occupational therapy techniques for daily living skills, cognitive rehabilitation, and workplace modification."
+        },
+        "THA.OCC.DNT": {
+                "code": "THA.OCC.DNT",
+                "name": "Dental Procedures & Assistance",
+                "parent_trf": "TRF.OCC",
+                "description": "Assisting with or performing dental examinations, scaling, polishing, radiography, and chairside procedures."
+        },
+        "THA.OCC.SRG": {
+                "code": "THA.OCC.SRG",
+                "name": "Surgical Assistance & Procedures",
+                "parent_trf": "TRF.OCC",
+                "description": "Preparing surgical environments, assisting during operations, managing instruments, and supporting perioperative care."
+        },
+        "THA.OCC.CPR": {
+                "code": "THA.OCC.CPR",
+                "name": "Resuscitation & Emergency Life Support",
+                "parent_trf": "TRF.OCC",
+                "description": "Performing CPR, using defibrillators, providing basic and advanced life support in emergency situations."
+        },
+        "THA.OCC.PAL": {
+                "code": "THA.OCC.PAL",
+                "name": "Palliative & End-of-Life Care",
+                "parent_trf": "TRF.OCC",
+                "description": "Providing comfort care, symptom management, emotional support, and dignity for individuals at end of life."
+        },
+        "THA.OCC.MHC": {
+                "code": "THA.OCC.MHC",
+                "name": "Mental Health Support & Intervention",
+                "parent_trf": "TRF.OCC",
+                "description": "Providing mental health first aid, de-escalation, crisis support, and recovery-oriented interventions."
+        },
+        "THA.OCC.ADL": {
+                "code": "THA.OCC.ADL",
+                "name": "Activities of Daily Living Support",
+                "parent_trf": "TRF.OCC",
+                "description": "Assisting individuals with personal hygiene, mobility, eating, dressing, and daily routine tasks."
+        },
+        "THA.OCC.MAN": {
+                "code": "THA.OCC.MAN",
+                "name": "Manual Handling & Patient Transfer",
+                "parent_trf": "TRF.OCC",
+                "description": "Safely lifting, transferring, and repositioning patients and clients using hoists, slide sheets, and ergonomic techniques."
+        },
+        "THA.OCC.CTH": {
+                "code": "THA.OCC.CTH",
+                "name": "Catheter & Continence Management",
+                "parent_trf": "TRF.OCC",
+                "description": "Managing urinary catheters, continence aids, stoma care, and related elimination support procedures."
+        },
+        "THA.OCC.FAD": {
+                "code": "THA.OCC.FAD",
+                "name": "First Aid & Pre-Hospital Care",
+                "parent_trf": "TRF.OCC",
+                "description": "Providing first aid, managing trauma, controlling bleeding, treating shock, and stabilising patients before hospital care."
+        },
+        "THA.OCC.FFS": {
+                "code": "THA.OCC.FFS",
+                "name": "Firefighting & Suppression",
+                "parent_trf": "TRF.OCC",
+                "description": "Operating firefighting equipment, applying suppression techniques, conducting search and rescue in fire environments."
+        },
+        "THA.OCC.HAZ": {
+                "code": "THA.OCC.HAZ",
+                "name": "Hazardous Materials Response",
+                "parent_trf": "TRF.OCC",
+                "description": "Responding to chemical, biological, and radiological incidents including containment, decontamination, and safe handling."
+        },
+        "THA.OCC.RES": {
+                "code": "THA.OCC.RES",
+                "name": "Rescue & Confined Space Operations",
+                "parent_trf": "TRF.OCC",
+                "description": "Performing technical rescue operations in confined spaces, at heights, in water, and in collapsed structures."
+        },
+        "THA.OCC.CHM": {
+                "code": "THA.OCC.CHM",
+                "name": "Chemical Handling & Application",
+                "parent_trf": "TRF.OCC",
+                "description": "Handling, storing, mixing, and applying chemicals safely including interpreting SDS, managing spills, and applying pesticides."
         },
         "THA.OCC.BIO": {
                 "code": "THA.OCC.BIO",
-                "name": "Biological & Specimen Processing",
+                "name": "Biological Specimen Processing",
                 "parent_trf": "TRF.OCC",
-                "description": "Handling, processing, and managing biological materials and specimens.",
-                "keywords": [
-                        "biological",
-                        "specimen",
-                        "tissue",
-                        "sample processing",
-                        "cryogenics",
-                        "pathology"
-                ],
-                "typical_skills": [
-                        "collect and process biological specimens",
-                        "perform histology and tissue processing",
-                        "handle and store biological materials safely",
-                        "prepare specimens for microscopic examination",
-                        "manage cryogenic storage and thawing procedures",
-                        "process blood and body fluid samples",
-                        "apply biocontainment and biosafety protocols",
-                        "perform microbiological culture and identification",
-                        "manage specimen tracking and chain of custody",
-                        "process semen and reproductive biological materials"
-                ]
+                "description": "Collecting, processing, and managing biological specimens including tissue processing, cryogenics, and biosafety protocols."
         },
-        "THA.OCC.EQM": {
-                "code": "THA.OCC.EQM",
-                "name": "Specialist Equipment Maintenance",
+        "THA.OCC.STR": {
+                "code": "THA.OCC.STR",
+                "name": "Sterilisation & Decontamination",
                 "parent_trf": "TRF.OCC",
-                "description": "Maintaining, cleaning, and servicing specialised equipment and instruments.",
-                "keywords": [
-                        "equipment maintenance",
-                        "servicing",
-                        "cleaning",
-                        "sterilisation",
-                        "preventive maintenance"
-                ],
-                "typical_skills": [
-                        "clean and sterilise medical instruments",
-                        "perform preventive maintenance on equipment",
-                        "maintain and service specialised tools and equipment",
-                        "manage equipment maintenance schedules and logs",
-                        "perform functional testing of equipment",
-                        "clean and maintain firearms and weapons",
-                        "service and maintain dental equipment",
-                        "manage equipment hygiene and decontamination",
-                        "maintain and service laboratory equipment",
-                        "service and maintain kitchen and food equipment"
-                ]
+                "description": "Sterilising instruments and equipment using autoclaves, chemical disinfection, and validated decontamination processes."
         },
-        "THA.OCC.HVY": {
-                "code": "THA.OCC.HVY",
-                "name": "Heavy Equipment & Plant Operation",
+        "THA.OCC.CKG": {
+                "code": "THA.OCC.CKG",
+                "name": "Cooking & Culinary Technique",
                 "parent_trf": "TRF.OCC",
-                "description": "Operating heavy plant and equipment including cranes, excavators, forklifts.",
-                "keywords": [
-                        "crane",
-                        "excavator",
-                        "forklift",
-                        "earthmoving",
-                        "plant operation",
-                        "heavy equipment",
-                        "rigging"
-                ],
-                "typical_skills": [
-                        "operate forklifts and order pickers",
-                        "operate excavators and backhoes",
-                        "conduct crane operations and lifting",
-                        "perform rigging and slinging of loads",
-                        "operate earthmoving and grading equipment",
-                        "operate elevated work platforms",
-                        "perform dogging and crane signalling",
-                        "operate concrete pumps and placing booms",
-                        "drive and operate front-end loaders",
-                        "operate drilling and piling equipment"
-                ]
+                "description": "Preparing, cooking, and presenting food using various methods including grilling, baking, saut\u00e9ing, and sous vide."
         },
-        "THA.OCC.MAR": {
-                "code": "THA.OCC.MAR",
-                "name": "Maritime & Vessel Operations",
+        "THA.OCC.PTY": {
+                "code": "THA.OCC.PTY",
+                "name": "Patisserie & Baking",
                 "parent_trf": "TRF.OCC",
-                "description": "Operating, navigating, and maintaining marine vessels and watercraft.",
-                "keywords": [
-                        "maritime",
-                        "vessel",
-                        "navigation",
-                        "seamanship",
-                        "marine",
-                        "boat",
-                        "ship"
-                ],
-                "typical_skills": [
-                        "navigate and operate commercial vessels",
-                        "perform seamanship and vessel handling",
-                        "manage marine cargo loading and discharge",
-                        "maintain marine engines and systems",
-                        "apply maritime safety and survival procedures",
-                        "operate radar and electronic navigation aids",
-                        "manage vessel stability and trim",
-                        "conduct marine radio communications",
-                        "perform anchoring mooring and berthing operations",
-                        "maintain vessel hull and deck equipment"
-                ]
+                "description": "Producing cakes, pastries, breads, and desserts using baking, laminating, tempering, and decorating techniques."
         },
-        "THA.OCC.AVN": {
-                "code": "THA.OCC.AVN",
-                "name": "Aviation & Aircraft Systems",
+        "THA.OCC.FHS": {
+                "code": "THA.OCC.FHS",
+                "name": "Food Safety & Hygiene Management",
                 "parent_trf": "TRF.OCC",
-                "description": "Operating, maintaining, and managing aircraft and aviation systems.",
-                "keywords": [
-                        "aviation",
-                        "aircraft",
-                        "flight",
-                        "air traffic",
-                        "aircraft maintenance",
-                        "avionics"
-                ],
-                "typical_skills": [
-                        "perform aircraft maintenance and inspections",
-                        "service aircraft engines and propulsion systems",
-                        "maintain avionics and aircraft electrical systems",
-                        "conduct pre-flight and post-flight checks",
-                        "apply aviation safety and regulatory procedures",
-                        "perform aircraft structural repairs",
-                        "manage aircraft maintenance documentation",
-                        "operate air traffic management systems",
-                        "service aircraft landing gear and hydraulics",
-                        "manage aviation fuel and ground handling"
-                ]
+                "description": "Implementing food safety systems, HACCP, temperature monitoring, allergen management, and food handling compliance."
         },
-        "THA.OCC.MNG": {
-                "code": "THA.OCC.MNG",
-                "name": "Mining & Extraction Operations",
+        "THA.OCC.BAR": {
+                "code": "THA.OCC.BAR",
+                "name": "Beverage Service & Mixology",
                 "parent_trf": "TRF.OCC",
-                "description": "Performing mining, quarrying, and resource extraction operations.",
-                "keywords": [
-                        "mining",
-                        "extraction",
-                        "drilling",
-                        "blasting",
-                        "ore",
-                        "quarrying",
-                        "underground"
-                ],
-                "typical_skills": [
-                        "conduct underground mining operations",
-                        "perform drilling and blasting operations",
-                        "operate ore processing and crushing equipment",
-                        "install ground support in underground mines",
-                        "conduct open cut mining operations",
-                        "manage mine ventilation systems",
-                        "operate continuous mining equipment",
-                        "manage tailings and waste disposal",
-                        "perform geological sampling and logging",
-                        "apply mine safety and emergency procedures"
-                ]
+                "description": "Preparing and serving alcoholic and non-alcoholic beverages, operating bar equipment, and managing cellar operations."
         },
-        "THA.OCC.PCS": {
-                "code": "THA.OCC.PCS",
-                "name": "Personal Care & Beauty Services",
+        "THA.OCC.FBS": {
+                "code": "THA.OCC.FBS",
+                "name": "Food & Table Service",
                 "parent_trf": "TRF.OCC",
-                "description": "Providing personal care and beauty treatments.",
-                "keywords": [
-                        "hairdressing",
-                        "beauty",
-                        "massage",
-                        "nail",
-                        "skin care",
-                        "grooming",
-                        "personal care"
-                ],
-                "typical_skills": [
-                        "cut and style hair using various techniques",
-                        "apply hair colouring and chemical treatments",
-                        "perform facial and skin care treatments",
-                        "provide body massage and relaxation therapies",
-                        "apply and maintain nail enhancements",
-                        "perform waxing and hair removal services",
-                        "provide makeup application services",
-                        "assess skin conditions and recommend treatments",
-                        "manage client consultations and service records",
-                        "apply eyelash and brow treatments"
-                ]
+                "description": "Providing table service, managing dining rooms, serving meals, and delivering front-of-house hospitality service."
         },
-        "THA.OCC.SPR": {
-                "code": "THA.OCC.SPR",
-                "name": "Sport & Fitness Instruction",
+        "THA.OCC.ACC": {
+                "code": "THA.OCC.ACC",
+                "name": "Accommodation & Front Office",
                 "parent_trf": "TRF.OCC",
-                "description": "Coaching, instructing, and facilitating sport, fitness, and recreational activities.",
-                "keywords": [
-                        "sport",
-                        "fitness",
-                        "coaching",
-                        "exercise",
-                        "recreation",
-                        "training programs"
-                ],
-                "typical_skills": [
-                        "plan and deliver exercise programs",
-                        "instruct and coach sport activities",
-                        "conduct fitness assessments and testing",
-                        "plan and deliver group fitness sessions",
-                        "develop athlete training programs",
-                        "provide gym floor instruction and supervision",
-                        "plan and deliver aquatic programs",
-                        "manage sport and recreation facilities",
-                        "apply exercise science principles",
-                        "coordinate community sport and recreation programs"
-                ]
+                "description": "Managing front desk, reservations, room allocation, housekeeping coordination, and guest services operations."
+        },
+        "THA.OCC.CRP": {
+                "code": "THA.OCC.CRP",
+                "name": "Crop Production & Harvesting",
+                "parent_trf": "TRF.OCC",
+                "description": "Planting, cultivating, irrigating, fertilising, and harvesting crops and pastures using manual and mechanised methods."
+        },
+        "THA.OCC.SOL": {
+                "code": "THA.OCC.SOL",
+                "name": "Soil & Land Management",
+                "parent_trf": "TRF.OCC",
+                "description": "Assessing soil health, applying amendments, managing erosion, implementing conservation practices, and land rehabilitation."
+        },
+        "THA.OCC.PST": {
+                "code": "THA.OCC.PST",
+                "name": "Pest, Weed & Disease Control",
+                "parent_trf": "TRF.OCC",
+                "description": "Identifying and managing pests, weeds, and plant/animal diseases using chemical, biological, and integrated methods."
+        },
+        "THA.OCC.LDM": {
+                "code": "THA.OCC.LDM",
+                "name": "Landscape & Turf Maintenance",
+                "parent_trf": "TRF.OCC",
+                "description": "Establishing and maintaining gardens, lawns, turf, trees, and landscape features including pruning and propagation."
+        },
+        "THA.OCC.ANH": {
+                "code": "THA.OCC.ANH",
+                "name": "Animal Handling & Husbandry",
+                "parent_trf": "TRF.OCC",
+                "description": "Handling, restraining, feeding, breeding, and providing daily care for livestock, companion, and native animals."
+        },
+        "THA.OCC.AVT": {
+                "code": "THA.OCC.AVT",
+                "name": "Animal Health & Veterinary Support",
+                "parent_trf": "TRF.OCC",
+                "description": "Administering animal health treatments, assisting with veterinary procedures, managing medications, and monitoring animal conditions."
+        },
+        "THA.OCC.AQU": {
+                "code": "THA.OCC.AQU",
+                "name": "Aquaculture & Fisheries",
+                "parent_trf": "TRF.OCC",
+                "description": "Managing aquatic species production, fish farming, hatchery operations, water quality management, and marine harvesting."
+        },
+        "THA.OCC.UGM": {
+                "code": "THA.OCC.UGM",
+                "name": "Underground Mining Operations",
+                "parent_trf": "TRF.OCC",
+                "description": "Operating underground mining equipment, managing ground support, ventilation, and conducting underground development."
+        },
+        "THA.OCC.OCM": {
+                "code": "THA.OCC.OCM",
+                "name": "Open Cut & Surface Mining",
+                "parent_trf": "TRF.OCC",
+                "description": "Operating open cut mining equipment, managing bench operations, overburden removal, and pit development."
+        },
+        "THA.OCC.BLS": {
+                "code": "THA.OCC.BLS",
+                "name": "Blasting & Explosives Handling",
+                "parent_trf": "TRF.OCC",
+                "description": "Preparing, loading, and firing explosive charges for mining, quarrying, and construction blasting operations."
+        },
+        "THA.OCC.OPR": {
+                "code": "THA.OCC.OPR",
+                "name": "Ore Processing & Mineral Separation",
+                "parent_trf": "TRF.OCC",
+                "description": "Operating crushing, grinding, flotation, gravity separation, and other mineral processing equipment and circuits."
+        },
+        "THA.OCC.NAV": {
+                "code": "THA.OCC.NAV",
+                "name": "Navigation & Vessel Handling",
+                "parent_trf": "TRF.OCC",
+                "description": "Navigating marine vessels, performing seamanship duties, operating radar, managing vessel stability, and berthing operations."
+        },
+        "THA.OCC.MCG": {
+                "code": "THA.OCC.MCG",
+                "name": "Marine Cargo & Deck Operations",
+                "parent_trf": "TRF.OCC",
+                "description": "Managing cargo loading and discharge, deck equipment operation, mooring, anchoring, and marine maintenance."
+        },
+        "THA.OCC.ACM": {
+                "code": "THA.OCC.ACM",
+                "name": "Aircraft Maintenance & Inspection",
+                "parent_trf": "TRF.OCC",
+                "description": "Performing scheduled and unscheduled aircraft maintenance, structural repairs, and airworthiness inspections."
+        },
+        "THA.OCC.AVI": {
+                "code": "THA.OCC.AVI",
+                "name": "Avionics & Aircraft Electronics",
+                "parent_trf": "TRF.OCC",
+                "description": "Installing, testing, and maintaining avionics systems, flight instruments, navigation electronics, and aircraft communication systems."
+        },
+        "THA.OCC.SEW": {
+                "code": "THA.OCC.SEW",
+                "name": "Sewing & Garment Construction",
+                "parent_trf": "TRF.OCC",
+                "description": "Cutting, sewing, and assembling garments from patterns using industrial and domestic sewing machines."
+        },
+        "THA.OCC.PAT": {
+                "code": "THA.OCC.PAT",
+                "name": "Pattern Making & Textile Design",
+                "parent_trf": "TRF.OCC",
+                "description": "Drafting, modifying, and grading garment patterns; designing textile prints; and developing fashion prototypes."
+        },
+        "THA.OCC.UPH": {
+                "code": "THA.OCC.UPH",
+                "name": "Upholstery & Soft Furnishing",
+                "parent_trf": "TRF.OCC",
+                "description": "Producing and repairing upholstered furniture, curtains, blinds, and soft furnishings using fabrics and padding materials."
+        },
+        "THA.OCC.HAR": {
+                "code": "THA.OCC.HAR",
+                "name": "Hairdressing & Colour Technique",
+                "parent_trf": "TRF.OCC",
+                "description": "Cutting, styling, colouring, perming, and chemically treating hair using professional techniques and products."
+        },
+        "THA.OCC.BTY": {
+                "code": "THA.OCC.BTY",
+                "name": "Beauty Therapy & Skin Treatment",
+                "parent_trf": "TRF.OCC",
+                "description": "Performing facial treatments, skin analysis, waxing, makeup application, eyelash and brow treatments."
+        },
+        "THA.OCC.MSG": {
+                "code": "THA.OCC.MSG",
+                "name": "Massage & Body Therapy",
+                "parent_trf": "TRF.OCC",
+                "description": "Performing remedial, relaxation, sports, and therapeutic massage techniques for pain relief and wellbeing."
+        },
+        "THA.OCC.NLT": {
+                "code": "THA.OCC.NLT",
+                "name": "Nail Technology & Enhancement",
+                "parent_trf": "TRF.OCC",
+                "description": "Applying, maintaining, and removing nail enhancements including acrylics, gels, and nail art techniques."
+        },
+        "THA.OCC.FIT": {
+                "code": "THA.OCC.FIT",
+                "name": "Fitness Instruction & Programming",
+                "parent_trf": "TRF.OCC",
+                "description": "Planning and delivering exercise programs, group fitness sessions, gym floor instruction, and fitness assessments."
+        },
+        "THA.OCC.COA": {
+                "code": "THA.OCC.COA",
+                "name": "Sports Coaching & Development",
+                "parent_trf": "TRF.OCC",
+                "description": "Coaching sport-specific skills, developing athlete training programs, and coordinating competitive sport activities."
+        },
+        "THA.OCC.AQP": {
+                "code": "THA.OCC.AQP",
+                "name": "Aquatic & Pool Operations",
+                "parent_trf": "TRF.OCC",
+                "description": "Managing swimming pool operations, water quality, lifeguarding, and aquatic program delivery."
+        },
+        "THA.OCC.COD": {
+                "code": "THA.OCC.COD",
+                "name": "Software Development & Programming",
+                "parent_trf": "TRF.OCC",
+                "description": "Writing, testing, debugging, and maintaining program code in various languages and development frameworks."
+        },
+        "THA.OCC.DBA": {
+                "code": "THA.OCC.DBA",
+                "name": "Database Administration & Management",
+                "parent_trf": "TRF.OCC",
+                "description": "Designing, administering, optimising, and securing databases and data storage systems."
+        },
+        "THA.OCC.WEB": {
+                "code": "THA.OCC.WEB",
+                "name": "Web Development & Design",
+                "parent_trf": "TRF.OCC",
+                "description": "Creating, developing, and maintaining websites, web applications, and user interfaces using web technologies."
+        },
+        "THA.OCC.GRD": {
+                "code": "THA.OCC.GRD",
+                "name": "Security Guarding & Patrol",
+                "parent_trf": "TRF.OCC",
+                "description": "Conducting security patrols, access control, crowd management, incident response, and security screening operations."
+        },
+        "THA.OCC.EVC": {
+                "code": "THA.OCC.EVC",
+                "name": "Emergency Evacuation Coordination",
+                "parent_trf": "TRF.OCC",
+                "description": "Planning, coordinating, and conducting emergency evacuations, drills, and warden duties for buildings and events."
+        },
+        "THA.OCC.EQH": {
+                "code": "THA.OCC.EQH",
+                "name": "Equipment Hygiene & Sterilisation",
+                "parent_trf": "TRF.OCC",
+                "description": "Cleaning, disinfecting, and sterilising specialised equipment including medical instruments, firearms, and food processing equipment."
+        },
+        "THA.OCC.EQS": {
+                "code": "THA.OCC.EQS",
+                "name": "Equipment Servicing & Functional Testing",
+                "parent_trf": "TRF.OCC",
+                "description": "Performing preventive maintenance, functional testing, and servicing of specialised tools, instruments, and apparatus."
+        },
+        "THA.OCC.VIA": {
+                "code": "THA.OCC.VIA",
+                "name": "Visual Arts & Illustration",
+                "parent_trf": "TRF.OCC",
+                "description": "Creating visual artworks, illustrations, paintings, sculptures, and artistic pieces using various media and techniques."
+        },
+        "THA.OCC.GFX": {
+                "code": "THA.OCC.GFX",
+                "name": "Graphic Design & Layout",
+                "parent_trf": "TRF.OCC",
+                "description": "Designing visual communications including logos, marketing materials, publications, and digital graphics using design software."
+        },
+        "THA.OCC.PHO": {
+                "code": "THA.OCC.PHO",
+                "name": "Photography & Videography",
+                "parent_trf": "TRF.OCC",
+                "description": "Capturing, editing, and producing photographic and video content for commercial, editorial, and artistic purposes."
+        },
+        "THA.OCC.SND": {
+                "code": "THA.OCC.SND",
+                "name": "Sound & Audio Production",
+                "parent_trf": "TRF.OCC",
+                "description": "Recording, mixing, editing, and producing audio content including music, voiceover, podcasts, and live sound reinforcement."
+        },
+        "THA.OCC.CHD": {
+                "code": "THA.OCC.CHD",
+                "name": "Child Development & Early Education",
+                "parent_trf": "TRF.OCC",
+                "description": "Supporting childrens learning, development, and wellbeing through play-based programs, observation, and age-appropriate activities."
+        },
+        "THA.OCC.YTH": {
+                "code": "THA.OCC.YTH",
+                "name": "Youth Work & Community Engagement",
+                "parent_trf": "TRF.OCC",
+                "description": "Engaging with young people and communities through outreach, group programs, advocacy, and support services."
         }
 },
 }
