@@ -229,15 +229,10 @@ class FacetAssigner:
                     })
                     continue
 
-            # Direct assignment (multi-value)
-            codes = [tha_keys[top_idx[k]] for k in range(min(self.max_multi_values, len(top_idx)))
-                     if top_sims[k] >= self.multi_value_threshold]
-            if codes:
-                df.at[df.index[i], "facet_THA"] = json.dumps(codes)
-                df.at[df.index[i], "facet_THA_name"] = ", ".join(
-                    ALL_FACETS["THA"]["values"][c]["name"] for c in codes
-                )
-                df.at[df.index[i], "facet_THA_confidence"] = float(best_sim)
+            # Direct assignment (single best match)
+            df.at[df.index[i], "facet_THA"] = best_code
+            df.at[df.index[i], "facet_THA_name"] = ALL_FACETS["THA"]["values"].get(best_code, {}).get("name", best_code)
+            df.at[df.index[i], "facet_THA_confidence"] = float(best_sim)
 
         # LLM re-ranking for ambiguous THA assignments
         if to_rerank:
@@ -250,12 +245,12 @@ class FacetAssigner:
                     if idx in results:
                         code, conf = results[idx]
                         info = ALL_FACETS["THA"]["values"].get(code, {})
-                        df.at[idx, "facet_THA"] = json.dumps([code])
+                        df.at[idx, "facet_THA"] = code
                         df.at[idx, "facet_THA_name"] = info.get("name", code)
                         df.at[idx, "facet_THA_confidence"] = conf
                     else:
                         c = item["candidates"][0]
-                        df.at[idx, "facet_THA"] = json.dumps([c["code"]])
+                        df.at[idx, "facet_THA"] = c["code"]
                         df.at[idx, "facet_THA_name"] = c["name"]
                         df.at[idx, "facet_THA_confidence"] = c["similarity"]
 

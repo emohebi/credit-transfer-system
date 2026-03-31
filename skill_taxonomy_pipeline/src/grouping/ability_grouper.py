@@ -86,16 +86,18 @@ def build_ability_groups(
             unassigned.append(sid)
             continue
 
-        # THA can be multi-value (JSON list)
+        # Handle legacy JSON-wrapped codes (e.g. '["THA.BRD.RSK"]')
         if isinstance(tha_code, str) and tha_code.startswith("["):
             try:
                 codes = json.loads(tha_code)
-                for code in codes:
-                    tha_groups[code].append(sid)
+                tha_code = codes[0] if codes else ""
             except (json.JSONDecodeError, TypeError):
-                tha_groups[tha_code].append(sid)
-        else:
+                pass
+
+        if tha_code:
             tha_groups[tha_code].append(sid)
+        else:
+            unassigned.append(sid)
 
     logger.info(f"Skills with THA: {sum(len(v) for v in tha_groups.values())}")
     logger.info(f"Skills without THA: {len(unassigned)}")
