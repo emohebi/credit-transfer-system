@@ -309,16 +309,52 @@ class FacetAssigner:
     def _build_rerank_prompt(self, fid: str, item: Dict) -> Tuple[str, str]:
         """Build tightly constrained prompts for LLM re-ranking."""
         fi = ALL_FACETS[fid]
-        system = (
-            f"You classify vocational skills into {fi['facet_name']} categories.\n"
-            f"{fi['description']}\n\n"
-            f"RULES:\n"
-            f"- Output ONLY a JSON object: {{\"choice\": <int>, \"confidence\": <float>}}\n"
-            f"- choice = the candidate number (1-based) that best fits\n"
-            f"- confidence = your confidence from 0.0 to 1.0\n"
-            f"- Do NOT output any reasoning, explanation, or text outside the JSON\n"
-            f"- Do NOT wrap in markdown code blocks"
-        )
+
+        if fid == "TRF":
+            # Special TRF prompt that discriminates on domain knowledge
+            system = (
+                "You classify Australian VET skills by their transferability level.\n\n"
+                "CATEGORIES:\n"
+                "1. Universal — Generic employability skills everyone needs: communication, "
+                "numeracy, teamwork, time management, digital literacy, ethics.\n"
+                "2. Cross-Sector — Professional/management skills transferable WITHOUT "
+                "specialist trade or domain knowledge: project management, risk assessment, "
+                "compliance, data analysis, leadership, budgeting, reporting. A general "
+                "professional could perform this skill in any industry.\n"
+                "3. Sector-Specific — Technical skills shared across related occupations "
+                "requiring some specialist knowledge: fault diagnosis, inspection, calibration, "
+                "care planning, clinical assessment, process monitoring, laboratory work.\n"
+                "4. Occupation-Specific — Hands-on skills requiring specialist tools, materials, "
+                "physical techniques, or deep domain knowledge unique to a trade or occupation: "
+                "welding, wiring, plumbing, animal handling, cooking, hairdressing, concreting, "
+                "crane operation, medication administration, farming, shearing.\n\n"
+                "KEY DECISION RULE:\n"
+                "If the skill mentions specific animals, plants, crops, chemicals, body parts, "
+                "machinery, or trade materials — it likely requires domain-specific knowledge "
+                "and should be Occupation-Specific, even if the ACTIVITY sounds like management, "
+                "compliance, or risk assessment.\n"
+                "Example: 'Alpaca Hazard Assessment' = Occupation-Specific (needs alpaca knowledge)\n"
+                "Example: 'Workplace Risk Assessment' = Cross-Sector (generic process)\n"
+                "Example: 'Carcass Biosecurity Management' = Occupation-Specific (needs meat industry knowledge)\n"
+                "Example: 'Regulatory Compliance Auditing' = Cross-Sector (generic process)\n\n"
+                "RULES:\n"
+                "- Output ONLY a JSON object: {\"choice\": <int>, \"confidence\": <float>}\n"
+                "- choice = the candidate number (1-based) that best fits\n"
+                "- confidence = your confidence from 0.0 to 1.0\n"
+                "- Do NOT output any reasoning, explanation, or text outside the JSON\n"
+                "- Do NOT wrap in markdown code blocks"
+            )
+        else:
+            system = (
+                f"You classify vocational skills into {fi['facet_name']} categories.\n"
+                f"{fi['description']}\n\n"
+                f"RULES:\n"
+                f"- Output ONLY a JSON object: {{\"choice\": <int>, \"confidence\": <float>}}\n"
+                f"- choice = the candidate number (1-based) that best fits\n"
+                f"- confidence = your confidence from 0.0 to 1.0\n"
+                f"- Do NOT output any reasoning, explanation, or text outside the JSON\n"
+                f"- Do NOT wrap in markdown code blocks"
+            )
 
         cands = "\n".join(
             f"{i+1}. {c['name']}: {c['description']}"
