@@ -266,6 +266,303 @@ class SkillNameRefiner:
         
         logger.info(f"Initialized SkillNameRefiner with batch_size={self.batch_size}")
     
+    # ═══════════════════════════════════════════════════════════════
+    #  POST-PROCESSING: Strip domain from generic transferable skills
+    # ═══════════════════════════════════════════════════════════════
+
+    # Generic skill suffixes that transfer across ALL domains.
+    # If a refined name ends with one of these, the domain prefix is unnecessary.
+    GENERIC_TRANSFERABLE_SUFFIXES = [
+        # Record keeping & documentation
+        'record keeping', 'data entry', 'data recording', 'documentation',
+        'form completion', 'filing', 'record management', 'log keeping',
+        'record maintenance', 'data collation', 'data collection',
+        'record updating', 'document preparation', 'data management',
+        # Communication
+        'communication', 'briefing', 'active listening', 'presentation',
+        'oral communication', 'written communication', 'reporting',
+        'feedback provision', 'debriefing', 'instruction delivery',
+        'instruction following', 'information delivery', 'explanation',
+        # Safety & PPE
+        'ppe selection', 'ppe usage', 'ppe fitting', 'ppe utilization',
+        'ppe use', 'ppe compliance', 'hazard identification',
+        'risk assessment', 'safety compliance', 'manual handling',
+        'safe work practices', 'safe work practice implementation',
+        # Planning & scheduling
+        'scheduling', 'time management', 'prioritisation', 'planning',
+        'task scheduling', 'work scheduling', 'deadline management',
+        # Financial
+        'cost calculation', 'cost estimation', 'budget monitoring',
+        'budget management', 'cost analysis', 'percentage calculation',
+        'payroll maintenance', 'wage calculation', 'invoice processing',
+        # Quality & compliance
+        'compliance checking', 'compliance verification', 'compliance review',
+        'quality checking', 'quality inspection', 'audit', 'auditing',
+        'compliance monitoring', 'verification',
+        # Supervision & coordination
+        'team supervision', 'team coordination', 'staff coordination',
+        'work coordination', 'team briefing', 'team communication',
+        'delegation', 'task allocation',
+        # Research & analysis
+        'data analysis', 'research', 'literature review',
+        'information retrieval', 'information gathering',
+        # Other generic processes
+        'problem solving', 'decision making', 'conflict resolution',
+        'negotiation', 'consultation', 'stakeholder engagement',
+        'customer service', 'client communication',
+        'inspection', 'testing', 'calibration', 'measurement',
+        'housekeeping', 'work area cleaning', 'site cleaning',
+        'procurement', 'ordering', 'inventory management',
+        'stock management', 'storage', 'transport',
+    ]
+
+    # Domain words that should be stripped when preceding a generic suffix
+    DOMAIN_PREFIXES_TO_STRIP = [
+        # Multi-word domains (check these FIRST — longer matches take priority)
+        'companion animal', 'assistance dog', 'marine wildlife',
+        'native animal', 'native mammal', 'stingless bee', 'honey bee',
+        'large animal', 'small animal', 'young animal',
+        'wool room', 'shearing shed', 'woolshed', 'shearing team',
+        'compost site', 'compost plant', 'mushroom substrate',
+        'grain storage', 'nursery plant', 'indoor plant',
+        'poultry shed', 'production shed',
+        # Animals
+        'animal', 'canine', 'feline', 'equine', 'bovine', 'ovine',
+        'avian', 'porcine', 'alpaca', 'sheep', 'cattle', 'horse',
+        'mare', 'dog', 'cat', 'poultry', 'pig', 'bee', 'fish',
+        'livestock', 'aquatic', 'marine', 'amphibian', 'reptile',
+        'bird', 'mammal', 'wildlife', 'zoological', 'veterinary',
+        # Plants & agriculture
+        'plant', 'crop', 'seed', 'soil', 'horticultural', 'nursery',
+        'garden', 'turf', 'tree', 'vineyard', 'mushroom', 'cannabis',
+        'agricultural', 'organic', 'compost', 'broadacre', 'pastoral',
+        'grain', 'harvest', 'wool', 'fleece', 'shearing',
+        # Industry contexts
+        'construction', 'mining', 'maritime', 'aviation', 'automotive',
+        'electrical', 'plumbing', 'welding', 'catering', 'hospitality',
+        'retail', 'warehouse', 'laboratory', 'clinical', 'dental',
+        'pharmaceutical', 'correctional', 'custodial',
+        # Specific contexts
+        'apiary', 'hive', 'incubation', 'carcass', 'carcase',
+        'abattoir', 'stockyard',
+    ]
+
+    def _strip_unnecessary_domain(self, refined_name: str) -> str:
+        """
+        Strip domain qualifiers from generic transferable skills.
+        
+        If the skill ends with a generic transferable suffix (like "Record Keeping"),
+        remove any domain prefix (like "Animal") because the skill transfers
+        across all domains.
+        
+        Args:
+            refined_name: The LLM-refined skill name
+            
+        Returns:
+            Cleaned skill name with unnecessary domain stripped
+        """
+        name_lower = refined_name.lower().strip()
+        
+        # Check if the name ends with any generic transferable suffix
+        matched_suffix = None
+        for suffix in sorted(self.GENERIC_TRANSFERABLE_SUFFIXES, key=len, reverse=True):
+            if name_lower.endswith(suffix):
+                matched_suffix = suffix
+                break
+        
+        if not matched_suffix:
+            return refined_name
+        
+        # Extract the prefix (everything before the generic suffix)
+        suffix_start = name_lower.rfind(matched_suffix)
+        prefix = name_lower[:suffix_start].strip()
+        
+        if not prefix:
+            return refined_name  # No prefix to strip
+        
+        # Iteratively strip domain words from the prefix (right to left)
+        # This handles multi-layer prefixes like "Assistance Dog Training"
+        # where "assistance dog" is a domain and "training" is context
+        remaining_prefix = prefix
+        stripped_any = False
+        
+        max_iterations = 5  # Safety limit
+        for _ in range(max_iterations):
+            found = False
+            for domain in sorted(self.DOMAIN_PREFIXES_TO_STRIP, key=len, reverse=True):
+                domain_lower = domain.lower()
+                if remaining_prefix.endswith(domain_lower):
+                    remaining_prefix = remaining_prefix[:remaining_prefix.rfind(domain_lower)].strip()
+                    stripped_any = True
+                    found = True
+                    break
+            
+            if not found:
+                # Check if remaining prefix is a generic context word that should also be stripped
+                context_words = ['training', 'work', 'operations', 'service', 'services',
+                                'facility', 'site', 'area', 'room', 'shed', 'field',
+                                'workplace', 'worksite', 'industry', 'sector', 'program',
+                                'project', 'production', 'processing', 'practice']
+                remaining_words = remaining_prefix.split()
+                if remaining_words and remaining_words[-1] in context_words:
+                    remaining_prefix = ' '.join(remaining_words[:-1]).strip()
+                    stripped_any = True
+                else:
+                    break
+            
+            if not remaining_prefix:
+                break
+        
+        if not stripped_any:
+            return refined_name
+        
+        # Reconstruct the name
+        suffix_part = refined_name[suffix_start:].strip()
+        if remaining_prefix:
+            # Keep the remaining non-domain prefix with proper casing
+            return remaining_prefix.title() + ' ' + suffix_part
+        else:
+            return suffix_part
+
+    # ═══════════════════════════════════════════════════════════════
+    #  STAGE 2: LLM VALIDATION for domain qualifiers
+    #  Catches domain words not in the deterministic list
+    # ═══════════════════════════════════════════════════════════════
+
+    DOMAIN_VALIDATION_SYSTEM_PROMPT = """You determine whether a domain qualifier in a skill name is necessary or should be removed.
+
+RULE: If the core skill transfers to ANY domain without needing new knowledge, remove the domain qualifier. If the domain changes HOW the skill is performed, keep it.
+
+TRANSFERS (remove domain):
+- "Brood Frame Record Keeping" → "Record Keeping" (recording data is the same everywhere)
+- "Singe Carcase Issue Reporting" → "Issue Reporting" (reporting issues is the same process)
+- "Gambrel Safety Inspection" → "Safety Inspection" (inspecting for safety is the same process)
+- "Vermiculture Data Entry" → "Data Entry" (entering data is the same everywhere)
+- "Aquaponics Budget Monitoring" → "Budget Monitoring" (budgeting transfers)
+- "Silviculture Team Briefing" → "Team Briefing" (briefing a team transfers)
+- "Apiculture PPE Selection" → "PPE Selection" (selecting PPE transfers)
+- "Feedlot Compliance Checking" → "Compliance Checking" (compliance process transfers)
+
+DOES NOT TRANSFER (keep domain):
+- "Animal Behaviour Modification" → KEEP (animal behaviour ≠ human behaviour)
+- "Tree Crown Reduction" → KEEP (domain-specific pruning technique)
+- "Marine Species Identification" → KEEP (needs marine biology knowledge)
+- "Equine Lameness Assessment" → KEEP (needs veterinary knowledge)
+- "Soil pH Testing" → KEEP (needs soil science knowledge)
+
+Output ONLY valid JSON: {"cleaned_name": "...", "domain_removed": true/false}
+No explanations."""
+
+    def _validate_domain_batch(self, skills_to_validate: List[Dict]) -> List[Dict]:
+        """
+        Stage 2: Use LLM to check if domain qualifiers should be stripped
+        from skills that the deterministic list didn't catch.
+        
+        Args:
+            skills_to_validate: List of dicts with 'index', 'refined_name', 'description'
+            
+        Returns:
+            List of dicts with 'index' and 'cleaned_name'
+        """
+        if not self.genai_interface or not skills_to_validate:
+            return skills_to_validate
+        
+        logger.info(f"Stage 2: LLM domain validation for {len(skills_to_validate)} skills")
+        
+        results = []
+        
+        # Process in batches
+        for batch_start in range(0, len(skills_to_validate), self.batch_size):
+            batch = skills_to_validate[batch_start:batch_start + self.batch_size]
+            
+            prompts = []
+            for item in batch:
+                prompt = (
+                    f"Skill name: \"{item['refined_name']}\"\n"
+                    f"Description: {item.get('description', '')[:200]}\n\n"
+                    f"Does the domain qualifier transfer or should it be removed?\n"
+                    f"{{\"cleaned_name\":"
+                )
+                prompts.append(prompt)
+            
+            try:
+                responses = self.genai_interface._generate_batch(
+                    user_prompts=prompts,
+                    system_prompt=self.DOMAIN_VALIDATION_SYSTEM_PROMPT
+                )
+                
+                for item, response in zip(batch, responses or []):
+                    cleaned = item['refined_name']  # default: keep as-is
+                    
+                    if response:
+                        text = response.strip()
+                        # Prepend the partial JSON we sent
+                        text = '{"cleaned_name":' + text
+                        
+                        # Clean up markdown
+                        text = text.replace('```json', '').replace('```', '').strip()
+                        
+                        try:
+                            parsed = json.loads(text)
+                            if isinstance(parsed, dict) and 'cleaned_name' in parsed:
+                                candidate = parsed['cleaned_name'].strip()
+                                if candidate and len(candidate) >= 3:
+                                    if parsed.get('domain_removed', False) or candidate != item['refined_name']:
+                                        logger.debug(
+                                            f"LLM domain strip: '{item['refined_name']}' → '{candidate}'"
+                                        )
+                                    cleaned = candidate
+                        except (json.JSONDecodeError, KeyError):
+                            # Try regex extraction
+                            match = re.search(r'"cleaned_name"\s*:\s*"([^"]+)"', text)
+                            if match:
+                                candidate = match.group(1).strip()
+                                if candidate and len(candidate) >= 3:
+                                    cleaned = candidate
+                    
+                    results.append({
+                        'index': item['index'],
+                        'cleaned_name': cleaned,
+                        'original_refined': item['refined_name'],
+                    })
+                    
+            except Exception as e:
+                logger.warning(f"LLM domain validation batch failed: {e}")
+                for item in batch:
+                    results.append({
+                        'index': item['index'],
+                        'cleaned_name': item['refined_name'],
+                        'original_refined': item['refined_name'],
+                    })
+        
+        stripped_count = sum(1 for r in results if r['cleaned_name'] != r['original_refined'])
+        logger.info(f"Stage 2: LLM stripped domain from {stripped_count}/{len(results)} skills")
+        
+        return results
+
+    def _needs_llm_domain_check(self, refined_name: str) -> bool:
+        """
+        Determine if a refined name should go through LLM domain validation.
+        
+        Returns True if the name has 3+ words AND wasn't already stripped by Stage 1,
+        meaning it might have domain qualifiers the deterministic list missed.
+        """
+        words = refined_name.split()
+        if len(words) < 3:
+            return False  # Short names like "PPE Selection" are already fine
+        
+        # Check if the name ends with a generic suffix — if it does and still
+        # has a prefix, it means Stage 1 didn't strip it, so the prefix might
+        # be a domain word we missed
+        name_lower = refined_name.lower()
+        for suffix in self.GENERIC_TRANSFERABLE_SUFFIXES:
+            if name_lower.endswith(suffix):
+                prefix_part = name_lower[:name_lower.rfind(suffix)].strip()
+                if prefix_part:
+                    return True  # Has prefix + generic suffix → needs LLM check
+        
+        return False
+
     def _get_single_skill_prompt(self, skill: Dict) -> str:
         """
         Generate a user prompt for a single skill refinement.
@@ -445,6 +742,13 @@ Output (JSON only):
                 refined_name = refinement.get('refined_name', skill['name'])
                 changed = refinement.get('changed', False)
                 
+                # Post-process: strip unnecessary domain from generic skills
+                if refined_name:
+                    cleaned_name = self._strip_unnecessary_domain(refined_name)
+                    if cleaned_name != refined_name:
+                        logger.debug(f"Domain stripped: '{refined_name}' → '{cleaned_name}'")
+                        refined_name = cleaned_name
+                
                 if refined_name and len(refined_name) >= 3:
                     skill_copy['org_name'] = skill['name']
                     skill_copy['name'] = refined_name
@@ -548,6 +852,40 @@ Output (JSON only):
                 df_result.loc[idx, 'org_name'] = refined_skill.get('org_name', df_result.loc[idx, 'org_name'])
                 df_result.loc[idx, 'name_changed'] = refined_skill.get('name_changed', False)
                 df_result.loc[idx, 'refinement_confidence'] = refined_skill.get('refinement_confidence', 0.0)
+        
+        # ═══════════════════════════════════════════════════════════
+        #  STAGE 2: LLM domain validation
+        #  For skills that Stage 1 (deterministic strip) didn't catch,
+        #  ask the LLM if the domain qualifier is necessary.
+        # ═══════════════════════════════════════════════════════════
+        if self.genai_interface:
+            skills_for_llm_check = []
+            for idx in df_result.index:
+                current_name = str(df_result.loc[idx, name_column])
+                if self._needs_llm_domain_check(current_name):
+                    skills_for_llm_check.append({
+                        'index': idx,
+                        'refined_name': current_name,
+                        'description': str(df_result.loc[idx, description_column]) if description_column in df_result.columns else '',
+                    })
+            
+            if skills_for_llm_check:
+                logger.info(f"Stage 2: {len(skills_for_llm_check)} skills need LLM domain validation")
+                llm_results = self._validate_domain_batch(skills_for_llm_check)
+                
+                llm_stripped = 0
+                for result in llm_results:
+                    idx = result['index']
+                    cleaned = result['cleaned_name']
+                    original_refined = result['original_refined']
+                    
+                    if cleaned != original_refined and idx in df_result.index:
+                        df_result.loc[idx, name_column] = cleaned
+                        llm_stripped += 1
+                
+                logger.info(f"Stage 2: LLM stripped domain from {llm_stripped} additional skills")
+            else:
+                logger.info("Stage 2: No skills need LLM domain validation")
         
         self._log_refinement_statistics(df_result)
         return df_result
