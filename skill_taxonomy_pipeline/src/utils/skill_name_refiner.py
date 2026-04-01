@@ -105,22 +105,87 @@ THE REFINEMENT PROCESS
 
 1. Read the Description to understand what the person ACTUALLY DOES
 2. Determine if it is Type A (hands-on) or Type B (professional/management)
-3. Read the Unit Title to identify the missing OBJECT or DOMAIN
-4. If the skill name already contains the object/domain → KEEP unchanged
-5. If missing → Add it using language appropriate to the type (A or B)
+3. Read the Unit Title to identify the DOMAIN context
+4. Apply the DOMAIN ADDITION TEST (below) to decide whether to add domain
+5. If domain should be added → add it using language appropriate to the type
+6. If domain should NOT be added → keep the skill name generic
 
 ────────────────────────────────────────
-GENERIC CAPABILITY PROTECTION RULE
+DOMAIN ADDITION TEST (CRITICAL)
 ────────────────────────────────────────
 
-If the original skill is a general human capability (communication, teamwork, planning, coordination, leadership, judgement, analysis, problem-solving), DO NOT add technical or equipment-specific domains from the Unit Title.
+Before adding any domain context from the Unit Title, ask:
 
-Generic soft skills MUST remain generic:
-- "Face-to-Face Communication" → keep as is, NOT "Helicopter Communication"
-- "Teamwork" → keep as is, NOT "Aviation Teamwork"
-- "Problem Solving" → keep as is, NOT "Plumbing Problem Solving"
+"Can a person who can do this skill in domain A also do it in domain B
+WITHOUT needing to learn new domain-specific knowledge?"
 
-Domains can ONLY be added when they are INTRINSIC to the capability itself.
+If YES → the skill TRANSFERS across domains → do NOT add domain.
+If NO → the domain CHANGES the ability → DO add domain.
+
+EXAMPLES WHERE DOMAIN TRANSFERS (do NOT add domain):
+- "Record Keeping" — keeping records is the same process everywhere.
+  "Assistance Dog Training Record Keeping" ✗ → "Record Keeping" ✓
+- "PPE Selection" — selecting PPE follows the same hazard-based process.
+  "Shearing PPE Selection" ✗ → "PPE Selection" ✓
+- "Data Analysis" — analytical technique transfers across all domains.
+  "Agricultural Data Analysis" ✗ → "Data Analysis" ✓
+- "Communication" — communication skill transfers everywhere.
+  "Veterinary Drug Dosage Communication" ✗ → "Drug Dosage Communication" ✓
+- "Risk Assessment" — the risk assessment PROCESS is the same everywhere.
+  "Alpaca Hazard Risk Assessment" ✗ → "Hazard Risk Assessment" ✓
+- "Scheduling" — scheduling is scheduling regardless of domain.
+  "Shearing Team Scheduling" ✗ → "Team Scheduling" ✓
+- "Cost Calculation" — maths transfers.
+  "Wool Premium Percentage Calculation" ✗ → "Percentage Calculation" ✓
+- "Compliance Checking" — compliance process transfers.
+  "Bee Transport Permit Compliance" ✗ → "Permit Compliance Checking" ✓
+- "Budget Monitoring" — budgeting transfers.
+  "Companion Animal Campaign Budget Monitoring" ✗ → "Campaign Budget Monitoring" ✓
+
+EXAMPLES WHERE DOMAIN CHANGES THE ABILITY (DO add domain):
+- "Stress Prevention" — animal stress is completely different from human stress.
+  "Stress Prevention" ✗ → "Animal Stress Prevention" ✓
+- "Behaviour Modification" — modifying animal behaviour ≠ modifying human behaviour.
+  "Behaviour Modification" ✗ → "Animal Behaviour Modification" ✓
+- "Infection Control" — animal infection control ≠ hospital infection control.
+  "Infection Control" ✗ → "Animal Infection Control" ✓
+- "Health Assessment" — assessing animal health ≠ assessing human health.
+  "Health Assessment" ✗ → "Animal Health Assessment" ✓
+- "Wound Dressing" — animal wounds differ from human wounds.
+  "Wound Dressing" ✗ → "Animal Wound Dressing" ✓
+- "Nutrition Planning" — animal nutrition ≠ human nutrition.
+  "Nutrition Planning" ✗ → "Animal Nutrition Planning" ✓
+- "Habitat Assessment" — specific to ecosystem/species.
+  "Habitat Assessment" ✗ → "Marine Habitat Assessment" ✓
+- "Pruning" — pruning technique depends on plant species.
+  "Pruning" ✗ → "Amenity Tree Pruning" ✓
+
+────────────────────────────────────────
+QUICK REFERENCE — GENERIC SKILLS (never add domain)
+────────────────────────────────────────
+
+These skills are ALWAYS transferable. NEVER add domain qualifiers:
+Record Keeping, Data Entry, Filing, Documentation, Reporting,
+Communication, Briefing, Presentation, Active Listening,
+Scheduling, Time Management, Prioritisation,
+PPE Selection, Manual Handling, Hazard Identification,
+Risk Assessment, Compliance Checking, Audit,
+Cost Calculation, Budget Monitoring, Numeracy,
+Teamwork, Supervision, Coordination, Delegation,
+Problem Solving, Decision Making, Research,
+Quality Checking, Inspection, Verification
+
+────────────────────────────────────────
+QUICK REFERENCE — DOMAIN-SPECIFIC SKILLS (always add domain)
+────────────────────────────────────────
+
+These skills CHANGE based on domain. ALWAYS add domain qualifiers:
+Health Assessment, Infection Control, Wound Care, Medication,
+Behaviour Modification, Stress Management, Nutrition Planning,
+Species Identification, Habitat Assessment, Breeding,
+Diagnosis, Treatment, Rehabilitation, Therapy,
+Propagation, Pruning technique, Grafting, Pollination,
+Welding technique, Machining technique, Cooking technique
 
 ────────────────────────────────────────
 NAMING CONSTRAINTS
@@ -130,26 +195,30 @@ NAMING CONSTRAINTS
 - Use noun-headed phrases (the last word should be a noun or gerund noun)
 - Preferred structure: [Domain/Object] + [Action-as-Noun]
   Examples: "Sheep Shearing", "Concrete Placing", "IV Cannulation", "Forklift Operation"
-- For Type B: [Domain/Object] + [Professional Noun]
-  Examples: "Bushfire Risk Assessment", "Carbon Farming Compliance", "WHS Auditing"
+- For generic transferable skills, keep short: "Record Keeping", "PPE Selection", "Risk Assessment"
+- For domain-specific skills: "Animal Health Assessment", "Marine Habitat Survey", "Tree Pruning"
 - Use Australian VET terminology where appropriate
 
 ────────────────────────────────────────
 MORE EXAMPLES
 ────────────────────────────────────────
 
-| Description | Unit Title | Refined Name |
-|------------|------------|--------------|
-| Operates excavator to dig trenches | Conduct excavator operations | Trench Excavation |
-| Mixes concrete to specified ratios | Carry out concreting | Concrete Mix Preparation |
-| Applies wound dressing to patient | Provide wound care | Wound Dressing Application |
-| Monitors sheep for signs of illness | Handle livestock | Sheep Health Monitoring |
-| Reviews compliance with food safety law | Manage food safety program | Food Safety Compliance Review |
-| Identifies hazards in shearing shed | Work safely in shearing | Shearing Shed Hazard Identification |
-| Selects correct welding rod for joint | Perform MMAW welding | Welding Rod Selection |
-| Records animal feeding data in logbook | Maintain animal records | Animal Feeding Record Keeping |
-| Prunes branches using chainsaw | Perform tree pruning | Chainsaw Pruning |
-| Supervises junior staff during harvest | Coordinate harvest operations | Harvest Team Supervision |
+| Description | Unit Title | Refined Name | Why |
+|------------|------------|--------------|-----|
+| Operates excavator to dig trenches | Conduct excavator operations | Trench Excavation | domain-specific technique |
+| Mixes concrete to specified ratios | Carry out concreting | Concrete Mix Preparation | domain-specific technique |
+| Applies wound dressing to patient | Provide wound care | Wound Dressing Application | domain-specific (human vs animal wounds differ) |
+| Monitors sheep for signs of illness | Handle livestock | Sheep Health Monitoring | domain-specific (animal health ≠ human health) |
+| Reviews compliance with food safety law | Manage food safety program | Compliance Review | generic process — transfers across all compliance |
+| Identifies hazards in shearing shed | Work safely in shearing | Hazard Identification | generic process — same process everywhere |
+| Selects correct welding rod for joint | Perform MMAW welding | Welding Rod Selection | domain-specific (welding knowledge needed) |
+| Records animal feeding data in logbook | Maintain animal records | Record Keeping | generic process — recording data transfers |
+| Prunes branches using chainsaw | Perform tree pruning | Chainsaw Pruning | domain-specific technique |
+| Supervises junior staff during harvest | Coordinate harvest operations | Team Supervision | generic process — supervision transfers |
+| Selects PPE for task | Work safely around animals | PPE Selection | generic process — PPE selection process is same |
+| Plans rations for sheep flock | Provide livestock nutrition | Sheep Nutrition Planning | domain-specific (animal nutrition ≠ human nutrition) |
+| Analyses soil test data | Manage soil health | Data Analysis | generic process — analytical method transfers |
+| Modifies dog behaviour using conditioning | Train assistance dogs | Canine Behaviour Modification | domain-specific (animal ≠ human behaviour) |
 
 ────────────────────────────────────────
 OUTPUT
