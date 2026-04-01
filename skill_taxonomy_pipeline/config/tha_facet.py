@@ -1,8 +1,9 @@
 """
 Transferable Human Ability (THA) Facet Definition
 
-260 functional human abilities organized under TRF categories.
+303 functional human abilities organized under TRF categories.
 Each describes WHAT a human can do, not WHERE they do it.
+Names describe abilities, not industries or settings.
 Each THA passes the transferability test: a person who masters
 one skill in a THA group can perform other skills in that group.
 """
@@ -248,18 +249,6 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "parent_trf": "TRF.SEC",
                 "description": "Calibrating measuring instruments, verifying accuracy, applying measurement uncertainty, and maintaining calibration records."
         },
-        "THA.SEC.DIA": {
-                "code": "THA.SEC.DIA",
-                "name": "Systematic Fault Diagnosis",
-                "parent_trf": "TRF.SEC",
-                "description": "Isolating faults through structured elimination, symptom analysis, schematic interpretation, and diagnostic instrument use."
-        },
-        "THA.SEC.PAT": {
-                "code": "THA.SEC.PAT",
-                "name": "Client & Patient Assessment",
-                "parent_trf": "TRF.SEC",
-                "description": "Assessing needs, conditions, or capabilities of clients, patients, or service users through intake, screening, triage, and needs analysis."
-        },
         "THA.SEC.CPL": {
                 "code": "THA.SEC.CPL",
                 "name": "Care Planning & Case Management",
@@ -274,9 +263,9 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
         },
         "THA.SEC.VTL": {
                 "code": "THA.SEC.VTL",
-                "name": "Vital Signs & Clinical Monitoring",
+                "name": "Physiological Monitoring & Recording",
                 "parent_trf": "TRF.SEC",
-                "description": "Measuring, recording, and interpreting patient vital signs and physiological parameters using clinical monitoring equipment."
+                "description": "Measuring, recording, and interpreting vital signs and physiological parameters using monitoring equipment."
         },
         "THA.SEC.SMP": {
                 "code": "THA.SEC.SMP",
@@ -286,9 +275,9 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
         },
         "THA.SEC.SRV": {
                 "code": "THA.SEC.SRV",
-                "name": "Site Measurement & Setting Out",
+                "name": "Server & Cloud Administration",
                 "parent_trf": "TRF.SEC",
-                "description": "Establishing reference points, taking measurements, and setting out work using optical, laser, and GPS instruments."
+                "description": "Provisioning, managing, patching, and maintaining on-premise servers, virtual machines, and cloud computing environments."
         },
         "THA.SEC.EST": {
                 "code": "THA.SEC.EST",
@@ -338,12 +327,6 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "parent_trf": "TRF.SEC",
                 "description": "Operating and maintaining water treatment, wastewater processing, and solid waste management systems."
         },
-        "THA.SEC.NET": {
-                "code": "THA.SEC.NET",
-                "name": "Network & Systems Administration",
-                "parent_trf": "TRF.SEC",
-                "description": "Configuring, managing, and maintaining ICT networks, servers, cloud infrastructure, and telecommunications systems."
-        },
         "THA.SEC.CYB": {
                 "code": "THA.SEC.CYB",
                 "name": "Cybersecurity & Information Protection",
@@ -373,12 +356,6 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "name": "Event & Function Coordination",
                 "parent_trf": "TRF.SEC",
                 "description": "Planning, organising, and managing events, functions, exhibitions, and conferences including logistics and attendee management."
-        },
-        "THA.SEC.AUT": {
-                "code": "THA.SEC.AUT",
-                "name": "Automation & Control Programming",
-                "parent_trf": "TRF.SEC",
-                "description": "Programming, configuring, and troubleshooting automated systems including PLCs, SCADA, robotics, and industrial control networks."
         },
         "THA.SEC.FOR": {
                 "code": "THA.SEC.FOR",
@@ -412,21 +389,21 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
         },
         "THA.SEC.PRV": {
                 "code": "THA.SEC.PRV",
-                "name": "Property Valuation & Assessment",
+                "name": "Asset Valuation & Market Appraisal",
                 "parent_trf": "TRF.SEC",
-                "description": "Assessing market value, condition, and characteristics of property and assets using valuation methodologies and market analysis."
+                "description": "Assessing market value, condition, and characteristics of assets using valuation methodologies and comparable market analysis."
         },
         "THA.SEC.INR": {
                 "code": "THA.SEC.INR",
-                "name": "Insurance Assessment & Claims",
+                "name": "Loss Assessment & Claims Processing",
                 "parent_trf": "TRF.SEC",
-                "description": "Assessing insurance claims, evaluating damage or loss, determining liability, and processing settlement documentation."
+                "description": "Assessing damage or loss, evaluating liability, determining claim validity, and processing settlement documentation."
         },
         "THA.SEC.COR": {
                 "code": "THA.SEC.COR",
-                "name": "Correctional & Custodial Operations",
+                "name": "Custodial Supervision & Detainee Management",
                 "parent_trf": "TRF.SEC",
-                "description": "Managing detainees, maintaining security in custodial environments, conducting searches, and supporting rehabilitation programs."
+                "description": "Managing detainees, maintaining order in custodial environments, conducting searches, and supporting rehabilitation programs."
         },
         "THA.OCC.MMA": {
                 "code": "THA.OCC.MMA",
@@ -484,15 +461,15 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
         },
         "THA.OCC.LTH": {
                 "code": "THA.OCC.LTH",
-                "name": "Lathe Turning",
+                "name": "Manual Lathe Turning",
                 "parent_trf": "TRF.OCC",
-                "description": "Producing cylindrical components using manual and CNC lathes including facing, boring, threading, and taper turning."
+                "description": "Producing cylindrical components on manual centre lathes including facing, parallel turning, boring, threading, taper turning, and knurling."
         },
         "THA.OCC.MLG": {
                 "code": "THA.OCC.MLG",
-                "name": "Milling & Drilling",
+                "name": "Manual Milling & Drilling",
                 "parent_trf": "TRF.OCC",
-                "description": "Producing flat, angled, and contoured surfaces using manual and CNC milling machines and precision drilling equipment."
+                "description": "Producing flat, angled, and contoured surfaces using manual milling machines and precision drill presses."
         },
         "THA.OCC.GRN": {
                 "code": "THA.OCC.GRN",
@@ -535,12 +512,6 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "name": "Abrasive Blasting & Surface Preparation",
                 "parent_trf": "TRF.OCC",
                 "description": "Preparing surfaces using abrasive blasting, chemical cleaning, and mechanical preparation for coating application."
-        },
-        "THA.OCC.CST": {
-                "code": "THA.OCC.CST",
-                "name": "Casting & Moulding",
-                "parent_trf": "TRF.OCC",
-                "description": "Producing components through sand casting, die casting, injection moulding, and resin infusion processes."
         },
         "THA.OCC.3DP": {
                 "code": "THA.OCC.3DP",
@@ -610,15 +581,15 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
         },
         "THA.OCC.PEM": {
                 "code": "THA.OCC.PEM",
-                "name": "Petrol Engine Servicing",
+                "name": "Spark-Ignition Engine Repair",
                 "parent_trf": "TRF.OCC",
-                "description": "Servicing, tuning, diagnosing, and repairing spark-ignition petrol engines and their fuel and ignition systems."
+                "description": "Servicing, diagnosing, and repairing spark-ignition (petrol/LPG) engines including fuel injection, ignition, cooling, and emission systems."
         },
         "THA.OCC.DSE": {
                 "code": "THA.OCC.DSE",
-                "name": "Diesel Engine Servicing",
+                "name": "Compression-Ignition Engine Repair",
                 "parent_trf": "TRF.OCC",
-                "description": "Servicing, diagnosing, and repairing compression-ignition diesel engines and their fuel injection systems."
+                "description": "Servicing, diagnosing, and repairing compression-ignition (diesel) engines including common rail injection, turbochargers, and exhaust aftertreatment."
         },
         "THA.OCC.GBX": {
                 "code": "THA.OCC.GBX",
@@ -730,15 +701,15 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
         },
         "THA.OCC.CPR": {
                 "code": "THA.OCC.CPR",
-                "name": "Concrete Placing & Finishing",
+                "name": "Basic Life Support & Defibrillation",
                 "parent_trf": "TRF.OCC",
-                "description": "Placing, compacting, screeding, floating, and finishing concrete for slabs, footings, paths, and structural elements."
+                "description": "Performing cardiopulmonary resuscitation, using automated external defibrillators, and managing unconscious casualties."
         },
         "THA.OCC.FWK": {
                 "code": "THA.OCC.FWK",
-                "name": "Formwork Construction & Stripping",
+                "name": "Formwork Assembly & Stripping",
                 "parent_trf": "TRF.OCC",
-                "description": "Constructing, erecting, and stripping timber and steel formwork for concrete pours."
+                "description": "Constructing, erecting, aligning, and stripping timber and steel formwork for concrete pours."
         },
         "THA.OCC.SCF": {
                 "code": "THA.OCC.SCF",
@@ -784,9 +755,9 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
         },
         "THA.OCC.CAB": {
                 "code": "THA.OCC.CAB",
-                "name": "Cabinet Construction & Installation",
+                "name": "Cabinetmaking & Joinery",
                 "parent_trf": "TRF.OCC",
-                "description": "Manufacturing and installing cabinets, built-in furniture, benchtops, and architectural joinery components."
+                "description": "Manufacturing and installing cabinets, built-in furniture, benchtops, doors, and architectural joinery components."
         },
         "THA.OCC.STO": {
                 "code": "THA.OCC.STO",
@@ -799,12 +770,6 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "name": "Demolition & Asbestos Removal",
                 "parent_trf": "TRF.OCC",
                 "description": "Safely demolishing structures, removing hazardous materials including asbestos, and managing demolition waste."
-        },
-        "THA.OCC.IRR": {
-                "code": "THA.OCC.IRR",
-                "name": "Irrigation System Installation",
-                "parent_trf": "TRF.OCC",
-                "description": "Designing, installing, and maintaining irrigation systems including sprinklers, drip lines, controllers, and pumps."
         },
         "THA.OCC.SPL": {
                 "code": "THA.OCC.SPL",
@@ -830,35 +795,23 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "parent_trf": "TRF.OCC",
                 "description": "Recovering, recycling, charging, and leak-testing refrigerant gases in compliance with environmental regulations."
         },
-        "THA.OCC.PEM2": {
-                "code": "THA.OCC.PEM2",
-                "name": "Vehicle Petrol Engine Repair",
-                "parent_trf": "TRF.OCC",
-                "description": "Diagnosing and repairing automotive petrol engine faults including fuel injection, ignition, and emission systems."
-        },
-        "THA.OCC.DSE2": {
-                "code": "THA.OCC.DSE2",
-                "name": "Vehicle Diesel Engine Repair",
-                "parent_trf": "TRF.OCC",
-                "description": "Diagnosing and repairing automotive diesel engine faults including common rail, turbocharger, and exhaust systems."
-        },
         "THA.OCC.ABR": {
                 "code": "THA.OCC.ABR",
-                "name": "Vehicle Brake & Suspension Repair",
+                "name": "Brake & Suspension Repair",
                 "parent_trf": "TRF.OCC",
-                "description": "Servicing and repairing disc and drum brakes, ABS, suspension, steering, and wheel alignment systems."
+                "description": "Servicing and repairing disc and drum brakes, ABS, suspension, steering, wheel alignment, and tyre management systems."
         },
         "THA.OCC.AEL": {
                 "code": "THA.OCC.AEL",
-                "name": "Vehicle Electrical & Electronic Repair",
+                "name": "Onboard Electrical & Electronic Repair",
                 "parent_trf": "TRF.OCC",
-                "description": "Diagnosing and repairing vehicle electrical systems, CAN bus networks, engine management, and onboard electronics."
+                "description": "Diagnosing and repairing electrical systems, CAN bus networks, engine management, sensors, and onboard electronics."
         },
         "THA.OCC.EVS": {
                 "code": "THA.OCC.EVS",
-                "name": "Electric Vehicle Systems",
+                "name": "Electric & Hybrid Drive Systems",
                 "parent_trf": "TRF.OCC",
-                "description": "Servicing, diagnosing, and repairing electric and hybrid vehicle drive systems, batteries, and charging infrastructure."
+                "description": "Servicing, diagnosing, and repairing electric and hybrid drive systems, traction batteries, inverters, and charging infrastructure."
         },
         "THA.OCC.PNL": {
                 "code": "THA.OCC.PNL",
@@ -868,21 +821,9 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
         },
         "THA.OCC.VRF": {
                 "code": "THA.OCC.VRF",
-                "name": "Vehicle Refinishing & Detailing",
+                "name": "Spray Refinishing & Detailing",
                 "parent_trf": "TRF.OCC",
-                "description": "Spray painting vehicles, matching colours, applying clear coat, polishing, and detailing to factory finish standards."
-        },
-        "THA.OCC.VOP": {
-                "code": "THA.OCC.VOP",
-                "name": "Heavy Vehicle & Plant Driving",
-                "parent_trf": "TRF.OCC",
-                "description": "Safely operating heavy rigid vehicles, articulated trucks, buses, and mobile plant on roads and worksites."
-        },
-        "THA.OCC.CRN": {
-                "code": "THA.OCC.CRN",
-                "name": "Crane Operation",
-                "parent_trf": "TRF.OCC",
-                "description": "Operating mobile, tower, and overhead cranes including load chart interpretation, lift planning, and safe operation."
+                "description": "Applying paint systems, matching colours, applying clear coat, polishing, and detailing painted surfaces to finish standards."
         },
         "THA.OCC.RIG": {
                 "code": "THA.OCC.RIG",
@@ -890,29 +831,11 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "parent_trf": "TRF.OCC",
                 "description": "Selecting and attaching slings, chains, and shackles; calculating loads; and directing crane movements as a dogger or rigger."
         },
-        "THA.OCC.FLT": {
-                "code": "THA.OCC.FLT",
-                "name": "Forklift & Warehouse Equipment Operation",
-                "parent_trf": "TRF.OCC",
-                "description": "Operating counterbalance forklifts, reach trucks, order pickers, and pallet jacks for material handling."
-        },
-        "THA.OCC.ETH": {
-                "code": "THA.OCC.ETH",
-                "name": "Excavation & Earthmoving",
-                "parent_trf": "TRF.OCC",
-                "description": "Operating excavators, backhoes, bulldozers, graders, and compaction equipment for earthworks and civil works."
-        },
         "THA.OCC.EWP": {
                 "code": "THA.OCC.EWP",
                 "name": "Elevated Work Platform Operation",
                 "parent_trf": "TRF.OCC",
                 "description": "Operating boom lifts, scissor lifts, and other elevated work platforms for working safely at heights."
-        },
-        "THA.OCC.DRL": {
-                "code": "THA.OCC.DRL",
-                "name": "Drilling & Piling",
-                "parent_trf": "TRF.OCC",
-                "description": "Operating drilling rigs, boring equipment, and piling machines for construction, exploration, and resource extraction."
         },
         "THA.OCC.ORM": {
                 "code": "THA.OCC.ORM",
@@ -925,12 +848,6 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "name": "Injection & Immunisation",
                 "parent_trf": "TRF.OCC",
                 "description": "Preparing and administering subcutaneous, intramuscular, and intradermal injections including immunisation procedures."
-        },
-        "THA.OCC.IVT": {
-                "code": "THA.OCC.IVT",
-                "name": "Intravenous Therapy & Cannulation",
-                "parent_trf": "TRF.OCC",
-                "description": "Inserting cannulae, managing IV lines, administering IV fluids and medications, and monitoring infusion therapy."
         },
         "THA.OCC.WND": {
                 "code": "THA.OCC.WND",
@@ -964,21 +881,15 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
         },
         "THA.OCC.DNT": {
                 "code": "THA.OCC.DNT",
-                "name": "Dental Chairside Assistance",
+                "name": "Oral Health Chairside Assistance",
                 "parent_trf": "TRF.OCC",
-                "description": "Assisting with dental procedures, managing instruments, taking impressions, processing radiographs, and maintaining dental equipment."
+                "description": "Assisting with oral examinations, scaling, polishing, radiography, impression taking, and chairside instrument management."
         },
         "THA.OCC.SRG": {
                 "code": "THA.OCC.SRG",
                 "name": "Surgical Assistance & Perioperative Care",
                 "parent_trf": "TRF.OCC",
                 "description": "Preparing surgical environments, assisting during operations, managing instruments, and supporting pre and post-operative care."
-        },
-        "THA.OCC.BLS": {
-                "code": "THA.OCC.BLS",
-                "name": "Basic & Advanced Life Support",
-                "parent_trf": "TRF.OCC",
-                "description": "Performing CPR, using defibrillators, managing cardiac arrest, and providing basic and advanced life support interventions."
         },
         "THA.OCC.PAL": {
                 "code": "THA.OCC.PAL",
@@ -1016,12 +927,6 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "parent_trf": "TRF.OCC",
                 "description": "Delivering health education, screening programs, and preventive health messages to individuals and community groups."
         },
-        "THA.OCC.FAD": {
-                "code": "THA.OCC.FAD",
-                "name": "First Aid & Trauma Response",
-                "parent_trf": "TRF.OCC",
-                "description": "Providing first aid, managing trauma, controlling bleeding, treating shock, and stabilising patients at emergency scenes."
-        },
         "THA.OCC.FFS": {
                 "code": "THA.OCC.FFS",
                 "name": "Firefighting & Suppression",
@@ -1045,12 +950,6 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "name": "Emergency Evacuation & Warden Duties",
                 "parent_trf": "TRF.OCC",
                 "description": "Planning, coordinating, and conducting emergency evacuations, fire drills, and floor warden responsibilities."
-        },
-        "THA.OCC.CHM": {
-                "code": "THA.OCC.CHM",
-                "name": "Chemical Mixing & Application",
-                "parent_trf": "TRF.OCC",
-                "description": "Measuring, mixing, and applying chemical products safely including pesticides, herbicides, cleaning agents, and industrial chemicals."
         },
         "THA.OCC.DGH": {
                 "code": "THA.OCC.DGH",
@@ -1094,17 +993,11 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "parent_trf": "TRF.OCC",
                 "description": "Implementing food safety systems, HACCP plans, temperature monitoring, allergen management, and food handling compliance."
         },
-        "THA.OCC.BAR": {
-                "code": "THA.OCC.BAR",
-                "name": "Beverage Preparation & Service",
-                "parent_trf": "TRF.OCC",
-                "description": "Preparing and serving espresso coffee, cocktails, wines, and beverages using bar equipment and service protocols."
-        },
         "THA.OCC.FBS": {
                 "code": "THA.OCC.FBS",
-                "name": "Table & Restaurant Service",
+                "name": "Table Service & Dining Room Management",
                 "parent_trf": "TRF.OCC",
-                "description": "Providing table service, managing dining rooms, serving courses, and delivering front-of-house hospitality."
+                "description": "Providing table service, managing dining room flow, serving courses, and delivering front-of-house hospitality."
         },
         "THA.OCC.ACC": {
                 "code": "THA.OCC.ACC",
@@ -1126,9 +1019,9 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
         },
         "THA.OCC.HRT": {
                 "code": "THA.OCC.HRT",
-                "name": "Horticultural Propagation & Growing",
+                "name": "Plant Propagation & Nursery Production",
                 "parent_trf": "TRF.OCC",
-                "description": "Propagating plants from seed, cutting, and graft; managing nursery production; and cultivating horticultural crops."
+                "description": "Propagating plants from seed, cutting, and graft; managing nursery stock; and cultivating container and field-grown plants."
         },
         "THA.OCC.VIT": {
                 "code": "THA.OCC.VIT",
@@ -1180,15 +1073,15 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
         },
         "THA.OCC.LSH": {
                 "code": "THA.OCC.LSH",
-                "name": "Livestock Handling & Mustering",
+                "name": "Large Animal Handling & Mustering",
                 "parent_trf": "TRF.OCC",
-                "description": "Handling, restraining, mustering, drafting, and transporting cattle, sheep, and other livestock safely."
+                "description": "Handling, restraining, mustering, drafting, and transporting cattle, sheep, and other large animals safely."
         },
         "THA.OCC.LSF": {
                 "code": "THA.OCC.LSF",
-                "name": "Livestock Feeding & Nutrition",
+                "name": "Animal Feeding & Nutrition Management",
                 "parent_trf": "TRF.OCC",
-                "description": "Formulating rations, managing feed programs, operating feeding systems, and monitoring nutritional intake for livestock."
+                "description": "Formulating rations, managing feed programs, operating feeding systems, and monitoring nutritional intake."
         },
         "THA.OCC.ANB": {
                 "code": "THA.OCC.ANB",
@@ -1198,9 +1091,9 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
         },
         "THA.OCC.AVT": {
                 "code": "THA.OCC.AVT",
-                "name": "Veterinary Clinical Assistance",
+                "name": "Animal Health Treatment & Assistance",
                 "parent_trf": "TRF.OCC",
-                "description": "Assisting with veterinary examinations, administering treatments, preparing animals for surgery, and managing clinical records."
+                "description": "Administering animal health treatments, assisting with examinations and procedures, managing medications, and monitoring conditions."
         },
         "THA.OCC.SHR": {
                 "code": "THA.OCC.SHR",
@@ -1210,9 +1103,9 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
         },
         "THA.OCC.EQN": {
                 "code": "THA.OCC.EQN",
-                "name": "Equine Handling & Care",
+                "name": "Horse Handling & Stable Management",
                 "parent_trf": "TRF.OCC",
-                "description": "Handling, grooming, exercising, feeding, and providing daily care for horses including hoof care and tack management."
+                "description": "Handling, grooming, exercising, feeding, and providing daily care for horses including tack and stable management."
         },
         "THA.OCC.FAR": {
                 "code": "THA.OCC.FAR",
@@ -1234,21 +1127,21 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
         },
         "THA.OCC.AQU": {
                 "code": "THA.OCC.AQU",
-                "name": "Aquaculture & Fish Farming",
+                "name": "Aquatic Species Production & Harvesting",
                 "parent_trf": "TRF.OCC",
-                "description": "Managing aquatic species production, hatchery operations, pond/cage management, water quality, and harvesting."
+                "description": "Managing aquatic species life cycles, hatchery operations, pond and cage systems, water quality, and harvest techniques."
         },
         "THA.OCC.UGM": {
                 "code": "THA.OCC.UGM",
-                "name": "Underground Mining Development",
+                "name": "Underground Excavation & Ground Support",
                 "parent_trf": "TRF.OCC",
-                "description": "Operating underground equipment, installing ground support, managing ventilation, and conducting development drives."
+                "description": "Operating underground equipment, advancing development headings, installing rock bolts, mesh, and ground stabilisation systems."
         },
         "THA.OCC.OCM": {
                 "code": "THA.OCC.OCM",
-                "name": "Open Cut Mining Operations",
+                "name": "Surface Extraction & Bench Operations",
                 "parent_trf": "TRF.OCC",
-                "description": "Operating equipment for bench operations, overburden removal, loading, and hauling in open cut environments."
+                "description": "Operating surface extraction equipment for bench development, overburden removal, and pit management."
         },
         "THA.OCC.BLT": {
                 "code": "THA.OCC.BLT",
@@ -1276,9 +1169,9 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
         },
         "THA.OCC.MEN": {
                 "code": "THA.OCC.MEN",
-                "name": "Marine Engine Operation",
+                "name": "Shipboard Engine Operation",
                 "parent_trf": "TRF.OCC",
-                "description": "Operating, monitoring, and maintaining marine propulsion engines, auxiliary systems, and engineering equipment."
+                "description": "Operating, monitoring, and maintaining propulsion engines, auxiliary machinery, and engineering systems aboard vessels."
         },
         "THA.OCC.DIV": {
                 "code": "THA.OCC.DIV",
@@ -1288,9 +1181,9 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
         },
         "THA.OCC.ACM": {
                 "code": "THA.OCC.ACM",
-                "name": "Aircraft Airframe Maintenance",
+                "name": "Airframe Inspection & Repair",
                 "parent_trf": "TRF.OCC",
-                "description": "Inspecting, repairing, and maintaining aircraft structures, control surfaces, landing gear, and airframe systems."
+                "description": "Inspecting, repairing, and maintaining airframe structures, control surfaces, landing gear, and flight-critical assemblies."
         },
         "THA.OCC.AVI": {
                 "code": "THA.OCC.AVI",
@@ -1352,12 +1245,6 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "parent_trf": "TRF.OCC",
                 "description": "Performing waxing, sugaring, threading, and other hair removal techniques on face and body."
         },
-        "THA.OCC.MSG": {
-                "code": "THA.OCC.MSG",
-                "name": "Remedial & Relaxation Massage",
-                "parent_trf": "TRF.OCC",
-                "description": "Performing remedial, relaxation, sports, and therapeutic massage techniques for pain relief and wellbeing."
-        },
         "THA.OCC.NLT": {
                 "code": "THA.OCC.NLT",
                 "name": "Nail Enhancement & Art",
@@ -1372,9 +1259,9 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
         },
         "THA.OCC.GFI": {
                 "code": "THA.OCC.GFI",
-                "name": "Gym & Personal Training",
+                "name": "Personal Training & Fitness Instruction",
                 "parent_trf": "TRF.OCC",
-                "description": "Instructing gym floor exercises, designing personal training programs, and conducting fitness assessments."
+                "description": "Instructing gym floor exercises, designing personalised training programs, and conducting fitness assessments."
         },
         "THA.OCC.GRP": {
                 "code": "THA.OCC.GRP",
@@ -1423,12 +1310,6 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "name": "Software Testing & Quality Assurance",
                 "parent_trf": "TRF.OCC",
                 "description": "Designing test cases, executing manual and automated tests, reporting defects, and verifying software quality."
-        },
-        "THA.OCC.GRD": {
-                "code": "THA.OCC.GRD",
-                "name": "Security Patrol & Access Control",
-                "parent_trf": "TRF.OCC",
-                "description": "Conducting security patrols, managing access points, screening persons, and responding to security incidents."
         },
         "THA.OCC.CWD": {
                 "code": "THA.OCC.CWD",
@@ -1486,9 +1367,9 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
         },
         "THA.OCC.AGC": {
                 "code": "THA.OCC.AGC",
-                "name": "Aged Care & Dementia Support",
+                "name": "Crop Chemical Application",
                 "parent_trf": "TRF.OCC",
-                "description": "Providing specialised care for older people including dementia-specific approaches, reminiscence, and aged care standards."
+                "description": "Measuring, mixing, calibrating, and applying herbicides, pesticides, and fungicides using boom, handheld, and aerial spray equipment."
         },
         "THA.OCC.AOD": {
                 "code": "THA.OCC.AOD",
@@ -1504,15 +1385,15 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
         },
         "THA.OCC.RLY": {
                 "code": "THA.OCC.RLY",
-                "name": "Railway Track & Signalling",
+                "name": "Rail Track Installation & Signalling",
                 "parent_trf": "TRF.OCC",
-                "description": "Installing, maintaining, and inspecting railway tracks, points, signals, and rail infrastructure systems."
+                "description": "Installing, maintaining, and inspecting rail tracks, points, signals, and rail infrastructure control systems."
         },
         "THA.OCC.BOA": {
                 "code": "THA.OCC.BOA",
-                "name": "Boatbuilding & Marine Construction",
+                "name": "Hull & Deck Fabrication",
                 "parent_trf": "TRF.OCC",
-                "description": "Constructing, repairing, and maintaining boat hulls, decks, and marine structures using timber, fibreglass, and composites."
+                "description": "Constructing, repairing, and maintaining boat hulls, decks, and superstructures using timber, fibreglass, and composite materials."
         },
         "THA.OCC.MTP": {
                 "code": "THA.OCC.MTP",
@@ -1528,15 +1409,15 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
         },
         "THA.OCC.FNR": {
                 "code": "THA.OCC.FNR",
-                "name": "Funeral & Mortuary Services",
+                "name": "Mortuary Care & Bereavement Services",
                 "parent_trf": "TRF.OCC",
-                "description": "Preparing deceased persons, managing mortuary procedures, coordinating funeral services, and supporting bereaved families."
+                "description": "Preparing deceased persons, managing mortuary procedures, coordinating memorial services, and supporting bereaved families."
         },
         "THA.OCC.REP": {
                 "code": "THA.OCC.REP",
-                "name": "Real Estate & Property Management",
+                "name": "Sales, Leasing & Tenancy Management",
                 "parent_trf": "TRF.OCC",
-                "description": "Managing property sales, rentals, inspections, tenant relations, and trust accounting for residential and commercial property."
+                "description": "Managing sales, rentals, inspections, tenant relations, and trust accounting for residential and commercial premises."
         },
         "THA.OCC.TAX": {
                 "code": "THA.OCC.TAX",
@@ -1573,6 +1454,384 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "name": "Rope Access & Height Safety",
                 "parent_trf": "TRF.OCC",
                 "description": "Performing work tasks at height using industrial rope access techniques, harnesses, and fall arrest systems."
+        },
+        "THA.SEC.CAS": {
+                "code": "THA.SEC.CAS",
+                "name": "Health Status Assessment & Triage",
+                "parent_trf": "TRF.SEC",
+                "description": "Assessing patient health status through physical examination, triage, vital signs interpretation, and screening protocols."
+        },
+        "THA.SEC.SAS": {
+                "code": "THA.SEC.SAS",
+                "name": "Social & Community Needs Assessment",
+                "parent_trf": "TRF.SEC",
+                "description": "Assessing individual and community needs, circumstances, and eligibility through intake interviews, screening tools, and needs analysis."
+        },
+        "THA.SEC.EMD": {
+                "code": "THA.SEC.EMD",
+                "name": "Electromechanical Fault Diagnosis",
+                "parent_trf": "TRF.SEC",
+                "description": "Diagnosing faults in mechanical, electrical, and hydraulic systems using systematic elimination, test instruments, and schematics."
+        },
+        "THA.SEC.ICT": {
+                "code": "THA.SEC.ICT",
+                "name": "ICT & Network Fault Diagnosis",
+                "parent_trf": "TRF.SEC",
+                "description": "Diagnosing faults in computer systems, networks, and software using logs, diagnostic tools, and systematic troubleshooting."
+        },
+        "THA.SEC.SCD": {
+                "code": "THA.SEC.SCD",
+                "name": "SCADA & DCS Operations",
+                "parent_trf": "TRF.SEC",
+                "description": "Monitoring, configuring, and responding to events in SCADA and distributed control systems for process industries."
+        },
+        "THA.SEC.ROB": {
+                "code": "THA.SEC.ROB",
+                "name": "Robotics Programming & Operation",
+                "parent_trf": "TRF.SEC",
+                "description": "Programming, teaching, calibrating, and operating industrial robots and robotic work cells."
+        },
+        "THA.OCC.ICH": {
+                "code": "THA.OCC.ICH",
+                "name": "Industrial Chemical Handling",
+                "parent_trf": "TRF.OCC",
+                "description": "Handling, measuring, mixing, and applying industrial chemicals, cleaning agents, and treatment products safely."
+        },
+        "THA.OCC.PIL": {
+                "code": "THA.OCC.PIL",
+                "name": "Piling & Foundation Drilling",
+                "parent_trf": "TRF.OCC",
+                "description": "Operating piling rigs, bored pile equipment, and screw pile systems for deep and shallow foundation installation."
+        },
+        "THA.OCC.EXD": {
+                "code": "THA.OCC.EXD",
+                "name": "Exploration & Production Drilling",
+                "parent_trf": "TRF.OCC",
+                "description": "Operating drilling rigs for mineral exploration, water bore drilling, geotechnical investigation, and resource extraction."
+        },
+        "THA.OCC.WFA": {
+                "code": "THA.OCC.WFA",
+                "name": "Workplace First Aid",
+                "parent_trf": "TRF.OCC",
+                "description": "Providing initial emergency care for injuries and illnesses in workplace settings including bleeding control, fracture management, and casualty monitoring."
+        },
+        "THA.OCC.PMD": {
+                "code": "THA.OCC.PMD",
+                "name": "Advanced Emergency & Trauma Care",
+                "parent_trf": "TRF.OCC",
+                "description": "Providing advanced emergency care including patient assessment, drug administration, advanced airway management, and field clinical decision-making."
+        },
+        "THA.OCC.ALS": {
+                "code": "THA.OCC.ALS",
+                "name": "Advanced Life Support & Resuscitation",
+                "parent_trf": "TRF.OCC",
+                "description": "Managing cardiac arrest with advanced interventions including intubation, IV access, drug administration, and cardiac monitoring."
+        },
+        "THA.OCC.EXC": {
+                "code": "THA.OCC.EXC",
+                "name": "Excavator & Backhoe Operation",
+                "parent_trf": "TRF.OCC",
+                "description": "Operating hydraulic excavators and backhoes for trenching, bulk excavation, demolition, and material loading."
+        },
+        "THA.OCC.GRC": {
+                "code": "THA.OCC.GRC",
+                "name": "Grading, Compaction & Finishing",
+                "parent_trf": "TRF.OCC",
+                "description": "Operating graders, rollers, and compaction equipment to achieve specified levels, grades, and surface finishes."
+        },
+        "THA.OCC.SPG": {
+                "code": "THA.OCC.SPG",
+                "name": "Security Patrol & Access Control",
+                "parent_trf": "TRF.OCC",
+                "description": "Conducting security patrols, managing access points, screening persons, and responding to security incidents."
+        },
+        "THA.OCC.HRV": {
+                "code": "THA.OCC.HRV",
+                "name": "Heavy Rigid & Articulated Driving",
+                "parent_trf": "TRF.OCC",
+                "description": "Driving heavy rigid, heavy combination, and multi-combination vehicles on public roads and worksites."
+        },
+        "THA.OCC.BUS": {
+                "code": "THA.OCC.BUS",
+                "name": "Bus & Passenger Transport Driving",
+                "parent_trf": "TRF.OCC",
+                "description": "Operating buses and passenger transport vehicles safely, managing passenger boarding, and following route schedules."
+        },
+        "THA.OCC.FNC": {
+                "code": "THA.OCC.FNC",
+                "name": "Fencing Erection & Gate Installation",
+                "parent_trf": "TRF.OCC",
+                "description": "Installing timber, metal, chain-link, and security fencing including post setting, rail fitting, and gate hanging."
+        },
+        "THA.OCC.BPT": {
+                "code": "THA.OCC.BPT",
+                "name": "Surface Painting & Decorating",
+                "parent_trf": "TRF.OCC",
+                "description": "Preparing surfaces and applying paint, stains, and decorative finishes to walls, ceilings, and exterior surfaces using brushes, rollers, and sprayers."
+        },
+        "THA.OCC.STL": {
+                "code": "THA.OCC.STL",
+                "name": "Steel Fixing & Reinforcement",
+                "parent_trf": "TRF.OCC",
+                "description": "Cutting, bending, tying, and placing steel reinforcement bars and mesh in formwork prior to concrete placement."
+        },
+        "THA.OCC.LFT": {
+                "code": "THA.OCC.LFT",
+                "name": "Lift & Elevator Installation",
+                "parent_trf": "TRF.OCC",
+                "description": "Installing, commissioning, servicing, and repairing passenger and freight elevators, escalators, and moving walkways."
+        },
+        "THA.OCC.FPI": {
+                "code": "THA.OCC.FPI",
+                "name": "Fire Protection System Installation",
+                "parent_trf": "TRF.OCC",
+                "description": "Installing, testing, and maintaining fire sprinkler systems, hydrants, hose reels, and fire detection and alarm systems."
+        },
+        "THA.OCC.ALM": {
+                "code": "THA.OCC.ALM",
+                "name": "Security Alarm & Access System Installation",
+                "parent_trf": "TRF.OCC",
+                "description": "Installing, programming, and maintaining intruder alarms, CCTV, access control systems, and electronic security infrastructure."
+        },
+        "THA.OCC.STN": {
+                "code": "THA.OCC.STN",
+                "name": "Stonemasonry & Stone Cutting",
+                "parent_trf": "TRF.OCC",
+                "description": "Cutting, shaping, carving, and setting natural and manufactured stone for walls, floors, and decorative elements."
+        },
+        "THA.OCC.CNP": {
+                "code": "THA.OCC.CNP",
+                "name": "Concrete Pumping & Placement",
+                "parent_trf": "TRF.OCC",
+                "description": "Operating concrete pump trucks, boom pumps, and line pumps to deliver concrete to placement locations."
+        },
+        "THA.OCC.EAF": {
+                "code": "THA.OCC.EAF",
+                "name": "Exposed Aggregate & Decorative Concrete",
+                "parent_trf": "TRF.OCC",
+                "description": "Finishing concrete with decorative techniques including exposed aggregate, stencilling, stamping, and polished finishes."
+        },
+        "THA.OCC.IRD": {
+                "code": "THA.OCC.IRD",
+                "name": "Irrigation Design & Programming",
+                "parent_trf": "TRF.OCC",
+                "description": "Designing irrigation layouts, calculating water requirements, selecting components, and programming irrigation controllers."
+        },
+        "THA.OCC.IRI": {
+                "code": "THA.OCC.IRI",
+                "name": "Irrigation Installation & Maintenance",
+                "parent_trf": "TRF.OCC",
+                "description": "Installing, connecting, and maintaining irrigation pipes, sprinklers, drip lines, valves, and pumping systems."
+        },
+        "THA.OCC.SGW": {
+                "code": "THA.OCC.SGW",
+                "name": "Signwriting & Vinyl Wrapping",
+                "parent_trf": "TRF.OCC",
+                "description": "Designing, cutting, and applying vinyl graphics, lettering, and wraps using plotters and application tools."
+        },
+        "THA.OCC.CSE": {
+                "code": "THA.OCC.CSE",
+                "name": "Confined Space Entry & Work",
+                "parent_trf": "TRF.OCC",
+                "description": "Entering and working safely in confined spaces including atmospheric testing, ventilation, and communication protocols."
+        },
+        "THA.OCC.HGT": {
+                "code": "THA.OCC.HGT",
+                "name": "Working at Heights Safety",
+                "parent_trf": "TRF.OCC",
+                "description": "Applying fall prevention and fall arrest techniques, using harnesses, anchor points, and height safety systems."
+        },
+        "THA.OCC.PLF": {
+                "code": "THA.OCC.PLF",
+                "name": "Aquatic Facility Assembly & Servicing",
+                "parent_trf": "TRF.OCC",
+                "description": "Constructing, tiling, plumbing, and maintaining swimming pools, spas, and aquatic facilities including water chemistry management."
+        },
+        "THA.SEC.NWK": {
+                "code": "THA.SEC.NWK",
+                "name": "Network Configuration & Switching",
+                "parent_trf": "TRF.SEC",
+                "description": "Configuring, managing, and troubleshooting network switches, routers, firewalls, VLANs, and WAN/LAN infrastructure."
+        },
+        "THA.OCC.BRS": {
+                "code": "THA.OCC.BRS",
+                "name": "Espresso & Coffee Preparation",
+                "parent_trf": "TRF.OCC",
+                "description": "Preparing espresso-based coffee, specialty beverages, and non-alcoholic drinks using commercial coffee machines and brewing methods."
+        },
+        "THA.OCC.MIX": {
+                "code": "THA.OCC.MIX",
+                "name": "Cocktail Mixing & Bar Service",
+                "parent_trf": "TRF.OCC",
+                "description": "Preparing cocktails, serving alcoholic beverages, managing cellar operations, and operating bar equipment."
+        },
+        "THA.OCC.MCR": {
+                "code": "THA.OCC.MCR",
+                "name": "Mobile Crane Operation",
+                "parent_trf": "TRF.OCC",
+                "description": "Operating mobile slewing and non-slewing cranes including load chart interpretation, outrigger setup, and lift planning."
+        },
+        "THA.OCC.TCR": {
+                "code": "THA.OCC.TCR",
+                "name": "Tower Crane Operation",
+                "parent_trf": "TRF.OCC",
+                "description": "Operating tower cranes including load management, blind lifts, signal interpretation, and high-altitude operation."
+        },
+        "THA.OCC.OHC": {
+                "code": "THA.OCC.OHC",
+                "name": "Overhead & Gantry Crane Operation",
+                "parent_trf": "TRF.OCC",
+                "description": "Operating overhead bridge cranes, gantry cranes, and jib cranes in workshops, warehouses, and production environments."
+        },
+        "THA.OCC.FKL": {
+                "code": "THA.OCC.FKL",
+                "name": "Counterbalance Forklift Operation",
+                "parent_trf": "TRF.OCC",
+                "description": "Operating counterbalance forklifts for loading, unloading, stacking, and transporting materials on worksites and in warehouses."
+        },
+        "THA.OCC.WEQ": {
+                "code": "THA.OCC.WEQ",
+                "name": "Reach Truck & Order Picker Operation",
+                "parent_trf": "TRF.OCC",
+                "description": "Operating reach trucks, order pickers, and pallet jacks for precise stock retrieval and placement in narrow-aisle warehouse environments."
+        },
+        "THA.OCC.PVC": {
+                "code": "THA.OCC.PVC",
+                "name": "Peripheral Cannulation & IV Infusion",
+                "parent_trf": "TRF.OCC",
+                "description": "Inserting peripheral intravenous cannulae, managing IV lines, administering fluids, and monitoring infusion rates."
+        },
+        "THA.OCC.CVA": {
+                "code": "THA.OCC.CVA",
+                "name": "Central Venous Access & Transfusion",
+                "parent_trf": "TRF.OCC",
+                "description": "Managing central venous catheters, PICC lines, blood product transfusions, and complex vascular access devices."
+        },
+        "THA.OCC.RMM": {
+                "code": "THA.OCC.RMM",
+                "name": "Remedial & Sports Massage",
+                "parent_trf": "TRF.OCC",
+                "description": "Performing remedial, myofascial, trigger point, and sports massage techniques for injury management and functional recovery."
+        },
+        "THA.OCC.RLM": {
+                "code": "THA.OCC.RLM",
+                "name": "Relaxation & Wellness Massage",
+                "parent_trf": "TRF.OCC",
+                "description": "Performing Swedish, aromatherapy, hot stone, and relaxation massage techniques for stress relief and general wellbeing."
+        },
+        "THA.OCC.UNP": {
+                "code": "THA.OCC.UNP",
+                "name": "Subfloor Restumping & Underpinning",
+                "parent_trf": "TRF.OCC",
+                "description": "Replacing deteriorated stumps, installing new piers, levelling subfloor structures, and underpinning foundations."
+        },
+        "THA.OCC.SHC": {
+                "code": "THA.OCC.SHC",
+                "name": "Shotcrete & Spray Concrete Application",
+                "parent_trf": "TRF.OCC",
+                "description": "Applying concrete by spraying using wet-mix and dry-mix shotcrete methods for tunnels, retaining walls, and stabilisation."
+        },
+        "THA.OCC.AAC": {
+                "code": "THA.OCC.AAC",
+                "name": "Cabin Climate Control Servicing",
+                "parent_trf": "TRF.OCC",
+                "description": "Diagnosing, servicing, and repairing cabin air conditioning and heating systems including refrigerant recovery, leak testing, and recharge."
+        },
+        "THA.OCC.MWD": {
+                "code": "THA.OCC.MWD",
+                "name": "Motor Winding & Rewinding",
+                "parent_trf": "TRF.OCC",
+                "description": "Stripping, winding, connecting, impregnating, and testing electric motor and transformer windings and coils."
+        },
+        "THA.OCC.TGD": {
+                "code": "THA.OCC.TGD",
+                "name": "Tour Guiding & Heritage Interpretation",
+                "parent_trf": "TRF.OCC",
+                "description": "Leading guided tours, interpreting natural and cultural heritage, engaging visitors, and delivering commentary."
+        },
+        "THA.OCC.TRA": {
+                "code": "THA.OCC.TRA",
+                "name": "Travel Booking & Itinerary Planning",
+                "parent_trf": "TRF.OCC",
+                "description": "Processing travel reservations, building itineraries, managing booking systems, and advising on destinations and fares."
+        },
+        "THA.OCC.CHP": {
+                "code": "THA.OCC.CHP",
+                "name": "Child Protection & Safeguarding",
+                "parent_trf": "TRF.OCC",
+                "description": "Identifying child welfare concerns, conducting risk assessments, managing mandatory reporting, and coordinating protective interventions."
+        },
+        "THA.OCC.PHB": {
+                "code": "THA.OCC.PHB",
+                "name": "Phlebotomy & Venipuncture",
+                "parent_trf": "TRF.OCC",
+                "description": "Performing venipuncture and capillary blood collection using correct technique, labelling, and specimen handling protocols."
+        },
+        "THA.OCC.AUD": {
+                "code": "THA.OCC.AUD",
+                "name": "Audiometric Testing & Screening",
+                "parent_trf": "TRF.OCC",
+                "description": "Conducting pure-tone audiometry, tympanometry, and hearing screening tests using calibrated audiometric equipment."
+        },
+        "THA.OCC.PDT": {
+                "code": "THA.OCC.PDT",
+                "name": "Foot Care & Podiatric Assistance",
+                "parent_trf": "TRF.OCC",
+                "description": "Providing basic foot care, nail trimming, padding, assessing foot conditions, and assisting with podiatric treatments."
+        },
+        "THA.OCC.HET": {
+                "code": "THA.OCC.HET",
+                "name": "Heat Treatment & Thermal Processing",
+                "parent_trf": "TRF.OCC",
+                "description": "Performing hardening, tempering, annealing, normalising, and case hardening of metals using furnaces and controlled cooling."
+        },
+        "THA.OCC.PLW": {
+                "code": "THA.OCC.PLW",
+                "name": "Plastics Fabrication & Welding",
+                "parent_trf": "TRF.OCC",
+                "description": "Cutting, shaping, bending, and welding plastic and composite materials using thermal, solvent, and adhesive joining methods."
+        },
+        "THA.OCC.LRS": {
+                "code": "THA.OCC.LRS",
+                "name": "Load Restraint & Securing",
+                "parent_trf": "TRF.OCC",
+                "description": "Selecting and applying chains, webbing, ratchets, and blocking to secure loads on vehicles and trailers for transport."
+        },
+        "THA.OCC.WPK": {
+                "code": "THA.OCC.WPK",
+                "name": "Warehouse Picking & Packing",
+                "parent_trf": "TRF.OCC",
+                "description": "Manually picking, sorting, packing, labelling, and staging goods for dispatch using pick lists and inventory systems."
+        },
+        "THA.OCC.SML": {
+                "code": "THA.OCC.SML",
+                "name": "Sawmilling & Timber Conversion",
+                "parent_trf": "TRF.OCC",
+                "description": "Operating sawmill equipment to convert logs into sawn timber including band saws, circular saws, and docking stations."
+        },
+        "THA.OCC.WTN": {
+                "code": "THA.OCC.WTN",
+                "name": "Wood Turning & Woodcraft",
+                "parent_trf": "TRF.OCC",
+                "description": "Shaping timber on lathes, carving, and crafting wooden objects using hand tools, chisels, and power woodworking equipment."
+        },
+        "THA.OCC.ORG": {
+                "code": "THA.OCC.ORG",
+                "name": "Outdoor Recreation Guiding",
+                "parent_trf": "TRF.OCC",
+                "description": "Leading outdoor activities including bushwalking, canoeing, kayaking, rock climbing, and camping with safety and navigation skills."
+        },
+        "THA.OCC.FDY": {
+                "code": "THA.OCC.FDY",
+                "name": "Metal Casting & Foundry Work",
+                "parent_trf": "TRF.OCC",
+                "description": "Producing metal components through pattern making, mould preparation, metal melting, pouring, and fettling using sand, shell, and investment casting."
+        },
+        "THA.OCC.INM": {
+                "code": "THA.OCC.INM",
+                "name": "Injection Moulding & Extrusion",
+                "parent_trf": "TRF.OCC",
+                "description": "Operating and setting up injection moulding, blow moulding, and extrusion machines for plastics and composite production."
         }
 },
 }
