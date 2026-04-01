@@ -51,10 +51,10 @@ TRANSFERABILITY_FACET = {
     "facet_name": "Transferability",
     "description": "Indicates how portable/transferable the skill is across contexts.",
     "values": {
-        "TRF.UNI": {"code": "TRF.UNI", "name": "Universal", "description": "Foundational skills applicable across all occupations and industries."},
-        "TRF.BRD": {"code": "TRF.BRD", "name": "Cross-Sector", "description": "Specialist skills transferable across multiple industries and sectors."},
-        "TRF.SEC": {"code": "TRF.SEC", "name": "Sector-Specific", "description": "Skills relevant within a specific sector or closely related industries."},
-        "TRF.OCC": {"code": "TRF.OCC", "name": "Occupation-Specific", "description": "Highly specialized skills unique to a particular occupation or role."},
+        "TRF.UNI": {"code": "TRF.UNI", "name": "Universal", "description": "Foundational personal and interpersonal skills needed by all workers regardless of occupation: communication, numeracy, digital literacy, teamwork, time management, ethics, cultural awareness, self-management, problem solving, and workplace safety awareness. These are generic employability skills, not technical or trade skills."},
+        "TRF.BRD": {"code": "TRF.BRD", "name": "Cross-Sector", "description": "Professional and management skills that apply across many industries without requiring specialist trade knowledge: project management, leadership, supervision, quality assurance, risk assessment, WHS management, training delivery, regulatory compliance, data analysis, financial management, reporting, stakeholder engagement, customer service, environmental management, supply chain coordination, and strategic planning."},
+        "TRF.SEC": {"code": "TRF.SEC", "name": "Sector-Specific", "description": "Technical skills shared across a family of related occupations within a sector: diagnostic fault finding, inspection and testing, calibration and measurement, care planning and case management, clinical assessment, process monitoring and control, laboratory sampling, design and drafting, estimation and costing, automation programming, cybersecurity, event coordination, counselling, and forensic analysis."},
+        "TRF.OCC": {"code": "TRF.OCC", "name": "Occupation-Specific", "description": "Hands-on practical trade and vocational skills requiring specific tools, equipment, materials, or physical techniques unique to an occupation: welding, bricklaying, wiring, plumbing, machining, cooking, hairdressing, concreting, crane operation, animal handling, medication administration, spray painting, forklift driving, drilling, sewing, massage, scaffolding, tiling, and other manual or procedural craft skills."},
     },
 }
 
@@ -129,32 +129,25 @@ ALL_FACETS = {
     "NAT": SKILL_NATURE_FACET,
     "TRF": TRANSFERABILITY_FACET,
     "COG": COGNITIVE_COMPLEXITY_FACET,
-    "ASCED": ASCED_FIELD_OF_EDUCATION_FACET,
+    # "ASCED": ASCED_FIELD_OF_EDUCATION_FACET,
     "LVL": PROFICIENCY_LEVEL_FACET,
     "THA": TRANSFERABLE_HUMAN_ABILITY_FACET,
 }
 
-MULTI_VALUE_FACETS = ["ASCED", "THA"]
+MULTI_VALUE_FACETS = []
 
 # Ordered list of facets for processing priority
 # TRF must be assigned before THA (THA candidates are scoped by TRF)
-ORDERED_FACETS = ["NAT", "TRF", "COG", "ASCED", "LVL", "THA"]
+ORDERED_FACETS = ["NAT", "TRF", "COG", "LVL", "THA"]
 
 # Default facet assignment priority
-FACET_PRIORITY = ["NAT", "TRF", "COG", "ASCED", "LVL", "THA"]
+FACET_PRIORITY = ["NAT", "TRF", "COG", "LVL", "THA"]
 
 
 def get_facet_text_for_embedding(facet_id: str, value_code: str) -> str:
     """Text representation of a facet value for embedding similarity."""
     facet = ALL_FACETS.get(facet_id, {})
     value = facet.get("values", {}).get(value_code, {})
-    if facet_id == "THA":
-        # For THA: name + typical_skills only — keeps embedding focused
-        # Description and keywords are used in LLM re-ranking prompts, not embeddings
-        parts = [value.get("name", "")]
-        if "typical_skills" in value:
-            parts.append("; ".join(value["typical_skills"]))
-        return ". ".join(p for p in parts if p)
     parts = [value.get("name", ""), value.get("description", "")]
     return ". ".join(p for p in parts if p)
 

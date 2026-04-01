@@ -91,7 +91,7 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "code": "THA.BRD.RSK",
                 "name": "Risk Assessment & Mitigation",
                 "parent_trf": "TRF.BRD",
-                "description": "Systematically identifying, evaluating, and controlling risks using hazard identification, risk matrices, and hierarchy of controls."
+                "description": "Conducting formal risk assessments by identifying hazards in workplaces and projects, evaluating likelihood and consequence using risk matrices, determining controls using the hierarchy of controls, and documenting risk treatment plans and registers."
         },
         "THA.BRD.SPV": {
                 "code": "THA.BRD.SPV",
@@ -115,13 +115,13 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "code": "THA.BRD.PRJ",
                 "name": "Project Planning & Coordination",
                 "parent_trf": "TRF.BRD",
-                "description": "Planning, organising, and coordinating projects including scope, resources, scheduling, and monitoring deliverables."
+                "description": "Developing project plans with scope, schedule, budget, and resource allocation; monitoring progress against milestones using Gantt charts and project management software; managing deliverables, risks, and stakeholder communication."
         },
         "THA.BRD.QMS": {
                 "code": "THA.BRD.QMS",
                 "name": "Quality Assurance & Improvement",
                 "parent_trf": "TRF.BRD",
-                "description": "Monitoring, evaluating, and improving quality through standards, auditing, continuous improvement, and defect analysis."
+                "description": "Implementing quality management systems to ISO 9001 or equivalent standards; conducting internal quality audits; managing non-conformance reports and corrective actions; facilitating continuous improvement using PDCA, root cause analysis, and statistical process control."
         },
         "THA.BRD.TRD": {
                 "code": "THA.BRD.TRD",
@@ -139,13 +139,13 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "code": "THA.BRD.REG",
                 "name": "Regulatory Compliance & Governance",
                 "parent_trf": "TRF.BRD",
-                "description": "Ensuring adherence to laws, regulations, standards, and organisational policies through interpretation, documentation, and auditing."
+                "description": "Interpreting workplace legislation, industry regulations, and Australian Standards; developing compliance policies and procedures; conducting compliance audits; maintaining regulatory registers; and advising on legal obligations and licensing requirements."
         },
         "THA.BRD.DAT": {
                 "code": "THA.BRD.DAT",
                 "name": "Data Analysis & Interpretation",
                 "parent_trf": "TRF.BRD",
-                "description": "Collecting, organising, analysing, and interpreting data to extract insights, identify trends, and support evidence-based decisions."
+                "description": "Collecting numerical and categorical workplace data, organising datasets in spreadsheets and databases, performing statistical analysis to identify trends and patterns, creating charts and dashboards, and writing evidence-based analytical reports."
         },
         "THA.BRD.NEG": {
                 "code": "THA.BRD.NEG",
@@ -163,13 +163,13 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "code": "THA.BRD.STK",
                 "name": "Stakeholder & Relationship Management",
                 "parent_trf": "TRF.BRD",
-                "description": "Building and maintaining professional relationships with external partners, clients, and stakeholders through consultation and engagement."
+                "description": "Building and maintaining professional relationships with external clients, government agencies, community organisations, and business partners through formal consultation, memoranda of understanding, partnership agreements, and stakeholder engagement plans."
         },
         "THA.BRD.RPT": {
                 "code": "THA.BRD.RPT",
                 "name": "Technical Reporting & Documentation",
                 "parent_trf": "TRF.BRD",
-                "description": "Preparing accurate technical reports, specifications, procedures, work instructions, incident reports, and compliance records."
+                "description": "Writing formal technical reports, incident investigation reports, standard operating procedures, work method statements, specifications, and compliance documentation using templates, technical language, and document numbering systems."
         },
         "THA.BRD.BDG": {
                 "code": "THA.BRD.BDG",
@@ -187,13 +187,13 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "code": "THA.BRD.WHS",
                 "name": "Workplace Health & Safety Management",
                 "parent_trf": "TRF.BRD",
-                "description": "Implementing and managing WHS systems including policy development, incident investigation, safety auditing, and emergency coordination."
+                "description": "Developing and implementing WHS management systems, policies, and safe work procedures; conducting workplace safety audits and inspections; investigating incidents and near-misses; coordinating emergency response planning and return-to-work programs."
         },
         "THA.BRD.ENV": {
                 "code": "THA.BRD.ENV",
                 "name": "Environmental & Sustainability Management",
                 "parent_trf": "TRF.BRD",
-                "description": "Managing environmental impacts through waste management, resource conservation, environmental monitoring, and sustainability planning."
+                "description": "Developing and implementing environmental management plans, waste minimisation programs, recycling systems, and sustainability policies; conducting environmental impact assessments; monitoring emissions, effluent, and resource consumption."
         },
         "THA.BRD.PRC": {
                 "code": "THA.BRD.PRC",
@@ -211,7 +211,7 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "code": "THA.BRD.INF",
                 "name": "Information Management & Research",
                 "parent_trf": "TRF.BRD",
-                "description": "Sourcing, organising, evaluating, and managing information through research methods, records management, and knowledge systems."
+                "description": "Conducting desktop research, literature reviews, and information gathering; managing document control systems and records management databases; classifying, archiving, and retrieving workplace records and knowledge assets."
         },
         "THA.BRD.RCM": {
                 "code": "THA.BRD.RCM",
@@ -235,7 +235,7 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "code": "THA.SEC.INS",
                 "name": "Visual & Dimensional Inspection",
                 "parent_trf": "TRF.SEC",
-                "description": "Examining products, components, or structures visually and dimensionally to verify conformance to specifications."
+                "description": "Examining manufactured products, fabricated components, and built structures by measuring dimensions, checking tolerances, and verifying conformance to engineering drawings and quality specifications using gauges, callipers, and inspection equipment."
         },
         "THA.SEC.NDT": {
                 "code": "THA.SEC.NDT",
@@ -259,7 +259,7 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "code": "THA.SEC.PRM",
                 "name": "Process Monitoring & Control",
                 "parent_trf": "TRF.SEC",
-                "description": "Continuously monitoring process parameters, adjusting controls, responding to alarms, and maintaining stable operating conditions."
+                "description": "Monitoring industrial process variables such as temperature, pressure, flow rate, and pH on control panels, SCADA screens, and instrumentation displays; adjusting set points and responding to process alarms in manufacturing, water treatment, and chemical processing plants."
         },
         "THA.SEC.VTL": {
                 "code": "THA.SEC.VTL",
@@ -271,7 +271,7 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "code": "THA.SEC.SMP",
                 "name": "Sample Collection & Laboratory Technique",
                 "parent_trf": "TRF.SEC",
-                "description": "Collecting, preparing, and processing samples using aseptic technique, contamination control, and laboratory protocols."
+                "description": "Collecting soil, water, air, blood, urine, tissue, and environmental samples using sterile technique, labelled containers, and chain-of-custody procedures; preparing samples for laboratory analysis using centrifuging, dilution, and reagent addition."
         },
         "THA.SEC.SRV": {
                 "code": "THA.SEC.SRV",
@@ -283,19 +283,19 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "code": "THA.SEC.EST",
                 "name": "Quantity Estimation & Takeoff",
                 "parent_trf": "TRF.SEC",
-                "description": "Calculating material quantities, labour requirements, and costs from plans, drawings, and specifications."
+                "description": "Calculating material quantities, labour hours, and project costs from architectural plans, engineering drawings, and specifications; preparing bills of quantities, material takeoff schedules, and cost estimates for tenders and budgets."
         },
         "THA.SEC.MKT": {
                 "code": "THA.SEC.MKT",
                 "name": "Marketing & Promotion",
                 "parent_trf": "TRF.SEC",
-                "description": "Promoting products, services, or ideas through market research, advertising, branding, digital marketing, and campaign management."
+                "description": "Developing marketing strategies, running advertising campaigns, managing social media accounts, conducting market research surveys, creating promotional materials, and analysing customer demographics and sales conversion data."
         },
         "THA.SEC.CPN": {
                 "code": "THA.SEC.CPN",
                 "name": "Counselling & Psychosocial Support",
                 "parent_trf": "TRF.SEC",
-                "description": "Providing emotional support, counselling, crisis intervention, and therapeutic communication to individuals in distress or need."
+                "description": "Providing face-to-face counselling sessions, crisis telephone support, grief and loss counselling, and therapeutic conversations using active listening, motivational interviewing, and person-centred approaches."
         },
         "THA.SEC.RHB": {
                 "code": "THA.SEC.RHB",
@@ -313,7 +313,7 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "code": "THA.SEC.CLN",
                 "name": "Cleaning & Sanitisation",
                 "parent_trf": "TRF.SEC",
-                "description": "Applying systematic cleaning, sanitisation, and hygiene procedures for facilities, surfaces, and equipment."
+                "description": "Systematically cleaning, washing, mopping, vacuuming, and sanitising floors, walls, surfaces, and fixtures in buildings, hospitals, food premises, and public facilities using approved cleaning agents and hygiene procedures."
         },
         "THA.SEC.STE": {
                 "code": "THA.SEC.STE",
@@ -325,7 +325,7 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "code": "THA.SEC.WTR",
                 "name": "Water & Waste Treatment",
                 "parent_trf": "TRF.SEC",
-                "description": "Operating and maintaining water treatment, wastewater processing, and solid waste management systems."
+                "description": "Operating water treatment plants, wastewater processing facilities, and sewage treatment works; monitoring water quality parameters, dosing chemicals, managing sludge, and maintaining pumps, filters, and disinfection systems."
         },
         "THA.SEC.CYB": {
                 "code": "THA.SEC.CYB",
@@ -337,7 +337,7 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "code": "THA.SEC.DSP",
                 "name": "Dispensing & Formulation",
                 "parent_trf": "TRF.SEC",
-                "description": "Measuring, preparing, compounding, and dispensing medications, chemical formulations, or specialised mixtures accurately."
+                "description": "Accurately measuring, weighing, and mixing pharmaceutical compounds, chemical formulations, and specialised preparations using balances, graduated cylinders, and dispensing equipment in pharmacy, laboratory, and manufacturing settings."
         },
         "THA.SEC.IMG": {
                 "code": "THA.SEC.IMG",
@@ -355,13 +355,13 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "code": "THA.SEC.EVT",
                 "name": "Event & Function Coordination",
                 "parent_trf": "TRF.SEC",
-                "description": "Planning, organising, and managing events, functions, exhibitions, and conferences including logistics and attendee management."
+                "description": "Planning and managing conferences, weddings, exhibitions, corporate functions, and public events including venue booking, catering coordination, speaker scheduling, audiovisual setup, and attendee registration."
         },
         "THA.SEC.FOR": {
                 "code": "THA.SEC.FOR",
                 "name": "Forensic & Evidence Analysis",
                 "parent_trf": "TRF.SEC",
-                "description": "Collecting, preserving, and analysing physical, digital, or documentary evidence using forensic methods and chain of custody."
+                "description": "Securing and examining crime scenes, accident sites, and incident locations; collecting, preserving, and documenting physical and digital evidence using chain-of-custody procedures, forensic photography, and analytical testing."
         },
         "THA.SEC.LGL": {
                 "code": "THA.SEC.LGL",
@@ -373,7 +373,7 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "code": "THA.SEC.CHL",
                 "name": "Cultural Heritage & Land Management",
                 "parent_trf": "TRF.SEC",
-                "description": "Documenting, preserving, and managing cultural heritage sites, indigenous landscapes, and sacred materials with appropriate protocols."
+                "description": "Documenting, preserving, and managing Aboriginal and Torres Strait Islander cultural heritage sites, sacred materials, and indigenous landscapes using archaeological, anthropological, and ecological survey methods with appropriate cultural protocols and permissions."
         },
         "THA.SEC.DSC": {
                 "code": "THA.SEC.DSC",
@@ -385,13 +385,13 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "code": "THA.SEC.INT",
                 "name": "Interpreting & Translation",
                 "parent_trf": "TRF.SEC",
-                "description": "Converting spoken or written content between languages or communication modes including sign language and assistive communication."
+                "description": "Converting spoken or written content between English and other languages, or between spoken language and Auslan sign language, maintaining accuracy, cultural nuance, and confidentiality in real-time and document-based settings."
         },
         "THA.SEC.PRV": {
                 "code": "THA.SEC.PRV",
                 "name": "Asset Valuation & Market Appraisal",
                 "parent_trf": "TRF.SEC",
-                "description": "Assessing market value, condition, and characteristics of assets using valuation methodologies and comparable market analysis."
+                "description": "Determining the market value of residential, commercial, and rural property by inspecting premises, analysing comparable sales data, applying valuation methodologies, and preparing formal valuation reports."
         },
         "THA.SEC.INR": {
                 "code": "THA.SEC.INR",
@@ -403,7 +403,7 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "code": "THA.SEC.COR",
                 "name": "Custodial Supervision & Detainee Management",
                 "parent_trf": "TRF.SEC",
-                "description": "Managing detainees, maintaining order in custodial environments, conducting searches, and supporting rehabilitation programs."
+                "description": "Supervising inmates in correctional centres, conducting cell searches and pat-downs, managing prisoner movements, operating security equipment, and maintaining order in custodial facilities."
         },
         "THA.OCC.MMA": {
                 "code": "THA.OCC.MMA",
@@ -1465,7 +1465,7 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "code": "THA.SEC.SAS",
                 "name": "Social & Community Needs Assessment",
                 "parent_trf": "TRF.SEC",
-                "description": "Assessing individual and community needs, circumstances, and eligibility through intake interviews, screening tools, and needs analysis."
+                "description": "Interviewing individuals and families to assess social, housing, financial, and welfare needs; determining eligibility for community services, disability support, aged care, and government assistance programs using standardised assessment tools."
         },
         "THA.SEC.EMD": {
                 "code": "THA.SEC.EMD",
@@ -1483,13 +1483,13 @@ TRANSFERABLE_HUMAN_ABILITY_FACET = {
                 "code": "THA.SEC.SCD",
                 "name": "SCADA & DCS Operations",
                 "parent_trf": "TRF.SEC",
-                "description": "Monitoring, configuring, and responding to events in SCADA and distributed control systems for process industries."
+                "description": "Monitoring and operating supervisory control and data acquisition systems and distributed control systems in process plants; responding to alarms, adjusting setpoints, and managing plant startups and shutdowns from control rooms."
         },
         "THA.SEC.ROB": {
                 "code": "THA.SEC.ROB",
                 "name": "Robotics Programming & Operation",
                 "parent_trf": "TRF.SEC",
-                "description": "Programming, teaching, calibrating, and operating industrial robots and robotic work cells."
+                "description": "Programming industrial robot arms and collaborative robots using teach pendants, offline programming software, and motion planning; setting up robotic work cells, calibrating tool centre points, and integrating with conveyor systems."
         },
         "THA.OCC.ICH": {
                 "code": "THA.OCC.ICH",
