@@ -26,170 +26,130 @@ logger = logging.getLogger(__name__)
 
 # System prompt used for all refinement requests
 REFINEMENT_SYSTEM_PROMPT = """
-You are an expert skill taxonomist.
+You are an expert skill taxonomist for Australian VET (Vocational Education and Training).
 
-Your task is to refine vague skill names into clear, capability-based SKILL labels by explicitly including any missing OBJECT or DOMAIN, while ensuring the result is a HUMAN ABILITY (not a task, action, or service).
-
-────────────────────────────────────────
-CORE PRINCIPLE — SKILLS, NOT TASKS
-────────────────────────────────────────
-
-A SKILL describes what a person is capable of doing across contexts.
-A TASK describes a specific job step, activity, or deliverable.
-
-All outputs MUST represent transferable human capabilities.
+Your task is to refine vague skill names into clear, specific skill labels by adding the missing OBJECT or DOMAIN from the Unit Title.
 
 ────────────────────────────────────────
-THE PROBLEM
+CORE PRINCIPLE — MATCH THE WORK LEVEL
 ────────────────────────────────────────
 
-Skill names are vague when they do not specify the OBJECT or DOMAIN to which the capability applies.
+The refined skill name MUST reflect what the person ACTUALLY DOES physically or cognitively. Do NOT elevate practical work into management language.
 
-Examples of vague skills:
-- "Client Consultation" → consultation about WHAT?
-- "Equipment Cleaning" → WHAT equipment?
-- "Training Progress Monitoring" → training of WHAT?
-- "Risk Assessment" → assessing risks of WHAT?
+There are TWO types of skills. You must identify which type and name accordingly:
 
-────────────────────────────────────────
-THE GOAL
-────────────────────────────────────────
+TYPE A — HANDS-ON / PRACTICAL SKILLS
+The person uses tools, equipment, materials, or physical techniques.
+Use PRACTICAL language: Welding, Cutting, Handling, Cooking, Wiring, Plumbing, Shearing, Grooming, Dressing, Pruning, Drilling, Mixing, Laying, Fitting, Sewing, Painting, Driving, Lifting, Feeding, Planting.
 
-Refine vague skill names by:
-1. Identifying the primary OBJECT or DOMAIN from the Unit Title
-2. Adding it ONLY if it is missing
-3. Ensuring the final skill name is a noun‑headed, abstract capability
+TYPE B — PROFESSIONAL / MANAGEMENT SKILLS  
+The person uses judgement, authority, analysis, or coordination from a supervisory or professional position.
+Use PROFESSIONAL language: Assessment, Analysis, Management, Compliance, Strategy, Coordination, Planning, Governance, Oversight.
 
 ────────────────────────────────────────
-CRITICAL DISTINCTION — SKILL VS TASK
+CRITICAL RULE — DO NOT ELEVATE TYPE A INTO TYPE B
 ────────────────────────────────────────
 
-A VALID SKILL MUST:
-- Be noun‑headed (e.g. Assessment, Analysis, Management, Oversight, Strategy)
-- Represent judgement, expertise, or professional capability
-- Be applicable across multiple situations
-- NOT describe execution, preparation, or delivery steps
+If the description says the person is DOING physical work, the skill name MUST use practical verbs/nouns. Do NOT replace practical words with management abstractions.
 
-INVALID (task‑leaning) patterns include:
-- Verb‑led instructions (clean, prepare, implement, document)
-- Deliverables (plans, reports, documentation, timelines)
-- Procedural activities (planning, implementation, execution)
+WRONG (elevating practical work to management):
+- "Cleans bee smoker" → "Bee Smoker Fire Prevention Strategy" ✗
+- "Feeds alpacas" → "Animal Feeding Instruction" ✗
+- "Ties steel reinforcement" → "Reinforcement Management" ✗
+- "Shears sheep" → "Shearing Oversight" ✗
+- "Checks carcass quality" → "Carcass QA Correlation" ✗
+- "Stacks crop containers" → "Crop Container Stacking Optimisation" ✗
 
-────────────────────────────────────────
-TASK LEAKAGE CONTROL (MANDATORY)
-────────────────────────────────────────
-
-The following terms are HIGH‑RISK and must NOT be used as the head noun unless abstracted into a higher‑level capability:
-
-DO NOT use as head nouns:
-- Implementation
-- Planning
-- Documentation
-- Preparation
-- Execution
-- Control
-- Monitoring
-- Testing
-- Reporting
-
-Use capability-safe alternatives such as:
-- Assessment
-- Analysis
-- Evaluation
-- Management
-- Oversight
-- Governance
-- Assurance
-- Strategy
-- Advisory
+RIGHT (preserving practical language):
+- "Cleans bee smoker" → "Bee Smoker Cleaning" ✓
+- "Feeds alpacas" → "Alpaca Feeding" ✓
+- "Ties steel reinforcement" → "Steel Reinforcement Tying" ✓
+- "Shears sheep" → "Sheep Shearing" ✓
+- "Checks carcass quality" → "Carcass Quality Checking" ✓
+- "Stacks crop containers" → "Crop Container Stacking" ✓
 
 ────────────────────────────────────────
-GENERIC CAPABILITY PROTECTION RULE (NEW)
+BANNED WORDS FOR TYPE A SKILLS
 ────────────────────────────────────────
 
-If the original skill is a general human capability (e.g., communication, teamwork, planning, coordination, leadership, documentation, judgement, analysis, problem-solving),
-DO NOT add technical, equipment-specific, or context-specific domains from the Unit Title.
+When the person is doing PRACTICAL/HANDS-ON work, do NOT use these as the main noun:
 
-Generic soft skills MUST remain generic.
+BANNED for Type A: Strategy, Governance, Advisory, Oversight, Optimisation, Correlation, Integration, Assurance, Evaluation
 
-Examples:
-- Face‑to‑Face Communication → do NOT add “helicopter”
-- Teamwork → do NOT add “aviation”
-- Verbal Communication → do NOT add “customer”
-- Documentation → do NOT add “site”
+These words imply professional/management authority that a hands-on worker does not exercise.
 
-Domains can ONLY be added when they are intrinsic to the capability itself, not when they merely describe job context.
+ALLOWED for Type A: the practical verb as a gerund noun:
+Welding, Cutting, Handling, Cooking, Wiring, Cleaning, Shearing, Grooming, Dressing, Pruning, Drilling, Mixing, Laying, Fitting, Sewing, Painting, Driving, Lifting, Feeding, Planting, Harvesting, Milling, Grinding, Brazing, Soldering, Tiling, Plastering, Concreting, Bricklaying, Scaffolding, Rigging, Testing, Checking, Measuring, Calibrating, Sampling, Inspecting, Operating, Servicing, Repairing, Installing, Assembling, Fabricating, Joining, Finishing, Coating, Polishing, Pouring, Moulding, Turning, Boring, Threading, Pressing, Stamping, Folding, Rolling, Bending
 
 ────────────────────────────────────────
-DOMAIN QUALIFIER RULE
+WHEN TO USE MANAGEMENT LANGUAGE (TYPE B ONLY)
 ────────────────────────────────────────
 
-Do NOT automatically prefix the full domain (e.g. "Electrical Installation").
+Use management/professional nouns ONLY when the description explicitly says the person:
+- Supervises or directs OTHER people's work
+- Makes policy or strategic decisions
+- Conducts formal audits or compliance reviews
+- Manages budgets, projects, or programs
+- Assesses risks using formal frameworks (matrices, registers)
+- Writes formal reports, policies, or procedures
 
-Include a domain qualifier ONLY IF:
-- The skill would be ambiguous without it, OR
-- The domain materially changes the meaning of the capability
-
-If the capability is cross‑domain, use a domain‑neutral skill name.
-
-────────────────────────────────────────
-FINAL NORMALISATION RULE (MANDATORY)
-
-If the refined skill name ends with a low‑abstraction or task‑proximate term, you MUST replace it with a higher‑order capability noun.
-
-Replace:
-- Planning → Strategy
-- Monitoring → Oversight or Assurance
-- Specification → Definition or Governance
-- Selection → Decision-Making or Evaluation
-- Identification → Assessment
-
-The final head noun MUST represent a capability, not an activity.
+Examples of genuine Type B skills:
+- "Conducts WHS audit of construction site" → "Construction WHS Auditing" ✓
+- "Develops animal welfare compliance policy" → "Animal Welfare Policy Development" ✓
+- "Manages shearing team schedule and output" → "Shearing Team Coordination" ✓
+- "Assesses fire risk using risk matrix" → "Bushfire Risk Assessment" ✓
 
 ────────────────────────────────────────
-OBJECT / DOMAIN CHECK — EXAMPLES
+THE REFINEMENT PROCESS
 ────────────────────────────────────────
 
-| Skill Name | Unit Title | Action |
-|-----------|------------|--------|
-| Training Progress Monitoring | Train assistance dogs | → Dog Training Progress Monitoring |
-| Risk Assessment | Groom cats | → Grooming Risk Assessment |
-| Equipment Cleaning | Food service on aircraft | → Galley Equipment Hygiene Management |
-| Client Consultation | Groom cats | → Cat Grooming Needs Assessment |
+1. Read the Description to understand what the person ACTUALLY DOES
+2. Determine if it is Type A (hands-on) or Type B (professional/management)
+3. Read the Unit Title to identify the missing OBJECT or DOMAIN
+4. If the skill name already contains the object/domain → KEEP unchanged
+5. If missing → Add it using language appropriate to the type (A or B)
 
 ────────────────────────────────────────
-MORE EXAMPLES
+GENERIC CAPABILITY PROTECTION RULE
 ────────────────────────────────────────
 
-| Vague Skill | Unit Title | Refined Skill |
-|------------|------------|---------------|
-| Progress Monitoring | Train assistance dogs | Dog Training Progress Monitoring |
-| Behaviour Assessment | Handle companion animals | Animal Behaviour Assessment |
-| Safety Procedures | Work at heights | Fall Risk Management |
-| Documentation | Process insurance claims | Claims Documentation Management |
-| Communication Skills | Provide aged care | Elderly Client Communication |
-| Handler Instruction | Train assistance dogs | Handler Training Advisory |
+If the original skill is a general human capability (communication, teamwork, planning, coordination, leadership, judgement, analysis, problem-solving), DO NOT add technical or equipment-specific domains from the Unit Title.
 
-────────────────────────────────────────
-DECISION RULES
-────────────────────────────────────────
+Generic soft skills MUST remain generic:
+- "Face-to-Face Communication" → keep as is, NOT "Helicopter Communication"
+- "Teamwork" → keep as is, NOT "Aviation Teamwork"
+- "Problem Solving" → keep as is, NOT "Plumbing Problem Solving"
 
-1. Identify the primary OBJECT or DOMAIN from the Unit Title.
-2. If the skill already contains the object/domain → KEEP unchanged.
-3. If missing → Add it using abstract, capability‑oriented terminology.
-4. Prefer structure: [Specific Object or Critical Domain] + [Capability Noun].
-5. Keep skill names concise (2–5 words).
-6. Generic capabilities MUST NOT inherit technical domain qualifiers.
-7. Reject outputs that read like executable job steps.
+Domains can ONLY be added when they are INTRINSIC to the capability itself.
 
 ────────────────────────────────────────
 NAMING CONSTRAINTS
 ────────────────────────────────────────
 
-- Skills MUST be noun‑headed capability expressions.
-- Gerund forms (“‑ing”) are acceptable ONLY if functioning as abstract nouns.
-- Do NOT output tasks, services, or deliverables.
-- Use terminology aligned with recognised skill taxonomies (ESCO, O*NET, national competency frameworks).
+- Keep to 2-5 words
+- Use noun-headed phrases (the last word should be a noun or gerund noun)
+- Preferred structure: [Domain/Object] + [Action-as-Noun]
+  Examples: "Sheep Shearing", "Concrete Placing", "IV Cannulation", "Forklift Operation"
+- For Type B: [Domain/Object] + [Professional Noun]
+  Examples: "Bushfire Risk Assessment", "Carbon Farming Compliance", "WHS Auditing"
+- Use Australian VET terminology where appropriate
+
+────────────────────────────────────────
+MORE EXAMPLES
+────────────────────────────────────────
+
+| Description | Unit Title | Refined Name |
+|------------|------------|--------------|
+| Operates excavator to dig trenches | Conduct excavator operations | Trench Excavation |
+| Mixes concrete to specified ratios | Carry out concreting | Concrete Mix Preparation |
+| Applies wound dressing to patient | Provide wound care | Wound Dressing Application |
+| Monitors sheep for signs of illness | Handle livestock | Sheep Health Monitoring |
+| Reviews compliance with food safety law | Manage food safety program | Food Safety Compliance Review |
+| Identifies hazards in shearing shed | Work safely in shearing | Shearing Shed Hazard Identification |
+| Selects correct welding rod for joint | Perform MMAW welding | Welding Rod Selection |
+| Records animal feeding data in logbook | Maintain animal records | Animal Feeding Record Keeping |
+| Prunes branches using chainsaw | Perform tree pruning | Chainsaw Pruning |
+| Supervises junior staff during harvest | Coordinate harvest operations | Harvest Team Supervision |
 
 ────────────────────────────────────────
 OUTPUT
@@ -251,21 +211,20 @@ class SkillNameRefiner:
         description = skill.get('description', '')
         unit_title = skill.get('unit_title', '')
         
-        user_prompt = f"""## Using the rules defined in the system prompt, refine the following skill name:
-        - Name: {name}
-        - Description: {description}
-        - Unit Title: {unit_title}
+        user_prompt = f"""Refine the following skill name using the rules in the system prompt.
 
-        ## Your task:
-        - Use the Unit Title to identify any missing object or domain
-        - Refine the Skill Name only if needed
-        - Ensure the result is a skill (human capability), not a task
-        - Do not add unnecessary domain qualifiers
-        - Output must comply fully with the system rules
-        - Keep to 2-4 words.
+Skill Name: {name}
+Description: {description}
+Unit Title: {unit_title}
 
-        ## Output (JSON only):
-        {{"original_name": "{name}", "refined_name": "your refined name here", "changed": true/false, "confidence": 0.0-1.0}}"""
+Steps:
+1. Read the Description — is this person doing HANDS-ON work (Type A) or PROFESSIONAL/MANAGEMENT work (Type B)?
+2. Use the Unit Title to identify any missing object or domain
+3. Refine the name using practical language for Type A or professional language for Type B
+4. Keep to 2-5 words
+
+Output (JSON only):
+{{"original_name": "{name}", "refined_name": "your refined name here", "changed": true/false, "confidence": 0.0-1.0, "type": "A or B"}}"""
 
         return user_prompt
     
@@ -302,10 +261,8 @@ class SkillNameRefiner:
         
         # Try to find JSON object
         try:
-            # Try direct parse
             result = json.loads(text)
             if isinstance(result, dict):
-                # Ensure required fields exist
                 result.setdefault('original_name', original_name)
                 result.setdefault('refined_name', original_name)
                 result.setdefault('changed', False)
@@ -328,8 +285,6 @@ class SkillNameRefiner:
             except json.JSONDecodeError:
                 pass
         
-        # Fallback - keep original
-        # logger.warning(f"Failed to parse refinement response for '{original_name}'")
         return None
     
     def refine_skill_names_batch(self, skills: List[Dict]) -> List[Dict]:
@@ -350,7 +305,6 @@ class SkillNameRefiner:
         user_prompts = [self._get_single_skill_prompt(skill) for skill in skills]
         
         try:
-            # Use batch generation with one prompt per skill
             responses = self.genai_interface._generate_batch(
                 user_prompts=user_prompts,
                 system_prompt=REFINEMENT_SYSTEM_PROMPT
@@ -358,13 +312,11 @@ class SkillNameRefiner:
             
             if not responses or len(responses) != len(skills):
                 logger.warning(f"Unexpected response count: got {len(responses) if responses else 0}, expected {len(skills)}")
-                # Pad with empty responses if needed
                 if responses is None:
                     responses = [''] * len(skills)
                 while len(responses) < len(skills):
                     responses.append('')
             
-            # Process each response
             results = []
             for i, (skill, response) in enumerate(zip(skills, responses)):
                 skill_copy = skill.copy()
@@ -374,18 +326,16 @@ class SkillNameRefiner:
                 while loop:
                     try:
                         loop = False
-                        # Parse the response
                         refinement = self._parse_single_response(response, skill['name'])
                         if refinement is None and retry_count > 0:
                             retry_count -= 1
-                            logger.warning(f"Failed to parse refinement response for '{skill['name']}'")
-                            logger.warning(f"Trying '{retry_count}' more time ...")
+                            logger.warning(f"Failed to parse refinement response for '{skill['name']}', {retry_count} retries left")
                             response = self.genai_interface._generate_batch(
                                 user_prompts=[self._get_single_skill_prompt(skill)],
                                 system_prompt=REFINEMENT_SYSTEM_PROMPT
                             )[0]
                             loop = True
-                        elif refinement is None and retry_count == 0 :
+                        elif refinement is None and retry_count == 0:
                             logger.warning(f"All retries exhausted for skill {skill['name']}")
                             refinement = {
                                 'original_name': skill['name'],
@@ -396,29 +346,34 @@ class SkillNameRefiner:
                     except Exception as e:
                         if retry_count > 0:
                             retry_count -= 1
-                            logger.warning(f"Failed to parse refinement response for '{skill['name']}'")
-                            logger.warning(f"Trying '{retry_count}' more time ...")
-                            response = self.genai_interface._generate_batch(
-                                user_prompts=[self._get_single_skill_prompt(skill)],
-                                system_prompt=REFINEMENT_SYSTEM_PROMPT
-                            )[0]
-                            loop = True
-                            pass
+                            logger.warning(f"Error for '{skill['name']}', {retry_count} retries left: {e}")
+                            try:
+                                response = self.genai_interface._generate_batch(
+                                    user_prompts=[self._get_single_skill_prompt(skill)],
+                                    system_prompt=REFINEMENT_SYSTEM_PROMPT
+                                )[0]
+                                loop = True
+                            except Exception:
+                                loop = False
+                                refinement = {
+                                    'original_name': skill['name'],
+                                    'refined_name': skill['name'],
+                                    'confidence': 0.0,
+                                    'changed': False
+                                }
                         else:
                             loop = False
-                            logger.warning(f"Error getting refinement for skill {skill['name']}")
                             refinement = {
                                 'original_name': skill['name'],
                                 'refined_name': skill['name'],
                                 'confidence': 0.0,
                                 'changed': False
                             }
-                            pass
+
                 # Apply refinement
                 refined_name = refinement.get('refined_name', skill['name'])
                 changed = refinement.get('changed', False)
                 
-                # Validate refinement
                 if refined_name and len(refined_name) >= 3:
                     skill_copy['org_name'] = skill['name']
                     skill_copy['name'] = refined_name
@@ -445,7 +400,6 @@ class SkillNameRefiner:
             self.stats['failed'] += len(skills)
             self.stats['errors'].append(str(e))
             
-            # Return original skills with org_name
             return [{**s, 'org_name': s['name'], 'name_changed': False, 
                     'refinement_confidence': 0.0} for s in skills]
     
@@ -471,12 +425,11 @@ class SkillNameRefiner:
         logger.info(f"Starting skill name refinement for {len(df)} skills")
         logger.info(f"Batch size: {self.batch_size} (one prompt per skill)")
         
-        # Check for unit_title column
         has_unit_title = unit_title_column in df.columns
         if has_unit_title:
             logger.info(f"Using unit title column '{unit_title_column}' for domain context")
         else:
-            logger.warning(f"No unit title column '{unit_title_column}' found - refinements may be less context-aware")
+            logger.warning(f"No unit title column '{unit_title_column}' found")
         
         # Prepare skills for processing
         all_skills = []
@@ -498,7 +451,6 @@ class SkillNameRefiner:
             batch_end = min(batch_start + self.batch_size, len(all_skills))
             batch = all_skills[batch_start:batch_end]
             
-            # Try refinement with retries
             refined_batch = None
             for attempt in range(self.max_retries):
                 try:
@@ -507,7 +459,6 @@ class SkillNameRefiner:
                 except Exception as e:
                     logger.warning(f"Batch refinement attempt {attempt + 1} failed: {e}")
                     if attempt == self.max_retries - 1:
-                        # Final fallback - keep original names
                         refined_batch = [{**s, 'org_name': s['name'], 'name_changed': False,
                                          'refinement_confidence': 0.0} for s in batch]
             
@@ -515,13 +466,10 @@ class SkillNameRefiner:
         
         # Create result DataFrame
         df_result = df.copy()
-        
-        # Add new columns
         df_result['org_name'] = df_result[name_column]
         df_result['name_changed'] = False
         df_result['refinement_confidence'] = 0.0
         
-        # Apply refinements
         for refined_skill in refined_skills:
             idx = refined_skill['index']
             if idx in df_result.index:
@@ -530,9 +478,7 @@ class SkillNameRefiner:
                 df_result.loc[idx, 'name_changed'] = refined_skill.get('name_changed', False)
                 df_result.loc[idx, 'refinement_confidence'] = refined_skill.get('refinement_confidence', 0.0)
         
-        # Log statistics
         self._log_refinement_statistics(df_result)
-        
         return df_result
     
     def _log_refinement_statistics(self, df: pd.DataFrame):
@@ -570,19 +516,9 @@ def run_skill_name_refinement(
 ) -> pd.DataFrame:
     """
     Main function to run skill name refinement on a file.
-    
-    Args:
-        input_file: Path to input Excel/CSV file
-        output_file: Path to output Excel file
-        config: Configuration dictionary
-        genai_interface: GenAI interface for LLM calls
-        
-    Returns:
-        DataFrame with refined skill names
     """
     logger.info(f"Loading skills from: {input_file}")
     
-    # Load input file
     input_path = Path(input_file)
     if input_path.suffix.lower() == '.csv':
         df = pd.read_csv(input_file)
@@ -593,13 +529,9 @@ def run_skill_name_refinement(
     else:
         raise ValueError(f"Unsupported file format: {input_path.suffix}")
     
-    # df = df[df['unit_code'].isin(['ACMGRM402'])]
-    # df.reset_index(inplace=True, drop=True)
     logger.info(f"Loaded {len(df)} skills")
     
-    # Initialize refiner
     if genai_interface is None:
-        # Try to create genai interface from config
         try:
             from src.interfaces.model_factory import ModelFactory
             genai_interface = ModelFactory.create_genai_interface(config)
@@ -612,11 +544,9 @@ def run_skill_name_refinement(
         config=config or {}
     )
     
-    # Determine column names
     name_col = 'name' if 'name' in df.columns else 'skill_name'
     desc_col = 'description' if 'description' in df.columns else 'skill_description'
     
-    # Try to find unit title column (provides crucial domain context)
     unit_title_col = None
     for col_name in ['unit_title', 'unit_name', 'unit', 'competency_title', 'uoc_title']:
         if col_name in df.columns:
@@ -625,7 +555,6 @@ def run_skill_name_refinement(
     
     cat_col = 'category' if 'category' in df.columns else None
     
-    # Run refinement
     df_refined = refiner.refine_skills_dataframe(
         df,
         name_column=name_col,
@@ -634,7 +563,6 @@ def run_skill_name_refinement(
         category_column=cat_col if cat_col else 'category'
     )
     
-    # Save output
     output_path = Path(output_file)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     
@@ -644,99 +572,48 @@ def run_skill_name_refinement(
         df_refined.to_excel(output_file, index=False)
     
     logger.info(f"Saved refined skills to: {output_file}")
-    
     return df_refined
 
-# CLI interface
+
 if __name__ == "__main__":
     import argparse
     import sys
     import os
     
-    # Add project root to path
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     
     parser = argparse.ArgumentParser(
         description="Refine skill names based on descriptions and VET unit context using LLM"
     )
-    
-    parser.add_argument(
-        "input_file",
-        help="Input Excel/CSV file with skills"
-    )
-    
-    parser.add_argument(
-        "-o", "--output",
-        default=None,
-        help="Output file path (default: input_refined.xlsx)"
-    )
-    
-    parser.add_argument(
-        "--batch-size",
-        type=int,
-        default=20,
-        help="Batch size for LLM processing (default: 20)"
-    )
-    
-    parser.add_argument(
-        "--unit-title-column",
-        default=None,
-        help="Column name containing VET unit titles for context (auto-detected if not specified)"
-    )
-    
-    parser.add_argument(
-        "--sample",
-        type=int,
-        default=None,
-        help="Process only a sample of N skills"
-    )
-    
-    parser.add_argument(
-        "--backend",
-        choices=['vllm', 'openai'],
-        default='vllm',
-        help="LLM backend to use (default: vllm)"
-    )
+    parser.add_argument("input_file", help="Input Excel/CSV file with skills")
+    parser.add_argument("-o", "--output", default=None, help="Output file path")
+    parser.add_argument("--batch-size", type=int, default=20, help="Batch size for LLM processing")
+    parser.add_argument("--backend", choices=['vllm', 'openai'], default='vllm', help="LLM backend")
     
     args = parser.parse_args()
     
-    # Setup logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     
-    # Load config
     try:
-        from config.settings_faceted import CONFIG
+        from config.settings import CONFIG
     except ImportError:
         CONFIG = {}
     
     CONFIG['batch_size'] = args.batch_size
     CONFIG['backend_type'] = args.backend
-    if args.unit_title_column:
-        CONFIG['unit_title_column'] = args.unit_title_column
     
-    # Determine output file
     if args.output:
         output_file = args.output
     else:
         input_path = Path(args.input_file)
         output_file = str(input_path.parent / f"{input_path.stem}_refined.xlsx")
     
-    # Run refinement
     try:
-        df_result = run_skill_name_refinement(
-            args.input_file,
-            output_file,
-            config=CONFIG
-        )
-        
+        df_result = run_skill_name_refinement(args.input_file, output_file, config=CONFIG)
         print(f"\nRefinement complete!")
         print(f"Output saved to: {output_file}")
         print(f"Total skills: {len(df_result)}")
         print(f"Names changed: {df_result['name_changed'].sum()}")
-        
     except Exception as e:
         logger.error(f"Refinement failed: {e}")
         sys.exit(1)
