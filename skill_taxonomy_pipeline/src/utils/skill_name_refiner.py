@@ -288,9 +288,11 @@ Unit Title: {unit_title}
 
 Steps:
 1. Read the Description — is this person doing HANDS-ON work (Type A) or PROFESSIONAL/MANAGEMENT work (Type B)?
-2. Use the Unit Title to identify any missing object or domain
-3. Refine the name using practical language for Type A or professional language for Type B
-4. Keep to 2-5 words
+2. Apply the DOMAIN ADDITION TEST: "Can a person who can do this skill in one domain also do it in another domain WITHOUT new domain knowledge?"
+   - If YES (skill transfers) → do NOT add domain. Keep the name generic. Examples: Record Keeping, Data Entry, PPE Selection, Risk Assessment, Communication, Scheduling, Cost Calculation, Compliance Checking, Hazard Identification.
+   - If NO (domain changes the ability) → DO add domain. Examples: Animal Health Assessment, Canine Behaviour Modification, Marine Habitat Survey, Tree Pruning.
+3. Refine the name using practical language for Type A or professional language for Type B.
+4. Keep to 2-5 words.
 
 Output (JSON only):
 {{"original_name": "{name}", "refined_name": "your refined name here", "changed": true/false, "confidence": 0.0-1.0, "type": "A or B"}}"""
